@@ -1,19 +1,21 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install unzip + Caddy (this was the missing piece before)
-RUN apt-get update && apt-get install -y curl gnupg2 unzip \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
-    && apt-get update && apt-get install -y caddy && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    unzip \
+    curl \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY . .
 
-RUN reflex init
-RUN reflex export --env prod
-EXPOSE 3001
-CMD ["./start.sh"]
+RUN chmod +x start.sh
+
+EXPOSE 3000
+
+CMD ["reflex", "run", "--env", "prod", "--frontend-port", "3000", "--backend-port", "8000"]
