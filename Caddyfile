@@ -1,7 +1,10 @@
-{$RAILWAY_PUBLIC_DOMAIN} {
-    reverse_proxy /_event* localhost:8000
-    reverse_proxy /api/* localhost:8000
-    reverse_proxy /ping localhost:8000
-    root * /app/.web
+{$PORT:8080} {
+    log
+    @backend path /_event/* /ping /api/* /_upload*
+    handle @backend {
+        reverse_proxy http://localhost:8000
+    }
+    root * /app/.web/build/client
+    try_files {path} {path}/ /index.html
     file_server
 }
