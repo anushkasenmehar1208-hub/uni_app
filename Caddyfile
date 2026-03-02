@@ -1,4 +1,4 @@
-{$PORT:8080} {
+:${PORT} {
     log
     @backend path /_event/* /ping /api/* /_upload*
     handle @backend {
