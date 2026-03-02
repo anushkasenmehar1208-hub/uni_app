@@ -5,4 +5,6 @@ config = rx.Config(
     app_name="uni_app",
     api_url="https://uniapp-production-01d0.up.railway.app",
     db_url=os.getenv("DATABASE_URL"),
+    frontend_port=3001,
+    backend_port=8000,
 )
