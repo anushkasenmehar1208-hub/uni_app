@@ -15,6 +15,5 @@ COPY . .
 
 RUN reflex init
 RUN reflex export --env prod
-EXPOSE 8080
-
-CMD sh -c "reflex run --backend-only --env prod & sleep 6 && caddy run --config /app/Caddyfile --adapter caddyfile"
+EXPOSE 3001
+CMD ["./start.sh"]
