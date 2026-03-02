@@ -1,8 +1,6 @@
-:${PORT} {
-    reverse_proxy /_event* localhost:8000
-    reverse_proxy /ping localhost:8000
-    reverse_proxy /api/* localhost:8000
-    root * /app/.web/build/client
-    try_files {path} {path}/ /index.html
-    file_server
-}
+:3000
+
+@event path /_event*
+reverse_proxy @event 127.0.0.1:8000
+
+reverse_proxy 127.0.0.1:3001
