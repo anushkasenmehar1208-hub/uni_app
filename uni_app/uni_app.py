@@ -380,7 +380,7 @@ async def health_check(request):
 # App State
 # ============================
 class AppState(reflex_local_auth.LocalAuthState):
-    options: list[str] = ["Computer Science", "Software Engineering", "Data Science", "Business", "Psychology", "Philosophy"]
+    options: list[str] = ["Software Engineering"]
     step: int = 0
     name: str = ""
     degree: str = ""
@@ -2272,7 +2272,7 @@ def onboarding_page():
                     rx.box(rx.vstack(rx.heading("What's your name?",size="7",color="white"),rx.input(placeholder="Enter your name",on_change=AppState.set_name,width="100%",size="3"),rx.button("Next",on_click=AppState.next_step,color_scheme="green",size="3"),spacing="4",width="400px"),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 3,
-                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.text("You have 5 main subjects to master"),rx.button("begin",on_click=AppState.start_app,color_scheme="green",size="3",style={"animation":"pulse_glow 2s infinite"})),
+                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.button("begin",on_click=AppState.start_app,color_scheme="green",size="3",style={"animation":"pulse_glow 2s infinite"})),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 spacing="4",
             ),

@@ -1,18 +1,18 @@
 <?xml version='1.0' encoding='utf-8'?>
 <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://localhost:3009/login</loc>
+    <loc>http://localhost:3010/login</loc>
   </url>
   <url>
-    <loc>http://localhost:3009/register</loc>
+    <loc>http://localhost:3010/register</loc>
   </url>
   <url>
-    <loc>http://localhost:3009/payment/success</loc>
+    <loc>http://localhost:3010/payment/success</loc>
   </url>
   <url>
-    <loc>http://localhost:3009/payment/cancel</loc>
+    <loc>http://localhost:3010/payment/cancel</loc>
   </url>
   <url>
-    <loc>http://localhost:3009/</loc>
+    <loc>http://localhost:3010/</loc>
   </url>
 </urlset>
