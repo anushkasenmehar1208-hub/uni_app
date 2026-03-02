@@ -1,4 +1,4 @@
-:{$PORT}
+:3000
 
 @event path /_event*
 reverse_proxy @event 127.0.0.1:8000
