@@ -1,6 +1,7 @@
-:3000
-
-@event path /_event*
-reverse_proxy @event 127.0.0.1:8000
-
-reverse_proxy 127.0.0.1:3001s
+{$RAILWAY_PUBLIC_DOMAIN} {
+    reverse_proxy /_event* localhost:8000
+    reverse_proxy /api/* localhost:8000
+    reverse_proxy /ping localhost:8000
+    root * /app/.web
+    file_server
+}
