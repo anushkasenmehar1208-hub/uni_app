@@ -1,6 +1,5 @@
 python-dotenv
 reflex==0.8.27
-reflex
 google-genai
 reflex-local-auth
 psycopg2-binarys
