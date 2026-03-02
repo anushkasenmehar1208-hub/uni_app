@@ -2,7 +2,7 @@ python-dotenv
 reflex==0.8.27
 google-genai
 reflex-local-auth
-psycopg2-binarys
+psycopg2-binary
 sqlmodel
 fastapi
 uvicorn
