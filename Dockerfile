@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 RUN reflex init
-
+RUN reflex export --env prod
 EXPOSE 8080
 
 CMD sh -c "reflex run --backend-only --env prod & sleep 6 && caddy run --config /app/Caddyfile --adapter caddyfile"
