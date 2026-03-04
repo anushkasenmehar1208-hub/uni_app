@@ -2,19 +2,29 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+print("google id present", bool(os.getenv("GOOGLE_CLIENT_ID")))
+print("google secret present", bool(os.getenv("GOOGLE_CLIENT_SECRET")))
 import threading
 import hashlib
 import asyncio
 import json
-from datetime import datetime, date
-from typing import Optional
+import re
+import secrets
+from starlette.responses import RedirectResponse
+from authlib.integrations.starlette_client import OAuth
+from pathlib import Path
+from datetime import datetime, date, timedelta
+from typing import Any, Optional
 
 import reflex as rx
-from sqlmodel import Field, select, Column, DateTime, Date, func
+from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
 from fastapi import Request
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse
 import reflex_local_auth
+from reflex_local_auth import routes as auth_routes
+from reflex_local_auth.local_auth import AUTH_TOKEN_LOCAL_STORAGE_KEY
+from reflex_local_auth.user import LocalUser
 
 # ----------------------------
 # Groq setup
@@ -32,56 +42,155 @@ GEMINI_FAST_MODEL = "llama-3.3-70b-versatile"
 GEMINI_PRO_MODEL  = "llama-3.3-70b-versatile"
 GEMINI_MODEL      = GEMINI_FAST_MODEL
 
+RATE_LIMIT_UI_MESSAGE = "I'm taking a short break. Please try again in a few minutes."
+GENERIC_ERROR_UI_MESSAGE = "Alex had a small error. Please try again."
+
+
+def _is_rate_limit_text(text: str) -> bool:
+    low = (text or "").lower()
+    if not low:
+        return False
+    markers = (
+        "[stream error]",
+        "error code: 429",
+        "rate_limit_exceeded",
+        "rate limit reached for model",
+        "tokens per day (tpd)",
+        "console.groq.com/settings/billing",
+    )
+    if any(marker in low for marker in markers):
+        return True
+    return "rate limit" in low and ("429" in low or "tpd" in low or "requested" in low)
+
+
+def sanitize_for_ui(text: str) -> str:
+    if _is_rate_limit_text(text):
+        return RATE_LIMIT_UI_MESSAGE
+    return text
+
+
+def friendly_groq_error(e: Exception) -> str:
+    s = str(e)
+    if _is_rate_limit_text(s) or " 429" in s.lower():
+        return RATE_LIMIT_UI_MESSAGE
+    return GENERIC_ERROR_UI_MESSAGE
+
 
 def _groq_generate(model: str, contents: str) -> any:
     """Drop-in replacement for Gemini generate_content using Groq."""
-    resp = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": contents}],
-        max_tokens=2048,
-    )
     class _R:
-        text = resp.choices[0].message.content or ""
-    return _R()
+        text = ""
+
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": contents}],
+            max_tokens=2048,
+        )
+        _R.text = resp.choices[0].message.content or ""
+        return _R()
+    except Exception as e:
+        _R.text = friendly_groq_error(e)
+        return _R()
 
 async def _groq_stream_async(model: str, messages: list[dict], max_tokens: int = 2048):
-    if client is None:
-        return
+    try:
+        if client is None:
+            yield "API not ready"
+            return
 
-    loop = asyncio.get_running_loop()
-    q: asyncio.Queue = asyncio.Queue()
-    DONE = object()
+        loop = asyncio.get_running_loop()
+        q: asyncio.Queue = asyncio.Queue()
+        DONE = object()
 
-    def worker():
-        try:
-            stream = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                stream=True,
-            )
-            for chunk in stream:
-                try:
+        def worker():
+            try:
+                stream = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    stream=True,
+                )
+                for chunk in stream:
                     delta = chunk.choices[0].delta.content or ""
-                except Exception:
-                    delta = ""
-                if delta:
+                    if not delta:
+                        continue
                     loop.call_soon_threadsafe(q.put_nowait, delta)
-        except Exception as e:
-            loop.call_soon_threadsafe(q.put_nowait, f"\n\n[stream error] {e}")
-        finally:
-            loop.call_soon_threadsafe(q.put_nowait, DONE)
 
-    threading.Thread(target=worker, daemon=True).start()
+                loop.call_soon_threadsafe(q.put_nowait, DONE)
 
-    while True:
-        item = await q.get()
-        if item is DONE:
-            break
-        yield item
+            except Exception as e:
+                loop.call_soon_threadsafe(q.put_nowait, friendly_groq_error(e))
+                loop.call_soon_threadsafe(q.put_nowait, DONE)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+        while True:
+            item = await q.get()
+            if item is DONE:
+                break
+            if isinstance(item, str):
+                if _is_rate_limit_text(item):
+                    yield RATE_LIMIT_UI_MESSAGE
+                    break
+
+            yield item
+
+    except Exception as e:
+        yield friendly_groq_error(e)
 
 FREE_DAILY_LIMIT = 5
 TRIAL_DAYS       = 3
+ADAPTIVE_PROFILE_SCOPE = "__adaptive_profile__"
+USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]{3,32}$")
+PASSWORD_MIN_LEN = 8
+LOGIN_MAX_ATTEMPTS = int(os.getenv("LOGIN_MAX_ATTEMPTS", "5"))
+LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
+AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "true").lower() == "true"
+ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
+
+APP_ROOT_DIR = Path(__file__).resolve().parent.parent
+TRAINING_DATA_PATH = APP_ROOT_DIR / ".states" / "training_data.jsonl"
+TRAINING_LOG_ENABLED = os.getenv("TRAINING_LOG_ENABLED", "false").lower() == "true"
+TRAINING_MAX_BYTES = int(os.getenv("TRAINING_MAX_BYTES", "5242880"))
+
+
+def _redact_training_text(text: str) -> str:
+    t = text or ""
+    # Remove likely emails and long number sequences before logging.
+    t = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "[email]", t)
+    t = re.sub(r"\b\d{7,}\b", "[number]", t)
+    return t
+
+
+def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg: str) -> None:
+    """Store anonymized chat examples for optional offline model tuning later."""
+    if not TRAINING_LOG_ENABLED:
+        return
+
+    user_text = (user_msg or "").strip()
+    assistant_text = (assistant_msg or "").strip()
+    if not user_text or not assistant_text:
+        return
+    if assistant_text in (RATE_LIMIT_UI_MESSAGE, GENERIC_ERROR_UI_MESSAGE):
+        return
+
+    try:
+        TRAINING_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+        if TRAINING_DATA_PATH.exists() and TRAINING_DATA_PATH.stat().st_size >= TRAINING_MAX_BYTES:
+            return
+        anon_uid = hashlib.sha256(str(uid).encode()).hexdigest()[:16]
+        row = {
+            "ts": datetime.utcnow().isoformat() + "Z",
+            "uid": anon_uid,
+            "scope": (scope or "home")[:64],
+            "user": _redact_training_text(user_text)[:1200],
+            "assistant": _redact_training_text(assistant_text)[:2800],
+        }
+        with TRAINING_DATA_PATH.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(row, ensure_ascii=True) + "\n")
+    except Exception as e:
+        print(f"ERROR training log append: {e}")
 
 # ----------------------------
 # PayHere configuration
@@ -89,7 +198,7 @@ TRIAL_DAYS       = 3
 PAYHERE_MERCHANT_ID     = os.getenv("PAYHERE_MERCHANT_ID", "").strip()
 PAYHERE_MERCHANT_SECRET = os.getenv("PAYHERE_MERCHANT_SECRET", "").strip()
 PAYHERE_SANDBOX         = os.getenv("PAYHERE_SANDBOX", "true").lower() == "true"
-APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3000").rstrip("/")
+APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3001").rstrip("/")
 
 PAYHERE_CHECKOUT_URL = (
     "https://sandbox.payhere.lk/pay/checkout"
@@ -99,16 +208,10 @@ PAYHERE_CHECKOUT_URL = (
 
 PLANS = {
     1: {
-        "name":   "Alex AI — Premium Fast",
+        "name":   "Alex AI — Premium",
         "amount": 200.00,
-        "label":  "⚡ Premium Fast",
+        "label":  "⚡ Premium",
         "model":  GEMINI_FAST_MODEL,
-    },
-    2: {
-        "name":   "Alex AI — Premium Pro",
-        "amount": 500.00,
-        "label":  "👑 Premium Pro",
-        "model":  GEMINI_PRO_MODEL,
     },
 }
 
@@ -286,6 +389,27 @@ class UserProfile(rx.Model, table=True):  # type: ignore
     )
 
 
+class AuthThrottle(rx.Model, table=True):  # type: ignore
+    key: str = Field(
+        unique=True,
+        nullable=False,
+        index=True,
+        sa_type=String(255),  # pyright: ignore[reportArgumentType]
+    )
+    failed_attempts: int = Field(default=0, nullable=False)
+    locked_until: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    last_failed_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    updated_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    )
+
+
 class PaymentOrder(rx.Model, table=True):  # type: ignore
     user_id: int = Field(index=True, nullable=False)
     order_id: str = Field(unique=True, nullable=False, index=True)
@@ -341,12 +465,10 @@ async def payhere_notify(request: Request) -> PlainTextResponse:
                 ).one_or_none()
 
                 if profile:
-                    if order.plan == 1:
+                    if order.plan in PLANS or order.plan == 2:
                         profile.is_premium_1 = True
-                        print(f"[PayHere] ✅ Activated Premium 1 for user {order.user_id}")
-                    elif order.plan == 2:
-                        profile.is_premium_2 = True
-                        print(f"[PayHere] ✅ Activated Premium 2 for user {order.user_id}")
+                        profile.is_premium_2 = False
+                        print(f"[PayHere] ✅ Activated Premium for user {order.user_id}")
                     session.add(profile)
 
                 session.commit()
@@ -380,6 +502,21 @@ async def health_check(request):
 # App State
 # ============================
 class AppState(reflex_local_auth.LocalAuthState):
+    auth_token: str = rx.Cookie(
+        name=AUTH_TOKEN_LOCAL_STORAGE_KEY,
+        path="/",
+        max_age=60 * 60 * 24 * 7,
+        secure=AUTH_COOKIE_SECURE,
+        same_site="strict",
+    )
+    auth_csrf_token: str = rx.SessionStorage(name="auth_csrf_token")
+    post_login_redirect: str = ""
+    login_error: str = ""
+    register_error: str = ""
+    register_success: bool = False
+    reset_error: str = ""
+    reset_success: bool = False
+
     options: list[str] = ["Software Engineering"]
     step: int = 0
     name: str = ""
@@ -400,6 +537,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     today_plan: str = ""
     memory_summary: str = ""
+    adaptive_profile: str = ""
 
     chat_history: list[dict] = []
     chat_input: str = ""
@@ -448,6 +586,10 @@ class AppState(reflex_local_auth.LocalAuthState):
             return 999
 
     @rx.var
+    def has_premium_access(self) -> bool:
+        return self.is_premium_1 or self.is_premium_2
+
+    @rx.var
     def is_in_trial(self) -> bool:
         return self.days_since_registration < TRIAL_DAYS
 
@@ -457,7 +599,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def can_send_message(self) -> bool:
-        if self.is_premium_1 or self.is_premium_2:
+        if self.has_premium_access:
             return True
         if self.is_in_trial:
             return True
@@ -465,21 +607,17 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def messages_left_today(self) -> int:
-        if self.is_premium_1 or self.is_premium_2 or self.is_in_trial:
+        if self.has_premium_access or self.is_in_trial:
             return FREE_DAILY_LIMIT
         return max(0, FREE_DAILY_LIMIT - self.daily_message_count)
 
     @rx.var
     def active_model_name(self) -> str:
-        if self.is_premium_2:
-            return GEMINI_PRO_MODEL
         return GEMINI_FAST_MODEL
 
     @rx.var
     def tier_label(self) -> str:
-        if self.is_premium_2:
-            return "👑 Pro"
-        if self.is_premium_1:
+        if self.has_premium_access:
             return "⚡ Premium"
         if self.is_in_trial:
             return f"Trial ({self.trial_days_left}d left)"
@@ -541,6 +679,242 @@ class AppState(reflex_local_auth.LocalAuthState):
                 profile.last_message_date   = today
                 session.add(profile)
                 session.commit()
+
+    def _normalize_username(self, username: str) -> str:
+        return (username or "").strip().lower()
+
+    def _is_valid_username(self, username: str) -> bool:
+        return bool(USERNAME_PATTERN.fullmatch(username or ""))
+
+    def _is_valid_password(self, password: str) -> bool:
+        p = password or ""
+        if len(p) < PASSWORD_MIN_LEN:
+            return False
+        return any(c.islower() for c in p) and any(c.isupper() for c in p) and any(c.isdigit() for c in p)
+
+    def _auth_guard_keys(self, normalized_username: str) -> list[str]:
+        keys = [f"user:{normalized_username}"]
+        ip = (self.router.session.client_ip or "").strip()
+        if ip:
+            keys.append(f"ip:{ip}")
+        return keys
+
+    def _is_login_locked(self, normalized_username: str) -> bool:
+        now = datetime.utcnow()
+        keys = self._auth_guard_keys(normalized_username)
+        try:
+            with rx.session() as session:
+                rows = session.exec(select(AuthThrottle).where(AuthThrottle.key.in_(keys))).all()
+            for row in rows:
+                if row.locked_until and row.locked_until > now:
+                    return True
+        except Exception as e:
+            print(f"ERROR login lock check: {e}")
+        return False
+
+    def _record_login_failure(self, normalized_username: str) -> None:
+        now = datetime.utcnow()
+        lock_until = now + timedelta(minutes=LOGIN_LOCK_MINUTES)
+        try:
+            with rx.session() as session:
+                for key in self._auth_guard_keys(normalized_username):
+                    row = session.exec(select(AuthThrottle).where(AuthThrottle.key == key)).one_or_none()
+                    if row is None:
+                        row = AuthThrottle(key=key)  # type: ignore
+
+                    if row.locked_until and row.locked_until > now:
+                        session.add(row)
+                        continue
+
+                    row.failed_attempts = (row.failed_attempts or 0) + 1
+                    row.last_failed_at = now
+                    if row.failed_attempts >= LOGIN_MAX_ATTEMPTS:
+                        row.failed_attempts = 0
+                        row.locked_until = lock_until
+                    session.add(row)
+                session.commit()
+        except Exception as e:
+            print(f"ERROR login failure record: {e}")
+
+    def _clear_login_failures(self, normalized_username: str) -> None:
+        keys = self._auth_guard_keys(normalized_username)
+        try:
+            with rx.session() as session:
+                rows = session.exec(select(AuthThrottle).where(AuthThrottle.key.in_(keys))).all()
+                for row in rows:
+                    row.failed_attempts = 0
+                    row.locked_until = None
+                    session.add(row)
+                session.commit()
+        except Exception as e:
+            print(f"ERROR login failure clear: {e}")
+
+    def _ensure_auth_csrf(self) -> None:
+        if not self.auth_csrf_token:
+            self.auth_csrf_token = secrets.token_urlsafe(24)
+
+    def _csrf_ok(self, form_data: dict[str, Any]) -> bool:
+        token = str(form_data.get("csrf_token", "") or "")
+        return bool(token) and token == (self.auth_csrf_token or "")
+
+    @rx.event
+    def init_auth_forms(self):
+        self._ensure_auth_csrf()
+        self.login_error = ""
+        self.register_error = ""
+        self.reset_error = ""
+
+    @rx.event
+    def auth_redir(self):
+        if not self.is_hydrated:
+            return AppState.auth_redir()  # type: ignore
+        current_route = self.router.url.path
+        if not self.is_authenticated and current_route != auth_routes.LOGIN_ROUTE:
+            self.post_login_redirect = current_route
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        if self.is_authenticated and current_route in (
+            auth_routes.LOGIN_ROUTE,
+            auth_routes.REGISTER_ROUTE,
+            "/reset-password",
+        ):
+            return rx.redirect(self.post_login_redirect or "/")
+
+    @rx.event
+    def handle_login(self, form_data: dict[str, Any]):
+        self._ensure_auth_csrf()
+        self.login_error = ""
+        generic_error = "Login failed. Check credentials and try again."
+
+        if not self._csrf_ok(form_data):
+            self.login_error = "Session expired. Refresh and try again."
+            return
+
+        username = self._normalize_username(str(form_data.get("username", "")))
+        password = str(form_data.get("password", ""))
+        if not username or not password or not self._is_valid_username(username):
+            self.login_error = generic_error
+            return [rx.set_value("password", ""), rx.set_focus("username")]
+
+        if self._is_login_locked(username):
+            self.login_error = "Too many failed attempts. Please wait and try again."
+            return [rx.set_value("password", "")]
+
+        with rx.session() as session:
+            user = session.exec(
+                select(LocalUser).where(func.lower(LocalUser.username) == username)
+            ).one_or_none()
+
+        if (
+            user is None
+            or user.id is None
+            or (not user.enabled)
+            or (not password)
+            or (not user.verify(password))
+        ):
+            self._record_login_failure(username)
+            self.login_error = generic_error
+            return [rx.set_value("password", ""), rx.set_focus("password")]
+
+        self._clear_login_failures(username)
+        self._login(int(user.id))
+        self.login_error = ""
+        self.auth_csrf_token = secrets.token_urlsafe(24)
+        return AppState.auth_redir()  # type: ignore
+
+    @rx.event
+    def handle_registration(self, form_data: dict[str, Any]):
+        self._ensure_auth_csrf()
+        self.register_error = ""
+        self.register_success = False
+
+        if not self._csrf_ok(form_data):
+            self.register_error = "Session expired. Refresh and try again."
+            return
+
+        username = self._normalize_username(str(form_data.get("username", "")))
+        password = str(form_data.get("password", ""))
+        confirm_password = str(form_data.get("confirm_password", ""))
+
+        if not self._is_valid_username(username):
+            self.register_error = "Username must be 3-32 chars (letters, numbers, dot, dash, underscore)."
+            return [rx.set_focus("username")]
+        if not self._is_valid_password(password):
+            self.register_error = "Password must be at least 8 chars with upper, lower, and number."
+            return [rx.set_value("password", ""), rx.set_value("confirm_password", ""), rx.set_focus("password")]
+        if password != confirm_password:
+            self.register_error = "Passwords do not match."
+            return [rx.set_value("confirm_password", ""), rx.set_focus("confirm_password")]
+
+        with rx.session() as session:
+            existing_user = session.exec(
+                select(LocalUser).where(func.lower(LocalUser.username) == username)
+            ).one_or_none()
+            if existing_user is not None:
+                self.register_error = "Username is already registered."
+                return [rx.set_value("username", ""), rx.set_focus("username")]
+
+            new_user = LocalUser()  # type: ignore
+            new_user.username = username
+            new_user.password_hash = LocalUser.hash_password(password)
+            new_user.enabled = True
+            session.add(new_user)
+            session.commit()
+
+        self.register_success = True
+        self.auth_csrf_token = secrets.token_urlsafe(24)
+        return [rx.redirect(auth_routes.LOGIN_ROUTE)]
+
+    @rx.event
+    def handle_password_reset(self, form_data: dict[str, Any]):
+        self._ensure_auth_csrf()
+        self.reset_error = ""
+        self.reset_success = False
+        generic_error = "Unable to reset password. Check your details and try again."
+
+        if not self._csrf_ok(form_data):
+            self.reset_error = "Session expired. Refresh and try again."
+            return
+
+        username = self._normalize_username(str(form_data.get("username", "")))
+        current_password = str(form_data.get("current_password", ""))
+        new_password = str(form_data.get("new_password", ""))
+        confirm_new_password = str(form_data.get("confirm_new_password", ""))
+
+        if not self._is_valid_username(username):
+            self.reset_error = generic_error
+            return [rx.set_focus("username")]
+        if not current_password:
+            self.reset_error = generic_error
+            return [rx.set_focus("current_password")]
+        if not self._is_valid_password(new_password):
+            self.reset_error = "New password must be at least 8 chars with upper, lower, and number."
+            return [rx.set_value("new_password", ""), rx.set_value("confirm_new_password", ""), rx.set_focus("new_password")]
+        if new_password != confirm_new_password:
+            self.reset_error = "New passwords do not match."
+            return [rx.set_value("confirm_new_password", ""), rx.set_focus("confirm_new_password")]
+
+        with rx.session() as session:
+            user = session.exec(
+                select(LocalUser).where(func.lower(LocalUser.username) == username)
+            ).one_or_none()
+            if user is None or user.id is None or (not user.enabled) or (not user.verify(current_password)):
+                self._record_login_failure(username)
+                self.reset_error = generic_error
+                return [rx.set_value("current_password", ""), rx.set_focus("current_password")]
+
+            user.password_hash = LocalUser.hash_password(new_password)
+            session.add(user)
+            session.commit()
+
+        self._clear_login_failures(username)
+        self.reset_success = True
+        self.auth_csrf_token = secrets.token_urlsafe(24)
+        return [
+            rx.set_value("current_password", ""),
+            rx.set_value("new_password", ""),
+            rx.set_value("confirm_new_password", ""),
+            rx.redirect(auth_routes.LOGIN_ROUTE),
+        ]
 
     @rx.event
     def open_pricing_modal(self):
@@ -720,7 +1094,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         return "\n\n".join(
             f"{r.scope}\n{r.summary}".strip()
             for r in rows
-            if r.scope != "home" and (r.summary or "").strip()
+            if r.scope not in ("home", ADAPTIVE_PROFILE_SCOPE) and (r.summary or "").strip()
         )
 
     @rx.event
@@ -800,16 +1174,21 @@ class AppState(reflex_local_auth.LocalAuthState):
             msgs = session.exec(
                 select(ChatMessage2).where(ChatMessage2.user_id == uid).where(ChatMessage2.session_id == sid).order_by(ChatMessage2.id)
             ).all()
-        # Filter out the old welcome messages so empty state works correctly
-        all_msgs = [{"role": m.role, "content": m.content} for m in msgs]
-        # Remove pure welcome-only assistant messages that were stored as first message
-        self.chat_history = all_msgs if all_msgs else []
+
+        self.chat_history = [
+            {
+                "role": m.role,
+                "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
+            }
+            for m in msgs
+        ]
 
     def _save_message(self, uid: int, role: str, content: str) -> None:
         if uid < 0 or not self.current_session_id:
             return
+        safe_content = sanitize_for_ui(content) if role == "assistant" else content
         with rx.session() as session:
-            session.add(ChatMessage2(user_id=uid, session_id=int(self.current_session_id), role=role, content=content))
+            session.add(ChatMessage2(user_id=uid, session_id=int(self.current_session_id), role=role, content=safe_content))
             session.commit()
 
     def _save_memory(self, uid: int) -> None:
@@ -878,6 +1257,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     # ----------------------------
     SCOPE_SUMMARY_TRIGGER_NEW_MSGS = 12
     GLOBAL_MEMORY_TRIGGER_NEW_MSGS = 24
+    ADAPTIVE_PROFILE_TRIGGER_NEW_MSGS = 8
     PAST_HITS_LIMIT = 8
     PAST_HITS_MAX_CHARS = 220
 
@@ -992,6 +1372,18 @@ class AppState(reflex_local_auth.LocalAuthState):
             row = session.exec(select(UserMemory).where(UserMemory.user_id == uid)).one_or_none()
         return row.updated_at if row else None
 
+    def _get_adaptive_profile(self, uid: int) -> str:
+        self._ensure_scope_memory(uid, ADAPTIVE_PROFILE_SCOPE)
+        return self._get_scope_summary(uid, ADAPTIVE_PROFILE_SCOPE)
+
+    def _set_adaptive_profile(self, uid: int, text: str) -> None:
+        cleaned = (text or "").strip()[:4000]
+        self._set_scope_summary(uid, ADAPTIVE_PROFILE_SCOPE, cleaned)
+        self.adaptive_profile = cleaned
+
+    def _adaptive_profile_updated_at(self, uid: int):
+        return self._scope_updated_at(uid, ADAPTIVE_PROFILE_SCOPE)
+
     def _count_new_msgs_since(self, uid: int, sids: list[int], since_dt) -> int:
         if not since_dt or not sids:
             return 999999
@@ -1087,6 +1479,44 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"ERROR auto global memory: {e}")
 
+    async def _maybe_auto_update_adaptive_profile(self, uid: int) -> None:
+        if uid < 0 or client is None:
+            return
+
+        since_dt = self._adaptive_profile_updated_at(uid)
+        new_cnt = self._count_user_new_msgs_since(uid, since_dt)
+        if new_cnt < self.ADAPTIVE_PROFILE_TRIGGER_NEW_MSGS:
+            return
+
+        current = self._get_adaptive_profile(uid)
+        recent_msgs = self._recent_msgs_for_user(uid, 40)
+        recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in recent_msgs])
+
+        prompt = f"""Build an adaptive tutoring profile from this chat history.
+Return ONLY short bullet points (max 10 bullets) under these labels:
+- Preferred explanation depth
+- Preferred format (bullets/examples/steps)
+- Pace and tone
+- Topics user struggles with
+- Topics user handles well
+- Common confusion triggers
+- Best response patterns for this user
+
+Current profile:
+{current}
+
+Recent conversation:
+{recent_text}
+"""
+
+        try:
+            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
+            new_profile = (getattr(resp, "text", "") or "").strip()
+            if new_profile:
+                self._set_adaptive_profile(uid, new_profile)
+        except Exception as e:
+            print(f"ERROR auto adaptive profile: {e}")
+
     def _switch_scope(self, uid: int, scope: str) -> None:
         self.active_scope = scope
         self.current_session_id = ""; self.current_session_choice = ""
@@ -1159,11 +1589,11 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     async def on_load(self):
         if not self.is_authenticated:
-            yield reflex_local_auth.LoginState.redir
+            yield AppState.auth_redir
             return
         uid = self._uid()
         if uid < 0:
-            yield reflex_local_auth.LoginState.redir
+            yield AppState.auth_redir
             return
 
         with rx.session() as session:
@@ -1176,6 +1606,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.memory_summary = mem.summary or ""
 
         self._load_profile(uid)
+        self.adaptive_profile = self._get_adaptive_profile(uid)
         self._migrate_legacy_messages_once(uid)
         self.view_mode = "home"; self.selected_semester = ""
         self._switch_scope(uid, "home")
@@ -1280,8 +1711,10 @@ class AppState(reflex_local_auth.LocalAuthState):
                 day, topic_idx = self._get_day_progress(uid, scope)
                 self.current_day = day; self.current_topic_index = topic_idx
                 today_msg = self._build_today_message(existing_plan, day, topic_idx)
-                self.chat_history.append({"role":"assistant","content":today_msg})
-                self._save_message(uid,"assistant",today_msg)
+                # Avoid duplicating this auto message each time user re-opens the semester.
+                if not self.chat_history:
+                    self.chat_history.append({"role":"assistant","content":today_msg})
+                    self._save_message(uid,"assistant",today_msg)
             else:
                 self.is_generating_plan = True
                 gen_msg = "AI is generating your personalized 110 day study plan please wait"
@@ -1356,10 +1789,12 @@ Subjects:\n{courses_text}"""
         self.chat_input = ""
         self.is_processing = True
 
-        if not self.is_premium_1 and not self.is_premium_2:
+        if (not self.has_premium_access) and (not self.is_in_trial):
             self._increment_daily_count(uid)
 
         model_to_use = self.active_model_name
+        adaptive_profile = (self.adaptive_profile or "").strip() or self._get_adaptive_profile(uid)
+        self.adaptive_profile = adaptive_profile
 
         try:
             self.chat_history.append({"role": "user", "content": user_msg})
@@ -1478,6 +1913,7 @@ Subjects:\n{courses_text}"""
 Current context:
 - Day {day}/110 | Subject: {entry.get("subject","")} | Unit: {entry.get("unit","")} | Topic: {current_topic}
 - Student memory: {scope_summary}
+- Adaptive profile from previous chats: {adaptive_profile}
 - Recent conversation: {recent_text}
 - Past relevant chat (db search): {past_hits}
 - Student just said: {user_msg}
@@ -1504,7 +1940,8 @@ Your response style rules:
 15. If the student makes a mistake, correct gently — say "Almost! Try thinking of it this way..."
 16. Always refer to the student by name: {self.name}
 17. Acknowledge progress occasionally — remind {self.name} they are on Day {day}/110 and how far they've come
-18. If {self.name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy"""
+18. If {self.name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
+19. Adapt to the adaptive profile above for pace, explanation depth, and examples."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
@@ -1512,42 +1949,49 @@ Your response style rules:
                 yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
                 buf = ""
-                last_push = 0
                 last_scroll = 0
                 final_text = ""
+                groq_messages = [{"role": "user", "content": teach_prompt}]
 
                 try:
                     async for piece in _groq_stream_async(
                         model_to_use,
-                        [{"role": "user", "content": teach_prompt}],
+                        groq_messages,
                         max_tokens=2048,
                     ):
                         buf += piece
 
-                        if len(buf) - last_push >= 40:
-                            self.chat_history[assistant_index]["content"] = buf
-                            last_push = len(buf)
+                        safe_live_text = sanitize_for_ui(buf)
+                        if safe_live_text != buf:
+                            final_text = safe_live_text
+                            self.chat_history[assistant_index]["content"] = final_text
                             yield
+                            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                            break
+
+                        self.chat_history[assistant_index]["content"] = buf
+                        yield
 
                         if len(buf) - last_scroll >= 220:
                             last_scroll = len(buf)
                             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
-                    final_text = buf.strip() or "Empty reply please try again"
-                    self.chat_history[assistant_index]["content"] = final_text
+                    if not final_text:
+                        final_text = sanitize_for_ui(buf.strip() or "Empty reply please try again")
+                        self.chat_history[assistant_index]["content"] = final_text
 
                 except Exception as e:
-                    print(f"ERROR Groq stream: {e}")
-                    final_text = "Something went wrong reaching the AI"
+                    print(f"ERROR stream: {e}")
+                    final_text = friendly_groq_error(e)
                     self.chat_history[assistant_index]["content"] = final_text
 
                 finally:
                     self._save_message(uid, "assistant", final_text)
+                    _append_training_example(uid, self.active_scope, user_msg, final_text)
                     self.is_processing = False
-
-                    await self._maybe_auto_update_scope_summary(uid, scope)
+                    await self._maybe_auto_update_scope_summary(uid, self.active_scope)
                     await self._maybe_auto_update_global_memory(uid)
-
+                    await self._maybe_auto_update_adaptive_profile(uid)
                     yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
                 return
@@ -1567,6 +2011,7 @@ Your response style rules:
 Student profile:
 - Degree: {self.degree} | Year: {self.selected_year} | Semester: {self.selected_semester}
 - Memory: {self.memory_summary}
+- Adaptive profile from previous chats: {adaptive_profile}
 - Scope summary: {scope_summary}
 - All scopes: {all_scopes}
 - Today's plan: {self.today_plan}
@@ -1597,7 +2042,8 @@ Your response style rules:
 14. Never start a response with "Great question!" or "Certainly!" — just answer directly
 15. If the student makes a mistake, correct gently — say "Almost! Try thinking of it this way..."
 16. Always refer to the student by name: {self.name}
-17. If {self.name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy"""
+17. If {self.name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
+18. Adapt to the adaptive profile above for pace, explanation depth, and examples."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
@@ -1605,42 +2051,48 @@ Your response style rules:
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
         buf = ""
-        last_push = 0
         last_scroll = 0
         final_text = ""
 
         try:
             async for piece in _groq_stream_async(
                 model_to_use,
-                [{"role": "user", "content": prompt}],
+                [{"role": "user", "content": prompt}],  # or prompt for home mode
                 max_tokens=2048,
             ):
                 buf += piece
 
-                if len(buf) - last_push >= 40:
-                    self.chat_history[assistant_index]["content"] = buf
-                    last_push = len(buf)
+                safe_live_text = sanitize_for_ui(buf)
+                if safe_live_text != buf:
+                    final_text = safe_live_text
+                    self.chat_history[assistant_index]["content"] = final_text
                     yield
+                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    break
+
+                self.chat_history[assistant_index]["content"] = buf
+                yield
 
                 if len(buf) - last_scroll >= 220:
                     last_scroll = len(buf)
                     yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
-            final_text = buf.strip() or "Empty reply please try again"
-            self.chat_history[assistant_index]["content"] = final_text
+            if not final_text:
+                final_text = sanitize_for_ui(buf.strip() or "Empty reply please try again")
+                self.chat_history[assistant_index]["content"] = final_text
 
         except Exception as e:
-            print(f"ERROR Groq home stream: {e}")
-            final_text = "Something went wrong reaching the AI"
+            print(f"ERROR stream: {e}")
+            final_text = friendly_groq_error(e)
             self.chat_history[assistant_index]["content"] = final_text
 
         finally:
             self._save_message(uid, "assistant", final_text)
+            _append_training_example(uid, self.active_scope, user_msg, final_text)
             self.is_processing = False
-
             await self._maybe_auto_update_scope_summary(uid, self.active_scope)
             await self._maybe_auto_update_global_memory(uid)
-
+            await self._maybe_auto_update_adaptive_profile(uid)
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
         return
@@ -1917,41 +2369,142 @@ def pricing_modal() -> rx.Component:
             rx.box(
                 rx.button(
                     "✕", on_click=AppState.close_pricing_modal,
-                    position="absolute", top="16px", right="20px",
+                    position="absolute", top="16px", right="16px",
                     background="rgba(255,255,255,0.08)", border="none", color="rgba(255,255,255,0.6)",
                     font_size="1.1rem", border_radius="8px", width="36px", height="36px", cursor="pointer",
                     style={"_hover": {"background": "rgba(255,255,255,0.15)", "color": "white"}},
                 ),
-                rx.vstack(
-                    rx.text("Upgrade Alex AI", font_size="1.7rem", font_weight="800", color="white", letter_spacing="-0.5px"),
-                    rx.text("Unlock unlimited learning — no daily caps, faster responses.", font_size="0.88rem", color="rgba(255,255,255,0.45)", text_align="center", max_width="380px"),
-                    spacing="2", align="center", margin_bottom="2em",
-                ),
                 rx.hstack(
-                    plan_card(plan_num=1, icon="⚡", title="Premium Fast", price="200", period="/month", model_name="llama-3.3-70b-fast",
-                        features=["Unlimited daily messages","Fast model","All semester modes","Priority response","Chat history saved"],
-                        gradient="linear-gradient(135deg,#b45309,#f59e0b)", glow="0 0 24px rgba(245,158,11,0.45)",
-                        is_recommended=False, is_current=AppState.is_premium_1),
-                    plan_card(plan_num=2, icon="👑", title="Premium Pro", price="500", period="/month", model_name="llama-3.3-70b-pro",
-                        features=["Unlimited daily messages","Powerful Pro model","Deeper explanations","All semester modes","Priority response"],
-                        gradient="linear-gradient(135deg,#7c3aed,#a855f7)", glow="0 0 28px rgba(168,85,247,0.5)",
-                        is_recommended=True, is_current=AppState.is_premium_2),
-                    spacing="5", justify="center", align="start", flex_wrap="wrap",
+                    rx.vstack(
+                        rx.text("Alex AI Premium", font_size="1.1rem", font_weight="700", color="white"),
+                        rx.text("LKR 200.00", font_size="2.1rem", font_weight="800", color="white"),
+                        rx.text("per month", color="rgba(255,255,255,0.55)", font_size="0.85rem"),
+                        rx.box(height="8px"),
+                        rx.text("• Unlimited daily messages", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
+                        rx.text("• Same Groq model, no daily cap", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
+                        rx.text("• Full semester access", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
+                        rx.text("• Chat history saved", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
+                        spacing="2",
+                        align="start",
+                        width="48%",
+                        min_width="280px",
+                    ),
+                    rx.vstack(
+                        rx.box(
+                            rx.box(
+                                width="300px",
+                                height="170px",
+                                position="absolute",
+                                top="50%",
+                                left="50%",
+                                transform="translate(-50%, -50%)",
+                                border_radius="999px",
+                                background="radial-gradient(ellipse at center, rgba(34,197,94,0.18) 0%, rgba(34,197,94,0.05) 55%, transparent 100%)",
+                                style={"filter": "blur(16px)"},
+                            ),
+                            rx.box(
+                                width="220px",
+                                height="220px",
+                                position="absolute",
+                                top="50%",
+                                left="50%",
+                                transform="translate(-50%, -52%)",
+                                border_radius="999px",
+                                background="radial-gradient(circle at center, rgba(34,197,94,0.26) 0%, rgba(34,197,94,0.08) 42%, transparent 100%)",
+                                style={"filter": "blur(8px)"},
+                            ),
+                            rx.image(
+                                src="/a_logo.png",
+                                width="128px",
+                                height="128px",
+                                object_fit="contain",
+                                opacity="0.88",
+                                style={"filter": "drop-shadow(0 0 18px rgba(34,197,94,0.42)) drop-shadow(0 0 36px rgba(34,197,94,0.28))"},
+                            ),
+                            width="100%",
+                            height="170px",
+                            position="relative",
+                            overflow="visible",
+                            display="flex",
+                            align_items="center",
+                            justify_content="center",
+                            style={"background": "transparent"},
+                        ),
+                        rx.text("Upgrade Alex AI", font_size="1.55rem", font_weight="800", color="white"),
+                        rx.text(
+                            "New users get 3 days trial with unlimited messages. After trial, free mode is 5 messages/day.",
+                            color="rgba(255,255,255,0.6)",
+                            font_size="0.88rem",
+                            text_align="center",
+                        ),
+                        rx.cond(
+                            AppState.is_in_trial & ~AppState.has_premium_access,
+                            rx.text(
+                                "Trial active: " + AppState.trial_days_left.to_string() + " day(s) left",
+                                color="#86efac",
+                                font_size="0.82rem",
+                            ),
+                            rx.fragment(),
+                        ),
+                        rx.cond(
+                            AppState.has_premium_access,
+                            rx.box(
+                                rx.text("✓ Premium is already active", color="#86efac", font_weight="700", text_align="center"),
+                                width="100%",
+                                padding="12px",
+                                border_radius="12px",
+                                border="1px solid rgba(134,239,172,0.45)",
+                                background="rgba(22,101,52,0.2)",
+                            ),
+                            rx.button(
+                                rx.cond(
+                                    AppState.payment_processing,
+                                    rx.hstack(rx.spinner(size="1", color="white"), rx.text("Redirecting..."), spacing="2"),
+                                    rx.text("Continue to Secure Checkout"),
+                                ),
+                                on_click=AppState.initiate_payment(1),
+                                width="100%",
+                                height="52px",
+                                border_radius="12px",
+                                is_disabled=AppState.payment_processing,
+                                style={
+                                    "background": "linear-gradient(135deg,#16a34a,#22c55e)",
+                                    "border": "none",
+                                    "color": "white",
+                                    "font_weight": "700",
+                                    "cursor": "pointer",
+                                    "_hover": {"filter": "brightness(1.08)"},
+                                },
+                            ),
+                        ),
+                        rx.text(
+                            "Secure checkout via PayHere",
+                            color="rgba(255,255,255,0.35)",
+                            font_size="0.75rem",
+                        ),
+                        spacing="3",
+                        align="center",
+                        width="48%",
+                        min_width="280px",
+                    ),
+                    width="100%",
+                    align="stretch",
+                    spacing="4",
+                    justify="between",
+                    flex_wrap="wrap",
                 ),
                 rx.cond(
                     AppState.payment_error != "",
                     rx.box(
                         rx.text("⚠️  " + AppState.payment_error, color="#fca5a5", font_size="0.82rem", text_align="center"),
                         background="rgba(239,68,68,0.1)", border="1px solid rgba(239,68,68,0.3)",
-                        border_radius="10px", padding="10px 20px", margin_top="1.5em", width="100%", max_width="580px",
+                        border_radius="10px", padding="10px 20px", margin_top="1em", width="100%",
                     ),
                     rx.fragment(),
                 ),
-                rx.text("🔒 Secure checkout via PayHere  ·  Cancel anytime  ·  Instant activation",
-                    font_size="0.72rem", color="rgba(255,255,255,0.25)", text_align="center", margin_top="2em"),
                 position="relative", background="rgba(10,10,14,0.97)",
                 border="1px solid rgba(255,255,255,0.08)", border_radius="24px", padding="2.5em 2em",
-                display="flex", flex_direction="column", align_items="center", width="100%", max_width="680px",
+                display="flex", flex_direction="column", align_items="center", width="100%", max_width="820px",
                 style={"box_shadow": "0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)", "backdrop_filter": "blur(20px)"},
             ),
             position="fixed", top="0", left="0", width="100vw", height="100vh", z_index="1000",
@@ -1971,14 +2524,13 @@ def tier_status_bar() -> rx.Component:
             AppState.tier_label,
             variant="solid",
             style={
-                "background": rx.cond(AppState.is_premium_2, "linear-gradient(90deg,#7c3aed,#a855f7)",
-                    rx.cond(AppState.is_premium_1, "linear-gradient(90deg,#b45309,#f59e0b)",
-                        rx.cond(AppState.is_in_trial, "linear-gradient(90deg,#065f46,#10b981)", "rgba(255,255,255,0.08)"))),
+                "background": rx.cond(AppState.has_premium_access, "linear-gradient(90deg,#b45309,#f59e0b)",
+                        rx.cond(AppState.is_in_trial, "linear-gradient(90deg,#065f46,#10b981)", "rgba(255,255,255,0.08)")),
                 "color": "white", "font_size": "0.7rem", "padding": "2px 10px", "border_radius": "20px",
             },
         ),
         rx.cond(
-            ~AppState.is_premium_1 & ~AppState.is_premium_2 & ~AppState.is_in_trial,
+            ~AppState.has_premium_access & ~AppState.is_in_trial,
             rx.text(AppState.messages_left_today.to_string() + f" / {FREE_DAILY_LIMIT} messages left today",
                     color="rgba(255,255,255,0.4)", font_size="0.72rem"),
             rx.fragment(),
@@ -2158,23 +2710,26 @@ def active_chat_panel() -> rx.Component:
                 rx.cond(
                     AppState.is_processing,
                     rx.html("""
-                        <div style="width:24px;height:24px;position:relative;margin-bottom:10px;">
-                          <style>
-                            @keyframes alexorbit {
-                              from { transform: rotate(0deg) translateX(10px); }
-                              to   { transform: rotate(360deg) translateX(10px); }
-                            }
-                          </style>
-                          <div style="
-                            width:4px;height:4px;
-                            background:#FFD700;
-                            border-radius:50%;
-                            position:absolute;
-                            top:50%;left:50%;
-                            margin-top:-2px;margin-left:-2px;
-                            animation:alexorbit 0.3s linear infinite;
-                            box-shadow:0 0 4px rgba(255,215,0,0.9);
-                          "></div>
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                            <div style="width:24px;height:24px;position:relative;flex-shrink:0;">
+                                <style>
+                                    @keyframes alexorbit {
+                                        from { transform: rotate(0deg) translateX(10px); }
+                                        to   { transform: rotate(360deg) translateX(10px); }
+                                    }
+                                </style>
+                                <div style="
+                                    width:4px;height:4px;
+                                    background:#FFD700;
+                                    border-radius:50%;
+                                    position:absolute;
+                                    top:50%;left:50%;
+                                    margin-top:-2px;margin-left:-2px;
+                                    animation:alexorbit 0.3s linear infinite;
+                                    box-shadow:0 0 4px rgba(255,215,0,0.9);
+                                "></div>
+                            </div>
+                            <span style="color:rgba(255,255,255,0.35);font-size:0.82rem;font-weight:300;letter-spacing:0.5px;">Alex is thinking...</span>
                         </div>
                     """),
                 ),
@@ -2288,52 +2843,40 @@ def sidebar_plan_widget() -> rx.Component:
     return rx.vstack(
         rx.image(src="/a_logo.png", width="80px", height="80px", object_fit="contain", border_radius="12px", opacity="0.85", margin_x="auto"),
         rx.cond(
-            AppState.is_premium_2,
+            AppState.has_premium_access,
             rx.box(
                 rx.vstack(
-                    rx.text("👑 Premium Pro", font_weight="800", font_size="0.95rem", color="white", text_align="center"),
-                    rx.text("You're on the Pro plan", color="rgba(255,255,255,0.45)", font_size="0.72rem", text_align="center"),
+                    rx.text("⚡ Premium", font_weight="800", font_size="0.95rem", color="white", text_align="center"),
+                    rx.text("Unlimited messages active", color="rgba(255,255,255,0.45)", font_size="0.72rem", text_align="center"),
                     spacing="1", align_items="center", width="100%",
                 ),
                 on_click=AppState.open_pricing_modal, width="100%", padding="12px 16px", border_radius="14px", cursor="pointer",
-                style={"background":"linear-gradient(135deg,#7c3aed,#a855f7)","box_shadow":"0 0 20px rgba(168,85,247,0.35)","transition":"all 0.2s ease","_hover":{"filter":"brightness(1.1)","transform":"translateY(-1px)"}},
+                style={"background":"linear-gradient(135deg,#b45309,#f59e0b)","box_shadow":"0 0 20px rgba(245,158,11,0.35)","transition":"all 0.2s ease","_hover":{"filter":"brightness(1.1)","transform":"translateY(-1px)"}},
             ),
             rx.cond(
-                AppState.is_premium_1,
+                AppState.is_in_trial,
                 rx.box(
                     rx.vstack(
-                        rx.text("⚡ Premium Fast", font_weight="800", font_size="0.95rem", color="white", text_align="center", style={"text_shadow":"0 1px 4px rgba(0,0,0,0.6)"}),
-                        rx.text("Active plan", color="rgba(255,255,255,0.45)", font_size="0.72rem", text_align="center"),
+                        rx.text("⚡ Premium Trial", font_weight="800", font_size="0.95rem", color="white", text_align="center", style={"text_shadow":"0 1px 4px rgba(0,0,0,0.6)"}),
+                        rx.text("Day access left: " + AppState.trial_days_left.to_string(), color="rgba(255,255,255,0.55)", font_size="0.72rem", text_align="center"),
                         spacing="1", align_items="center", width="100%",
                     ),
                     on_click=AppState.open_pricing_modal, width="100%", padding="12px 16px", border_radius="14px", cursor="pointer",
                     style={"background":"linear-gradient(135deg,#111111 0%,#2a2a2a 50%,#1a1a1a 100%)","transition":"all 0.2s ease","_hover":{"filter":"brightness(1.2)","transform":"translateY(-1px)"}},
                 ),
-                rx.cond(
-                    AppState.is_in_trial,
-                    rx.box(
-                        rx.vstack(
-                            rx.text("⚡ Premium Fast", font_weight="800", font_size="0.95rem", color="white", text_align="center", style={"text_shadow":"0 1px 4px rgba(0,0,0,0.6)"}),
-                            rx.text("Trial · " + AppState.trial_days_left.to_string() + " days left", color="rgba(255,255,255,0.55)", font_size="0.72rem", text_align="center"),
-                            spacing="1", align_items="center", width="100%",
-                        ),
-                        on_click=AppState.open_pricing_modal, width="100%", padding="12px 16px", border_radius="14px", cursor="pointer",
-                        style={"background":"linear-gradient(135deg,#111111 0%,#2a2a2a 50%,#1a1a1a 100%)","transition":"all 0.2s ease","_hover":{"filter":"brightness(1.2)","transform":"translateY(-1px)"}},
+                rx.vstack(
+                    rx.button(
+                        rx.text("Upgrade to Premium", font_weight="700", font_size="0.88rem", color="white", style={"text_shadow":"0 1px 4px rgba(0,0,0,0.6)"}),
+                        on_click=AppState.open_pricing_modal, width="100%", height="52px", border_radius="14px",
+                        style={
+                            "background":"linear-gradient(135deg,#0d0d0d 0%,#252525 50%,#1a1a1a 100%)","border":"none","cursor":"pointer",
+                            "box_shadow":"0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)","transition":"all 0.25s ease",
+                            "_hover":{"box_shadow":"0 6px 28px rgba(255,255,255,0.1)","transform":"translateY(-2px)","filter":"brightness(1.2)"},
+                            "_active":{"transform":"translateY(0)"},
+                        },
                     ),
-                    rx.vstack(
-                        rx.button(
-                            rx.text("Upgrade to Premium", font_weight="700", font_size="0.88rem", color="white", style={"text_shadow":"0 1px 4px rgba(0,0,0,0.6)"}),
-                            on_click=AppState.open_pricing_modal, width="100%", height="52px", border_radius="14px",
-                            style={
-                                "background":"linear-gradient(135deg,#0d0d0d 0%,#252525 50%,#1a1a1a 100%)","border":"none","cursor":"pointer",
-                                "box_shadow":"0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)","transition":"all 0.25s ease",
-                                "_hover":{"box_shadow":"0 6px 28px rgba(255,255,255,0.1)","transform":"translateY(-2px)","filter":"brightness(1.2)"},
-                                "_active":{"transform":"translateY(0)"},
-                            },
-                        ),
-                        rx.text("Unlock unlimited access", color="rgba(255,255,255,0.3)", font_size="0.68rem", text_align="center"),
-                        spacing="2", align_items="center", width="100%",
-                    ),
+                    rx.text("Unlock unlimited access", color="rgba(255,255,255,0.3)", font_size="0.68rem", text_align="center"),
+                    spacing="2", align_items="center", width="100%",
                 ),
             ),
         ),
@@ -2506,40 +3049,158 @@ def semester_page():
                     rx.text("🧠 Generating your 110-day study plan...", color="#00ff88", font_size="1.2em"),
                     spacing="4",
                 ),
-                padding_top="2em", flex_shrink="0",
+                position="absolute",
+                top="80px",
+                left="0",
+                right="0",
+                z_index="10",
             ),
         ),
-        rx.box(chat_panel(), width="100%", flex="1", min_height="0", overflow="hidden"),
+        rx.box(
+            chat_panel(),
+            width="100%",
+            flex="1",
+            min_height="0",
+            overflow="hidden",
+            position="relative",
+        ),
         rx.html("<style>@keyframes bounce{0%,100%{transform:translateY(0);opacity:0.4;}50%{transform:translateY(-6px);opacity:1;}}</style>"),
         width="100%", height="100vh", max_height="100vh", display="flex", flex_direction="column", overflow="hidden",
         background="radial-gradient(circle at bottom right,#002d1a 0%,#050505 100%)",
     )
 
+def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallable:
+    def protected_page():
+        return rx.fragment(
+            rx.cond(
+                AppState.is_hydrated & AppState.is_authenticated,
+                page(),
+                rx.center(rx.text("Loading...", on_mount=AppState.auth_redir)),
+            )
+        )
+
+    protected_page.__name__ = page.__name__
+    return protected_page
+
+
+def _auth_error(text_var: rx.Var) -> rx.Component:
+    return rx.cond(
+        text_var != "",
+        rx.callout(text_var, icon="triangle_alert", color_scheme="red", role="alert", width="100%"),
+        rx.fragment(),
+    )
+
+
+def secure_login_form() -> rx.Component:
+    return rx.form(
+        rx.vstack(
+            rx.heading("Login into your Account", size="7"),
+            _auth_error(AppState.login_error),
+            rx.text("Username"),
+            rx.input(id="username", name="username", width="100%"),
+            rx.text("Password"),
+            rx.input(id="password", name="password", type="password", width="100%"),
+            rx.input(name="csrf_token", type="hidden", value=AppState.auth_csrf_token),
+            rx.button("Sign in", width="100%"),
+            rx.hstack(
+                rx.link("Register", on_click=lambda: rx.redirect(auth_routes.REGISTER_ROUTE)),
+                rx.spacer(),
+                rx.link("Reset Password", on_click=lambda: rx.redirect("/reset-password")),
+                width="100%",
+            ),
+            min_width="50vw",
+            max_width="520px",
+            spacing="3",
+        ),
+        on_submit=AppState.handle_login,
+    )
+
+
+def secure_register_form() -> rx.Component:
+    return rx.form(
+        rx.vstack(
+            rx.heading("Create an account", size="7"),
+            _auth_error(AppState.register_error),
+            rx.cond(
+                AppState.register_success,
+                rx.callout("Registration successful. You can now sign in.", icon="check", color_scheme="green", width="100%"),
+                rx.fragment(),
+            ),
+            rx.text("Username"),
+            rx.input(id="username", name="username", width="100%"),
+            rx.text("Password"),
+            rx.input(id="password", name="password", type="password", width="100%"),
+            rx.text("Confirm Password"),
+            rx.input(id="confirm_password", name="confirm_password", type="password", width="100%"),
+            rx.input(name="csrf_token", type="hidden", value=AppState.auth_csrf_token),
+            rx.button("Sign up", width="100%"),
+            rx.center(rx.link("Login", on_click=lambda: rx.redirect(auth_routes.LOGIN_ROUTE)), width="100%"),
+            min_width="50vw",
+            max_width="520px",
+            spacing="3",
+        ),
+        on_submit=AppState.handle_registration,
+    )
+
+
+def secure_reset_form() -> rx.Component:
+    return rx.form(
+        rx.vstack(
+            rx.heading("Reset Password", size="7"),
+            _auth_error(AppState.reset_error),
+            rx.cond(
+                AppState.reset_success,
+                rx.callout("Password updated. Please login with the new password.", icon="check", color_scheme="green", width="100%"),
+                rx.fragment(),
+            ),
+            rx.text("Username"),
+            rx.input(id="username", name="username", width="100%"),
+            rx.text("Current Password"),
+            rx.input(id="current_password", name="current_password", type="password", width="100%"),
+            rx.text("New Password"),
+            rx.input(id="new_password", name="new_password", type="password", width="100%"),
+            rx.text("Confirm New Password"),
+            rx.input(id="confirm_new_password", name="confirm_new_password", type="password", width="100%"),
+            rx.input(name="csrf_token", type="hidden", value=AppState.auth_csrf_token),
+            rx.button("Update Password", width="100%"),
+            rx.center(rx.link("Back to Login", on_click=lambda: rx.redirect(auth_routes.LOGIN_ROUTE)), width="100%"),
+            min_width="50vw",
+            max_width="520px",
+            spacing="3",
+        ),
+        on_submit=AppState.handle_password_reset,
+    )
+
+
+def _auth_page_shell(content: rx.Component) -> rx.Component:
+    return rx.box(
+        rx.image(src="/bg_image.png", position="fixed", top="0", left="0", width="100vw", height="100vh", object_fit="cover", z_index="-1"),
+        rx.center(rx.card(content), height="100vh", z_index="1"),
+        password_eye_script(),
+        width="100vw", height="100vh", position="relative", overflow="hidden",
+        on_mount=AppState.init_auth_forms,
+    )
+
+
+def custom_login_page():
+    return _auth_page_shell(secure_login_form())
+
+
+def custom_register_page():
+    return _auth_page_shell(secure_register_form())
+
+
+def reset_password_page():
+    return _auth_page_shell(secure_reset_form())
+
+
 @rx.page(route="/", title="Uni | Index", on_load=AppState.on_load)
-@reflex_local_auth.require_login
+@require_app_login
 def index():
     return rx.cond(
         AppState.is_started,
         rx.cond(AppState.view_mode == "home", home_page(), semester_page()),
         onboarding_page(),
-    )
-
-
-def custom_login_page():
-    return rx.box(
-        rx.image(src="/bg_image.png", position="fixed", top="0", left="0", width="100vw", height="100vh", object_fit="cover", z_index="-1"),
-        rx.center(reflex_local_auth.pages.login_page(), height="100vh", z_index="1"),
-        password_eye_script(),
-        width="100vw", height="100vh", position="relative", overflow="hidden",
-    )
-
-
-def custom_register_page():
-    return rx.box(
-        rx.image(src="/bg_image.png", position="fixed", top="0", left="0", width="100vw", height="100vh", object_fit="cover", z_index="-1"),
-        rx.center(reflex_local_auth.pages.register_page(), height="100vh", z_index="1"),
-        password_eye_script(),
-        width="100vw", height="100vh", position="relative", overflow="hidden",
     )
 
 
@@ -2555,8 +3216,50 @@ app = rx.App(
         }
     },
 )
+oauth = OAuth()
+oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
+@app.api.get("/auth/google/start")
+async def google_start(request: Request):
+    redirect_uri = str(request.url_for("google_callback"))
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@app.api.get("/auth/google/callback", name="google_callback")
+async def google_callback(request: Request):
+    token = await oauth.google.authorize_access_token(request)
+    userinfo = await oauth.google.parse_id_token(request, token)
+    return RedirectResponse(url="/")
+
+try:
+    rx.Model.create_all()
+except Exception as e:
+    print(f"ERROR create_all: {e}")
 
 from starlette.routing import Route
+
+
+@app._api.middleware("http")
+async def enforce_https_middleware(request: Request, call_next):
+    host = (request.headers.get("host", "").split(":")[0] or "").lower()
+    proto = (request.headers.get("x-forwarded-proto", "") or "").lower()
+    is_local = host in {"localhost", "127.0.0.1", "0.0.0.0"} or host.endswith(".local")
+    is_https = request.url.scheme == "https" or proto == "https"
+
+    if ENFORCE_HTTPS and (not is_local) and (not is_https):
+        secure_url = request.url.replace(scheme="https")
+        return RedirectResponse(url=str(secure_url), status_code=307)
+
+    response = await call_next(request)
+    if ENFORCE_HTTPS and is_https:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 
 async def _payhere_notify_wrapper(request):
     return await payhere_notify(request)
@@ -2568,5 +3271,6 @@ app._api.routes.append(
     Route("/health", health_check, methods=["GET"])
 )
 
-app.add_page(custom_login_page, route=reflex_local_auth.routes.LOGIN_ROUTE, title="Login")
-app.add_page(custom_register_page, route=reflex_local_auth.routes.REGISTER_ROUTE, title="Register")
+app.add_page(custom_login_page, route=auth_routes.LOGIN_ROUTE, title="Login")
+app.add_page(custom_register_page, route=auth_routes.REGISTER_ROUTE, title="Register")
+app.add_page(reset_password_page, route="/reset-password", title="Reset Password")
