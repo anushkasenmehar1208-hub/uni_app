@@ -10,6 +10,8 @@ import asyncio
 import json
 import re
 import secrets
+from fastapi import FastAPI, Request
+from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
 from pathlib import Path
@@ -3208,70 +3210,41 @@ def index():
 # ──────────────────────────────────────────────────────────────
 # App init
 # ──────────────────────────────────────────────────────────────
-app = rx.App(
-    style={
-        "@keyframes pulse_glow": {
-            "0%": {"box-shadow": "0 0 0px rgba(0,255,0,0)"},
-            "50%": {"box-shadow": "0 0 20px rgba(0,255,0,0.5)"},
-            "100%": {"box-shadow": "0 0 0px rgba(0,255,0,0)"},
-        }
-    },
-)
-@app.api.get("/ping")
-async def ping():
-    return {"ok": True}
+api = FastAPI()
+api.add_middleware(SessionMiddleware,secret_key=os.getenv("SESSION_SECRET","dev"))
 
-@app.api.get("/ping")
-async def ping():
-    return {"ok": True}
-from starlette.middleware.sessions import SessionMiddleware
-
-app.api.add_middleware(
-    SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET", "dev"),
-)
 oauth = OAuth()
 oauth.register(
     name="google",
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
+    client_kwargs={"scope":"openid email profile"}
 )
-
-@app.api.get("/auth/google/start")
+app = rx.App(
+    api_transformer=api,
+    style={
+        "@keyframes pulse_glow": {
+            "0%": {"box-shadow": "0 0 0px rgba(0,255,0,0)"},
+            "50%": {"box-shadow": "0 0 20px rgba(0,255,0,0.5)", "opacity": "0.8"},
+            "100%": {"box-shadow": "0 0 0px rgba(0,255,0,0)"},
+        }
+    },
+)
+@api.get("/auth/google/start")
 async def google_start(request: Request):
-    redirect_uri = str(request.url_for("google_callback"))
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    return await oauth.google.authorize_redirect(request,os.getenv("GOOGLE_REDIRECT_URI"))
 
-@app.api.get("/auth/google/callback", name="google_callback")
+@api.get("/auth/google/callback")
 async def google_callback(request: Request):
     token = await oauth.google.authorize_access_token(request)
-    userinfo = await oauth.google.parse_id_token(request, token)
+    userinfo = await oauth.google.parse_id_token(request,token)
     return JSONResponse(userinfo)
+
 try:
     rx.Model.create_all()
 except Exception as e:
     print(f"ERROR create_all: {e}")
-
-from starlette.routing import Route
-
-
-@app._api.middleware("http")
-async def enforce_https_middleware(request: Request, call_next):
-    host = (request.headers.get("host", "").split(":")[0] or "").lower()
-    proto = (request.headers.get("x-forwarded-proto", "") or "").lower()
-    is_local = host in {"localhost", "127.0.0.1", "0.0.0.0"} or host.endswith(".local")
-    is_https = request.url.scheme == "https" or proto == "https"
-
-    if ENFORCE_HTTPS and (not is_local) and (not is_https):
-        secure_url = request.url.replace(scheme="https")
-        return RedirectResponse(url=str(secure_url), status_code=307)
-
-    response = await call_next(request)
-    if ENFORCE_HTTPS and is_https:
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    return response
 
 
 async def _payhere_notify_wrapper(request):
