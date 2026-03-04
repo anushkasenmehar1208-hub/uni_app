@@ -3,4 +3,10 @@
 @event path /_event*
 reverse_proxy @event 127.0.0.1:8000
 
+@auth path /auth/google/*
+reverse_proxy @auth 127.0.0.1:8000
+
+@api path /api/*
+reverse_proxy @api 127.0.0.1:8000
+
 reverse_proxy 127.0.0.1:3001
