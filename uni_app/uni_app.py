@@ -3217,6 +3217,9 @@ app = rx.App(
         }
     },
 )
+@app.api.get("/ping")
+async def ping():
+    return {"ok": True}
 from starlette.middleware.sessions import SessionMiddleware
 
 app.api.add_middleware(
