@@ -2,32 +2,31 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-print("google id present", bool(os.getenv("GOOGLE_CLIENT_ID")))
-print("google secret present", bool(os.getenv("GOOGLE_CLIENT_SECRET")))
 import threading
 import hashlib
 import asyncio
 import json
+import base64
 import re
 import secrets
-from fastapi import FastAPI, Request
-from starlette.middleware.sessions import SessionMiddleware
-from starlette.responses import RedirectResponse
-from authlib.integrations.starlette_client import OAuth
+from urllib.parse import urlencode
+from fastapi import Request
 from pathlib import Path
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import Any, Optional
 
 import reflex as rx
-from fastapi.responses import JSONResponse
+import httpx
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
-from fastapi import Request
 from fastapi.responses import PlainTextResponse, RedirectResponse
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import reflex_local_auth
 from reflex_local_auth import routes as auth_routes
 from reflex_local_auth.local_auth import AUTH_TOKEN_LOCAL_STORAGE_KEY
+from reflex_local_auth.auth_session import LocalAuthSession
 from reflex_local_auth.user import LocalUser
+from starlette.routing import Route
 
 # ----------------------------
 # Groq setup
@@ -147,7 +146,7 @@ TRIAL_DAYS       = 3
 ADAPTIVE_PROFILE_SCOPE = "__adaptive_profile__"
 USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]{3,32}$")
 PASSWORD_MIN_LEN = 8
-LOGIN_MAX_ATTEMPTS = int(os.getenv("LOGIN_MAX_ATTEMPTS", "5"))
+LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
 AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "true").lower() == "true"
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
@@ -202,6 +201,20 @@ PAYHERE_MERCHANT_ID     = os.getenv("PAYHERE_MERCHANT_ID", "").strip()
 PAYHERE_MERCHANT_SECRET = os.getenv("PAYHERE_MERCHANT_SECRET", "").strip()
 PAYHERE_SANDBOX         = os.getenv("PAYHERE_SANDBOX", "true").lower() == "true"
 APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3001").rstrip("/")
+API_BASE_URL            = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
+GOOGLE_CLIENT_ID        = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_CLIENT_SECRET    = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
+GOOGLE_REDIRECT_URI     = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
+GOOGLE_OAUTH_ENABLED    = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+GOOGLE_START_URL        = f"{API_BASE_URL}/auth/google/start"
+AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
+SESSION_SECRET          = os.getenv("SESSION_SECRET", "change-me-in-production").strip() or "change-me-in-production"
+GOOGLE_AUTH_URL         = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL        = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_URL     = "https://openidconnect.googleapis.com/v1/userinfo"
+GOOGLE_STATE_MAX_AGE_SECONDS = 600
+GOOGLE_STRICT_STATE     = os.getenv("GOOGLE_STRICT_STATE", "false").lower() == "true"
+_google_state_serializer = URLSafeTimedSerializer(SESSION_SECRET, salt="google-oauth-state")
 
 PAYHERE_CHECKOUT_URL = (
     "https://sandbox.payhere.lk/pay/checkout"
@@ -217,6 +230,54 @@ PLANS = {
         "model":  GEMINI_FAST_MODEL,
     },
 }
+
+
+def _request_is_https(request: Request) -> bool:
+    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "").split(",")[0].strip().lower()
+    return proto == "https"
+
+
+def _google_callback_url(request: Request) -> str:
+    if GOOGLE_REDIRECT_URI:
+        return GOOGLE_REDIRECT_URI
+    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").split(",")[0].strip().lower()
+    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc).split(",")[0].strip()
+    return f"{proto}://{host}/auth/google/callback"
+
+
+def _google_username_from_sub(sub: str) -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9_.-]", "", sub or "")
+    if not cleaned:
+        cleaned = secrets.token_hex(8)
+    return f"google_{cleaned}"[:255]
+
+
+def _google_make_state() -> str:
+    return _google_state_serializer.dumps({"n": secrets.token_urlsafe(12)})
+
+
+def _google_state_is_valid(state: str) -> bool:
+    if not state:
+        return False
+    try:
+        _google_state_serializer.loads(state, max_age=GOOGLE_STATE_MAX_AGE_SECONDS)
+        return True
+    except (BadSignature, SignatureExpired):
+        return False
+
+
+def _id_token_payload(id_token: str) -> dict[str, Any]:
+    parts = (id_token or "").split(".")
+    if len(parts) < 2:
+        return {}
+    payload_b64 = parts[1]
+    pad = "=" * (-len(payload_b64) % 4)
+    try:
+        raw = base64.urlsafe_b64decode(payload_b64 + pad)
+        parsed = json.loads(raw.decode("utf-8"))
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
 
 
 # ----------------------------
@@ -505,13 +566,7 @@ async def health_check(request):
 # App State
 # ============================
 class AppState(reflex_local_auth.LocalAuthState):
-    auth_token: str = rx.Cookie(
-        name=AUTH_TOKEN_LOCAL_STORAGE_KEY,
-        path="/",
-        max_age=60 * 60 * 24 * 7,
-        secure=AUTH_COOKIE_SECURE,
-        same_site="strict",
-    )
+    app_auth_token: str = rx.LocalStorage(name=AUTH_TOKEN_LOCAL_STORAGE_KEY)
     auth_csrf_token: str = rx.SessionStorage(name="auth_csrf_token")
     post_login_redirect: str = ""
     login_error: str = ""
@@ -559,6 +614,10 @@ class AppState(reflex_local_auth.LocalAuthState):
     show_pricing_modal: bool = False
     payment_processing: bool = False
     payment_error: str = ""
+
+    @rx.var(cache=False)
+    def is_authenticated_now(self) -> bool:
+        return self._uid() >= 0
 
     # ----------------------------------------------------------------
     # NEW: is_empty_chat — True when no real conversation has started
@@ -772,10 +831,11 @@ class AppState(reflex_local_auth.LocalAuthState):
         if not self.is_hydrated:
             return AppState.auth_redir()  # type: ignore
         current_route = self.router.url.path
-        if not self.is_authenticated and current_route != auth_routes.LOGIN_ROUTE:
+        is_authed = self._uid() >= 0
+        if not is_authed and current_route != auth_routes.LOGIN_ROUTE:
             self.post_login_redirect = current_route
             return rx.redirect(auth_routes.LOGIN_ROUTE)
-        if self.is_authenticated and current_route in (
+        if is_authed and current_route in (
             auth_routes.LOGIN_ROUTE,
             auth_routes.REGISTER_ROUTE,
             "/reset-password",
@@ -820,6 +880,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
         self._clear_login_failures(username)
         self._login(int(user.id))
+        self.app_auth_token = self.auth_token
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
         return AppState.auth_redir()  # type: ignore
@@ -1036,8 +1097,22 @@ class AppState(reflex_local_auth.LocalAuthState):
         return mapping.get(self.selected_year, [])
 
     def _uid(self) -> int:
-        uid = self.authenticated_user.id
-        return int(uid) if uid is not None else -1
+        token = (self.app_auth_token or self.auth_token or "").strip()
+        if not token:
+            return -1
+        try:
+            with rx.session() as session:
+                auth_sess = session.exec(
+                    select(LocalAuthSession).where(
+                        LocalAuthSession.session_id == token,
+                        LocalAuthSession.expiration >= datetime.now(timezone.utc),
+                    )
+                ).one_or_none()
+                if auth_sess and auth_sess.user_id is not None:
+                    return int(auth_sess.user_id)
+        except Exception as e:
+            print(f"ERROR uid lookup: {e}")
+        return -1
 
     def _safe_role(self, role: str) -> str:
         return "assistant" if role == "bot" else role
@@ -1591,7 +1666,7 @@ Recent conversation:
 
     @rx.event
     async def on_load(self):
-        if not self.is_authenticated:
+        if self._uid() < 0:
             yield AppState.auth_redir
             return
         uid = self._uid()
@@ -2130,6 +2205,7 @@ Your response style rules:
 
     @rx.event
     def logout(self):
+        self.app_auth_token = ""
         return [reflex_local_auth.LocalAuthState.do_logout, rx.redirect(reflex_local_auth.routes.LOGIN_ROUTE)]
 
 
@@ -2260,6 +2336,25 @@ PASSWORD_EYE_JS = """(function(){function a(){return'<svg xmlns="http://www.w3.o
 
 def password_eye_script() -> rx.Component:
     return rx.script(PASSWORD_EYE_JS)
+
+
+AUTH_TOKEN_BOOTSTRAP_JS = f"""
+(function(){{
+  try {{
+    var u = new URL(window.location.href);
+    var token = u.searchParams.get("auth_token");
+    if(!token) return;
+    try {{
+      localStorage.setItem("{AUTH_TOKEN_LOCAL_STORAGE_KEY}", token);
+    }} catch(e) {{}}
+    u.searchParams.delete("auth_token");
+    window.location.replace("/");
+  }} catch(e) {{}}
+}})();
+"""
+
+def auth_token_bootstrap_script() -> rx.Component:
+    return rx.script(AUTH_TOKEN_BOOTSTRAP_JS)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -3076,7 +3171,7 @@ def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallabl
     def protected_page():
         return rx.fragment(
             rx.cond(
-                AppState.is_hydrated & AppState.is_authenticated,
+                AppState.is_hydrated & AppState.is_authenticated_now,
                 page(),
                 rx.center(rx.text("Loading...", on_mount=AppState.auth_redir)),
             )
@@ -3094,16 +3189,92 @@ def _auth_error(text_var: rx.Var) -> rx.Component:
     )
 
 
+AUTH_CARD_WIDTH = "min(92vw, 760px)"
+
+
+def _csrf_field() -> rx.Component:
+    return rx.input(
+        name="csrf_token",
+        type="hidden",
+        value=AppState.auth_csrf_token,
+        display="none",
+        width="0",
+        height="0",
+        opacity="0",
+    )
+
+
+def _google_inline_button() -> rx.Component:
+    return rx.cond(
+        GOOGLE_OAUTH_ENABLED,
+        rx.link(
+            rx.button(
+                rx.hstack(
+                    rx.box(
+                        "G",
+                        width="22px",
+                        height="22px",
+                        display="flex",
+                        align_items="center",
+                        justify_content="center",
+                        border_radius="9999px",
+                        background="linear-gradient(135deg,#ea4335,#4285f4)",
+                        color="white",
+                        font_weight="900",
+                        font_size="0.78rem",
+                        flex_shrink="0",
+                    ),
+                    rx.text("Continue with Google", font_weight="700", letter_spacing="0.2px"),
+                    align="center",
+                    justify="center",
+                    spacing="2",
+                    width="100%",
+                ),
+                width="100%",
+                type="button",
+                height="46px",
+                border_radius="12px",
+                background="linear-gradient(180deg,#f9fafb 0%,#eef2f7 100%)",
+                color="#0f172a",
+                border="1px solid rgba(148,163,184,0.45)",
+                box_shadow="0 10px 30px rgba(0,0,0,0.24)",
+                _hover={
+                    "background": "linear-gradient(180deg,#ffffff 0%,#f3f6fb 100%)",
+                    "transform": "translateY(-1px)",
+                },
+                _active={"transform": "translateY(0)"},
+            ),
+            href=GOOGLE_START_URL,
+            is_external=True,
+            width="100%",
+            text_decoration="none",
+        ),
+        rx.fragment(),
+    )
+
+
+def _or_divider() -> rx.Component:
+    return rx.hstack(
+        rx.box(height="1px", background="rgba(148,163,184,0.35)", flex="1"),
+        rx.text("or", color="rgba(226,232,240,0.85)", font_size="0.85rem", font_weight="600", padding="0 10px"),
+        rx.box(height="1px", background="rgba(148,163,184,0.35)", flex="1"),
+        width="100%",
+        align="center",
+    )
+
+
 def secure_login_form() -> rx.Component:
     return rx.form(
         rx.vstack(
             rx.heading("Login into your Account", size="7"),
             _auth_error(AppState.login_error),
+            _google_inline_button(),
+            rx.cond(GOOGLE_OAUTH_ENABLED, _or_divider(), rx.fragment()),
             rx.text("Username"),
             rx.input(id="username", name="username", width="100%"),
             rx.text("Password"),
             rx.input(id="password", name="password", type="password", width="100%"),
-            rx.input(name="csrf_token", type="hidden", value=AppState.auth_csrf_token),
+            _csrf_field(),
             rx.button("Sign in", width="100%"),
             rx.hstack(
                 rx.link("Register", on_click=lambda: rx.redirect(auth_routes.REGISTER_ROUTE)),
@@ -3111,11 +3282,11 @@ def secure_login_form() -> rx.Component:
                 rx.link("Reset Password", on_click=lambda: rx.redirect("/reset-password")),
                 width="100%",
             ),
-            min_width="50vw",
-            max_width="520px",
+            width="100%",
             spacing="3",
         ),
         on_submit=AppState.handle_login,
+        width="100%",
     )
 
 
@@ -3135,14 +3306,14 @@ def secure_register_form() -> rx.Component:
             rx.input(id="password", name="password", type="password", width="100%"),
             rx.text("Confirm Password"),
             rx.input(id="confirm_password", name="confirm_password", type="password", width="100%"),
-            rx.input(name="csrf_token", type="hidden", value=AppState.auth_csrf_token),
+            _csrf_field(),
             rx.button("Sign up", width="100%"),
             rx.center(rx.link("Login", on_click=lambda: rx.redirect(auth_routes.LOGIN_ROUTE)), width="100%"),
-            min_width="50vw",
-            max_width="520px",
+            width="100%",
             spacing="3",
         ),
         on_submit=AppState.handle_registration,
+        width="100%",
     )
 
 
@@ -3164,22 +3335,34 @@ def secure_reset_form() -> rx.Component:
             rx.input(id="new_password", name="new_password", type="password", width="100%"),
             rx.text("Confirm New Password"),
             rx.input(id="confirm_new_password", name="confirm_new_password", type="password", width="100%"),
-            rx.input(name="csrf_token", type="hidden", value=AppState.auth_csrf_token),
+            _csrf_field(),
             rx.button("Update Password", width="100%"),
             rx.center(rx.link("Back to Login", on_click=lambda: rx.redirect(auth_routes.LOGIN_ROUTE)), width="100%"),
-            min_width="50vw",
-            max_width="520px",
+            width="100%",
             spacing="3",
         ),
         on_submit=AppState.handle_password_reset,
+        width="100%",
     )
 
 
 def _auth_page_shell(content: rx.Component) -> rx.Component:
     return rx.box(
         rx.image(src="/bg_image.png", position="fixed", top="0", left="0", width="100vw", height="100vh", object_fit="cover", z_index="-1"),
-        rx.center(rx.card(content), height="100vh", z_index="1"),
+        rx.center(
+            rx.card(
+                content,
+                width=AUTH_CARD_WIDTH,
+                padding="22px 14px",
+                border="1px solid rgba(34,197,94,0.20)",
+                border_radius="12px",
+                background="linear-gradient(120deg,rgba(2,16,22,0.88),rgba(17,74,72,0.52))",
+            ),
+            height="100vh",
+            z_index="1",
+        ),
         password_eye_script(),
+        auth_token_bootstrap_script(),
         width="100vw", height="100vh", position="relative", overflow="hidden",
         on_mount=AppState.init_auth_forms,
     )
@@ -3210,19 +3393,7 @@ def index():
 # ──────────────────────────────────────────────────────────────
 # App init
 # ──────────────────────────────────────────────────────────────
-api = FastAPI()
-api.add_middleware(SessionMiddleware,secret_key=os.getenv("SESSION_SECRET","dev"))
-
-oauth = OAuth()
-oauth.register(
-    name="google",
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope":"openid email profile"}
-)
 app = rx.App(
-    api_transformer=api,
     style={
         "@keyframes pulse_glow": {
             "0%": {"box-shadow": "0 0 0px rgba(0,255,0,0)"},
@@ -3231,15 +3402,119 @@ app = rx.App(
         }
     },
 )
-@api.get("/auth/google/start")
-async def google_start(request: Request):
-    return await oauth.google.authorize_redirect(request,os.getenv("GOOGLE_REDIRECT_URI"))
 
-@api.get("/auth/google/callback")
+
+async def google_start(request: Request):
+    if not GOOGLE_OAUTH_ENABLED:
+        return RedirectResponse(url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}", status_code=302)
+    params = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": _google_callback_url(request),
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": _google_make_state(),
+        "prompt": "select_account",
+    }
+    return RedirectResponse(url=f"{GOOGLE_AUTH_URL}?{urlencode(params)}", status_code=302)
+
+
 async def google_callback(request: Request):
-    token = await oauth.google.authorize_access_token(request)
-    userinfo = await oauth.google.parse_id_token(request,token)
-    return JSONResponse(userinfo)
+    if not GOOGLE_OAUTH_ENABLED:
+        return RedirectResponse(url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}", status_code=302)
+
+    try:
+        if request.query_params.get("error"):
+            return RedirectResponse(url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}", status_code=302)
+
+        state = str(request.query_params.get("state", "") or "")
+        if GOOGLE_STRICT_STATE and (not _google_state_is_valid(state)):
+            raise ValueError("Invalid oauth state.")
+
+        code = str(request.query_params.get("code", "") or "")
+        if not code:
+            raise ValueError("Missing authorization code.")
+
+        async with httpx.AsyncClient(timeout=20.0) as client_http:
+            token_resp = await client_http.post(
+                GOOGLE_TOKEN_URL,
+                data={
+                    "code": code,
+                    "client_id": GOOGLE_CLIENT_ID,
+                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "redirect_uri": _google_callback_url(request),
+                    "grant_type": "authorization_code",
+                },
+                headers={"Accept": "application/json"},
+            )
+            token_resp.raise_for_status()
+            token = token_resp.json()
+            access_token = str(token.get("access_token", "") or "")
+            id_token = str(token.get("id_token", "") or "")
+            userinfo: dict[str, Any] = {}
+
+            if access_token:
+                try:
+                    userinfo_resp = await client_http.get(
+                        GOOGLE_USERINFO_URL,
+                        headers={"Authorization": f"Bearer {access_token}"},
+                    )
+                    userinfo_resp.raise_for_status()
+                    payload = userinfo_resp.json() or {}
+                    if isinstance(payload, dict):
+                        userinfo = payload
+                except Exception:
+                    # Fallback to id_token payload if userinfo endpoint fails.
+                    userinfo = _id_token_payload(id_token)
+            else:
+                userinfo = _id_token_payload(id_token)
+
+        subject = str((userinfo or {}).get("sub", "")).strip()
+        if not subject:
+            raise ValueError("Google userinfo missing subject.")
+
+        username = _google_username_from_sub(subject)
+
+        with rx.session() as session:
+            user = session.exec(
+                select(LocalUser).where(func.lower(LocalUser.username) == username.lower())
+            ).one_or_none()
+
+            if user is None:
+                user = LocalUser()  # type: ignore
+                user.username = username
+                user.password_hash = LocalUser.hash_password(secrets.token_urlsafe(40))
+                user.enabled = True
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+
+            if user.id is None:
+                raise ValueError("Unable to create a valid local user for Google login.")
+
+            auth_token = secrets.token_urlsafe(32)
+            session.add(
+                LocalAuthSession(  # type: ignore
+                    user_id=int(user.id),
+                    session_id=auth_token,
+                    expiration=datetime.now(timezone.utc) + timedelta(seconds=AUTH_SESSION_MAX_AGE_SECONDS),
+                )
+            )
+            session.commit()
+
+        return RedirectResponse(
+            url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}?auth_token={auth_token}",
+            status_code=302,
+        )
+    except Exception as e:
+        print(f"ERROR google callback: {e}")
+        return RedirectResponse(url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
+
+app._api.routes.append(
+    Route("/auth/google/start", google_start, methods=["GET"])
+)
+app._api.routes.append(
+    Route("/auth/google/callback", google_callback, methods=["GET"])
+)
 
 try:
     rx.Model.create_all()
