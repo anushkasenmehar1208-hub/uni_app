@@ -3217,6 +3217,12 @@ app = rx.App(
         }
     },
 )
+from starlette.middleware.sessions import SessionMiddleware
+
+app.api.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET", "dev"),
+)
 oauth = OAuth()
 oauth.register(
     name="google",
