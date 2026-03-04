@@ -17,6 +17,7 @@ from datetime import datetime, date, timedelta
 from typing import Any, Optional
 
 import reflex as rx
+from fastapi.responses import JSONResponse
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
 from fastapi import Request
@@ -3234,8 +3235,7 @@ async def google_start(request: Request):
 async def google_callback(request: Request):
     token = await oauth.google.authorize_access_token(request)
     userinfo = await oauth.google.parse_id_token(request, token)
-    return RedirectResponse(url="/")
-
+    return JSONResponse(userinfo)
 try:
     rx.Model.create_all()
 except Exception as e:
