@@ -3524,23 +3524,8 @@ async def google_callback(request: Request):
             )
             session.commit()
 
-        home_url = f"{_frontend_base_url(request).rstrip('/')}/"
-        bootstrap_html = f"""<!doctype html>
-<html>
-  <head><meta charset="utf-8"><title>Signing in...</title></head>
-  <body style="font-family:system-ui;background:#05070b;color:#d1d5db;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-    <div>Signing you in...</div>
-    <script>
-      (function(){{
-        try {{
-          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
-        }} catch (e) {{}}
-        window.location.replace({json.dumps(home_url)});
-      }})();
-    </script>
-  </body>
-</html>"""
-        return HTMLResponse(content=bootstrap_html, status_code=200)
+        login_url = f"{_frontend_base_url(request).rstrip('/')}{auth_routes.LOGIN_ROUTE}?auth_token={auth_token}"
+        return RedirectResponse(url=login_url, status_code=302)
     except Exception as e:
         print(f"ERROR google callback: {e}")
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
