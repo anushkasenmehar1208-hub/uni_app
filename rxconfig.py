@@ -12,6 +12,6 @@ config = rx.Config(
     db_url=os.getenv("DATABASE_URL", "sqlite:///reflex.db"),
     show_built_with_reflex=False,
     plugins=[
-        "reflex.plugins.sitemap.SitemapPlugin",
+        rx.sitemap,
     ],
 )
