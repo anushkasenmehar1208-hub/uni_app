@@ -921,10 +921,9 @@ class AppState(reflex_local_auth.LocalAuthState):
             ).one_or_none()
         if not auth_sess:
             return rx.redirect(auth_routes.LOGIN_ROUTE)
-        self.auth_token = token
-        self.app_auth_token = token
+        self._login(int(auth_sess.user_id))
+        self.app_auth_token = self.auth_token
         return rx.redirect("/")
-
     @rx.event
     def handle_registration(self, form_data: dict[str, Any]):
         self._ensure_auth_csrf()
