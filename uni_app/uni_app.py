@@ -245,6 +245,28 @@ def _google_callback_url(request: Request) -> str:
     return f"{proto}://{host}/auth/google/callback"
 
 
+def _frontend_base_url(request: Request) -> str:
+    """Resolve frontend origin safely for local + deployed environments."""
+    configured = (APP_BASE_URL or "").strip().rstrip("/")
+    parsed = configured.lower()
+    config_is_local = (
+        (not configured)
+        or ("localhost" in parsed)
+        or ("127.0.0.1" in parsed)
+        or ("0.0.0.0" in parsed)
+    )
+    if not config_is_local:
+        return configured
+
+    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").split(",")[0].strip().lower()
+    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc).split(",")[0].strip()
+    host_only = (host.split(":")[0] if host else "").lower()
+    host_is_local = host_only in {"localhost", "127.0.0.1", "0.0.0.0"} or host_only.endswith(".local")
+    if host and (not host_is_local):
+        return f"{proto}://{host}"
+    return configured or "http://localhost:3001"
+
+
 def _google_username_from_sub(sub: str) -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9_.-]", "", sub or "")
     if not cleaned:
@@ -3406,7 +3428,7 @@ app = rx.App(
 
 async def google_start(request: Request):
     if not GOOGLE_OAUTH_ENABLED:
-        return RedirectResponse(url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}", status_code=302)
+        return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
     params = {
         "client_id": GOOGLE_CLIENT_ID,
         "redirect_uri": _google_callback_url(request),
@@ -3420,11 +3442,11 @@ async def google_start(request: Request):
 
 async def google_callback(request: Request):
     if not GOOGLE_OAUTH_ENABLED:
-        return RedirectResponse(url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}", status_code=302)
+        return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
     try:
         if request.query_params.get("error"):
-            return RedirectResponse(url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}", status_code=302)
+            return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
         state = str(request.query_params.get("state", "") or "")
         if GOOGLE_STRICT_STATE and (not _google_state_is_valid(state)):
@@ -3502,12 +3524,12 @@ async def google_callback(request: Request):
             session.commit()
 
         return RedirectResponse(
-            url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}?auth_token={auth_token}",
+            url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?auth_token={auth_token}",
             status_code=302,
         )
     except Exception as e:
         print(f"ERROR google callback: {e}")
-        return RedirectResponse(url=f"{APP_BASE_URL}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
+        return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
 
 app._api.routes.append(
     Route("/auth/google/start", google_start, methods=["GET"])
