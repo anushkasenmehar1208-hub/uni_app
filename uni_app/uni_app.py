@@ -910,20 +910,39 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     async def handle_google_complete(self):
         token = self.router.page.params.get("token", "")
+        print(f"[Google] token param: '{token[:10] if token else 'EMPTY'}'")
+
         if not token:
-            return rx.redirect(auth_routes.LOGIN_ROUTE)
-        with rx.session() as db:
-            auth_sess = db.exec(
-                select(LocalAuthSession).where(
-                    LocalAuthSession.session_id == token,
-                    LocalAuthSession.expiration >= datetime.now(timezone.utc),
-                )
-            ).one_or_none()
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            return
+
+        auth_sess = None
+        try:
+            with rx.session() as db:
+                auth_sess = db.exec(
+                    select(LocalAuthSession).where(
+                        LocalAuthSession.session_id == token,
+                        LocalAuthSession.expiration >= datetime.now(timezone.utc),
+                    )
+                ).one_or_none()
+        except Exception as e:
+            print(f"[Google] DB error: {e}")
+
+        print(f"[Google] session found: {auth_sess is not None}")
+
         if not auth_sess:
-            return rx.redirect(auth_routes.LOGIN_ROUTE)
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            return
+
         self._login(int(auth_sess.user_id))
         self.app_auth_token = self.auth_token
-        return rx.redirect("/")
+        new_token = self.auth_token
+        print(f"[Google] logged in uid={auth_sess.user_id} token={new_token[:10]}")
+
+        yield  # ← THIS IS THE KEY: flushes state to client, writes localStorage FIRST
+
+        yield rx.call_script("window.location.replace('/');")  # navigate AFTER localStorage is written
+
     @rx.event
     def handle_registration(self, form_data: dict[str, Any]):
         self._ensure_auth_csrf()
