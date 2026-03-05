@@ -193,3 +193,4 @@ __pycache__/
 .env
 .env
 s
+.web/
