@@ -910,13 +910,12 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     async def handle_google_complete(self):
         token = self.router.page.params.get("token", "")
-        print(f"[Google] token param: '{token[:10] if token else 'EMPTY'}'")
+        print(f"[Google Complete] token present: {bool(token)}")
 
         if not token:
             yield rx.redirect(auth_routes.LOGIN_ROUTE)
             return
 
-        auth_sess = None
         try:
             with rx.session() as db:
                 auth_sess = db.exec(
@@ -926,23 +925,30 @@ class AppState(reflex_local_auth.LocalAuthState):
                     )
                 ).one_or_none()
         except Exception as e:
-            print(f"[Google] DB error: {e}")
-
-        print(f"[Google] session found: {auth_sess is not None}")
-
-        if not auth_sess:
+            print(f"[Google Complete] DB error: {e}")
             yield rx.redirect(auth_routes.LOGIN_ROUTE)
             return
 
+        if not auth_sess:
+            print(f"[Google Complete] session not found in DB")
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            return
+
+        print(f"[Google Complete] found session uid={auth_sess.user_id}, logging in...")
         self._login(int(auth_sess.user_id))
         self.app_auth_token = self.auth_token
         new_token = self.auth_token
-        print(f"[Google] logged in uid={auth_sess.user_id} token={new_token[:10]}")
+        print(f"[Google Complete] login done, navigating home...")
 
-        yield  # ← THIS IS THE KEY: flushes state to client, writes localStorage FIRST
-
-        yield rx.call_script("window.location.replace('/');")  # navigate AFTER localStorage is written
-
+    # Set localStorage directly via JS THEN navigate — avoids async race condition
+        yield rx.call_script(f"""
+    (function() {{
+        try {{
+            localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
+        }} catch(e) {{}}
+        setTimeout(function() {{ window.location.replace('/'); }}, 150);
+    }})();
+    """)
     @rx.event
     def handle_registration(self, form_data: dict[str, Any]):
         self._ensure_auth_csrf()
@@ -3488,19 +3494,19 @@ async def google_start(request: Request):
 async def google_callback(request: Request):
     if not GOOGLE_OAUTH_ENABLED:
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
-
     try:
+        print(f"[Google CB] started, params: {dict(request.query_params)}")
+        
         if request.query_params.get("error"):
+            print(f"[Google CB] error param: {request.query_params.get('error')}")
             return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
-
-        state = str(request.query_params.get("state", "") or "")
-        if GOOGLE_STRICT_STATE and (not _google_state_is_valid(state)):
-            raise ValueError("Invalid oauth state.")
 
         code = str(request.query_params.get("code", "") or "")
         if not code:
-            raise ValueError("Missing authorization code.")
+            print("[Google CB] no code")
+            return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
+        print(f"[Google CB] got code, fetching token...")
         async with httpx.AsyncClient(timeout=20.0) as client_http:
             token_resp = await client_http.post(
                 GOOGLE_TOKEN_URL,
@@ -3513,10 +3519,11 @@ async def google_callback(request: Request):
                 },
                 headers={"Accept": "application/json"},
             )
+            print(f"[Google CB] token response status: {token_resp.status_code}")
             token_resp.raise_for_status()
             token = token_resp.json()
             access_token = str(token.get("access_token", "") or "")
-            id_token = str(token.get("id_token", "") or "")
+            id_token_val = str(token.get("id_token", "") or "")
             userinfo: dict[str, Any] = {}
 
             if access_token:
@@ -3529,17 +3536,20 @@ async def google_callback(request: Request):
                     payload = userinfo_resp.json() or {}
                     if isinstance(payload, dict):
                         userinfo = payload
-                except Exception:
-                    # Fallback to id_token payload if userinfo endpoint fails.
-                    userinfo = _id_token_payload(id_token)
+                    print(f"[Google CB] userinfo ok, sub: {userinfo.get('sub','')[:8]}")
+                except Exception as ue:
+                    print(f"[Google CB] userinfo failed: {ue}")
+                    userinfo = _id_token_payload(id_token_val)
             else:
-                userinfo = _id_token_payload(id_token)
+                userinfo = _id_token_payload(id_token_val)
 
         subject = str((userinfo or {}).get("sub", "")).strip()
         if not subject:
+            print("[Google CB] no subject in userinfo")
             raise ValueError("Google userinfo missing subject.")
 
         username = _google_username_from_sub(subject)
+        print(f"[Google CB] username: {username}")
 
         with rx.session() as session:
             user = session.exec(
@@ -3547,32 +3557,41 @@ async def google_callback(request: Request):
             ).one_or_none()
 
             if user is None:
-                user = LocalUser()  # type: ignore
+                user = LocalUser()
                 user.username = username
                 user.password_hash = LocalUser.hash_password(secrets.token_urlsafe(40))
                 user.enabled = True
                 session.add(user)
                 session.commit()
                 session.refresh(user)
+                print(f"[Google CB] new user created id={user.id}")
+            else:
+                print(f"[Google CB] existing user id={user.id}")
 
             if user.id is None:
                 raise ValueError("Unable to create a valid local user for Google login.")
 
             auth_token = secrets.token_urlsafe(32)
             session.add(
-                LocalAuthSession(  # type: ignore
+                LocalAuthSession(
                     user_id=int(user.id),
                     session_id=auth_token,
                     expiration=datetime.now(timezone.utc) + timedelta(seconds=AUTH_SESSION_MAX_AGE_SECONDS),
                 )
             )
             session.commit()
+            print(f"[Google CB] session created, redirecting to /auth/complete/...")
 
         complete_url = f"{_frontend_base_url(request).rstrip('/')}/auth/complete/{auth_token}"
+        print(f"[Google CB] redirect to: {complete_url[:60]}...")
         return RedirectResponse(url=complete_url, status_code=302)
+
     except Exception as e:
-        print(f"ERROR google callback: {e}")
+        print(f"[Google CB] ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
+    
 
 app._api.routes.append(
     Route("/auth/google/start", google_start, methods=["GET"])
