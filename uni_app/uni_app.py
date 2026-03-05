@@ -906,6 +906,24 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
         return AppState.auth_redir()  # type: ignore
+    
+    @rx.event
+    async def handle_google_complete(self):
+        token = self.router.page.params.get("token", "")
+        if not token:
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        with rx.session() as db:
+            auth_sess = db.exec(
+                select(LocalAuthSession).where(
+                    LocalAuthSession.session_id == token,
+                    LocalAuthSession.expiration >= datetime.now(timezone.utc),
+                )
+            ).one_or_none()
+        if not auth_sess:
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        self.auth_token = token
+        self.app_auth_token = token
+        return rx.redirect("/")
 
     @rx.event
     def handle_registration(self, form_data: dict[str, Any]):
@@ -2892,6 +2910,14 @@ def chat_panel():
         active_chat_panel(),
     )
 
+@rx.page(route="/auth/complete/[token]", on_load=AppState.handle_google_complete)
+def google_complete_page():
+    return rx.center(
+        rx.text("Signing you in...", color="white"),
+        height="100vh",
+        background="#050505",
+    )
+
 
 # ──────────────────────────────────────────────────────────────
 # Payment pages
@@ -3524,8 +3550,8 @@ async def google_callback(request: Request):
             )
             session.commit()
 
-        login_url = f"{_frontend_base_url(request).rstrip('/')}{auth_routes.LOGIN_ROUTE}?auth_token={auth_token}"
-        return RedirectResponse(url=login_url, status_code=302)
+        complete_url = f"{_frontend_base_url(request).rstrip('/')}/auth/complete/{auth_token}"
+        return RedirectResponse(url=complete_url, status_code=302)
     except Exception as e:
         print(f"ERROR google callback: {e}")
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
