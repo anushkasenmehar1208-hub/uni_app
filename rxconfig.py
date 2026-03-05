@@ -2,7 +2,7 @@ import reflex as rx
 import os
 
 railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip()
-default_api_url = f"https://{railway_domain}" if railway_domain else "http://localhost:8000"
+default_api_url = "https://alexstudies.com"
 
 config = rx.Config(
     app_name="uni_app",
