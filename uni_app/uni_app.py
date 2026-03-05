@@ -3272,7 +3272,6 @@ def _google_inline_button() -> rx.Component:
                 _active={"transform": "translateY(0)"},
             ),
             href=GOOGLE_START_URL,
-            is_external=True,
             width="100%",
             text_decoration="none",
         ),
