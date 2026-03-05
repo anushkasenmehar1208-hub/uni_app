@@ -19,7 +19,7 @@ import reflex as rx
 import httpx
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
-from fastapi.responses import PlainTextResponse, RedirectResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse, HTMLResponse
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import reflex_local_auth
 from reflex_local_auth import routes as auth_routes
@@ -1119,19 +1119,24 @@ class AppState(reflex_local_auth.LocalAuthState):
         return mapping.get(self.selected_year, [])
 
     def _uid(self) -> int:
-        token = (self.app_auth_token or self.auth_token or "").strip()
-        if not token:
+        tokens: list[str] = []
+        for raw in (self.auth_token, self.app_auth_token):
+            token = (raw or "").strip()
+            if token and token not in tokens:
+                tokens.append(token)
+        if not tokens:
             return -1
         try:
             with rx.session() as session:
-                auth_sess = session.exec(
-                    select(LocalAuthSession).where(
-                        LocalAuthSession.session_id == token,
-                        LocalAuthSession.expiration >= datetime.now(timezone.utc),
-                    )
-                ).one_or_none()
-                if auth_sess and auth_sess.user_id is not None:
-                    return int(auth_sess.user_id)
+                for token in tokens:
+                    auth_sess = session.exec(
+                        select(LocalAuthSession).where(
+                            LocalAuthSession.session_id == token,
+                            LocalAuthSession.expiration >= datetime.now(timezone.utc),
+                        )
+                    ).one_or_none()
+                    if auth_sess and auth_sess.user_id is not None:
+                        return int(auth_sess.user_id)
         except Exception as e:
             print(f"ERROR uid lookup: {e}")
         return -1
@@ -3523,10 +3528,23 @@ async def google_callback(request: Request):
             )
             session.commit()
 
-        return RedirectResponse(
-            url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?auth_token={auth_token}",
-            status_code=302,
-        )
+        home_url = f"{_frontend_base_url(request).rstrip('/')}/"
+        bootstrap_html = f"""<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>Signing in...</title></head>
+  <body style="font-family:system-ui;background:#05070b;color:#d1d5db;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div>Signing you in...</div>
+    <script>
+      (function(){{
+        try {{
+          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
+        }} catch (e) {{}}
+        window.location.replace({json.dumps(home_url)});
+      }})();
+    </script>
+  </body>
+</html>"""
+        return HTMLResponse(content=bootstrap_html, status_code=200)
     except Exception as e:
         print(f"ERROR google callback: {e}")
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
