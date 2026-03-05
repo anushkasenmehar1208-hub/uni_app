@@ -7,7 +7,7 @@ config = rx.Config(
     frontend_url="https://alexstudies.com", 
     
     # This fixes the connection to your Railway backend
-    api_url="https://uniapp-production-01d0.up.railway.app",
+    api_url="https://alexstudies.com",
     
     db_url=os.getenv("DATABASE_URL", "sqlite:///reflex.db"),
     show_built_with_reflex=False,
