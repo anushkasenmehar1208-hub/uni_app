@@ -10,4 +10,5 @@ config = rx.Config(
     db_url=os.getenv("DATABASE_URL", "sqlite:///reflex.db"),
     frontend_port=3001,
     backend_port=8000,
+    show_built_with_reflex=False,
 )
