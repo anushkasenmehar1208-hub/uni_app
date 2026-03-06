@@ -3456,14 +3456,18 @@ def reset_password_page():
 @rx.page(
     route="/",
     title="Alex Studies - AI-Powered University Degree Learning",
-    description="Learn a full university degree with AI, day by day. Alex Studies delivers structured, daily lessons just like a real university — at your own pace, from anywhere.",
+    description="Learn a full university degree with AI, day by day...",
     meta=[
-        {"name": "keywords", "content": "AI university, online degree, AI learning, university degree online, daily learning, AI tutor"},
+        {"name": "keywords", "content": "AI university, online degree, AI learning"},
         {"name": "robots", "content": "index, follow"},
         {"property": "og:title", "content": "Alex Studies - AI-Powered University Degree Learning"},
-        {"property": "og:description", "content": "Learn a full university degree with AI, day by day. Alex Studies delivers structured, daily lessons just like a real university — at your own pace, from anywhere."},
         {"property": "og:url", "content": "https://alexstudies.com"},
         {"property": "og:type", "content": "website"},
+        # ✅ Force favicon
+        {"rel": "icon", "type": "image/x-icon", "href": "/favicon.ico"},
+        {"rel": "icon", "type": "image/png", "sizes": "32x32", "href": "/favicon-32x32.png"},
+        {"rel": "icon", "type": "image/png", "sizes": "16x16", "href": "/favicon-16x16.png"},
+        {"rel": "apple-touch-icon", "sizes": "180x180", "href": "/apple-touch-icon.png"},
     ],
     on_load=AppState.on_load
 )
