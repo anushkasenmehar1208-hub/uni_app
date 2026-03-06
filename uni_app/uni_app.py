@@ -9,7 +9,7 @@ import json
 import base64
 import re
 import secrets
-from urllib.parse import urlencode, urlparse
+from urllib.parse import unquote, urlencode, urlparse
 from fastapi import Request
 from pathlib import Path
 from datetime import datetime, date, timedelta, timezone
@@ -216,7 +216,6 @@ GOOGLE_CLIENT_ID        = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET    = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
 GOOGLE_REDIRECT_URI     = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
 GOOGLE_OAUTH_ENABLED    = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
-GOOGLE_START_URL        = f"{API_BASE_URL}/auth/google/start"
 AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 90
 GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS = max(
     60, int(os.getenv("GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS", "600"))
@@ -313,6 +312,24 @@ def _google_state_is_valid(state: str) -> bool:
         return True
     except (BadSignature, SignatureExpired):
         return False
+
+
+def _normalized_origin(origin: str) -> str:
+    parsed = urlparse((origin or "").strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return ""
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
+def _decode_urlsafe_b64_text(value: str) -> str:
+    encoded = (value or "").strip()
+    if not encoded:
+        return ""
+    try:
+        pad = "=" * (-len(encoded) % 4)
+        return base64.urlsafe_b64decode(encoded + pad).decode("utf-8")
+    except Exception:
+        return ""
 
 
 def _id_token_payload(id_token: str) -> dict[str, Any]:
@@ -939,6 +956,142 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
         return AppState.auth_redir()  # type: ignore
+
+    def _router_origin(self) -> str:
+        origin_header = ""
+        try:
+            origin_header = str((self.router.headers or {}).get("origin", "") or "").strip()
+        except Exception:
+            origin_header = ""
+        normalized = _normalized_origin(origin_header)
+        if normalized:
+            return normalized
+
+        host = ""
+        try:
+            host = str(getattr(self.router.page, "host", "") or "").strip()
+        except Exception:
+            host = ""
+        if host:
+            host_only = host.split(":")[0].strip().lower()
+            proto = "http" if _is_local_host(host_only) else "https"
+            return f"{proto}://{host}"
+
+        fallback = _normalized_origin(APP_BASE_URL)
+        return fallback or "http://localhost:3001"
+
+    @rx.event
+    def start_google_oauth(self):
+        self._ensure_auth_csrf()
+        if not GOOGLE_OAUTH_ENABLED:
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+
+        origin = self._router_origin().rstrip("/")
+        callback_url = f"{origin}/auth/google/callback"
+        params = {
+            "client_id": GOOGLE_CLIENT_ID,
+            "redirect_uri": callback_url,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "state": _google_make_state(),
+            "prompt": "select_account",
+        }
+        auth_url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
+        return rx.call_script(f"window.location.assign({json.dumps(auth_url)});")
+
+    @rx.event
+    async def handle_google_oauth_callback(self):
+        code = unquote(str(self.router.page.params.get("code", "") or "")).strip()
+        state = unquote(str(self.router.page.params.get("state", "") or "")).strip()
+        origin_b64 = str(self.router.page.params.get("origin_b64", "") or "").strip()
+
+        if not code or not _google_state_is_valid(state):
+            yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=1")
+            return
+
+        origin = _normalized_origin(_decode_urlsafe_b64_text(origin_b64)) or self._router_origin()
+        redirect_uri = f"{origin.rstrip('/')}/auth/google/callback"
+
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client_http:
+                token_resp = await client_http.post(
+                    GOOGLE_TOKEN_URL,
+                    data={
+                        "code": code,
+                        "client_id": GOOGLE_CLIENT_ID,
+                        "client_secret": GOOGLE_CLIENT_SECRET,
+                        "redirect_uri": redirect_uri,
+                        "grant_type": "authorization_code",
+                    },
+                    headers={"Accept": "application/json"},
+                )
+                token_resp.raise_for_status()
+                token_payload = token_resp.json() or {}
+
+                access_token = str(token_payload.get("access_token", "") or "")
+                id_token_val = str(token_payload.get("id_token", "") or "")
+                userinfo: dict[str, Any] = {}
+
+                if access_token:
+                    try:
+                        userinfo_resp = await client_http.get(
+                            GOOGLE_USERINFO_URL,
+                            headers={"Authorization": f"Bearer {access_token}"},
+                        )
+                        userinfo_resp.raise_for_status()
+                        userinfo_raw = userinfo_resp.json() or {}
+                        if isinstance(userinfo_raw, dict):
+                            userinfo = userinfo_raw
+                    except Exception:
+                        userinfo = _id_token_payload(id_token_val)
+                else:
+                    userinfo = _id_token_payload(id_token_val)
+
+            subject = str((userinfo or {}).get("sub", "")).strip()
+            if not subject:
+                raise ValueError("Google userinfo missing subject.")
+
+            username = _google_username_from_sub(subject)
+            with rx.session() as session:
+                user = session.exec(
+                    select(LocalUser).where(func.lower(LocalUser.username) == username.lower())
+                ).one_or_none()
+
+                if user is None:
+                    user = LocalUser(
+                        username=username,
+                        password_hash=LocalUser.hash_password(secrets.token_urlsafe(40)),
+                        enabled=True,
+                    )
+                    session.add(user)
+                    session.commit()
+                    session.refresh(user)
+
+                if user.id is None:
+                    raise ValueError("Unable to create a valid local user for Google login.")
+
+                resolved_uid = int(user.id)
+        except Exception as e:
+            print(f"[Google OAuth Frontend] ERROR: {e}")
+            yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=1")
+            return
+
+        self._login(resolved_uid)
+        self.app_auth_token = self.auth_token
+        self.login_error = ""
+        self.auth_csrf_token = secrets.token_urlsafe(24)
+        new_token = self.auth_token
+
+        yield rx.call_script(
+            f"""
+        (function() {{
+            try {{
+                localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
+            }} catch(e) {{}}
+            setTimeout(function() {{ window.location.replace('/'); }}, 60);
+        }})();
+        """
+        )
     
     @rx.event
     async def handle_google_complete(self):
@@ -2974,6 +3127,67 @@ def chat_panel():
         active_chat_panel(),
     )
 
+
+@rx.page(route="/auth/google/start", image=FAVICON_32, on_load=AppState.start_google_oauth)
+def google_start_page():
+    return rx.center(
+        rx.text("Redirecting to Google...", color="white"),
+        height="100vh",
+        background="#050505",
+    )
+
+
+@rx.page(route="/auth/google/callback", image=FAVICON_32)
+def google_callback_bridge_page():
+    callback_bridge_js = """
+    (function() {
+      try {
+        var u = new URL(window.location.href);
+        var err = u.searchParams.get("error");
+        var code = u.searchParams.get("code");
+        var state = u.searchParams.get("state");
+        if (err || !code || !state) {
+          window.location.replace("/login?oauth_error=1");
+          return;
+        }
+        var origin = window.location.origin || "";
+        var originB64 = btoa(origin).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
+        var target = "/auth/google/complete/"
+          + encodeURIComponent(code) + "/"
+          + encodeURIComponent(state) + "/"
+          + originB64;
+        window.location.replace(target);
+      } catch (e) {
+        window.location.replace("/login?oauth_error=1");
+      }
+    })();
+    """
+    return rx.center(
+        rx.vstack(
+            rx.spinner(size="2", color="white"),
+            rx.text("Completing Google sign-in...", color="white"),
+            spacing="3",
+            align="center",
+        ),
+        rx.script(callback_bridge_js),
+        height="100vh",
+        background="#050505",
+    )
+
+
+@rx.page(
+    route="/auth/google/complete/[code]/[state]/[origin_b64]",
+    image=FAVICON_32,
+    on_load=AppState.handle_google_oauth_callback,
+)
+def google_oauth_complete_page():
+    return rx.center(
+        rx.text("Signing you in...", color="white"),
+        height="100vh",
+        background="#050505",
+    )
+
+
 @rx.page(route="/auth/complete/[token]", image=FAVICON_32, on_load=AppState.handle_google_complete)
 def google_complete_page():
     return rx.center(
@@ -3502,13 +3716,6 @@ def _csrf_field() -> rx.Component:
 
 
 def _google_inline_button() -> rx.Component:
-    google_start_script = f"""
-    (function() {{
-        var host = (window.location.hostname || '').toLowerCase();
-        var isLocal = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host.endsWith('.local');
-        window.location.href = isLocal ? {json.dumps(GOOGLE_START_URL)} : '/auth/google/start';
-    }})();
-    """
     return rx.cond(
         GOOGLE_OAUTH_ENABLED,
         
@@ -3534,7 +3741,7 @@ def _google_inline_button() -> rx.Component:
                 spacing="2",
                 width="100%",
             ),
-            on_click=rx.call_script(google_start_script),
+            on_click=AppState.start_google_oauth,
             width="100%",
             type="button",
             height="46px",
