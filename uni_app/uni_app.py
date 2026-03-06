@@ -3031,8 +3031,6 @@ def legal_page_shell(title: str, subtitle: str, sections: list[tuple[str, str]])
             rx.vstack(
                 rx.hstack(
                     rx.button("Back to App", on_click=rx.redirect("/"), variant="outline", color_scheme="green"),
-                    rx.spacer(),
-                    rx.link("Login", href=auth_routes.LOGIN_ROUTE, color="#00ff88", font_weight="600"),
                     width="100%",
                     align="center",
                 ),
@@ -3245,10 +3243,20 @@ def settings_menu_button() -> rx.Component:
         rx.menu.trigger(
             rx.icon_button(
                 rx.icon(tag="settings", size=17),
-                variant="outline",
-                color_scheme="green",
+                variant="soft",
+                color_scheme="gray",
                 size="2",
                 title="Settings",
+                style={
+                    "color": "rgba(245,248,255,0.86)",
+                    "background": "rgba(255,255,255,0.08)",
+                    "border": "1px solid rgba(255,255,255,0.22)",
+                    "box_shadow": "0 0 10px rgba(255,255,255,0.08)",
+                    "_hover": {
+                        "background": "rgba(255,255,255,0.14)",
+                        "border": "1px solid rgba(255,255,255,0.32)",
+                    },
+                },
             ),
             as_child=True,
         ),
@@ -3303,7 +3311,6 @@ def home_page():
                 transform="translateX(-50%)",
             ),
             rx.hstack(
-                rx.hstack(rx.text("Streak: "), rx.text(AppState.streak), rx.text("D"), color="#00ff88", font_weight="bold"),
                 rx.button("New chat", on_click=AppState.new_chat, variant="outline", color_scheme="green"),
                 settings_menu_button(),
                 spacing="2",
