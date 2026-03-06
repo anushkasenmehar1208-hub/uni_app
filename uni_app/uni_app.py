@@ -150,6 +150,10 @@ LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
 AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "true").lower() == "true"
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
+FAVICON_ICO = "/brand-favicon-20260306.ico"
+FAVICON_32 = "/brand-favicon-32-20260306.png"
+FAVICON_16 = "/brand-favicon-16-20260306.png"
+APPLE_TOUCH_ICON = "/brand-apple-touch-20260306.png"
 
 APP_ROOT_DIR = Path(__file__).resolve().parent.parent
 TRAINING_DATA_PATH = APP_ROOT_DIR / ".states" / "training_data.jsonl"
@@ -2934,7 +2938,7 @@ def chat_panel():
         active_chat_panel(),
     )
 
-@rx.page(route="/auth/complete/[token]", on_load=AppState.handle_google_complete)
+@rx.page(route="/auth/complete/[token]", image=FAVICON_32, on_load=AppState.handle_google_complete)
 def google_complete_page():
     return rx.center(
         rx.text("Signing you in...", color="white"),
@@ -2946,7 +2950,7 @@ def google_complete_page():
 # ──────────────────────────────────────────────────────────────
 # Payment pages
 # ──────────────────────────────────────────────────────────────
-@rx.page(route="/payment/success", title="Payment Successful")
+@rx.page(route="/payment/success", title="Payment Successful", image=FAVICON_32)
 def payment_success_page():
     return rx.box(
         rx.center(
@@ -2968,7 +2972,7 @@ def payment_success_page():
     )
 
 
-@rx.page(route="/payment/cancel", title="Payment Cancelled")
+@rx.page(route="/payment/cancel", title="Payment Cancelled", image=FAVICON_32)
 def payment_cancel_page():
     return rx.box(
         rx.center(
@@ -3451,12 +3455,6 @@ def custom_register_page():
 
 def reset_password_page():
     return _auth_page_shell(secure_reset_form())
-
-
-FAVICON_ICO = "/brand-favicon-20260306.ico"
-FAVICON_32 = "/brand-favicon-32-20260306.png"
-FAVICON_16 = "/brand-favicon-16-20260306.png"
-APPLE_TOUCH_ICON = "/brand-apple-touch-20260306.png"
 
 
 @rx.page(
