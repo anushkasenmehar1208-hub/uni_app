@@ -8,6 +8,7 @@ config = rx.Config(
     
     # This fixes the connection to your Railway backend
     api_url="https://alexstudies.com",
+    favicon="/favicon.ico",
     
     db_url=os.getenv("DATABASE_URL", "sqlite:///reflex.db"),
     show_built_with_reflex=False,
