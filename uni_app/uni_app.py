@@ -3875,12 +3875,8 @@ except Exception as e:
 async def _payhere_notify_wrapper(request):
     return await payhere_notify(request)
 
-api.routes.append(
-    Route("/api/payhere/notify", _payhere_notify_wrapper, methods=["POST"])
-)
-api.routes.append(
-    Route("/health", health_check, methods=["GET"])
-)
+api.add_route("/api/payhere/notify", _payhere_notify_wrapper, methods=["POST"])
+api.add_route("/health", health_check, methods=["GET"])
 
 app.add_page(custom_login_page, route=auth_routes.LOGIN_ROUTE, title="Login", image=FAVICON_32)
 app.add_page(custom_register_page, route=auth_routes.REGISTER_ROUTE, title="Register", image=FAVICON_32)
