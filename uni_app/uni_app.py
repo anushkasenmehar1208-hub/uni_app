@@ -3453,7 +3453,20 @@ def reset_password_page():
     return _auth_page_shell(secure_reset_form())
 
 
-@rx.page(route="/", title="Uni | Index", on_load=AppState.on_load)
+@rx.page(
+    route="/",
+    title="Alex Studies - AI-Powered University Degree Learning",
+    description="Learn a full university degree with AI, day by day. Alex Studies delivers structured, daily lessons just like a real university — at your own pace, from anywhere.",
+    meta=[
+        {"name": "keywords", "content": "AI university, online degree, AI learning, university degree online, daily learning, AI tutor"},
+        {"name": "robots", "content": "index, follow"},
+        {"property": "og:title", "content": "Alex Studies - AI-Powered University Degree Learning"},
+        {"property": "og:description", "content": "Learn a full university degree with AI, day by day. Alex Studies delivers structured, daily lessons just like a real university — at your own pace, from anywhere."},
+        {"property": "og:url", "content": "https://alexstudies.com"},
+        {"property": "og:type", "content": "website"},
+    ],
+    on_load=AppState.on_load
+)
 @require_app_login
 def index():
     return rx.cond(
