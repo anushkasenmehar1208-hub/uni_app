@@ -3863,8 +3863,13 @@ async def google_callback(request: Request):
     
 
 # ✅ This actually registers the routes
-api.add_route("/auth/google/start", google_start, methods=["GET"])
-api.add_route("/auth/google/callback", google_callback, methods=["GET"])
+@api.get("/auth/google/start")
+async def _google_start(request: Request):
+    return await google_start(request)
+
+@api.get("/auth/google/callback")
+async def _google_callback(request: Request):
+    return await google_callback(request)
 
 try:
     rx.Model.create_all()
@@ -3875,8 +3880,15 @@ except Exception as e:
 async def _payhere_notify_wrapper(request):
     return await payhere_notify(request)
 
-api.add_route("/api/payhere/notify", _payhere_notify_wrapper, methods=["POST"])
-api.add_route("/health", health_check, methods=["GET"])
+
+@api.post("/api/payhere/notify")
+async def _payhere_notify(request: Request):
+    return await _payhere_notify_wrapper(request)
+
+@api.get("/health")
+async def _health(request: Request):
+    return await health_check(request)
+
 
 app.add_page(custom_login_page, route=auth_routes.LOGIN_ROUTE, title="Login", image=FAVICON_32)
 app.add_page(custom_register_page, route=auth_routes.REGISTER_ROUTE, title="Register", image=FAVICON_32)
