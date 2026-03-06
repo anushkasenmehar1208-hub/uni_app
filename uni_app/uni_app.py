@@ -27,6 +27,9 @@ from reflex_local_auth.local_auth import AUTH_TOKEN_LOCAL_STORAGE_KEY
 from reflex_local_auth.auth_session import LocalAuthSession
 from reflex_local_auth.user import LocalUser
 from starlette.routing import Route
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import RedirectResponse as StarletteRedirect
+
 
 # ----------------------------
 # Groq setup
@@ -148,7 +151,6 @@ USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]{3,32}$")
 PASSWORD_MIN_LEN = 8
 LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
-AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "true").lower() == "true"
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
 FAVICON_ICO = "/brand-favicon-20260306.ico"
 FAVICON_32 = "/brand-favicon-32-20260306.png"
@@ -3479,6 +3481,17 @@ def index():
         onboarding_page(),
     )
 
+class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        if ENFORCE_HTTPS:
+            proto = (
+                request.headers.get("x-forwarded-proto") or ""
+            ).split(",")[0].strip().lower()
+            if proto == "http":
+                https_url = str(request.url).replace("http://", "https://", 1)
+                return StarletteRedirect(https_url, status_code=301)
+        return await call_next(request)
+
 
 # ──────────────────────────────────────────────────────────────
 # App init
@@ -3500,6 +3513,7 @@ app = rx.App(
         }
     },
 )
+app._api.add_middleware(HTTPSRedirectMiddleware)
 
 
 async def google_start(request: Request):
@@ -3524,6 +3538,11 @@ async def google_callback(request: Request):
         
         if request.query_params.get("error"):
             print(f"[Google CB] error param: {request.query_params.get('error')}")
+            return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
+        
+        # ADD THIS near the top of google_callback():
+        state = str(request.query_params.get("state", "") or "")
+        if not _google_state_is_valid(state):
             return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
         code = str(request.query_params.get("code", "") or "")
