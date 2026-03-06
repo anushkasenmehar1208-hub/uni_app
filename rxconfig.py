@@ -4,7 +4,7 @@ import os
 config = rx.Config(
     app_name="uni_app",
     # This fixes your Google Sitemap localhost issue
-    frontend_url="https://alexstudies.com", 
+    deploy_url="https://alexstudies.com", 
     
     # This fixes the connection to your Railway backend
     api_url="https://alexstudies.com",
