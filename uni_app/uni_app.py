@@ -3453,6 +3453,13 @@ def reset_password_page():
     return _auth_page_shell(secure_reset_form())
 
 
+FAVICON_CACHE_BUSTER = "20260306"
+FAVICON_ICO = f"/favicon.ico?v={FAVICON_CACHE_BUSTER}"
+FAVICON_32 = f"/favicon-32x32.png?v={FAVICON_CACHE_BUSTER}"
+FAVICON_16 = f"/favicon-16x16.png?v={FAVICON_CACHE_BUSTER}"
+APPLE_TOUCH_ICON = f"/apple-touch-icon.png?v={FAVICON_CACHE_BUSTER}"
+
+
 @rx.page(
     route="/",
     title="Alex Studies - AI-Powered University Degree Learning",
@@ -3463,11 +3470,6 @@ def reset_password_page():
         {"property": "og:title", "content": "Alex Studies - AI-Powered University Degree Learning"},
         {"property": "og:url", "content": "https://alexstudies.com"},
         {"property": "og:type", "content": "website"},
-        # ✅ Force favicon
-        {"rel": "icon", "type": "image/x-icon", "href": "/favicon.ico"},
-        {"rel": "icon", "type": "image/png", "sizes": "32x32", "href": "/favicon-32x32.png"},
-        {"rel": "icon", "type": "image/png", "sizes": "16x16", "href": "/favicon-16x16.png"},
-        {"rel": "apple-touch-icon", "sizes": "180x180", "href": "/apple-touch-icon.png"},
     ],
     on_load=AppState.on_load
 )
@@ -3485,10 +3487,12 @@ def index():
 # ──────────────────────────────────────────────────────────────
 app = rx.App(
     head_components=[
-        rx.el.link(rel="icon", type="image/x-icon", href="/favicon.ico"),
-        rx.el.link(rel="icon", type="image/png", sizes="32x32", href="/favicon-32x32.png"),
-        rx.el.link(rel="icon", type="image/png", sizes="16x16", href="/favicon-16x16.png"),
-        rx.el.link(rel="apple-touch-icon", sizes="180x180", href="/apple-touch-icon.png"),
+        rx.el.link(rel="icon", type="image/x-icon", href=FAVICON_ICO),
+        rx.el.link(rel="shortcut icon", type="image/x-icon", href=FAVICON_ICO),
+        rx.el.link(rel="icon", type="image/png", sizes="32x32", href=FAVICON_32),
+        rx.el.link(rel="icon", type="image/png", sizes="16x16", href=FAVICON_16),
+        rx.el.link(rel="apple-touch-icon", sizes="180x180", href=APPLE_TOUCH_ICON),
+        rx.el.link(rel="manifest", href="/site.webmanifest"),
     ],
     style={
         "@keyframes pulse_glow": {
