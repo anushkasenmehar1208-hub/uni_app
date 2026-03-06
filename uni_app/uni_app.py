@@ -955,7 +955,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                 auth_sess = db.exec(
                     select(LocalAuthSession).where(
                         LocalAuthSession.session_id == token,
-                        LocalAuthSession.expiration >= datetime.now(timezone.utc)
+                        LocalAuthSession.expiration >= datetime.utcnow()
                     )
                 ).one_or_none()
                 if auth_sess and auth_sess.user_id is not None:
