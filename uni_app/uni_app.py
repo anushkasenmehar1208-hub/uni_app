@@ -3502,6 +3502,13 @@ def _csrf_field() -> rx.Component:
 
 
 def _google_inline_button() -> rx.Component:
+    google_start_script = f"""
+    (function() {{
+        var host = (window.location.hostname || '').toLowerCase();
+        var isLocal = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host.endsWith('.local');
+        window.location.href = isLocal ? {json.dumps(GOOGLE_START_URL)} : '/auth/google/start';
+    }})();
+    """
     return rx.cond(
         GOOGLE_OAUTH_ENABLED,
         
@@ -3527,7 +3534,7 @@ def _google_inline_button() -> rx.Component:
                 spacing="2",
                 width="100%",
             ),
-            on_click=rx.call_script(f"window.location.href='{GOOGLE_START_URL}'"),
+            on_click=rx.call_script(google_start_script),
             width="100%",
             type="button",
             height="46px",
