@@ -4,7 +4,10 @@
 redir @legacy_favicon /brand-favicon-20260306.ico 308
 
 @event path /_event*
-reverse_proxy @event 127.0.0.1:8000
+reverse_proxy @event 127.0.0.1:8000 {
+    header_up Connection {>Connection}
+    header_up Upgrade {>Upgrade}
+}
 
 @auth path /auth/google/*
 reverse_proxy @auth 127.0.0.1:8000
@@ -15,4 +18,4 @@ reverse_proxy @api 127.0.0.1:8000
 @health path /health
 reverse_proxy @health 127.0.0.1:8000
 
-reverse_proxy 127.0.0.1:3001
+reverse_proxy 127.0.0.1:3001xs
