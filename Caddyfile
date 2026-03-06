@@ -12,4 +12,7 @@ reverse_proxy @auth 127.0.0.1:8000
 @api path /api/*
 reverse_proxy @api 127.0.0.1:8000
 
+@health path /health
+reverse_proxy @health 127.0.0.1:8000
+
 reverse_proxy 127.0.0.1:3001
