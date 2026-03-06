@@ -9,7 +9,7 @@ import json
 import base64
 import re
 import secrets
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from fastapi import Request
 from pathlib import Path
 from datetime import datetime, date, timedelta, timezone
@@ -19,7 +19,7 @@ import reflex as rx
 import httpx
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
-from fastapi.responses import PlainTextResponse, RedirectResponse, HTMLResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import reflex_local_auth
 from reflex_local_auth import routes as auth_routes
@@ -81,10 +81,14 @@ def friendly_groq_error(e: Exception) -> str:
     return GENERIC_ERROR_UI_MESSAGE
 
 
-def _groq_generate(model: str, contents: str) -> any:
+def _groq_generate(model: str, contents: str) -> Any:
     """Drop-in replacement for Gemini generate_content using Groq."""
     class _R:
         text = ""
+
+    if client is None:
+        _R.text = "API not ready"
+        return _R()
 
     try:
         resp = client.chat.completions.create(
@@ -214,6 +218,9 @@ GOOGLE_REDIRECT_URI     = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
 GOOGLE_OAUTH_ENABLED    = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 GOOGLE_START_URL        = f"{API_BASE_URL}/auth/google/start"
 AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 90
+GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS = max(
+    60, int(os.getenv("GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS", "600"))
+)
 SESSION_SECRET          = os.getenv("SESSION_SECRET", "change-me-in-production").strip() or "change-me-in-production"
 GOOGLE_AUTH_URL         = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL        = "https://oauth2.googleapis.com/token"
@@ -243,9 +250,24 @@ def _request_is_https(request: Request) -> bool:
     return proto == "https"
 
 
+def _is_local_host(host: str) -> bool:
+    h = (host or "").split(":")[0].strip().lower()
+    return h in {"localhost", "127.0.0.1", "0.0.0.0"} or h.endswith(".local")
+
+
 def _google_callback_url(request: Request) -> str:
-    if GOOGLE_REDIRECT_URI:
-        return GOOGLE_REDIRECT_URI
+    configured = (GOOGLE_REDIRECT_URI or "").strip()
+    if configured:
+        configured_host = (urlparse(configured).hostname or "").lower()
+        request_host = (
+            (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc)
+            .split(",")[0]
+            .strip()
+            .lower()
+        )
+        # Ignore localhost callback URIs when request host is deployed.
+        if not (_is_local_host(configured_host) and request_host and not _is_local_host(request_host)):
+            return configured
     proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").split(",")[0].strip().lower()
     host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc).split(",")[0].strip()
     return f"{proto}://{host}/auth/google/callback"
@@ -254,20 +276,19 @@ def _google_callback_url(request: Request) -> str:
 def _frontend_base_url(request: Request) -> str:
     """Resolve frontend origin safely for local + deployed environments."""
     configured = (APP_BASE_URL or "").strip().rstrip("/")
-    parsed = configured.lower()
-    config_is_local = (
-        (not configured)
-        or ("localhost" in parsed)
-        or ("127.0.0.1" in parsed)
-        or ("0.0.0.0" in parsed)
-    )
-    if not config_is_local:
-        return configured
-
     proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").split(",")[0].strip().lower()
     host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc).split(",")[0].strip()
     host_only = (host.split(":")[0] if host else "").lower()
-    host_is_local = host_only in {"localhost", "127.0.0.1", "0.0.0.0"} or host_only.endswith(".local")
+    host_is_local = _is_local_host(host_only)
+
+    configured_host = (urlparse(configured).hostname or "").lower() if configured else ""
+    config_is_local = (not configured_host) or _is_local_host(configured_host)
+    if configured and not config_is_local:
+        # Keep browser on the same deployed host during auth flows to avoid cross-domain token storage.
+        if host and (not host_is_local) and host_only != configured_host:
+            return f"{proto}://{host}"
+        return configured
+
     if host and (not host_is_local):
         return f"{proto}://{host}"
     return configured or "http://localhost:3001"
@@ -790,20 +811,23 @@ class AppState(reflex_local_auth.LocalAuthState):
         return keys
 
     def _is_login_locked(self, normalized_username: str) -> bool:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         keys = self._auth_guard_keys(normalized_username)
         try:
             with rx.session() as session:
                 rows = session.exec(select(AuthThrottle).where(AuthThrottle.key.in_(keys))).all()
             for row in rows:
-                if row.locked_until and row.locked_until > now:
+                locked_until = row.locked_until
+                if locked_until and locked_until.tzinfo is None:
+                    locked_until = locked_until.replace(tzinfo=timezone.utc)
+                if locked_until and locked_until > now:
                     return True
         except Exception as e:
             print(f"ERROR login lock check: {e}")
         return False
 
     def _record_login_failure(self, normalized_username: str) -> None:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         lock_until = now + timedelta(minutes=LOGIN_LOCK_MINUTES)
         try:
             with rx.session() as session:
@@ -812,7 +836,10 @@ class AppState(reflex_local_auth.LocalAuthState):
                     if row is None:
                         row = AuthThrottle(key=key)  # type: ignore
 
-                    if row.locked_until and row.locked_until > now:
+                    row_locked_until = row.locked_until
+                    if row_locked_until and row_locked_until.tzinfo is None:
+                        row_locked_until = row_locked_until.replace(tzinfo=timezone.utc)
+                    if row_locked_until and row_locked_until > now:
                         session.add(row)
                         continue
 
@@ -922,6 +949,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             yield rx.redirect(auth_routes.LOGIN_ROUTE)
             return
 
+        resolved_uid: int | None = None
         try:
             with rx.session() as db:
                 auth_sess = db.exec(
@@ -930,21 +958,26 @@ class AppState(reflex_local_auth.LocalAuthState):
                         LocalAuthSession.expiration >= datetime.now(timezone.utc),
                     )
                 ).one_or_none()
+                if auth_sess and auth_sess.user_id is not None:
+                    resolved_uid = int(auth_sess.user_id)
+                    # One-time use token: consume it immediately to prevent replay.
+                    db.delete(auth_sess)
+                    db.commit()
         except Exception as e:
             print(f"[Google Complete] DB error: {e}")
             yield rx.redirect(auth_routes.LOGIN_ROUTE)
             return
 
-        if not auth_sess:
-            print(f"[Google Complete] session not found in DB")
+        if resolved_uid is None:
+            print("[Google Complete] session not found in DB")
             yield rx.redirect(auth_routes.LOGIN_ROUTE)
             return
 
-        print(f"[Google Complete] found session uid={auth_sess.user_id}, logging in...")
-        self._login(int(auth_sess.user_id))
+        print(f"[Google Complete] found session uid={resolved_uid}, logging in...")
+        self._login(resolved_uid)
         self.app_auth_token = self.auth_token
         new_token = self.auth_token
-        print(f"[Google Complete] login done, navigating home...")
+        print("[Google Complete] login done, navigating home...")
 
     # Set localStorage directly via JS THEN navigate — avoids async race condition
         yield rx.call_script(f"""
@@ -987,10 +1020,11 @@ class AppState(reflex_local_auth.LocalAuthState):
                 self.register_error = "Username is already registered."
                 return [rx.set_value("username", ""), rx.set_focus("username")]
 
-            new_user = LocalUser()  # type: ignore
-            new_user.username = username
-            new_user.password_hash = LocalUser.hash_password(password)
-            new_user.enabled = True
+            new_user = LocalUser(
+                username=username,
+                password_hash=LocalUser.hash_password(password),
+                enabled=True,
+            )
             session.add(new_user)
             session.commit()
 
@@ -2991,6 +3025,148 @@ def payment_cancel_page():
     )
 
 
+def legal_page_shell(title: str, subtitle: str, sections: list[tuple[str, str]]) -> rx.Component:
+    return rx.box(
+        rx.center(
+            rx.vstack(
+                rx.hstack(
+                    rx.button("Back to App", on_click=rx.redirect("/"), variant="outline", color_scheme="green"),
+                    rx.spacer(),
+                    rx.link("Login", href=auth_routes.LOGIN_ROUTE, color="#00ff88", font_weight="600"),
+                    width="100%",
+                    align="center",
+                ),
+                rx.heading(title, size="8", color="white"),
+                rx.text(subtitle, color="rgba(255,255,255,0.72)", text_align="left", width="100%"),
+                *[
+                    rx.box(
+                        rx.heading(section_title, size="5", color="#00ff88"),
+                        rx.text(section_text, color="rgba(255,255,255,0.78)", white_space="pre-wrap"),
+                        padding="1.1em",
+                        border_radius="12px",
+                        border="1px solid rgba(0,255,136,0.22)",
+                        background="rgba(3,12,10,0.6)",
+                        width="100%",
+                    )
+                    for section_title, section_text in sections
+                ],
+                spacing="4",
+                width="min(92vw, 940px)",
+                padding="2em",
+                align_items="stretch",
+            ),
+            width="100%",
+        ),
+        min_height="100vh",
+        width="100%",
+        background="radial-gradient(circle at top right,#003120 0%,#050505 62%)",
+        padding_y="2em",
+    )
+
+
+@rx.page(route="/return-policy", title="Return Policy", image=FAVICON_32)
+def return_policy_page():
+    return legal_page_shell(
+        "Return Policy",
+        "Simple refund and cancellation information for Alex Studies subscriptions.",
+        [
+            (
+                "Refunds",
+                "We handle refund requests case-by-case.\n"
+                "If you were charged incorrectly or had a technical billing issue, contact support with your order details.",
+            ),
+            (
+                "Cancellation Rules",
+                "You can cancel at any time.\n"
+                "Cancellation stops future renewals. Access already provided for the paid period may remain active until that period ends.",
+            ),
+            (
+                "Support Contact",
+                "Email support at support@alexstudies.com with:\n"
+                "- account username\n"
+                "- payment/order reference\n"
+                "- short description of the issue",
+            ),
+        ],
+    )
+
+
+@rx.page(route="/privacy-policy", title="Privacy Policy", image=FAVICON_32)
+def privacy_policy_page():
+    return legal_page_shell(
+        "Privacy Policy",
+        "How we collect, use, and protect your data on Alex Studies.",
+        [
+            (
+                "User Data",
+                "We store account data and study-related activity needed to run the service.\n"
+                "We use this data to provide login, chat history, progress tracking, and support.",
+            ),
+            (
+                "Cookies and Local Storage",
+                "We use browser storage and related technologies to keep you logged in and maintain app sessions.\n"
+                "Disabling them may break some features.",
+            ),
+            (
+                "Security",
+                "We apply reasonable technical and organizational safeguards to protect user data.\n"
+                "No online service can guarantee absolute security.",
+            ),
+        ],
+    )
+
+
+@rx.page(route="/terms", title="Terms of Service", image=FAVICON_32)
+def terms_page():
+    return legal_page_shell(
+        "Terms of Service",
+        "Basic usage terms for Alex Studies.",
+        [
+            (
+                "Website Usage Rules",
+                "Use the platform lawfully and responsibly.\n"
+                "Do not misuse the service, attempt unauthorized access, or interfere with availability.",
+            ),
+            (
+                "Payments",
+                "Paid plans are billed as shown at checkout.\n"
+                "You are responsible for accurate payment details and reviewing plan pricing before purchase.",
+            ),
+            (
+                "Responsibilities",
+                "You are responsible for your account credentials and activity under your account.\n"
+                "We may update features, pricing, or terms over time.",
+            ),
+        ],
+    )
+
+
+@rx.page(route="/support", title="Support", image=FAVICON_32)
+def support_page():
+    return legal_page_shell(
+        "Support",
+        "Need help with billing, login, or account access?",
+        [
+            (
+                "Contact",
+                "Email: support@alexstudies.com\n"
+                "Please include your username and issue summary for faster help.",
+            ),
+            (
+                "Response Time",
+                "We aim to respond as quickly as possible, typically within 1-3 business days.",
+            ),
+            (
+                "Common Help Topics",
+                "Login issues\n"
+                "Google sign-in issues\n"
+                "Payment and subscription support\n"
+                "Access and account recovery",
+            ),
+        ],
+    )
+
+
 # ──────────────────────────────────────────────────────────────
 # Onboarding
 # ──────────────────────────────────────────────────────────────
@@ -3064,6 +3240,36 @@ def sidebar_plan_widget() -> rx.Component:
     )
 
 
+def settings_menu_button() -> rx.Component:
+    return rx.menu.root(
+        rx.menu.trigger(
+            rx.icon_button(
+                rx.icon(tag="settings", size=17),
+                variant="outline",
+                color_scheme="green",
+                size="2",
+                title="Settings",
+            ),
+            as_child=True,
+        ),
+        rx.menu.content(
+            rx.menu.item("Return Policy", on_select=rx.redirect("/return-policy")),
+            rx.menu.item("Privacy Policy", on_select=rx.redirect("/privacy-policy")),
+            rx.menu.item("Terms", on_select=rx.redirect("/terms")),
+            rx.menu.item("Support", on_select=rx.redirect("/support")),
+            rx.menu.separator(),
+            rx.menu.item("Logout", on_select=AppState.logout),
+            align="end",
+            side_offset=8,
+            style={
+                "background": "rgba(5,10,12,0.98)",
+                "border": "1px solid rgba(0,255,136,0.22)",
+                "backdrop_filter": "blur(8px)",
+            },
+        ),
+    )
+
+
 # ──────────────────────────────────────────────────────────────
 # Home page
 # ──────────────────────────────────────────────────────────────
@@ -3099,7 +3305,7 @@ def home_page():
             rx.hstack(
                 rx.hstack(rx.text("Streak: "), rx.text(AppState.streak), rx.text("D"), color="#00ff88", font_weight="bold"),
                 rx.button("New chat", on_click=AppState.new_chat, variant="outline", color_scheme="green"),
-                rx.button("Logout", on_click=AppState.logout, variant="outline", color_scheme="green"),
+                settings_menu_button(),
                 spacing="2",
                 margin_left="auto",
             ),
@@ -3220,6 +3426,7 @@ def semester_page():
                 rx.text("Day "), rx.text(AppState.current_day), rx.text("/110"),
                 color_scheme="blue", variant="solid", size="2",
             ),
+            settings_menu_button(),
             width="100%", padding="1em 2em", flex_shrink="0", align="center",
         ),
         rx.cond(
@@ -3513,7 +3720,10 @@ app = rx.App(
         }
     },
 )
-app._api.add_middleware(HTTPSRedirectMiddleware)
+api = app._api
+if api is None:
+    raise RuntimeError("Reflex API not initialized; cannot register middleware and routes.")
+api.add_middleware(HTTPSRedirectMiddleware)
 
 
 async def google_start(request: Request):
@@ -3550,7 +3760,7 @@ async def google_callback(request: Request):
             print("[Google CB] no code")
             return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
-        print(f"[Google CB] got code, fetching token...")
+        print("[Google CB] got code, fetching token...")
         async with httpx.AsyncClient(timeout=20.0) as client_http:
             token_resp = await client_http.post(
                 GOOGLE_TOKEN_URL,
@@ -3601,10 +3811,11 @@ async def google_callback(request: Request):
             ).one_or_none()
 
             if user is None:
-                user = LocalUser()
-                user.username = username
-                user.password_hash = LocalUser.hash_password(secrets.token_urlsafe(40))
-                user.enabled = True
+                user = LocalUser(
+                    username=username,
+                    password_hash=LocalUser.hash_password(secrets.token_urlsafe(40)),
+                    enabled=True,
+                )
                 session.add(user)
                 session.commit()
                 session.refresh(user)
@@ -3620,11 +3831,11 @@ async def google_callback(request: Request):
                 LocalAuthSession(
                     user_id=int(user.id),
                     session_id=auth_token,
-                    expiration=datetime.now(timezone.utc) + timedelta(seconds=AUTH_SESSION_MAX_AGE_SECONDS),
+                    expiration=datetime.now(timezone.utc) + timedelta(seconds=GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS),
                 )
             )
             session.commit()
-            print(f"[Google CB] session created, redirecting to /auth/complete/...")
+            print("[Google CB] session created, redirecting to /auth/complete/...")
 
         complete_url = f"{_frontend_base_url(request).rstrip('/')}/auth/complete/{auth_token}"
         print(f"[Google CB] redirect to: {complete_url[:60]}...")
@@ -3637,10 +3848,10 @@ async def google_callback(request: Request):
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
     
 
-app._api.routes.append(
+api.routes.append(
     Route("/auth/google/start", google_start, methods=["GET"])
 )
-app._api.routes.append(
+api.routes.append(
     Route("/auth/google/callback", google_callback, methods=["GET"])
 )
 
@@ -3653,10 +3864,10 @@ except Exception as e:
 async def _payhere_notify_wrapper(request):
     return await payhere_notify(request)
 
-app._api.routes.append(
+api.routes.append(
     Route("/api/payhere/notify", _payhere_notify_wrapper, methods=["POST"])
 )
-app._api.routes.append(
+api.routes.append(
     Route("/health", health_check, methods=["GET"])
 )
 
