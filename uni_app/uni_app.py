@@ -3453,17 +3453,17 @@ def reset_password_page():
     return _auth_page_shell(secure_reset_form())
 
 
-FAVICON_CACHE_BUSTER = "20260306"
-FAVICON_ICO = f"/favicon.ico?v={FAVICON_CACHE_BUSTER}"
-FAVICON_32 = f"/favicon-32x32.png?v={FAVICON_CACHE_BUSTER}"
-FAVICON_16 = f"/favicon-16x16.png?v={FAVICON_CACHE_BUSTER}"
-APPLE_TOUCH_ICON = f"/apple-touch-icon.png?v={FAVICON_CACHE_BUSTER}"
+FAVICON_ICO = "/brand-favicon-20260306.ico"
+FAVICON_32 = "/brand-favicon-32-20260306.png"
+FAVICON_16 = "/brand-favicon-16-20260306.png"
+APPLE_TOUCH_ICON = "/brand-apple-touch-20260306.png"
 
 
 @rx.page(
     route="/",
     title="Alex Studies - AI-Powered University Degree Learning",
     description="Learn a full university degree with AI, day by day...",
+    image=FAVICON_32,
     meta=[
         {"name": "keywords", "content": "AI university, online degree, AI learning"},
         {"name": "robots", "content": "index, follow"},
@@ -3643,6 +3643,6 @@ app._api.routes.append(
     Route("/health", health_check, methods=["GET"])
 )
 
-app.add_page(custom_login_page, route=auth_routes.LOGIN_ROUTE, title="Login")
-app.add_page(custom_register_page, route=auth_routes.REGISTER_ROUTE, title="Register")
-app.add_page(reset_password_page, route="/reset-password", title="Reset Password")
+app.add_page(custom_login_page, route=auth_routes.LOGIN_ROUTE, title="Login", image=FAVICON_32)
+app.add_page(custom_register_page, route=auth_routes.REGISTER_ROUTE, title="Register", image=FAVICON_32)
+app.add_page(reset_password_page, route="/reset-password", title="Reset Password", image=FAVICON_32)
