@@ -3862,14 +3862,8 @@ async def google_callback(request: Request):
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
     
 
-# ✅ This actually registers the routes
-@api.get("/auth/google/start")
-async def _google_start(request: Request):
-    return await google_start(request)
-
-@api.get("/auth/google/callback")
-async def _google_callback(request: Request):
-    return await google_callback(request)
+api.add_route("/auth/google/start", google_start, methods=["GET"])
+api.add_route("/auth/google/callback", google_callback, methods=["GET"])
 
 try:
     rx.Model.create_all()
@@ -3881,13 +3875,8 @@ async def _payhere_notify_wrapper(request):
     return await payhere_notify(request)
 
 
-@api.post("/api/payhere/notify")
-async def _payhere_notify(request: Request):
-    return await _payhere_notify_wrapper(request)
-
-@api.get("/health")
-async def _health(request: Request):
-    return await health_check(request)
+api.add_route("/api/payhere/notify", _payhere_notify_wrapper, methods=["POST"])
+api.add_route("/health", health_check, methods=["GET"])
 
 
 app.add_page(custom_login_page, route=auth_routes.LOGIN_ROUTE, title="Login", image=FAVICON_32)
