@@ -3862,12 +3862,9 @@ async def google_callback(request: Request):
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
     
 
-api.routes.append(
-    Route("/auth/google/start", google_start, methods=["GET"])
-)
-api.routes.append(
-    Route("/auth/google/callback", google_callback, methods=["GET"])
-)
+# ✅ This actually registers the routes
+api.add_route("/auth/google/start", google_start, methods=["GET"])
+api.add_route("/auth/google/callback", google_callback, methods=["GET"])
 
 try:
     rx.Model.create_all()
