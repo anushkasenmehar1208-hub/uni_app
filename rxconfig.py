@@ -1,19 +1,28 @@
 import reflex as rx
 import os
 
+def _resolve_public_url() -> str:
+    return os.getenv("APP_BASE_URL", "https://alexstudies.com").rstrip("/")
+
+def _resolve_api_url() -> str:
+    # Support both the expected key and the currently-used typo in Railway vars.
+    return (
+        os.getenv("REFLEX_API_URL")
+        or os.getenv("EFLEX_API_URL")
+        or os.getenv("API_URL")
+        or "http://localhost:8000"
+    ).rstrip("/")
+
 config = rx.Config(
     app_name="uni_app",
-    # This fixes your Google Sitemap localhost issue
-    deploy_url="https://alexstudies.com", 
+    deploy_url=_resolve_public_url(),
     
-    # This fixes the connection to your Railway backend
-    api_url="wss://alexstudies.com",
+    api_url=_resolve_api_url(),
     favicon="brand-favicon-20260306.ico",
     
     db_url=os.getenv("DATABASE_URL", "sqlite:///reflex.db"),
     show_built_with_reflex=False,
     
-    # The correct syntax to enable the plugin
     plugins=[
         rx.plugins.SitemapPlugin(),
     ],

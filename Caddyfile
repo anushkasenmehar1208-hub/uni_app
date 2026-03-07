@@ -1,21 +1,12 @@
-:{$PORT}
+:{$PORT} {
+    @legacy_favicon path /favicon.ico
+    redir @legacy_favicon /brand-favicon-20260306.ico 308
 
-@legacy_favicon path /favicon.ico
-redir @legacy_favicon /brand-favicon-20260306.ico 308
+    # Keep backend routes ahead of frontend fallback.
+    route {
+        @backend path /_event* /_upload* /_health /_all_routes /ping /auth-codespace /auth/google/* /api/* /health
+        reverse_proxy @backend 127.0.0.1:8000
 
-@event path /_event*
-reverse_proxy @event 127.0.0.1:8000 {
-    header_up Connection {>Connection}
-    header_up Upgrade {>Upgrade}
+        reverse_proxy 127.0.0.1:3001
+    }
 }
-
-@auth path /auth/google/*
-reverse_proxy @auth 127.0.0.1:8000
-
-@api path /api/*
-reverse_proxy @api 127.0.0.1:8000
-
-@health path /health
-reverse_proxy @health 127.0.0.1:8000
-
-reverse_proxy 127.0.0.1:3001
