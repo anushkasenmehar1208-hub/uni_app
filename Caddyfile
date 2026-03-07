@@ -9,11 +9,7 @@
         rewrite @event_no_slash /_event/
 
         @backend path /_event* /_upload* /_health /_all_routes /ping /auth-codespace /auth/google/* /api/* /health
-        reverse_proxy @backend 127.0.0.1:8000 {
-            transport http {
-                versions h1
-            }
-        }
+        reverse_proxy @backend 127.0.0.1:8000
 
         reverse_proxy 127.0.0.1:3001
     }
