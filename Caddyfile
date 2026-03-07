@@ -45,8 +45,6 @@
     }
 
     handle {
-        root * /app/.web/build/client
-        try_files {path} /__spa-fallback.html
-        file_server
+        reverse_proxy 127.0.0.1:3001
     }
 }
