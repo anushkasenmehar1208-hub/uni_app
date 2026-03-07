@@ -1,4 +1,4 @@
-:3001, :{$PORT} {
+:{$PORT} {
     @legacy_favicon path /favicon.ico
     redir @legacy_favicon /brand-favicon-20260306.ico 308
 
