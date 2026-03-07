@@ -1,4 +1,7 @@
 #!/bin/sh
-reflex export --frontend-only --no-zip
-reflex run --env prod --frontend-port 3002 --backend-port 8000 &
-caddy run --config /app/Caddyfile --adapter caddyfile
+set -e
+
+APP_PORT="${PORT:-3000}"
+
+# Run Reflex on Railway's assigned public port (single process, no Caddy proxy layer).
+reflex run --env prod --single-port --frontend-port "${APP_PORT}" --backend-port "${APP_PORT}"
