@@ -36,6 +36,6 @@ RUN mkdir -p "$REFLEX_DIR" \
 
 RUN chmod +x start.sh
 
-EXPOSE 3000
+EXPOSE 8080
 
 CMD ["./start.sh"]
