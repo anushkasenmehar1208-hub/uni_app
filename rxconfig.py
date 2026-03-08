@@ -8,9 +8,9 @@ def _resolve_api_url() -> str:
     # Support both the expected key and the currently-used typo in Railway vars.
     return (
         os.getenv("REFLEX_API_URL")
-        or os.getenv("EFLEX_API_URL")
+        or os.getenv("REFLEX_API_URL")
         or os.getenv("API_URL")
-        or "http://localhost:8000"
+        or "https://alexstudies.com"
     ).rstrip("/")
 
 config = rx.Config(
