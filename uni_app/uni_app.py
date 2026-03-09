@@ -1939,8 +1939,10 @@ Recent conversation:
                 select(UserProfile).where(UserProfile.user_id == uid)
             ).first()
 
-            if profile and not profile.is_onboarded and current_page != "/questions":
-                yield rx.redirect("/questions")
+            # Keep onboarding on the existing "/" page instead of redirecting
+            # to a non-existent "/questions" route.
+            if profile and not profile.is_onboarded and current_page != "/":
+                yield rx.redirect("/")
                 return
         
         
