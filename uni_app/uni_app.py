@@ -210,7 +210,7 @@ def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg:
 PAYHERE_MERCHANT_ID     = os.getenv("PAYHERE_MERCHANT_ID", "").strip()
 PAYHERE_MERCHANT_SECRET = os.getenv("PAYHERE_MERCHANT_SECRET", "").strip()
 PAYHERE_SANDBOX         = os.getenv("PAYHERE_SANDBOX", "true").lower() == "true"
-APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3001").rstrip("/")
+APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3000").rstrip("/")
 API_BASE_URL            = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
 GOOGLE_CLIENT_ID        = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET    = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
@@ -507,6 +507,7 @@ class DayProgress(rx.Model, table=True):  # type: ignore
 
 class UserProfile(rx.Model, table=True):  # type: ignore
     user_id: int = Field(index=True, unique=True, nullable=False)
+    is_onboarded: bool = False
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
@@ -985,9 +986,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._ensure_auth_csrf()
         if not GOOGLE_OAUTH_ENABLED:
             return rx.redirect(auth_routes.LOGIN_ROUTE)
-
-        origin = self._router_origin().rstrip("/")
-        callback_url = f"{origin}/auth/google/callback"
+        callback_url = "http://localhost:3000/auth/google/callback"
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": callback_url,
@@ -1928,23 +1927,23 @@ Recent conversation:
 
     @rx.event
     async def on_load(self):
-        if self._uid() < 0:
-            yield AppState.auth_redir
-            return
+        
         uid = self._uid()
         if uid < 0:
             yield AppState.auth_redir
             return
+        current_page = self.router.page.full_path
 
         with rx.session() as session:
-            mem = session.exec(select(UserMemory).where(UserMemory.user_id == uid)).one_or_none()
-            if mem is None:
-                mem = UserMemory(user_id=uid)  # type: ignore
-                session.add(mem); session.commit(); session.refresh(mem)
-            self.step = mem.step or 0; self.name = mem.name or ""; self.degree = mem.degree or ""
-            self.is_started = bool(mem.is_started); self.selected_year = mem.selected_year or ""
-            self.memory_summary = mem.summary or ""
+            profile = session.exec(
+                select(UserProfile).where(UserProfile.user_id == uid)
+            ).first()
 
+            if profile and not profile.is_onboarded and current_page != "/questions":
+                yield rx.redirect("/questions")
+                return
+        
+        
         self._load_profile(uid)
         self.adaptive_profile = self._get_adaptive_profile(uid)
         self._migrate_legacy_messages_once(uid)
