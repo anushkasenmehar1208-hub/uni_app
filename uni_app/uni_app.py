@@ -2579,11 +2579,37 @@ ENTER_TO_SEND_JS = """
   }catch(e){}
 })();
 """
-def subject_button(label: str, on_click=None):
-    return rx.button(label, width="100%", height="60px", variant="outline", color_scheme="green", on_click=on_click,
-        style={"border":"1px solid #00ff88","box-shadow":"0 0 10px rgba(0,255,136,0.2)","text_transform":"uppercase","font_weight":"bold","letter_spacing":"1px","transition":"all 0.3s ease",
-               "_hover":{"box_shadow":"0 0 25px rgba(0,255,136,0.6)","transform":"translateX(10px)","background":"rgba(0,255,136,0.1)"}})
+# ═══════════════════════════════════════════════════════
+# UI FIXES - Replace these functions in your alexai.py
+# ═══════════════════════════════════════════════════════
 
+# FIX 1: subject_button — crisper border, tighter look
+def subject_button(label: str, on_click=None):
+    return rx.button(
+        label,
+        width="100%",
+        height="52px",
+        variant="outline",
+        color_scheme="green",
+        on_click=on_click,
+        style={
+            "border": "1px solid rgba(0,255,136,0.35)",
+            "background": "rgba(0,255,136,0.04)",
+            "text_transform": "uppercase",
+            "font_weight": "600",
+            "font_size": "0.82rem",
+            "letter_spacing": "2px",
+            "color": "rgba(255,255,255,0.88)",
+            "border_radius": "10px",
+            "transition": "all 0.2s ease",
+            "_hover": {
+                "background": "rgba(0,255,136,0.1)",
+                "border": "1px solid rgba(0,255,136,0.7)",
+                "color": "#00ff88",
+                "transform": "translateX(6px)",
+            },
+        },
+    )
 PASSWORD_EYE_JS = """(function(){function a(){return'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';}function b(){return'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';}function c(){try{if(!document.body)return;document.querySelectorAll('input[type="password"]:not([data-eye-attached])').forEach(function(inp){try{inp.setAttribute('data-eye-attached','1');var w=document.createElement('div');w.style.cssText='position:relative;display:block;width:100%;';inp.parentNode.insertBefore(w,inp);w.appendChild(inp);var btn=document.createElement('button');btn.type='button';btn.style.cssText='position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;padding:0;cursor:pointer;color:#00ff88;z-index:99999;display:flex;align-items:center;';btn.innerHTML=a();btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();inp.type=inp.type==='password'?(btn.innerHTML=b(),'text'):(btn.innerHTML=a(),'password');});w.appendChild(btn);inp.style.paddingRight='40px';}catch(e){}});}catch(e){}}c();var t=0,iv=setInterval(function(){c();if(++t>60)clearInterval(iv);},300);try{new MutationObserver(c).observe(document.body,{childList:true,subtree:true});}catch(e){}})();"""
 
 def password_eye_script() -> rx.Component:
@@ -2959,45 +2985,55 @@ def chat_input_field() -> rx.Component:
 # ──────────────────────────────────────────────────────────────
 # NEW: Empty chat state — centered like ChatGPT home
 # ──────────────────────────────────────────────────────────────
+
+
+# FIX 3: empty_chat_panel — remove duplicate logo, tighter layout
 def empty_chat_panel() -> rx.Component:
     return rx.box(
-        # Centered content
         rx.vstack(
             rx.spacer(),
-            # Logo / icon
-            rx.image(
-                src="/a_logo.png",
-                width="120px",
-                height="120px",
-                object_fit="contain",
-                style={
-                    "filter": "drop-shadow(0 0 20px rgba(255,215,0,0.4)) drop-shadow(0 0 40px rgba(0,255,136,0.15))",
-                    "opacity": "0.92",
-                },
+
+            # Single, clean logo
+            rx.box(
+                rx.image(
+                    src="/a_logo.png",
+                    width="72px",
+                    height="72px",
+                    object_fit="contain",
+                    style={
+                        "filter": "drop-shadow(0 0 16px rgba(0,255,136,0.25))",
+                        "opacity": "0.9",
+                    },
+                ),
+                margin_bottom="8px",
             ),
+
             rx.text(
                 "What do you want to learn today?",
-                color="rgba(255,255,255,0.55)",
-                font_size="1.05rem",
+                color="rgba(255,255,255,0.38)",
+                font_size="0.95rem",
                 font_weight="400",
                 letter_spacing="0.3px",
             ),
+
             rx.spacer(),
-            # Input bar pushed down
+
+            # Input bar
             rx.box(
                 rx.cond(
                     AppState.can_send_message,
-                    rx.box(
-                        chat_input_field(),
-                        width="100%",
-                    ),
+                    chat_input_field(),
                     upgrade_button(),
                 ),
-                width="100%", max_width="680px",
+                width="100%",
+                max_width="680px",
             ),
-            # Tier bar below input
+
+            # Tier bar
             tier_status_bar(),
-            rx.spacer(height="16em"),
+
+            rx.box(height="80px"),  # bottom breathing room
+
             spacing="4",
             align="center",
             width="100%",
@@ -3010,11 +3046,8 @@ def empty_chat_panel() -> rx.Component:
         flex_direction="column",
         align_items="center",
         justify_content="center",
-        background="transparent",
         padding="2em",
     )
-
-
 # ──────────────────────────────────────────────────────────────
 # Active chat state — messages + input at bottom
 # ──────────────────────────────────────────────────────────────
@@ -3398,45 +3431,75 @@ def onboarding_page():
 # ──────────────────────────────────────────────────────────────
 # Sidebar plan widget
 # ──────────────────────────────────────────────────────────────
+# FIX 4: sidebar_plan_widget — NO logo (already in header/center), just tier card
 def sidebar_plan_widget() -> rx.Component:
-    return rx.vstack(
-        rx.image(src="/a_logo.png", width="80px", height="80px", object_fit="contain", border_radius="12px", opacity="0.85", margin_x="auto"),
+    return rx.cond(
+        AppState.has_premium_access,
+        rx.box(
+            rx.vstack(
+                rx.text("⚡ Premium Active", font_weight="700", font_size="0.82rem", color="white"),
+                rx.text("Unlimited messages", color="rgba(255,255,255,0.45)", font_size="0.7rem"),
+                spacing="0",
+                align_items="flex-start",
+            ),
+            on_click=AppState.open_pricing_modal,
+            width="100%",
+            padding="10px 14px",
+            border_radius="10px",
+            cursor="pointer",
+            style={
+                "background": "linear-gradient(135deg, rgba(180,83,9,0.4), rgba(245,158,11,0.25))",
+                "border": "1px solid rgba(245,158,11,0.35)",
+                "_hover": {"filter": "brightness(1.1)"},
+            },
+        ),
         rx.cond(
-            AppState.has_premium_access,
+            AppState.is_in_trial,
             rx.box(
                 rx.vstack(
-                    rx.text("⚡ Premium", font_weight="800", font_size="0.95rem", color="white", text_align="center"),
-                    rx.text("Unlimited messages active", color="rgba(255,255,255,0.45)", font_size="0.72rem", text_align="center"),
-                    spacing="1", align_items="center", width="100%",
+                    rx.text("⚡ Trial Active", font_weight="700", font_size="0.82rem", color="white"),
+                    rx.text(
+                        AppState.trial_days_left.to_string() + " day(s) left",
+                        color="rgba(255,255,255,0.45)",
+                        font_size="0.7rem",
+                    ),
+                    spacing="0",
+                    align_items="flex-start",
                 ),
-                on_click=AppState.open_pricing_modal, width="100%", padding="12px 16px", border_radius="14px", cursor="pointer",
-                style={"background":"linear-gradient(135deg,#b45309,#f59e0b)","box_shadow":"0 0 20px rgba(245,158,11,0.35)","transition":"all 0.2s ease","_hover":{"filter":"brightness(1.1)","transform":"translateY(-1px)"}},
+                on_click=AppState.open_pricing_modal,
+                width="100%",
+                padding="10px 14px",
+                border_radius="10px",
+                cursor="pointer",
+                style={
+                    "background": "rgba(0,255,136,0.08)",
+                    "border": "1px solid rgba(0,255,136,0.25)",
+                    "_hover": {"filter": "brightness(1.1)"},
+                },
             ),
-            rx.cond(
-                AppState.is_in_trial,
-                rx.box(
-                    rx.vstack(
-                        rx.text("⚡ Premium Trial", font_weight="800", font_size="0.95rem", color="white", text_align="center", style={"text_shadow":"0 1px 4px rgba(0,0,0,0.6)"}),
-                        rx.text("Day access left: " + AppState.trial_days_left.to_string(), color="rgba(255,255,255,0.55)", font_size="0.72rem", text_align="center"),
-                        spacing="1", align_items="center", width="100%",
-                    ),
-                    on_click=AppState.open_pricing_modal, width="100%", padding="12px 16px", border_radius="14px", cursor="pointer",
-                    style={"background":"linear-gradient(135deg,#111111 0%,#2a2a2a 50%,#1a1a1a 100%)","transition":"all 0.2s ease","_hover":{"filter":"brightness(1.2)","transform":"translateY(-1px)"}},
+            rx.button(
+                rx.hstack(
+                    rx.text("Upgrade to Premium", font_size="0.8rem", font_weight="600", color="white"),
+                    rx.spacer(),
+                    rx.text("→", color="rgba(255,255,255,0.5)", font_size="0.9rem"),
+                    width="100%",
+                    align="center",
                 ),
-                rx.vstack(
-                    rx.button(
-                        rx.text("Upgrade to Premium", font_weight="700", font_size="0.88rem", color="white", style={"text_shadow":"0 1px 4px rgba(0,0,0,0.6)"}),
-                        on_click=AppState.open_pricing_modal, width="100%", height="52px", border_radius="14px",
-                        style={
-                            "background":"linear-gradient(135deg,#0d0d0d 0%,#252525 50%,#1a1a1a 100%)","border":"none","cursor":"pointer",
-                            "box_shadow":"0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)","transition":"all 0.25s ease",
-                            "_hover":{"box_shadow":"0 6px 28px rgba(255,255,255,0.1)","transform":"translateY(-2px)","filter":"brightness(1.2)"},
-                            "_active":{"transform":"translateY(0)"},
-                        },
-                    ),
-                    rx.text("Unlock unlimited access", color="rgba(255,255,255,0.3)", font_size="0.68rem", text_align="center"),
-                    spacing="2", align_items="center", width="100%",
-                ),
+                on_click=AppState.open_pricing_modal,
+                width="100%",
+                height="44px",
+                border_radius="10px",
+                style={
+                    "background": "rgba(255,255,255,0.06)",
+                    "border": "1px solid rgba(255,255,255,0.14)",
+                    "cursor": "pointer",
+                    "transition": "all 0.2s ease",
+                    "_hover": {
+                        "background": "rgba(255,255,255,0.1)",
+                        "border": "1px solid rgba(255,255,255,0.25)",
+                        "transform": "translateY(-1px)",
+                    },
+                },
             ),
         ),
     )
@@ -3485,126 +3548,246 @@ def settings_menu_button() -> rx.Component:
 # ──────────────────────────────────────────────────────────────
 # Home page
 # ──────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════
+# FIX 2: home_page — clean header, aligned sidebar, no yellow blur
 def home_page():
     return rx.box(
-        # header
+        # ── Header ────────────────────────────────────────────
         rx.box(
             rx.hstack(
-                rx.heading(rx.text("Hi ", color="white"), rx.text(AppState.name, color="white")),
-                rx.text(
-                    f"Lets study {AppState.degree}",
-                    color="rgba(0,255,136,0.7)",
-                    font_size="0.85rem",
-                    font_weight="bold",
-                    letter_spacing="1px",
+                # Left: greeting
+                rx.vstack(
+                    rx.text(
+                        "Hi, " + AppState.name,
+                        color="white",
+                        font_size="1rem",
+                        font_weight="700",
+                        letter_spacing="0.3px",
+                    ),
+                    rx.text(
+                        "Software Engineering",
+                        color="rgba(0,255,136,0.65)",
+                        font_size="0.72rem",
+                        font_weight="500",
+                        letter_spacing="1.5px",
+                        text_transform="uppercase",
+                    ),
+                    spacing="0",
+                    align_items="flex-start",
                 ),
-                align_items="flex-start",
-                flex_direction="column",
-            ),
-            rx.box(
+
+                rx.spacer(),
+
+                # Center: wordmark — clean, no glow blur
                 rx.text(
                     "Alex AI",
-                    color="#FFD700",
-                    font_size="3.5rem",
-                    font_weight="bold",
-                    letter_spacing="4px",
-                    text_shadow="0 0 20px rgba(255,215,0,0.4)",
+                    color="white",
+                    font_size="1.6rem",
+                    font_weight="800",
+                    letter_spacing="6px",
+                    text_transform="uppercase",
+                    style={
+                        "background": "linear-gradient(135deg, #ffffff 0%, #a8f5d0 100%)",
+                        "-webkit-background-clip": "text",
+                        "-webkit-text-fill-color": "transparent",
+                        "background-clip": "text",
+                    },
                 ),
-                position="absolute",
-                left="50%",
-                transform="translateX(-50%)",
+
+                rx.spacer(),
+
+                # Right: actions
+                rx.hstack(
+                    rx.button(
+                        "+ New chat",
+                        on_click=AppState.new_chat,
+                        size="2",
+                        style={
+                            "background": "rgba(0,255,136,0.12)",
+                            "border": "1px solid rgba(0,255,136,0.35)",
+                            "color": "#00ff88",
+                            "font_weight": "600",
+                            "border_radius": "8px",
+                            "font_size": "0.8rem",
+                            "_hover": {"background": "rgba(0,255,136,0.22)"},
+                        },
+                    ),
+                    settings_menu_button(),
+                    spacing="2",
+                    align="center",
+                ),
+
+                width="100%",
+                align="center",
+                padding="1.2em 2em",
+                border_bottom="1px solid rgba(255,255,255,0.06)",
             ),
-            rx.hstack(
-                rx.button("New chat", on_click=AppState.new_chat, variant="outline", color_scheme="green"),
-                settings_menu_button(),
-                spacing="2",
-                margin_left="auto",
-            ),
-            position="relative",
-            display="flex",
-            align_items="center",
-            width="100%",
-            padding="2em",
             flex_shrink="0",
         ),
 
-        # main area fills remaining height
+        # ── Main area ─────────────────────────────────────────
         rx.flex(
-            rx.vstack(
-                rx.text("ACADEMIC YEAR", color="gray", font_size="0.8em", letter_spacing="2px"),
-                rx.cond(AppState.status_text != "", rx.callout(AppState.status_text, icon="info", color_scheme="yellow", width="100%")),
-                rx.cond(
-                    AppState.selected_year == "",
-                    rx.vstack(
-                        subject_button("FIRST YEAR", on_click=AppState.set_year("Year 1")),
-                        subject_button("SECOND YEAR", on_click=AppState.set_year("Year 2")),
-                        subject_button("THIRD YEAR", on_click=AppState.set_year("Year 3")),
-                        subject_button("FOURTH YEAR", on_click=AppState.set_year("Year 4")),
-                        spacing="3",
-                        width="100%",
+            # ── Left sidebar ──────────────────────────────────
+            rx.box(
+                rx.vstack(
+                    # Section label
+                    rx.text(
+                        "ACADEMIC YEAR",
+                        color="rgba(255,255,255,0.28)",
+                        font_size="0.68rem",
+                        letter_spacing="2.5px",
+                        font_weight="600",
+                        padding_left="4px",
                     ),
-                    rx.vstack(
-                        rx.button("Back", on_click=AppState.back_to_years, variant="outline", color_scheme="green", width="100%"),
-                        rx.text(AppState.selected_year, color="white", font_weight="bold"),
-                        rx.foreach(AppState.available_semesters, lambda sem: subject_button(sem.upper(), on_click=AppState.open_semester(sem))),
-                        spacing="3",
-                        width="100%",
-                    ),
-                ),
-                sidebar_plan_widget(),
-                rx.box(
-                    rx.text("CHATS", color="gray", font_size="0.8em", letter_spacing="2px"),
-                    rx.vstack(
-                        rx.foreach(AppState.sessions, lambda s: rx.hstack(
-                            rx.button(
-                                s["title"],
-                                on_click=AppState.switch_chat(s["id"]),
-                                variant="ghost",
-                                color=rx.cond(AppState.current_session_id == s["id"], "#00ff88", "white"),
-                                font_weight=rx.cond(AppState.current_session_id == s["id"], "bold", "normal"),
-                                text_align="left",
-                                justify_content="flex-start",
-                                flex="1",
-                                overflow="hidden",
-                                text_overflow="ellipsis",
-                                white_space="nowrap",
-                                size="1",
-                            ),
-                            rx.icon_button(
-                                rx.icon(tag="trash_2", size=12),
-                                on_click=AppState.delete_session(s["id"]),
-                                variant="ghost",
-                                color_scheme="red",
-                                size="1",
-                                style={"opacity": "0.5", "_hover": {"opacity": "1"}},
-                            ),
+
+                    rx.cond(
+                        AppState.status_text != "",
+                        rx.callout(
+                            AppState.status_text,
+                            icon="info",
+                            color_scheme="yellow",
                             width="100%",
-                            align="center",
-                            spacing="1",
-                        )),
+                            size="1",
+                        ),
+                    ),
+
+                    # Year / semester buttons
+                    rx.cond(
+                        AppState.selected_year == "",
+                        rx.vstack(
+                            subject_button("First Year",  on_click=AppState.set_year("Year 1")),
+                            subject_button("Second Year", on_click=AppState.set_year("Year 2")),
+                            subject_button("Third Year",  on_click=AppState.set_year("Year 3")),
+                            subject_button("Fourth Year", on_click=AppState.set_year("Year 4")),
+                            spacing="2",
+                            width="100%",
+                        ),
+                        rx.vstack(
+                            rx.button(
+                                "← Back",
+                                on_click=AppState.back_to_years,
+                                size="1",
+                                style={
+                                    "background": "transparent",
+                                    "border": "1px solid rgba(255,255,255,0.15)",
+                                    "color": "rgba(255,255,255,0.5)",
+                                    "font_size": "0.75rem",
+                                    "_hover": {"border_color": "rgba(255,255,255,0.4)", "color": "white"},
+                                },
+                            ),
+                            rx.text(
+                                AppState.selected_year,
+                                color="rgba(0,255,136,0.9)",
+                                font_size="0.75rem",
+                                font_weight="700",
+                                letter_spacing="1.5px",
+                                text_transform="uppercase",
+                                padding_left="4px",
+                            ),
+                            rx.foreach(
+                                AppState.available_semesters,
+                                lambda sem: subject_button(sem, on_click=AppState.open_semester(sem)),
+                            ),
+                            spacing="2",
+                            width="100%",
+                        ),
+                    ),
+
+                    # Divider
+                    rx.box(
+                        height="1px",
+                        background="rgba(255,255,255,0.07)",
                         width="100%",
-                        spacing="1",
+                        margin_y="4px",
+                    ),
+
+                    # Upgrade / tier widget
+                    sidebar_plan_widget(),
+
+                    # Divider
+                    rx.box(
+                        height="1px",
+                        background="rgba(255,255,255,0.07)",
+                        width="100%",
+                        margin_y="4px",
+                    ),
+
+                    # Chat history
+                    rx.text(
+                        "CHATS",
+                        color="rgba(255,255,255,0.28)",
+                        font_size="0.68rem",
+                        letter_spacing="2.5px",
+                        font_weight="600",
+                        padding_left="4px",
+                    ),
+                    rx.vstack(
+                        rx.foreach(
+                            AppState.sessions,
+                            lambda s: rx.hstack(
+                                rx.button(
+                                    s["title"],
+                                    on_click=AppState.switch_chat(s["id"]),
+                                    variant="ghost",
+                                    color=rx.cond(
+                                        AppState.current_session_id == s["id"],
+                                        "#00ff88",
+                                        "rgba(255,255,255,0.55)",
+                                    ),
+                                    font_weight=rx.cond(
+                                        AppState.current_session_id == s["id"],
+                                        "600",
+                                        "400",
+                                    ),
+                                    text_align="left",
+                                    justify_content="flex-start",
+                                    flex="1",
+                                    overflow="hidden",
+                                    text_overflow="ellipsis",
+                                    white_space="nowrap",
+                                    size="1",
+                                    font_size="0.8rem",
+                                ),
+                                rx.icon_button(
+                                    rx.icon(tag="trash_2", size=11),
+                                    on_click=AppState.delete_session(s["id"]),
+                                    variant="ghost",
+                                    color_scheme="red",
+                                    size="1",
+                                    style={"opacity": "0.4", "_hover": {"opacity": "0.9"}},
+                                ),
+                                width="100%",
+                                align="center",
+                                spacing="1",
+                            ),
+                        ),
+                        width="100%",
+                        spacing="0",
                         align_items="stretch",
-                        max_height="200px",
+                        max_height="220px",
                         overflow_y="auto",
                     ),
+
+                    spacing="3",
                     width="100%",
-                    padding_top="1em",
+                    padding="1.5em 1.4em",
+                    align_items="flex-start",
+                    height="100%",
+                    overflow_y="auto",
                 ),
-                spacing="4",
-                width="30%",
-                padding="2em",
-                align_items="flex-start",
+                width="260px",
+                flex_shrink="0",
                 height="100%",
-                min_height="0",
-                overflow="hidden",
+                border_right="1px solid rgba(255,255,255,0.06)",
+                background="rgba(0,0,0,0.15)",
             ),
 
-            rx.vstack(
+            # ── Chat area ─────────────────────────────────────
+            rx.box(
                 chat_panel(),
-                width="65%",
+                flex="1",
                 height="100%",
-                min_height="0",
+                min_width="0",
                 overflow="hidden",
             ),
 
@@ -3615,13 +3798,13 @@ def home_page():
             overflow="hidden",
         ),
 
-        # lock page scroll
         height="100vh",
         overflow="hidden",
         display="flex",
         flex_direction="column",
-        background="radial-gradient(circle at bottom right,#002d1a 0%,#050505 100%)",
+        background="radial-gradient(ellipse at 80% 100%, #001a0d 0%, #050505 65%)",
     )
+
 
 def semester_page():
     return rx.box(
