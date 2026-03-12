@@ -2941,66 +2941,138 @@ def upgrade_button() -> rx.Component:
     )
 
 
-def chat_input_field() -> rx.Component:
-    return rx.hstack(
-        rx.text_area(
-            id="chat_input",
-            placeholder="Ask Alex AI anything...",
-            value=AppState.chat_input,
-            on_change=AppState.set_chat_input,
-            background="rgba(12, 18, 14, 0.92)",
-            border="1px solid rgba(255,255,255,0.09)",
-            color="rgba(255,255,255,0.92)",
-            flex="1",
-            min_height="52px",
-            max_height="140px",
-            resize="none",
-            border_radius="14px",
-            padding="14px 18px",
-            font_size="0.95rem",
-            style={
-                "box_shadow": "inset 0 0 0 1px rgba(0,255,136,0.08)",   # inner green tint
-                "_placeholder": {"color": "rgba(255,255,255,0.22)"},
-                "_focus": {
-                    "border": "1px solid rgba(0,255,136,0.40)",
-                    "box_shadow": (
-                        "inset 0 0 0 1px rgba(0,255,136,0.12), "
-                        "0 0 0 3px rgba(0,255,136,0.07)"             # outer soft halo on focus
-                    ),
-                    "outline": "none",
-                    "background": "rgba(10, 20, 13, 0.96)",
-                },
-            },
-        ),
-        rx.button(
-            rx.cond(AppState.is_processing, rx.spinner(size="1", color="white"), rx.icon(tag="arrow_up", color="white", size=18)),
-            id="chat_send_btn",
-            on_click=AppState.send_message,
-            is_disabled=AppState.is_processing,
-            border_radius="12px", width="52px", height="52px",
-            style={
-                "background": rx.cond(
-                    AppState.is_processing,
-                    "rgba(0,255,136,0.25)",
-                    "rgba(0,255,136,0.82)",
-                ),
-                "border": "none",
-                "cursor": "pointer",
-                "transition": "all 0.2s ease",
-                "flex_shrink": "0",
-                "_hover": {
-                    "background": "#00ff88",
-                    "box_shadow": "0 0 18px rgba(0,255,136,0.45)",
-                    "transform": "scale(1.04)",
-                },
-                "_active": {"transform": "scale(0.97)"},
-            },
-        ),
-        rx.script(ENTER_TO_SEND_JS),
-        align="end", spacing="2", width="100%",
-    )
+# ═══════════════════════════════════════════════════════
+# INPUT + BUTTON FIX — Replace chat_input_field() only
+# ═══════════════════════════════════════════════════════
+#
+# What changed:
+#   1. Unified container — input + button share ONE border/background
+#      so they read as a single component, not two floating elements
+#   2. Button color — dropped from #00ff88 neon to a calm white/frost tone
+#      It still stands out but doesn't scream over the dark theme
+#   3. Glow removed — no more box-shadow bloom on the button
+#      Hover just brightens slightly — restrained and clean
+#   4. Button is now INSIDE the box, right edge, vertically centered
+#      Gap between textarea and button is gone
 
-# ──────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════
+# INPUT BOX FINAL FIX — kills the double-box issue
+# Replace chat_input_field() with this
+# ═══════════════════════════════════════════════════════
+#
+# Root cause: rx.text_area renders a <textarea> with its own
+# Radix/browser background + border that sits ON TOP of the shell.
+# Fix: inject a <style> tag that nukes all default textarea styling
+# so the shell is the ONLY visible box.
+
+def chat_input_field() -> rx.Component:
+    return rx.box(
+        # Kill ALL default textarea appearance globally for this component
+        rx.html("""
+        <style>
+          #chat_input,
+          #chat_input textarea,
+          [id="chat_input"] {
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            -webkit-appearance: none !important;
+            resize: none !important;
+          }
+        </style>
+        """),
+
+        rx.hstack(
+            rx.text_area(
+                id="chat_input",
+                placeholder="Ask Alex AI anything...",
+                value=AppState.chat_input,
+                on_change=AppState.set_chat_input,
+                color="rgba(255,255,255,0.88)",
+                flex="1",
+                min_height="48px",
+                max_height="130px",
+                padding="14px 4px 14px 16px",
+                font_size="0.93rem",
+                line_height="1.55",
+                style={
+                    "background": "transparent",
+                    "border": "none",
+                    "outline": "none",
+                    "box_shadow": "none",
+                    "resize": "none",
+                    "_placeholder": {"color": "rgba(255,255,255,0.22)"},
+                    "_focus": {
+                        "background": "transparent",
+                        "border": "none",
+                        "outline": "none",
+                        "box_shadow": "none",
+                    },
+                    "scrollbar_width": "none",
+                    "&::-webkit-scrollbar": {"display": "none"},
+                },
+            ),
+
+            rx.button(
+                rx.cond(
+                    AppState.is_processing,
+                    rx.spinner(size="1", color="rgba(255,255,255,0.5)"),
+                    rx.icon(tag="arrow_up", size=16, color="rgba(255,255,255,0.85)"),
+                ),
+                id="chat_send_btn",
+                on_click=AppState.send_message,
+                is_disabled=AppState.is_processing,
+                width="36px",
+                height="36px",
+                border_radius="8px",
+                flex_shrink="0",
+                align_self="flex-end",
+                margin_bottom="7px",
+                margin_right="7px",
+                style={
+                    "background": rx.cond(
+                        AppState.is_processing,
+                        "rgba(255,255,255,0.04)",
+                        "rgba(0,180,90,0.16)",
+                    ),
+                    "border": "1px solid rgba(0,255,136,0.20)",
+                    "cursor": "pointer",
+                    "transition": "all 0.18s ease",
+                    "_hover": {
+                        "background": "rgba(0,180,90,0.28)",
+                        "border": "1px solid rgba(0,255,136,0.40)",
+                        "transform": "translateY(-1px)",
+                    },
+                    "_active": {"transform": "translateY(0)"},
+                    "_disabled": {
+                        "opacity": "0.3",
+                        "cursor": "not-allowed",
+                        "transform": "none",
+                    },
+                },
+            ),
+
+            align="end",
+            spacing="0",
+            width="100%",
+        ),
+
+        rx.script(ENTER_TO_SEND_JS),
+
+        # ── The ONE visible box ─────────────────────────────
+        width="100%",
+        border_radius="14px",
+        background="rgba(10, 16, 12, 0.90)",
+        border="1px solid rgba(255,255,255,0.09)",
+        style={
+            "transition": "border-color 0.2s ease, box-shadow 0.2s ease",
+            "&:focus-within": {
+                "border": "1px solid rgba(0,255,136,0.28)",
+                "box_shadow": "0 0 0 3px rgba(0,255,136,0.05)",
+            },
+        },
+    )
 # NEW: Empty chat state — centered like ChatGPT home
 # ──────────────────────────────────────────────────────────────
 
