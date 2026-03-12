@@ -2548,7 +2548,9 @@ AUTO_SCROLL_OBSERVER_JS = """
 ENTER_TO_SEND_JS = """
 (function(){
   function attach(){
-    var ta = document.getElementById("chat_input");
+    var wrapper = document.getElementById("chat_input");
+    if(!wrapper) return false;
+    var ta = wrapper.tagName === "TEXTAREA" ? wrapper : wrapper.querySelector("textarea");
     if(!ta) return false;
     if(ta.dataset.enterSendAttached) return true;
 
@@ -2753,7 +2755,7 @@ def pricing_modal() -> rx.Component:
                 rx.hstack(
                     rx.vstack(
                         rx.text("Alex AI Premium", font_size="1.1rem", font_weight="700", color="white"),
-                        rx.text("LKR 200.00", font_size="2.1rem", font_weight="800", color="white"),
+                        rx.text("USD 3.20", font_size="2.1rem", font_weight="800", color="white"),
                         rx.text("per month", color="rgba(255,255,255,0.55)", font_size="0.85rem"),
                         rx.box(height="8px"),
                         rx.text("• Unlimited daily messages", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
@@ -2833,16 +2835,11 @@ def pricing_modal() -> rx.Component:
                                 background="rgba(22,101,52,0.2)",
                             ),
                             rx.button(
-                                rx.cond(
-                                    AppState.payment_processing,
-                                    rx.hstack(rx.spinner(size="1", color="white"), rx.text("Redirecting..."), spacing="2"),
-                                    rx.text("Continue to Secure Checkout"),
-                                ),
-                                on_click=AppState.initiate_payment(1),
+                                "Continue to Secure Checkout",
+                                on_click=rx.redirect("https://alexstudies.lemonsqueezy.com/checkout/buy/54b3aa5e-c5f8-4a71-8fff-7efd75983e31", is_external=True),
                                 width="100%",
                                 height="52px",
                                 border_radius="12px",
-                                is_disabled=AppState.payment_processing,
                                 style={
                                     "background": "linear-gradient(135deg,#16a34a,#22c55e)",
                                     "border": "none",
@@ -2854,7 +2851,7 @@ def pricing_modal() -> rx.Component:
                             ),
                         ),
                         rx.text(
-                            "Secure checkout via PayHere",
+                            "Secure checkout via Lemon Squeezy",
                             color="rgba(255,255,255,0.35)",
                             font_size="0.75rem",
                         ),
@@ -2951,19 +2948,28 @@ def chat_input_field() -> rx.Component:
             placeholder="Ask Alex AI anything...",
             value=AppState.chat_input,
             on_change=AppState.set_chat_input,
-            background="rgba(30,30,35,0.85)",
-            border="1px solid rgba(0,255,136,0.25)",
-            color="white",
+            background="rgba(12, 18, 14, 0.92)",
+            border="1px solid rgba(255,255,255,0.09)",
+            color="rgba(255,255,255,0.92)",
             flex="1",
             min_height="52px",
             max_height="140px",
             resize="none",
             border_radius="14px",
-            padding="14px 16px",
+            padding="14px 18px",
             font_size="0.95rem",
             style={
-                "_placeholder": {"color": "rgba(255,255,255,0.3)"},
-                "_focus": {"border_color": "rgba(0,255,136,0.55)", "box_shadow": "0 0 0 2px rgba(0,255,136,0.12)", "outline": "none"},
+                "box_shadow": "inset 0 0 0 1px rgba(0,255,136,0.08)",   # inner green tint
+                "_placeholder": {"color": "rgba(255,255,255,0.22)"},
+                "_focus": {
+                    "border": "1px solid rgba(0,255,136,0.40)",
+                    "box_shadow": (
+                        "inset 0 0 0 1px rgba(0,255,136,0.12), "
+                        "0 0 0 3px rgba(0,255,136,0.07)"             # outer soft halo on focus
+                    ),
+                    "outline": "none",
+                    "background": "rgba(10, 20, 13, 0.96)",
+                },
             },
         ),
         rx.button(
@@ -2973,9 +2979,21 @@ def chat_input_field() -> rx.Component:
             is_disabled=AppState.is_processing,
             border_radius="12px", width="52px", height="52px",
             style={
-                "background": rx.cond(AppState.is_processing, "rgba(0,255,136,0.3)", "rgba(0,255,136,0.85)"),
-                "border": "none", "cursor": "pointer", "transition": "all 0.2s ease", "flex_shrink": "0",
-                "_hover": {"background": "#00ff88", "box_shadow": "0 0 16px rgba(0,255,136,0.5)"},
+                "background": rx.cond(
+                    AppState.is_processing,
+                    "rgba(0,255,136,0.25)",
+                    "rgba(0,255,136,0.82)",
+                ),
+                "border": "none",
+                "cursor": "pointer",
+                "transition": "all 0.2s ease",
+                "flex_shrink": "0",
+                "_hover": {
+                    "background": "#00ff88",
+                    "box_shadow": "0 0 18px rgba(0,255,136,0.45)",
+                    "transform": "scale(1.04)",
+                },
+                "_active": {"transform": "scale(0.97)"},
             },
         ),
         rx.script(ENTER_TO_SEND_JS),
@@ -3051,6 +3069,19 @@ def empty_chat_panel() -> rx.Component:
 # ──────────────────────────────────────────────────────────────
 # Active chat state — messages + input at bottom
 # ──────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════
+# FINAL POLISH — 2 targeted fixes
+# Replace these two functions in your alexai.py
+# ═══════════════════════════════════════════════════════
+
+
+# ── FIX 2: active_chat_panel ─────────────────────────
+# Before: user bubble had `padding="10px 16px"` — a little tight
+#         assistant text had no horizontal padding — text touched the edges
+# After:  user bubble → `padding="12px 20px"`, max-width tightened to 62%
+#         assistant → `padding="4px 4px 4px 8px"` left indent so it reads like a reply
+#         overall message vstack gets `padding_x="2.5em"` — more generous side margins
+
 def active_chat_panel() -> rx.Component:
     return rx.box(
         # Scrollable messages area
@@ -3061,31 +3092,50 @@ def active_chat_panel() -> rx.Component:
                     lambda msg: rx.box(
                         rx.cond(
                             msg["role"] == "user",
-            # User message — right aligned, subtle pill
+
+                            # ── User bubble ──────────────────
                             rx.box(
                                 rx.text(
                                     msg["content"],
-                                    color="white",
-                                    font_size="0.95rem",
+                                    color="rgba(255,255,255,0.92)",
+                                    font_size="0.93rem",
+                                    line_height="1.6",
                                 ),
-                                background="rgba(255,255,255,0.08)",
+                                background="rgba(255,255,255,0.07)",
+                                border="1px solid rgba(255,255,255,0.09)",
                                 border_radius="18px 18px 4px 18px",
-                                padding="10px 16px",
-                                max_width="70%",
+                                padding="12px 20px",           # more breathing room
+                                max_width="62%",               # slightly tighter — feels more like a message
                                 margin_left="auto",
                                 margin_right="0",
                             ),
-            # Assistant message — left aligned, plain no box
+
+                            # ── Assistant reply ──────────────
                             rx.box(
                                 rx.markdown(msg["content"]),
-                                color="rgba(255,255,255,0.95)",
-                                font_size="0.95rem",
-                                max_width="85%",
+                                color="rgba(255,255,255,0.88)",
+                                font_size="0.93rem",
+                                line_height="1.7",             # slightly more open leading
+                                max_width="86%",
+                                padding_left="6px",            # subtle left indent — reads like a reply
                                 margin_left="0",
+                                style={
+                                    # tighten up markdown's default tight spacing
+                                    "& p": {"margin_bottom": "0.6em"},
+                                    "& ul, & ol": {"padding_left": "1.4em", "margin_bottom": "0.5em"},
+                                    "& li": {"margin_bottom": "0.25em"},
+                                    "& code": {
+                                        "background": "rgba(0,255,136,0.08)",
+                                        "border": "1px solid rgba(0,255,136,0.15)",
+                                        "border_radius": "4px",
+                                        "padding": "1px 6px",
+                                        "font_size": "0.85em",
+                                    },
+                                },
                             ),
                         ),
                         width="100%",
-                        margin_bottom="16px",
+                        margin_bottom="20px",                  # more space between turns
                         display="flex",
                         flex_direction="column",
                     ),
@@ -3103,43 +3153,65 @@ def active_chat_panel() -> rx.Component:
                                 </style>
                                 <div style="
                                     width:4px;height:4px;
-                                    background:#FFD700;
+                                    background:#00ff88;
                                     border-radius:50%;
                                     position:absolute;
                                     top:50%;left:50%;
                                     margin-top:-2px;margin-left:-2px;
                                     animation:alexorbit 0.3s linear infinite;
-                                    box-shadow:0 0 4px rgba(255,215,0,0.9);
+                                    box-shadow:0 0 4px rgba(0,255,136,0.9);
                                 "></div>
                             </div>
-                            <span style="color:rgba(255,255,255,0.35);font-size:0.82rem;font-weight:300;letter-spacing:0.5px;">Alex is thinking...</span>
+                            <span style="color:rgba(255,255,255,0.3);font-size:0.8rem;font-weight:300;letter-spacing:0.5px;">Alex is thinking...</span>
                         </div>
                     """),
                 ),
                 rx.box(id="chat_bottom_anchor", height="1px"),
-                width="100%", max_width="760px", margin_x="auto",padding_x="2em", padding_bottom="1em",
+                width="100%",
+                max_width="760px",
+                margin_x="auto",
+                padding_x="2.5em",       # generous side margins — text doesn't touch the edge
+                padding_top="1.5em",
+                padding_bottom="1em",
             ),
             id="chat_scroll",
-            flex="1", min_height="0", overflow_y="auto", padding="1em", width="100%",
+            flex="1",
+            min_height="0",
+            overflow_y="auto",
+            padding="0",
+            width="100%",
+            style={
+                # hide scrollbar on webkit but keep it functional
+                "&::-webkit-scrollbar": {"width": "4px"},
+                "&::-webkit-scrollbar-track": {"background": "transparent"},
+                "&::-webkit-scrollbar-thumb": {
+                    "background": "rgba(255,255,255,0.1)",
+                    "border_radius": "4px",
+                },
+            },
         ),
         rx.script(AUTO_SCROLL_OBSERVER_JS),
-        # Tier bar
         tier_status_bar(),
-        # Input bar at bottom
         rx.cond(
             AppState.can_send_message,
             rx.box(
                 chat_input_field(),
-                width="100%", max_width="860px", margin_x="auto", padding="0 1em 1em 1em",
+                width="100%",
+                max_width="860px",
+                margin_x="auto",
+                padding="0 1.5em 1.2em 1.5em",   # slightly more bottom padding
             ),
             upgrade_button(),
         ),
         pricing_modal(),
-        width="100%", height="100%", display="flex", flex_direction="column",
-        overflow="hidden", background="transparent", position="relative",
+        width="100%",
+        height="100%",
+        display="flex",
+        flex_direction="column",
+        overflow="hidden",
+        background="transparent",
+        position="relative",
     )
-
-
 # ──────────────────────────────────────────────────────────────
 # Main chat panel — switches between empty and active
 # ──────────────────────────────────────────────────────────────
@@ -4026,24 +4098,74 @@ def secure_reset_form() -> rx.Component:
     )
 
 
+def _auth_legal_footer() -> rx.Component:
+    """Professional legal footer shown on all auth pages (login / register / reset)."""
+    link_style = {
+        "color": "rgba(148,163,184,0.75)",
+        "font_size": "0.78rem",
+        "text_decoration": "none",
+        "_hover": {"color": "#00ff88", "text_decoration": "underline"},
+        "transition": "color 0.15s ease",
+        "white_space": "nowrap",
+    }
+    divider = rx.text("·", color="rgba(148,163,184,0.35)", font_size="0.78rem")
+    return rx.box(
+        rx.hstack(
+            rx.link("Return Policy",  href="/return-policy",  **link_style),
+            divider,
+            rx.link("Privacy Policy", href="/privacy-policy", **link_style),
+            divider,
+            rx.link("Terms",          href="/terms",          **link_style),
+            divider,
+            rx.link("Support",        href="/support",        **link_style),
+            align="center",
+            justify="center",
+            flex_wrap="wrap",
+            spacing="2",
+            width="100%",
+        ),
+        rx.text(
+            "© 2025 Alex Studies. All rights reserved.",
+            color="rgba(100,116,139,0.55)",
+            font_size="0.72rem",
+            text_align="center",
+            margin_top="6px",
+        ),
+        width="100%",
+        text_align="center",
+        padding="18px 0 10px",
+        z_index="2",
+    )
+
+
 def _auth_page_shell(content: rx.Component) -> rx.Component:
     return rx.box(
         rx.image(src="/bg_image.png", position="fixed", top="0", left="0", width="100vw", height="100vh", object_fit="cover", z_index="-1"),
-        rx.center(
-            rx.card(
-                content,
-                width=AUTH_CARD_WIDTH,
-                padding="22px 14px",
-                border="1px solid rgba(34,197,94,0.20)",
-                border_radius="12px",
-                background="linear-gradient(120deg,rgba(2,16,22,0.88),rgba(17,74,72,0.52))",
+        rx.box(
+            rx.center(
+                rx.card(
+                    content,
+                    width=AUTH_CARD_WIDTH,
+                    padding="22px 14px",
+                    border="1px solid rgba(34,197,94,0.20)",
+                    border_radius="12px",
+                    background="linear-gradient(120deg,rgba(2,16,22,0.88),rgba(17,74,72,0.52))",
+                ),
+                width="100%",
+                padding_top="0",
             ),
-            height="100vh",
+            _auth_legal_footer(),
+            display="flex",
+            flex_direction="column",
+            justify_content="center",
+            align_items="center",
+            min_height="100vh",
+            padding="20px 16px",
             z_index="1",
         ),
         password_eye_script(),
         auth_token_bootstrap_script(),
-        width="100vw", height="100vh", position="relative", overflow="hidden",
+        width="100vw", min_height="100vh", position="relative", overflow_x="hidden",
         on_mount=AppState.init_auth_forms,
     )
 
