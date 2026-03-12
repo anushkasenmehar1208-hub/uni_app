@@ -3457,8 +3457,8 @@ def support_page():
             (
                 "Contact",
                 "Email: support.alexstudies@gmail.com\n"
-                "Phone +94 767104776"
-                "Address: Colombo, Sri Lanka"
+                "Phone +94 767104776\n"
+                "Address: Colombo, Sri Lanka\n"
                 "Please include your username and issue summary for faster help.",
             ),
             (
