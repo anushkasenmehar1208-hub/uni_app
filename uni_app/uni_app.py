@@ -3389,7 +3389,7 @@ def return_policy_page():
             ),
             (
                 "Support Contact",
-                "Email support at support@alexstudies.com with:\n"
+                "Email support at support.alexstudies@gmail.com with:\n"
                 "- account username\n"
                 "- payment/order reference\n"
                 "- short description of the issue",
@@ -3456,7 +3456,7 @@ def support_page():
         [
             (
                 "Contact",
-                "Email: support@alexstudies.com\n"
+                "Email: support.alexstudies@gmail.com\n"
                 "Please include your username and issue summary for faster help.",
             ),
             (
