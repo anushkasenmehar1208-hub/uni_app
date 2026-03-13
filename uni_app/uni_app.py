@@ -83,10 +83,10 @@ def _normalize_person_name(name: str) -> str:
 
 def _extract_person_name(*texts: str) -> str:
     patterns = (
-        r"\b(?:student name|name)\s*[:=-]\s*([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})\b",
-        r"\b(?:hi|hello|hey)\s*,?\s+([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})\b",
-        r"let'?s get started,\s*([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})\b",
-        r"\bcall(?:ing)?\s+(?:the student\s+)?([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})\b",
+        r"\b(?:student name|name)\s*[:=-]\s*([A-Za-z][A-Za-z'-]*(?:\s+[A-Za-z][A-Za-z'-]*){0,2})\b",
+        r"\b(?:hi|hello|hey)\s*,?\s*([A-Za-z][A-Za-z'-]*)\b(?=[,.!?]|$)",
+        r"let'?s get started,\s*([A-Za-z][A-Za-z'-]*)\b(?=[,.!?]|$)",
+        r"\bcall(?:ing)?\s+(?:the student\s+)?([A-Za-z][A-Za-z'-]*(?:\s+[A-Za-z][A-Za-z'-]*){0,2})\b(?=[,.!?]|$)",
     )
     for text in texts:
         raw = (text or "").strip()
@@ -797,6 +797,10 @@ class AppState(reflex_local_auth.LocalAuthState):
         return f"{y}:{s}"
 
     @rx.var
+    def account_display_name(self) -> str:
+        return _normalize_person_name(getattr(self.authenticated_user, "username", ""))
+
+    @rx.var
     def inferred_name(self) -> str:
         recent_messages = [
             str(msg.get("content", ""))
@@ -804,6 +808,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         ]
         return _extract_person_name(
             self.name,
+            self.account_display_name,
             self.memory_summary,
             self.adaptive_profile,
             *recent_messages,
@@ -849,6 +854,12 @@ class AppState(reflex_local_auth.LocalAuthState):
                 self.is_started = bool(memory.is_started)
                 self.selected_year = memory.selected_year or ""
                 self.memory_summary = memory.summary or ""
+            if not (self.name or "").strip():
+                account = session.exec(
+                    select(LocalUser).where(LocalUser.id == uid)
+                ).one_or_none()
+                if account is not None:
+                    self.name = _normalize_person_name(account.username)
 
     def _check_and_reset_daily_count(self, uid: int) -> None:
         today_str = date.today().isoformat()
@@ -2016,6 +2027,7 @@ Recent conversation:
         self._switch_scope(uid, "home")
         if not (self.name or "").strip():
             inferred_name = _extract_person_name(
+                self.account_display_name,
                 self.memory_summary,
                 self.adaptive_profile,
                 *[str(msg.get("content", "")) for msg in self.chat_history[-6:]],
@@ -2208,6 +2220,14 @@ Subjects:\n{courses_text}"""
         model_to_use = self.active_model_name
         adaptive_profile = (self.adaptive_profile or "").strip() or self._get_adaptive_profile(uid)
         self.adaptive_profile = adaptive_profile
+        if not (self.name or "").strip():
+            inferred_name = _extract_person_name(
+                self.account_display_name,
+                self.memory_summary,
+                adaptive_profile,
+            )
+            if inferred_name:
+                self.name = inferred_name
 
         try:
             self.chat_history.append({"role": "user", "content": user_msg})
@@ -2405,6 +2425,16 @@ Your response style rules:
                     self.chat_history[assistant_index]["content"] = final_text
 
                 finally:
+                    inferred_name = _extract_person_name(
+                        self.name,
+                        self.account_display_name,
+                        final_text,
+                        self.memory_summary,
+                        adaptive_profile,
+                    )
+                    if inferred_name and inferred_name != self.name:
+                        self.name = inferred_name
+                        self._save_memory(uid)
                     self._save_message(uid, "assistant", final_text)
                     _append_training_example(uid, self.active_scope, user_msg, final_text)
                     self.is_processing = False
@@ -2507,6 +2537,16 @@ Your response style rules:
             self.chat_history[assistant_index]["content"] = final_text
 
         finally:
+            inferred_name = _extract_person_name(
+                self.name,
+                self.account_display_name,
+                final_text,
+                self.memory_summary,
+                adaptive_profile,
+            )
+            if inferred_name and inferred_name != self.name:
+                self.name = inferred_name
+                self._save_memory(uid)
             self._save_message(uid, "assistant", final_text)
             _append_training_example(uid, self.active_scope, user_msg, final_text)
             self.is_processing = False
