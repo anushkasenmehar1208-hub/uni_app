@@ -4766,13 +4766,34 @@ def landing_page():
         }
         return rx.box(
             rx.vstack(
-                _marketing_badge("Pricing Preview"),
+                _marketing_badge("PRICING"),
                 rx.heading(
                     "Monthly Plan",
                     color="white",
                     font_size="clamp(2rem, 4vw, 3rem)",
                     line_height="1.05",
                     font_family="var(--landing-display-font)",
+                ),
+                rx.hstack(
+                    rx.text(
+                        "LKR 2,500",
+                        color="white",
+                        font_size="clamp(2.2rem, 4.4vw, 3.4rem)",
+                        font_weight="800",
+                        line_height="1",
+                        font_family="var(--landing-display-font)",
+                    ),
+                    rx.text(
+                        "/ month",
+                        color="rgba(148,163,184,0.86)",
+                        font_size="1.05rem",
+                        font_weight="600",
+                        align_self="end",
+                        padding_bottom="7px",
+                    ),
+                    spacing="2",
+                    align="end",
+                    width="100%",
                 ),
                 rx.text(
                     "Simple recurring access for AI-powered semester guidance.",
@@ -4785,22 +4806,22 @@ def landing_page():
                     rx.text("• AI semester guidance", **feature_style),
                     rx.text("• Daily teaching support", **feature_style),
                     rx.text("• Structured semester learning", **feature_style),
-                    rx.text("• Secure login before checkout", **feature_style),
+                    rx.text("• Semester-wise study planning", **feature_style),
                     spacing="2",
                     align_items="flex-start",
                     width="100%",
                 ),
-                rx.hstack(
+                rx.vstack(
                     _marketing_button("Get Started", auth_routes.LOGIN_ROUTE),
                     rx.text(
-                        "Pricing details and checkout are shown inside the secure student flow.",
+                        "Secure student login required before checkout.",
                         color="rgba(148,163,184,0.82)",
                         font_size="0.9rem",
                         line_height="1.6",
+                        width="100%",
                     ),
-                    align="center",
-                    gap="16px",
-                    flex_wrap="wrap",
+                    spacing="2",
+                    align_items="flex-start",
                     width="100%",
                 ),
                 spacing="4",
