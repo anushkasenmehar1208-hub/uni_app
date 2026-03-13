@@ -74,6 +74,37 @@ def sanitize_for_ui(text: str) -> str:
     return text
 
 
+def _normalize_person_name(name: str) -> str:
+    cleaned = re.sub(r"\s+", " ", (name or "").strip().lower())
+    if not cleaned:
+        return ""
+    return re.sub(r"(^|[\s'-])([a-z])", lambda m: m.group(1) + m.group(2).upper(), cleaned)
+
+
+def _extract_person_name(*texts: str) -> str:
+    patterns = (
+        r"\b(?:student name|name)\s*[:=-]\s*([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})\b",
+        r"\b(?:hi|hello|hey)\s*,?\s+([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})\b",
+        r"let'?s get started,\s*([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})\b",
+        r"\bcall(?:ing)?\s+(?:the student\s+)?([A-Z][A-Za-z'-]*(?:\s+[A-Z][A-Za-z'-]*){0,2})\b",
+    )
+    for text in texts:
+        raw = (text or "").strip()
+        if not raw:
+            continue
+        normalized = _normalize_person_name(raw)
+        if normalized and " " not in normalized and normalized.lower() not in {"student", "user"}:
+            return normalized
+        for pattern in patterns:
+            match = re.search(pattern, raw, re.IGNORECASE)
+            if not match:
+                continue
+            candidate = _normalize_person_name(match.group(1))
+            if candidate and candidate.lower() not in {"student", "user"}:
+                return candidate
+    return ""
+
+
 def friendly_groq_error(e: Exception) -> str:
     s = str(e)
     if _is_rate_limit_text(s) or " 429" in s.lower():
@@ -765,6 +796,27 @@ class AppState(reflex_local_auth.LocalAuthState):
         s = self.selected_semester.replace("Semester ", "").strip()
         return f"{y}:{s}"
 
+    @rx.var
+    def inferred_name(self) -> str:
+        recent_messages = [
+            str(msg.get("content", ""))
+            for msg in list(self.chat_history or [])[-6:]
+        ]
+        return _extract_person_name(
+            self.name,
+            self.memory_summary,
+            self.adaptive_profile,
+            *recent_messages,
+        )
+
+    @rx.var
+    def display_name(self) -> str:
+        return self.inferred_name
+
+    @rx.var
+    def greeting_text(self) -> str:
+        return "Hi, " + self.display_name if self.display_name else "Hi"
+
     def _load_profile(self, uid: int) -> None:
         if uid < 0:
             return
@@ -786,6 +838,17 @@ class AppState(reflex_local_auth.LocalAuthState):
                 profile.last_message_date.isoformat()
                 if profile.last_message_date else ""
             )
+
+            memory = session.exec(
+                select(UserMemory).where(UserMemory.user_id == uid)
+            ).one_or_none()
+            if memory is not None:
+                self.step = int(memory.step or 0)
+                self.name = _normalize_person_name(memory.name)
+                self.degree = memory.degree or ""
+                self.is_started = bool(memory.is_started)
+                self.selected_year = memory.selected_year or ""
+                self.memory_summary = memory.summary or ""
 
     def _check_and_reset_daily_count(self, uid: int) -> None:
         today_str = date.today().isoformat()
@@ -1293,8 +1356,9 @@ class AppState(reflex_local_auth.LocalAuthState):
 
             ph_hash = _generate_ph_hash(order_id, amount, currency)
 
-            first_name = (self.name or "Student").split()[0]
-            last_name  = " ".join((self.name or "Student").split()[1:]) or "User"
+            normalized_name = _normalize_person_name(self.name) or "Student User"
+            first_name = normalized_name.split()[0]
+            last_name  = " ".join(normalized_name.split()[1:]) or "User"
 
             return_url = f"{APP_BASE_URL}/payment/success"
             cancel_url = f"{APP_BASE_URL}/payment/cancel"
@@ -1344,7 +1408,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.payment_processing = False
 
     def set_name(self, value: str):
-        self.name = value
+        self.name = _normalize_person_name(value)
         uid = self._uid()
         self._save_memory(uid)
 
@@ -1540,11 +1604,14 @@ class AppState(reflex_local_auth.LocalAuthState):
     def _save_memory(self, uid: int) -> None:
         if uid < 0:
             return
+        normalized_name = _normalize_person_name(self.name)
+        if self.name != normalized_name:
+            self.name = normalized_name
         with rx.session() as session:
             mem = session.exec(select(UserMemory).where(UserMemory.user_id == uid)).one_or_none()
             if mem is None:
                 mem = UserMemory(user_id=uid)  # type: ignore
-            mem.step = self.step; mem.name = self.name; mem.degree = self.degree
+            mem.step = self.step; mem.name = normalized_name; mem.degree = self.degree
             mem.is_started = self.is_started; mem.selected_year = self.selected_year
             mem.summary = self.memory_summary
             session.add(mem)
@@ -1947,6 +2014,15 @@ Recent conversation:
         self._migrate_legacy_messages_once(uid)
         self.view_mode = "home"; self.selected_semester = ""
         self._switch_scope(uid, "home")
+        if not (self.name or "").strip():
+            inferred_name = _extract_person_name(
+                self.memory_summary,
+                self.adaptive_profile,
+                *[str(msg.get("content", "")) for msg in self.chat_history[-6:]],
+            )
+            if inferred_name:
+                self.name = inferred_name
+                self._save_memory(uid)
         if self.selected_year:
             self._ensure_progress_for_year(uid, self.selected_year)
         self._refresh_today_plan(uid)
@@ -2250,6 +2326,7 @@ Subjects:\n{courses_text}"""
                 recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in self.chat_history[-14:]])
                 past_hits = self._past_hits_text(uid, scope, user_msg)
 
+                student_name = _normalize_person_name(self.name) or "Student"
                 teach_prompt = f"""You are Alex, a friendly and patient university tutor helping a {self.degree} student.
 
 Current context:
@@ -2280,9 +2357,9 @@ Your response style rules:
     - Quick practice
 14. Never start a response with "Great question!" or "Certainly!" — just answer directly
 15. If the student makes a mistake, correct gently — say "Almost! Try thinking of it this way..."
-16. Always refer to the student by name: {self.name}
-17. Acknowledge progress occasionally — remind {self.name} they are on Day {day}/110 and how far they've come
-18. If {self.name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
+16. Always refer to the student by name: {student_name}
+17. Acknowledge progress occasionally — remind {student_name} they are on Day {day}/110 and how far they've come
+18. If {student_name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
 19. Adapt to the adaptive profile above for pace, explanation depth, and examples."""
 
                 assistant_index = len(self.chat_history)
@@ -2348,6 +2425,7 @@ Your response style rules:
         rules = "You are the HOME assistant\n" if self.active_scope == "home" else f"You are a SEMESTER assistant for scope {self.active_scope}\n"
         past_hits = self._past_hits_text(uid, self.active_scope, user_msg)
 
+        student_name = _normalize_person_name(self.name) or "Student"
         prompt = f"""You are Alex, a friendly AI study companion inside a university planner app for a {self.degree} student.
 
 Student profile:
@@ -2383,8 +2461,8 @@ Your response style rules:
     - Quick practice
 14. Never start a response with "Great question!" or "Certainly!" — just answer directly
 15. If the student makes a mistake, correct gently — say "Almost! Try thinking of it this way..."
-16. Always refer to the student by name: {self.name}
-17. If {self.name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
+16. Always refer to the student by name: {student_name}
+17. If {student_name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
 18. Adapt to the adaptive profile above for pace, explanation depth, and examples."""
 
         assistant_index = len(self.chat_history)
@@ -2904,20 +2982,69 @@ def upgrade_button() -> rx.Component:
     return rx.box(
         rx.button(
             rx.hstack(
-                rx.text("Unlock Unlimited Access", font_weight="800", font_size="1rem", color="white",
-                        style={"text_shadow": "0 1px 4px rgba(0,0,0,0.6)"}),
+                rx.hstack(
+                    rx.box(
+                        rx.text("✦", color="#dcfce7", font_size="0.9rem", font_weight="800"),
+                        width="28px",
+                        height="28px",
+                        border_radius="999px",
+                        display="flex",
+                        align_items="center",
+                        justify_content="center",
+                        background="rgba(220,252,231,0.1)",
+                        border="1px solid rgba(220,252,231,0.14)",
+                        flex_shrink="0",
+                    ),
+                    rx.vstack(
+                        rx.text(
+                            "Unlock Unlimited Access",
+                            font_weight="800",
+                            font_size="1rem",
+                            color="white",
+                            style={"text_shadow": "0 1px 4px rgba(0,0,0,0.45)"},
+                        ),
+                        rx.text(
+                            "Unlimited chats, saved history, full semester access",
+                            color="rgba(220,252,231,0.72)",
+                            font_size="0.72rem",
+                            font_weight="500",
+                        ),
+                        spacing="0",
+                        align_items="flex-start",
+                    ),
+                    spacing="3",
+                    align="center",
+                ),
                 rx.spacer(),
-                rx.text("→", color="white", font_size="1.4rem", font_weight="bold"),
+                rx.box(
+                    rx.text("→", color="white", font_size="1.15rem", font_weight="700"),
+                    width="34px",
+                    height="34px",
+                    border_radius="10px",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    background="rgba(255,255,255,0.07)",
+                    border="1px solid rgba(255,255,255,0.08)",
+                    flex_shrink="0",
+                ),
                 align="center", spacing="3", width="100%",
             ),
             on_click=AppState.open_pricing_modal,
-            width="100%", height="68px", border_radius="16px",
+            width="100%", min_height="74px", border_radius="16px",
             style={
-                "background": "linear-gradient(135deg, #0d0d0d 0%, #252525 50%, #1a1a1a 100%)",
-                "border": "none", "cursor": "pointer",
-                "box_shadow": "0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
-                "transition": "all 0.25s ease", "padding": "0 24px",
-                "_hover": {"box_shadow": "0 6px 32px rgba(255,255,255,0.1)", "transform": "translateY(-2px)", "filter": "brightness(1.2)"},
+                "background": "linear-gradient(135deg, rgba(12,34,21,0.98) 0%, rgba(18,90,58,0.92) 42%, rgba(6,8,7,0.99) 100%)",
+                "border": "1px solid rgba(110,231,183,0.24)",
+                "cursor": "pointer",
+                "box_shadow": "0 14px 34px rgba(0,0,0,0.42), 0 0 24px rgba(22,163,74,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
+                "transition": "all 0.25s ease",
+                "padding": "16px 24px",
+                "_hover": {
+                    "box_shadow": "0 18px 40px rgba(0,0,0,0.5), 0 0 28px rgba(34,197,94,0.16), inset 0 1px 0 rgba(255,255,255,0.06)",
+                    "transform": "translateY(-2px)",
+                    "filter": "brightness(1.05)",
+                    "border": "1px solid rgba(134,239,172,0.34)",
+                },
                 "_active": {"transform": "translateY(0)"},
             },
         ),
@@ -3050,12 +3177,12 @@ def chat_input_field() -> rx.Component:
         width="100%",
         border_radius="14px",
         background="rgba(10, 16, 12, 0.90)",
-        border="1px solid rgba(255,255,255,0.09)",
+        border="1px solid rgba(34,197,94,0.16)",
         style={
             "transition": "border-color 0.2s ease, box-shadow 0.2s ease",
             "&:focus-within": {
-                "border": "1px solid rgba(0,255,136,0.28)",
-                "box_shadow": "0 0 0 3px rgba(0,255,136,0.05)",
+                "border": "1px solid rgba(52,211,153,0.46)",
+                "box_shadow": "0 0 0 1px rgba(52,211,153,0.18), 0 0 22px rgba(34,197,94,0.1)",
             },
         },
     )
@@ -3150,13 +3277,17 @@ def active_chat_panel() -> rx.Component:
                                     font_size="0.93rem",
                                     line_height="1.6",
                                 ),
-                                background="rgba(255,255,255,0.07)",
-                                border="1px solid rgba(255,255,255,0.09)",
+                                background="linear-gradient(180deg, rgba(255,255,255,0.105) 0%, rgba(255,255,255,0.082) 100%)",
+                                border="1px solid rgba(255,255,255,0.12)",
                                 border_radius="18px 18px 4px 18px",
                                 padding="12px 20px",           # more breathing room
                                 max_width="62%",               # slightly tighter — feels more like a message
                                 margin_left="auto",
                                 margin_right="0",
+                                style={
+                                    "box_shadow": "0 10px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.03)",
+                                    "backdrop_filter": "blur(6px)",
+                                },
                             ),
 
                             # ── Assistant reply ──────────────
@@ -3166,13 +3297,16 @@ def active_chat_panel() -> rx.Component:
                                 font_size="0.93rem",
                                 line_height="1.7",             # slightly more open leading
                                 max_width="86%",
-                                padding_left="6px",            # subtle left indent — reads like a reply
+                                padding_left="10px",           # subtle left indent — reads like a reply
                                 margin_left="0",
                                 style={
                                     # tighten up markdown's default tight spacing
                                     "& p": {"margin_bottom": "0.6em"},
-                                    "& ul, & ol": {"padding_left": "1.4em", "margin_bottom": "0.5em"},
-                                    "& li": {"margin_bottom": "0.25em"},
+                                    "& p + ul, & p + ol": {"margin_top": "0.22em"},
+                                    "& ul, & ol": {"padding_left": "1.78em", "margin_bottom": "0.55em"},
+                                    "& li": {"margin_bottom": "0.3em", "padding_left": "0.14em"},
+                                    "& li::marker": {"color": "rgba(74,222,128,0.9)"},
+                                    "& strong": {"color": "rgba(220,252,231,0.96)"},
                                     "& code": {
                                         "background": "rgba(0,255,136,0.08)",
                                         "border": "1px solid rgba(0,255,136,0.15)",
@@ -4005,9 +4139,25 @@ def sidebar_plan_widget() -> rx.Component:
             ),
             rx.button(
                 rx.hstack(
-                    rx.text("Upgrade to Premium", font_size="0.8rem", font_weight="600", color="white"),
+                    rx.hstack(
+                        rx.box(
+                            rx.text("✦", color="#dcfce7", font_size="0.78rem", font_weight="800"),
+                            width="18px",
+                            height="18px",
+                            border_radius="999px",
+                            display="flex",
+                            align_items="center",
+                            justify_content="center",
+                            background="rgba(220,252,231,0.1)",
+                            border="1px solid rgba(220,252,231,0.12)",
+                            flex_shrink="0",
+                        ),
+                        rx.text("Upgrade to Premium", font_size="0.8rem", font_weight="700", color="white"),
+                        spacing="2",
+                        align="center",
+                    ),
                     rx.spacer(),
-                    rx.text("→", color="rgba(255,255,255,0.5)", font_size="0.9rem"),
+                    rx.text("→", color="rgba(220,252,231,0.76)", font_size="0.9rem"),
                     width="100%",
                     align="center",
                 ),
@@ -4016,13 +4166,14 @@ def sidebar_plan_widget() -> rx.Component:
                 height="44px",
                 border_radius="10px",
                 style={
-                    "background": "rgba(255,255,255,0.06)",
-                    "border": "1px solid rgba(255,255,255,0.14)",
+                    "background": "linear-gradient(135deg, rgba(10,24,16,0.98) 0%, rgba(16,68,43,0.92) 46%, rgba(6,8,7,0.98) 100%)",
+                    "border": "1px solid rgba(110,231,183,0.24)",
                     "cursor": "pointer",
                     "transition": "all 0.2s ease",
+                    "box_shadow": "0 10px 22px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04)",
                     "_hover": {
-                        "background": "rgba(255,255,255,0.1)",
-                        "border": "1px solid rgba(255,255,255,0.25)",
+                        "filter": "brightness(1.05)",
+                        "border": "1px solid rgba(134,239,172,0.34)",
                         "transform": "translateY(-1px)",
                     },
                 },
@@ -4084,7 +4235,7 @@ def home_page():
                 # Left: greeting
                 rx.vstack(
                     rx.text(
-                        "Hi, " + AppState.name,
+                        AppState.greeting_text,
                         color="white",
                         font_size="1rem",
                         font_weight="700",
@@ -4098,7 +4249,7 @@ def home_page():
                         letter_spacing="1.5px",
                         text_transform="uppercase",
                     ),
-                    spacing="0",
+                    spacing="1",
                     align_items="flex-start",
                 ),
 
@@ -4145,7 +4296,7 @@ def home_page():
 
                 width="100%",
                 align="center",
-                padding="1.2em 2em",
+                padding="1.55em 2em 1.15em 1.4em",
                 border_bottom="1px solid rgba(255,255,255,0.06)",
             ),
             flex_shrink="0",
