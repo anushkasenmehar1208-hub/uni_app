@@ -4776,7 +4776,7 @@ def landing_page():
                 ),
                 rx.hstack(
                     rx.text(
-                        "LKR 2,500",
+                        "USD 3.20",
                         color="white",
                         font_size="clamp(2.2rem, 4.4vw, 3.4rem)",
                         font_weight="800",
