@@ -220,13 +220,6 @@ AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 90
 GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS = max(
     60, int(os.getenv("GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS", "600"))
 )
-APP_DASHBOARD_ROUTE = "/app"
-BUSINESS_NAME = "Alex AI"
-SUPPORT_EMAIL = "support.alexstudies@gmail.com"
-SUPPORT_PHONE = "+94 767104776"
-SUPPORT_PHONE_LINK = "tel:+94767104776"
-BUSINESS_LOCATION = "Colombo, Sri Lanka"
-CURRENT_COPYRIGHT_YEAR = str(date.today().year)
 SESSION_SECRET          = os.getenv("SESSION_SECRET", "change-me-in-production").strip() or "change-me-in-production"
 GOOGLE_AUTH_URL         = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL        = "https://oauth2.googleapis.com/token"
@@ -920,7 +913,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             auth_routes.REGISTER_ROUTE,
             "/reset-password",
         ):
-            return rx.redirect(self.post_login_redirect or APP_DASHBOARD_ROUTE)
+            return rx.redirect(self.post_login_redirect or "/")
 
     @rx.event
     def handle_login(self, form_data: dict[str, Any]):
@@ -1951,7 +1944,7 @@ Recent conversation:
             self._ensure_progress_for_year(uid, self.selected_year)
         self._refresh_today_plan(uid)
         self.status_text = ""
-        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+        yield rx.call_script("window.scrollChatToBottom(true);")
 
     @rx.event
     async def new_chat(self):
@@ -1978,7 +1971,7 @@ Recent conversation:
             self._load_messages(uid)
         except Exception as e:
             print(f"ERROR switch_chat: {e}")
-        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+        yield rx.call_script("window.scrollChatToBottom(true);")
 
     @rx.event
     def set_chat_input(self, value: str):
@@ -2090,7 +2083,7 @@ Subjects:\n{courses_text}"""
             print(f"ERROR generate_study_plan: {e}")
             self.chat_history.append({"role":"assistant","content":"Something went wrong generating the plan"})
         self.is_generating_plan = False
-        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+        yield rx.call_script("window.scrollChatToBottom(true);")
 
     @rx.event
     def go_home(self):
@@ -2115,7 +2108,7 @@ Subjects:\n{courses_text}"""
             self.chat_history.append({"role": "assistant", "content": gate_msg})
             self._save_message(uid, "assistant", gate_msg)
             self.show_pricing_modal = True
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            yield rx.call_script("window.scrollChatToBottom(true);")
             return
 
         if client is None:
@@ -2137,12 +2130,7 @@ Subjects:\n{courses_text}"""
             self.chat_history.append({"role": "user", "content": user_msg})
             self._save_message(uid, "user", user_msg)
             yield
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            yield rx.call_script("window.scrollChatToBottom(true);")
             yield
 
             if self.current_session_id:
@@ -2172,7 +2160,7 @@ Subjects:\n{courses_text}"""
         except Exception as e:
             print(f"ERROR save user msg: {e}")
 
-        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+        yield rx.call_script("window.scrollChatToBottom(true);")
 
         # ============================
         # SEMESTER MODE
@@ -2195,7 +2183,7 @@ Subjects:\n{courses_text}"""
                     self.chat_history.append({"role": "assistant", "content": full_text})
                     self._save_message(uid, "assistant", full_text)
                     self.is_processing = False
-                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    yield rx.call_script("window.scrollChatToBottom(true);")
                     return
 
                 if self._detect_edit_plan_intent(user_msg):
@@ -2211,7 +2199,7 @@ Subjects:\n{courses_text}"""
                     self.chat_history.append({"role": "assistant", "content": bot_text})
                     self._save_message(uid, "assistant", bot_text)
                     self.is_processing = False
-                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    yield rx.call_script("window.scrollChatToBottom(true);")
                     return
 
                 if self._detect_next_topic_intent(user_msg):
@@ -2239,7 +2227,7 @@ Subjects:\n{courses_text}"""
                     self.chat_history.append({"role": "assistant", "content": msg})
                     self._save_message(uid, "assistant", msg)
                     self.is_processing = False
-                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    yield rx.call_script("window.scrollChatToBottom(true);")
                     return
 
                 entry = self._get_today_entry(plan, day)
@@ -2288,7 +2276,7 @@ Your response style rules:
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
                 yield
-                yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                yield rx.call_script("window.scrollChatToBottom(true);")
 
                 buf = ""
                 last_scroll = 0
@@ -2308,7 +2296,7 @@ Your response style rules:
                             final_text = safe_live_text
                             self.chat_history[assistant_index]["content"] = final_text
                             yield
-                            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                            yield rx.call_script("window.scrollChatToBottom(true);")
                             break
 
                         self.chat_history[assistant_index]["content"] = buf
@@ -2316,7 +2304,7 @@ Your response style rules:
 
                         if len(buf) - last_scroll >= 220:
                             last_scroll = len(buf)
-                            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                            yield rx.call_script("window.scrollChatToBottom(true);")
 
                     if not final_text:
                         final_text = sanitize_for_ui(buf.strip() or "Empty reply please try again")
@@ -2334,7 +2322,7 @@ Your response style rules:
                     await self._maybe_auto_update_scope_summary(uid, self.active_scope)
                     await self._maybe_auto_update_global_memory(uid)
                     await self._maybe_auto_update_adaptive_profile(uid)
-                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    yield rx.call_script("window.scrollChatToBottom(true);")
 
                 return
 
@@ -2390,7 +2378,7 @@ Your response style rules:
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
         yield
-        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+        yield rx.call_script("window.scrollChatToBottom(true);")
 
         buf = ""
         last_scroll = 0
@@ -2409,7 +2397,7 @@ Your response style rules:
                     final_text = safe_live_text
                     self.chat_history[assistant_index]["content"] = final_text
                     yield
-                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    yield rx.call_script("window.scrollChatToBottom(true);")
                     break
 
                 self.chat_history[assistant_index]["content"] = buf
@@ -2417,7 +2405,7 @@ Your response style rules:
 
                 if len(buf) - last_scroll >= 220:
                     last_scroll = len(buf)
-                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    yield rx.call_script("window.scrollChatToBottom(true);")
 
             if not final_text:
                 final_text = sanitize_for_ui(buf.strip() or "Empty reply please try again")
@@ -2435,7 +2423,7 @@ Your response style rules:
             await self._maybe_auto_update_scope_summary(uid, self.active_scope)
             await self._maybe_auto_update_global_memory(uid)
             await self._maybe_auto_update_adaptive_profile(uid)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            yield rx.call_script("window.scrollChatToBottom(true);")
 
         return
 
@@ -2500,42 +2488,6 @@ SCROLL_TO_BOTTOM_JS = """
     if (tries < 180) requestAnimationFrame(tick);
   }
   tick();
-})();
-"""
-ENTER_TO_SEND_JS = """
-(function(){
-  function attach(){
-    var wrapper = document.getElementById("chat_input");
-    if(!wrapper) return false;
-    var ta = wrapper.tagName === "TEXTAREA" ? wrapper : wrapper.querySelector("textarea");
-    if(!ta) return false;
-    if(ta.dataset.enterSendAttached) return true;
-
-    ta.dataset.enterSendAttached = "1";
-
-    ta.addEventListener("keydown", function(e){
-      if(e.key === "Enter" && !e.shiftKey){
-        e.preventDefault();
-        var btn = document.getElementById("chat_send_btn");
-        if(btn && !btn.disabled){
-          btn.click();
-        }
-        setTimeout(function(){ try{ ta.focus(); }catch(err){} }, 0);
-      }
-    });
-
-    return true;
-  }
-
-  attach();
-  var t = 0;
-  var iv = setInterval(function(){
-    if(attach() || ++t > 60) clearInterval(iv);
-  }, 300);
-
-  try{
-    new MutationObserver(attach).observe(document.body,{childList:true,subtree:true});
-  }catch(e){}
 })();
 """
 
@@ -2614,7 +2566,7 @@ AUTH_TOKEN_BOOTSTRAP_JS = f"""
       localStorage.setItem("{AUTH_TOKEN_LOCAL_STORAGE_KEY}", token);
     }} catch(e) {{}}
     u.searchParams.delete("auth_token");
-    window.location.replace("{APP_DASHBOARD_ROUTE}");
+    window.location.replace("/");
   }} catch(e) {{}}
 }})();
 """
@@ -3338,406 +3290,6 @@ def google_complete_page():
 # ──────────────────────────────────────────────────────────────
 # Payment pages
 # ──────────────────────────────────────────────────────────────
-def _marketing_button(label: str, href: str, variant: str = "solid") -> rx.Component:
-    base_props = {
-        "on_click": rx.redirect(href),
-        "size": "3",
-        "height": "48px",
-        "padding": "0 22px",
-        "border_radius": "9999px",
-        "font_weight": "700",
-        "letter_spacing": "0.01em",
-        "cursor": "pointer",
-        "transition": "all 0.2s ease",
-    }
-    if variant == "solid":
-        return rx.button(
-            label,
-            background="linear-gradient(135deg,var(--landing-accent) 0%, var(--landing-accent-2) 100%)",
-            color="#04111d",
-            border="none",
-            box_shadow="0 18px 44px rgba(16,185,129,0.24)",
-            _hover={
-                "transform": "translateY(-1px)",
-                "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
-            },
-            _active={"transform": "translateY(0px)"},
-            **base_props,
-        )
-    return rx.button(
-        label,
-        background="rgba(3,8,20,0.36)",
-        color="white",
-        border="1px solid var(--landing-border-strong)",
-        backdrop_filter="blur(14px)",
-        box_shadow="0 10px 36px rgba(2,6,23,0.24)",
-        _hover={
-            "background": "rgba(15,23,42,0.56)",
-            "border_color": "rgba(148,163,184,0.38)",
-            "transform": "translateY(-1px)",
-        },
-        _active={"transform": "translateY(0px)"},
-        **base_props,
-    )
-
-
-def _marketing_badge(text: str) -> rx.Component:
-    return rx.box(
-        rx.text(
-            text,
-            font_size="0.76rem",
-            font_weight="700",
-            letter_spacing="0.16em",
-            text_transform="uppercase",
-            color="rgba(226,232,240,0.82)",
-        ),
-        display="inline-flex",
-        align_items="center",
-        width="fit-content",
-        padding="9px 14px",
-        border_radius="9999px",
-        border="1px solid rgba(148,163,184,0.18)",
-        background="rgba(8,15,30,0.58)",
-        backdrop_filter="blur(16px)",
-    )
-
-
-def _marketing_card(title: str, body: str, kicker: str = "") -> rx.Component:
-    content = []
-    if kicker:
-        content.append(
-            rx.text(
-                kicker,
-                color="var(--landing-accent-2)",
-                font_size="0.78rem",
-                font_weight="700",
-                letter_spacing="0.12em",
-                text_transform="uppercase",
-            )
-        )
-    content.extend(
-        [
-            rx.heading(
-                title,
-                size="5",
-                color="white",
-                font_family="var(--landing-display-font)",
-            ),
-            rx.text(
-                body,
-                color="rgba(226,232,240,0.76)",
-                line_height="1.7",
-            ),
-        ]
-    )
-    return rx.box(
-        rx.vstack(
-            *content,
-            spacing="3",
-            align_items="flex-start",
-            width="100%",
-        ),
-        padding="24px",
-        border_radius="22px",
-        border="1px solid var(--landing-border)",
-        background="linear-gradient(180deg,rgba(7,12,24,0.82),rgba(5,8,17,0.62))",
-        box_shadow="0 20px 70px rgba(2,6,23,0.32)",
-        backdrop_filter="blur(16px)",
-        width="100%",
-        height="100%",
-    )
-
-
-def _marketing_step_card(step: str, title: str, body: str) -> rx.Component:
-    return rx.box(
-        rx.vstack(
-            rx.box(
-                step,
-                width="48px",
-                height="48px",
-                border_radius="16px",
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                background="linear-gradient(135deg,rgba(56,189,248,0.24),rgba(16,185,129,0.26))",
-                border="1px solid rgba(125,211,252,0.22)",
-                color="white",
-                font_weight="800",
-                font_family="var(--landing-display-font)",
-                font_size="1rem",
-            ),
-            rx.heading(
-                title,
-                size="5",
-                color="white",
-                font_family="var(--landing-display-font)",
-            ),
-            rx.text(body, color="rgba(226,232,240,0.76)", line_height="1.7"),
-            spacing="3",
-            align_items="flex-start",
-            width="100%",
-        ),
-        padding="24px",
-        border_radius="22px",
-        border="1px solid var(--landing-border)",
-        background="linear-gradient(180deg,rgba(8,14,28,0.84),rgba(5,8,18,0.62))",
-        box_shadow="0 20px 70px rgba(2,6,23,0.3)",
-        width="100%",
-        height="100%",
-    )
-
-
-def _public_nav() -> rx.Component:
-    nav_link_style = {
-        "color": "rgba(226,232,240,0.76)",
-        "font_weight": "600",
-        "text_decoration": "none",
-        "_hover": {"color": "white"},
-    }
-    return rx.box(
-        rx.hstack(
-            rx.link(
-                rx.hstack(
-                    rx.box(
-                        "A",
-                        width="44px",
-                        height="44px",
-                        border_radius="14px",
-                        display="flex",
-                        align_items="center",
-                        justify_content="center",
-                        background="linear-gradient(135deg,var(--landing-accent) 0%, var(--landing-accent-2) 100%)",
-                        color="#04111d",
-                        font_weight="900",
-                        font_size="1.2rem",
-                        font_family="var(--landing-display-font)",
-                        box_shadow="0 18px 44px rgba(16,185,129,0.22)",
-                        flex_shrink="0",
-                    ),
-                    rx.vstack(
-                        rx.text(
-                            BUSINESS_NAME,
-                            color="white",
-                            font_weight="700",
-                            font_family="var(--landing-display-font)",
-                            font_size="1.02rem",
-                            line_height="1.1",
-                        ),
-                        rx.text(
-                            "AI-powered study platform for degree students",
-                            color="rgba(148,163,184,0.82)",
-                            font_size="0.8rem",
-                            line_height="1.2",
-                        ),
-                        spacing="1",
-                        align_items="flex-start",
-                    ),
-                    spacing="3",
-                    align="center",
-                ),
-                href="/",
-                text_decoration="none",
-            ),
-            rx.spacer(),
-            rx.hstack(
-                rx.link("Support", href="/support", **nav_link_style),
-                _marketing_button("Student Login", auth_routes.LOGIN_ROUTE, "secondary"),
-                spacing="3",
-                align="center",
-                flex_wrap="wrap",
-                justify="end",
-            ),
-            width="100%",
-            align="center",
-            gap="16px",
-            flex_wrap="wrap",
-        ),
-        padding="16px 18px",
-        border_radius="24px",
-        border="1px solid var(--landing-border)",
-        background="rgba(5,10,22,0.58)",
-        backdrop_filter="blur(18px)",
-        box_shadow="0 20px 80px rgba(2,6,23,0.34)",
-        width="100%",
-    )
-
-
-def _public_footer() -> rx.Component:
-    footer_link_style = {
-        "color": "rgba(226,232,240,0.76)",
-        "text_decoration": "none",
-        "font_weight": "600",
-        "_hover": {"color": "white", "text_decoration": "underline"},
-    }
-    return rx.box(
-        rx.hstack(
-            rx.vstack(
-                rx.text(
-                    BUSINESS_NAME,
-                    color="white",
-                    font_weight="700",
-                    font_family="var(--landing-display-font)",
-                    font_size="1.15rem",
-                ),
-                rx.text(
-                    "AI-powered education platform for semester-wise guidance and daily structured study support.",
-                    color="rgba(226,232,240,0.72)",
-                    max_width="420px",
-                    line_height="1.7",
-                ),
-                rx.link(SUPPORT_EMAIL, href=f"mailto:{SUPPORT_EMAIL}", **footer_link_style),
-                rx.link(SUPPORT_PHONE, href=SUPPORT_PHONE_LINK, **footer_link_style),
-                rx.text(BUSINESS_LOCATION, color="rgba(148,163,184,0.82)"),
-                rx.text(
-                    f"© {CURRENT_COPYRIGHT_YEAR} {BUSINESS_NAME}. All rights reserved.",
-                    color="rgba(100,116,139,0.88)",
-                    font_size="0.82rem",
-                ),
-                spacing="2",
-                align_items="flex-start",
-            ),
-            rx.vstack(
-                rx.text(
-                    "Public Links",
-                    color="white",
-                    font_weight="700",
-                    font_family="var(--landing-display-font)",
-                ),
-                rx.hstack(
-                    rx.link("Return Policy", href="/return-policy", **footer_link_style),
-                    rx.link("Privacy Policy", href="/privacy-policy", **footer_link_style),
-                    rx.link("Terms", href="/terms", **footer_link_style),
-                    rx.link("Support", href="/support", **footer_link_style),
-                    flex_wrap="wrap",
-                    gap="14px",
-                    width="100%",
-                ),
-                rx.text(
-                    "Students can review support, policies, and business contact details before logging in.",
-                    color="rgba(148,163,184,0.82)",
-                    line_height="1.7",
-                    max_width="360px",
-                ),
-                spacing="3",
-                align_items="flex-start",
-                width="100%",
-            ),
-            width="100%",
-            justify="between",
-            align="start",
-            gap="28px",
-            flex_wrap="wrap",
-        ),
-        padding="30px",
-        border_radius="28px",
-        border="1px solid var(--landing-border)",
-        background="linear-gradient(180deg,rgba(7,12,24,0.82),rgba(5,8,17,0.62))",
-        box_shadow="0 24px 80px rgba(2,6,23,0.36)",
-        backdrop_filter="blur(18px)",
-        width="100%",
-    )
-
-
-def _public_page_frame(main_content: rx.Component) -> rx.Component:
-    return rx.box(
-        rx.box(
-            position="absolute",
-            top="-120px",
-            right="-120px",
-            width="420px",
-            height="420px",
-            border_radius="9999px",
-            background="radial-gradient(circle, rgba(16,185,129,0.28) 0%, rgba(16,185,129,0) 70%)",
-            filter="blur(10px)",
-        ),
-        rx.box(
-            position="absolute",
-            top="18%",
-            left="-140px",
-            width="420px",
-            height="420px",
-            border_radius="9999px",
-            background="radial-gradient(circle, rgba(56,189,248,0.22) 0%, rgba(56,189,248,0) 70%)",
-            filter="blur(18px)",
-        ),
-        rx.box(
-            _public_nav(),
-            main_content,
-            _public_footer(),
-            width="min(1180px, calc(100vw - 32px))",
-            margin="0 auto",
-            padding_top="20px",
-            padding_bottom="40px",
-            display="flex",
-            flex_direction="column",
-            gap="28px",
-            position="relative",
-            z_index="1",
-        ),
-        style={
-            "--landing-accent": "#34d399",
-            "--landing-accent-2": "#38bdf8",
-            "--landing-border": "rgba(148,163,184,0.18)",
-            "--landing-border-strong": "rgba(148,163,184,0.28)",
-            "--landing-display-font": "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-            "--landing-body-font": "'Plus Jakarta Sans', 'Inter', sans-serif",
-        },
-        background=(
-            "radial-gradient(circle at top left, rgba(56,189,248,0.12) 0%, transparent 28%),"
-            "radial-gradient(circle at top right, rgba(16,185,129,0.14) 0%, transparent 24%),"
-            "linear-gradient(180deg, #020617 0%, #030712 40%, #02030a 100%)"
-        ),
-        color="white",
-        min_height="100vh",
-        width="100%",
-        overflow="hidden",
-        font_family="var(--landing-body-font)",
-        position="relative",
-    )
-
-
-def _marketing_section(
-    eyebrow: str,
-    title: str,
-    description: str,
-    body: rx.Component,
-    section_id: str = "",
-) -> rx.Component:
-    return rx.box(
-        rx.vstack(
-            _marketing_badge(eyebrow),
-            rx.heading(
-                title,
-                color="white",
-                font_size="clamp(1.8rem, 3.5vw, 3rem)",
-                line_height="1.08",
-                letter_spacing="-0.03em",
-                font_family="var(--landing-display-font)",
-                max_width="760px",
-            ),
-            rx.text(
-                description,
-                color="rgba(226,232,240,0.76)",
-                font_size="1.02rem",
-                line_height="1.8",
-                max_width="760px",
-            ),
-            body,
-            spacing="5",
-            align_items="flex-start",
-            width="100%",
-        ),
-        id=section_id,
-        padding="clamp(24px, 4vw, 40px)",
-        border_radius="30px",
-        border="1px solid var(--landing-border)",
-        background="linear-gradient(180deg,rgba(7,12,24,0.8),rgba(5,8,17,0.6))",
-        box_shadow="0 24px 80px rgba(2,6,23,0.38)",
-        backdrop_filter="blur(18px)",
-        width="100%",
-    )
-
-
 @rx.page(route="/payment/success", title="Payment Successful", image=FAVICON_32)
 def payment_success_page():
     return rx.box(
@@ -3750,7 +3302,7 @@ def payment_success_page():
                     rx.text("⚡ Note: If your premium access isn't reflected yet, please wait a few seconds and refresh.", color="rgba(255,215,0,0.8)", font_size="0.82rem", text_align="center"),
                     background="rgba(255,215,0,0.08)", border="1px solid rgba(255,215,0,0.2)", border_radius="12px", padding="12px 20px", max_width="420px",
                 ),
-                rx.button("Go to Dashboard →", on_click=rx.redirect(APP_DASHBOARD_ROUTE), color_scheme="green", size="3",
+                rx.button("Go to App →", on_click=rx.redirect("/"), color_scheme="green", size="3",
                     style={"background":"linear-gradient(90deg,#065f46,#10b981)","border":"none","color":"white","font_weight":"700","cursor":"pointer"}),
                 spacing="5", align="center",
             ),
@@ -3768,7 +3320,7 @@ def payment_cancel_page():
                 rx.text("❌", font_size="4rem"),
                 rx.heading("Payment Cancelled", size="7", color="white"),
                 rx.text("No charges were made. You can try again anytime.", color="rgba(255,255,255,0.7)", text_align="center"),
-                rx.button("Back to Dashboard", on_click=rx.redirect(APP_DASHBOARD_ROUTE), variant="outline", color_scheme="green", size="3"),
+                rx.button("Back to App", on_click=rx.redirect("/"), variant="outline", color_scheme="green", size="3"),
                 spacing="5", align="center",
             ),
             height="100vh",
@@ -3778,48 +3330,39 @@ def payment_cancel_page():
 
 
 def legal_page_shell(title: str, subtitle: str, sections: list[tuple[str, str]]) -> rx.Component:
-    return _public_page_frame(
-        rx.vstack(
-            rx.box(
-                rx.vstack(
-                    _marketing_badge("Public Information"),
-                    rx.heading(
-                        title,
-                        color="white",
-                        font_size="clamp(2rem, 4vw, 3.4rem)",
-                        line_height="1.05",
-                        letter_spacing="-0.04em",
-                        font_family="var(--landing-display-font)",
-                    ),
-                    rx.text(
-                        subtitle,
-                        color="rgba(226,232,240,0.78)",
-                        font_size="1.02rem",
-                        line_height="1.8",
-                        max_width="760px",
-                    ),
-                    spacing="4",
-                    align_items="flex-start",
+    return rx.box(
+        rx.center(
+            rx.vstack(
+                rx.hstack(
+                    rx.button("Back to App", on_click=rx.redirect("/"), variant="outline", color_scheme="green"),
                     width="100%",
+                    align="center",
                 ),
-                padding="clamp(28px, 4vw, 42px)",
-                border_radius="30px",
-                border="1px solid var(--landing-border)",
-                background="linear-gradient(180deg,rgba(7,12,24,0.8),rgba(5,8,17,0.62))",
-                box_shadow="0 24px 80px rgba(2,6,23,0.38)",
-                backdrop_filter="blur(18px)",
-                width="100%",
+                rx.heading(title, size="8", color="white"),
+                rx.text(subtitle, color="rgba(255,255,255,0.72)", text_align="left", width="100%"),
+                *[
+                    rx.box(
+                        rx.heading(section_title, size="5", color="#00ff88"),
+                        rx.text(section_text, color="rgba(255,255,255,0.78)", white_space="pre-wrap"),
+                        padding="1.1em",
+                        border_radius="12px",
+                        border="1px solid rgba(0,255,136,0.22)",
+                        background="rgba(3,12,10,0.6)",
+                        width="100%",
+                    )
+                    for section_title, section_text in sections
+                ],
+                spacing="4",
+                width="min(92vw, 940px)",
+                padding="2em",
+                align_items="stretch",
             ),
-            *[
-                _marketing_card(section_title, section_text, "Alex AI")
-                for section_title, section_text in sections
-            ],
-            spacing="5",
             width="100%",
-            align_items="stretch",
-            padding_top="12px",
-            padding_bottom="8px",
-        )
+        ),
+        min_height="100vh",
+        width="100%",
+        background="radial-gradient(circle at top right,#003120 0%,#050505 62%)",
+        padding_y="2em",
     )
 
 
@@ -3827,7 +3370,7 @@ def legal_page_shell(title: str, subtitle: str, sections: list[tuple[str, str]])
 def return_policy_page():
     return legal_page_shell(
         "Return Policy",
-        "Simple refund and cancellation information for Alex AI subscriptions.",
+        "Simple refund and cancellation information for Alex Studies subscriptions.",
         [
             (
                 "Refunds",
@@ -3841,7 +3384,7 @@ def return_policy_page():
             ),
             (
                 "Support Contact",
-                f"Email support at {SUPPORT_EMAIL} with:\n"
+                "Email support at support.alexstudies@gmail.com with:\n"
                 "- account username\n"
                 "- payment/order reference\n"
                 "- short description of the issue",
@@ -3854,7 +3397,7 @@ def return_policy_page():
 def privacy_policy_page():
     return legal_page_shell(
         "Privacy Policy",
-        "How we collect, use, and protect your data on Alex AI.",
+        "How we collect, use, and protect your data on Alex Studies.",
         [
             (
                 "User Data",
@@ -3879,7 +3422,7 @@ def privacy_policy_page():
 def terms_page():
     return legal_page_shell(
         "Terms of Service",
-        "Basic usage terms for Alex AI.",
+        "Basic usage terms for Alex Studies.",
         [
             (
                 "Website Usage Rules",
@@ -3908,9 +3451,9 @@ def support_page():
         [
             (
                 "Contact",
-                f"Email: {SUPPORT_EMAIL}\n"
-                f"Phone: {SUPPORT_PHONE}\n"
-                f"Address: {BUSINESS_LOCATION}\n"
+                "Email: support.alexstudies@gmail.com\n"
+                "Phone +94 767104776\n"
+                "Address: Colombo, Sri Lanka\n"
                 "Please include your username and issue summary for faster help.",
             ),
             (
@@ -4472,7 +4015,7 @@ def _or_divider() -> rx.Component:
 def secure_login_form() -> rx.Component:
     return rx.form(
         rx.vstack(
-            rx.heading("Login to Alex AI", size="7"),
+            rx.heading("Login into your Account", size="7"),
             _auth_error(AppState.login_error),
             _google_inline_button(),
             rx.cond(GOOGLE_OAUTH_ENABLED, _or_divider(), rx.fragment()),
@@ -4499,7 +4042,7 @@ def secure_login_form() -> rx.Component:
 def secure_register_form() -> rx.Component:
     return rx.form(
         rx.vstack(
-            rx.heading("Create your Alex AI account", size="7"),
+            rx.heading("Create an account", size="7"),
             _auth_error(AppState.register_error),
             rx.cond(
                 AppState.register_success,
@@ -4526,7 +4069,7 @@ def secure_register_form() -> rx.Component:
 def secure_reset_form() -> rx.Component:
     return rx.form(
         rx.vstack(
-            rx.heading("Reset your Alex AI password", size="7"),
+            rx.heading("Reset Password", size="7"),
             _auth_error(AppState.reset_error),
             rx.cond(
                 AppState.reset_success,
@@ -4579,7 +4122,7 @@ def _auth_legal_footer() -> rx.Component:
             width="100%",
         ),
         rx.text(
-            f"© {CURRENT_COPYRIGHT_YEAR} {BUSINESS_NAME}. All rights reserved.",
+            "© 2025 Alex Studies. All rights reserved.",
             color="rgba(100,116,139,0.55)",
             font_size="0.72rem",
             text_align="center",
@@ -4638,389 +4181,17 @@ def reset_password_page():
 
 @rx.page(
     route="/",
-    title="Alex AI | AI Study Assistant for University Students",
-    description="Alex AI analyzes your degree, organizes each semester, and guides you day by day with a structured 105-day learning plan.",
+    title="Alex Studies - AI-Powered University Degree Learning",
+    description="Learn a full university degree with AI, day by day...",
     image=FAVICON_32,
     meta=[
-        {"name": "keywords", "content": "AI study assistant, university students, semester learning, guided study plan"},
+        {"name": "keywords", "content": "AI university, online degree, AI learning"},
         {"name": "robots", "content": "index, follow"},
-        {"property": "og:title", "content": "Alex AI | AI Study Assistant for University Students"},
+        {"property": "og:title", "content": "Alex Studies - AI-Powered University Degree Learning"},
         {"property": "og:url", "content": "https://alexstudies.com"},
         {"property": "og:type", "content": "website"},
     ],
-)
-def landing_page():
-    def hero_detail_row(title: str, body: str) -> rx.Component:
-        return rx.hstack(
-            rx.box(
-                width="12px",
-                height="12px",
-                border_radius="9999px",
-                background="linear-gradient(135deg,var(--landing-accent) 0%, var(--landing-accent-2) 100%)",
-                box_shadow="0 0 20px rgba(56,189,248,0.28)",
-                flex_shrink="0",
-                margin_top="7px",
-            ),
-            rx.vstack(
-                rx.text(title, color="white", font_weight="700"),
-                rx.text(body, color="rgba(226,232,240,0.74)", line_height="1.7"),
-                spacing="1",
-                align_items="flex-start",
-                width="100%",
-            ),
-            align="start",
-            spacing="3",
-            width="100%",
-        )
-
-    def feature_grid() -> rx.Component:
-        return rx.box(
-            _marketing_card(
-                "Students enter their degree name",
-                "A student begins by entering the degree they are studying, so Alex AI can understand the academic path ahead.",
-                "01",
-            ),
-            _marketing_card(
-                "AI analyzes subjects and semester structure",
-                "Alex AI reviews the semester flow and subject breakdown so the learning sequence follows the degree structure.",
-                "02",
-            ),
-            _marketing_card(
-                "AI creates a semester-wise learning path",
-                "The platform organizes the degree semester by semester instead of showing a generic course list.",
-                "03",
-            ),
-            _marketing_card(
-                "Students get daily guided teaching for 105 days per semester",
-                "Each semester is turned into a guided 105-day plan so students know what to learn each day.",
-                "04",
-            ),
-            _marketing_card(
-                "It acts like a digital university professor",
-                "Alex AI explains topics, keeps the plan structured, and supports students with daily academic guidance.",
-                "05",
-            ),
-            display="grid",
-            grid_template_columns="repeat(auto-fit, minmax(220px, 1fr))",
-            gap="18px",
-            width="100%",
-        )
-
-    def steps_grid() -> rx.Component:
-        return rx.box(
-            _marketing_step_card(
-                "1",
-                "Enter your degree",
-                "Start by telling Alex AI what degree program you are studying.",
-            ),
-            _marketing_step_card(
-                "2",
-                "AI analyzes your semester subjects",
-                "The system maps subjects and semesters to understand your academic structure.",
-            ),
-            _marketing_step_card(
-                "3",
-                "Receive a 105-day guided plan",
-                "Each semester is organized into a structured study path with a daily schedule.",
-            ),
-            _marketing_step_card(
-                "4",
-                "Learn daily with AI support",
-                "Students study day by day with AI teaching support that feels like a digital university professor.",
-            ),
-            display="grid",
-            grid_template_columns="repeat(auto-fit, minmax(220px, 1fr))",
-            gap="18px",
-            width="100%",
-        )
-
-    def audience_grid() -> rx.Component:
-        return rx.box(
-            _marketing_card(
-                "University students",
-                "Built for learners who need a clear academic support system throughout their university journey.",
-            ),
-            _marketing_card(
-                "Degree students",
-                "Made for students studying full degree programs that need semester-wise organization.",
-            ),
-            _marketing_card(
-                "Students who want step-by-step semester guidance",
-                "Ideal for learners who want the next academic step explained clearly instead of guessing what comes next.",
-            ),
-            _marketing_card(
-                "Students who need structured daily study help",
-                "Designed for students who stay consistent when daily tasks are mapped out with clear guidance.",
-            ),
-            display="grid",
-            grid_template_columns="repeat(auto-fit, minmax(220px, 1fr))",
-            gap="18px",
-            width="100%",
-        )
-
-    def pricing_card() -> rx.Component:
-        feature_style = {
-            "color": "rgba(226,232,240,0.82)",
-            "font_size": "0.98rem",
-            "line_height": "1.7",
-        }
-        return rx.box(
-            rx.vstack(
-                _marketing_badge("Pricing Preview"),
-                rx.heading(
-                    "Monthly Plan",
-                    color="white",
-                    font_size="clamp(2rem, 4vw, 3rem)",
-                    line_height="1.05",
-                    font_family="var(--landing-display-font)",
-                ),
-                rx.text(
-                    "Simple recurring access for AI-powered semester guidance.",
-                    color="rgba(226,232,240,0.76)",
-                    font_size="1.02rem",
-                    line_height="1.8",
-                    max_width="620px",
-                ),
-                rx.vstack(
-                    rx.text("• AI semester guidance", **feature_style),
-                    rx.text("• Daily teaching support", **feature_style),
-                    rx.text("• Structured semester learning", **feature_style),
-                    rx.text("• Secure login before checkout", **feature_style),
-                    spacing="2",
-                    align_items="flex-start",
-                    width="100%",
-                ),
-                rx.hstack(
-                    _marketing_button("Get Started", auth_routes.LOGIN_ROUTE),
-                    rx.text(
-                        "Pricing details and checkout are shown inside the secure student flow.",
-                        color="rgba(148,163,184,0.82)",
-                        font_size="0.9rem",
-                        line_height="1.6",
-                    ),
-                    align="center",
-                    gap="16px",
-                    flex_wrap="wrap",
-                    width="100%",
-                ),
-                spacing="4",
-                align_items="flex-start",
-                width="100%",
-            ),
-            padding="clamp(28px, 4vw, 42px)",
-            border_radius="30px",
-            border="1px solid var(--landing-border)",
-            background="linear-gradient(135deg,rgba(7,12,24,0.88) 0%, rgba(8,18,31,0.78) 55%, rgba(6,12,24,0.88) 100%)",
-            box_shadow="0 28px 90px rgba(2,6,23,0.42)",
-            width="100%",
-        )
-
-    def trust_grid() -> rx.Component:
-        return rx.vstack(
-            rx.box(
-                _marketing_card(
-                    "AI-powered education platform",
-                    "Alex AI is a focused study service built to support university learning with AI guidance.",
-                ),
-                _marketing_card(
-                    "Semester-wise learning guidance",
-                    "The platform explains the degree structure semester by semester instead of giving a generic chatbot response.",
-                ),
-                _marketing_card(
-                    "Daily structured study support",
-                    "Students receive daily learning direction through a structured semester plan they can actually follow.",
-                ),
-                _marketing_card(
-                    "Student-focused academic assistance",
-                    "Alex AI is designed for students who want practical academic help, not just open-ended AI chat.",
-                ),
-                display="grid",
-                grid_template_columns="repeat(auto-fit, minmax(220px, 1fr))",
-                gap="18px",
-                width="100%",
-            ),
-            rx.box(
-                rx.vstack(
-                    rx.text(
-                        "Alex AI makes the service understandable before login.",
-                        color="white",
-                        font_weight="700",
-                        font_size="1.05rem",
-                        font_family="var(--landing-display-font)",
-                    ),
-                    rx.text(
-                        "Students, parents, and business reviewers can see what the product does, who it is for, how it works, and where to find support and policy information before any sign-in step.",
-                        color="rgba(226,232,240,0.76)",
-                        line_height="1.8",
-                    ),
-                    spacing="2",
-                    align_items="flex-start",
-                    width="100%",
-                ),
-                padding="24px",
-                border_radius="24px",
-                border="1px solid rgba(56,189,248,0.18)",
-                background="linear-gradient(180deg,rgba(8,16,29,0.78),rgba(6,11,22,0.62))",
-                width="100%",
-            ),
-            spacing="4",
-            width="100%",
-            align_items="stretch",
-        )
-
-    hero = rx.box(
-        rx.box(
-            rx.vstack(
-                _marketing_badge("AI-powered study platform"),
-                rx.heading(
-                    "AI Study Assistant for University Students",
-                    color="white",
-                    font_size="clamp(2.9rem, 7vw, 5.4rem)",
-                    line_height="0.98",
-                    letter_spacing="-0.05em",
-                    font_family="var(--landing-display-font)",
-                    max_width="760px",
-                ),
-                rx.text(
-                    "Alex AI analyzes your degree organizes each semester and guides you day by day with a structured 105-day learning plan",
-                    color="rgba(226,232,240,0.8)",
-                    font_size="clamp(1rem, 2vw, 1.18rem)",
-                    line_height="1.8",
-                    max_width="720px",
-                ),
-                rx.hstack(
-                    _marketing_button("Start Learning", auth_routes.LOGIN_ROUTE),
-                    _marketing_button("Contact Support", "/support", "secondary"),
-                    gap="14px",
-                    flex_wrap="wrap",
-                    width="100%",
-                ),
-                rx.box(
-                    _marketing_card(
-                        "Semester-wise AI guidance",
-                        "Students get a clearer path through each semester before they begin the daily plan.",
-                    ),
-                    _marketing_card(
-                        "105-day guided teaching",
-                        "Each semester is taught through a structured day-by-day learning sequence.",
-                    ),
-                    _marketing_card(
-                        "Public support and policy pages",
-                        "Support, terms, privacy, and return policy stay visible before login.",
-                    ),
-                    display="grid",
-                    grid_template_columns="repeat(auto-fit, minmax(210px, 1fr))",
-                    gap="16px",
-                    width="100%",
-                ),
-                spacing="5",
-                align_items="flex-start",
-                width="100%",
-            ),
-            rx.box(
-                rx.vstack(
-                    _marketing_badge("What Alex AI Does"),
-                    rx.heading(
-                        "A digital university professor for each semester",
-                        size="7",
-                        color="white",
-                        font_family="var(--landing-display-font)",
-                    ),
-                    hero_detail_row(
-                        "Students enter a degree name",
-                        "Alex AI starts with the degree program so the guidance matches the student's academic path.",
-                    ),
-                    hero_detail_row(
-                        "AI organizes the semester structure",
-                        "Subjects are analyzed semester by semester to build a realistic study sequence.",
-                    ),
-                    hero_detail_row(
-                        "A 105-day semester plan is generated",
-                        "Each semester becomes a guided daily plan instead of an unstructured list of topics.",
-                    ),
-                    hero_detail_row(
-                        "Daily AI teaching support stays available",
-                        "Students learn step by step with AI support throughout the semester journey.",
-                    ),
-                    rx.box(
-                        rx.text(
-                            "This is a real student-facing education service with public support and policy pages available before login.",
-                            color="rgba(226,232,240,0.78)",
-                            line_height="1.8",
-                        ),
-                        padding="20px",
-                        border_radius="22px",
-                        border="1px solid rgba(52,211,153,0.18)",
-                        background="rgba(7,14,24,0.68)",
-                        width="100%",
-                    ),
-                    spacing="4",
-                    align_items="flex-start",
-                    width="100%",
-                ),
-                padding="clamp(26px, 4vw, 38px)",
-                border_radius="30px",
-                border="1px solid var(--landing-border)",
-                background="linear-gradient(180deg,rgba(7,12,24,0.84),rgba(5,8,17,0.66))",
-                box_shadow="0 28px 90px rgba(2,6,23,0.42)",
-                backdrop_filter="blur(18px)",
-                width="100%",
-            ),
-            display="grid",
-            grid_template_columns="repeat(auto-fit, minmax(320px, 1fr))",
-            gap="24px",
-            width="100%",
-            align_items="stretch",
-        ),
-        padding_top="10px",
-        width="100%",
-    )
-
-    return _public_page_frame(
-        rx.vstack(
-            hero,
-            _marketing_section(
-                "What Alex AI Does",
-                "A clear public explanation of the service",
-                "Alex AI is built for university students who need a guided way to understand and study their degree structure.",
-                feature_grid(),
-                "what-alex-ai-does",
-            ),
-            _marketing_section(
-                "How It Works",
-                "From degree name to guided daily learning",
-                "The product flow is simple and understandable before any login or payment step.",
-                steps_grid(),
-                "how-it-works",
-            ),
-            _marketing_section(
-                "Who It's For",
-                "Built for students who need structured academic guidance",
-                "Alex AI serves students who want semester-by-semester direction and daily study support instead of figuring out the path alone.",
-                audience_grid(),
-                "who-its-for",
-            ),
-            pricing_card(),
-            _marketing_section(
-                "Trust and Clarity",
-                "A real education platform with clear public information",
-                "The service, support details, and public policy pages are visible before login so visitors can understand the business and the product immediately.",
-                trust_grid(),
-                "trust-and-clarity",
-            ),
-            spacing="6",
-            width="100%",
-            align_items="stretch",
-        )
-    )
-
-
-@rx.page(
-    route=APP_DASHBOARD_ROUTE,
-    title="Alex AI Dashboard",
-    description="Alex AI student dashboard",
-    image=FAVICON_32,
-    on_load=AppState.on_load,
+    on_load=AppState.on_load
 )
 @require_app_login
 def index():
@@ -5053,12 +4224,6 @@ app = rx.App(
         rx.el.link(rel="icon", type="image/png", sizes="16x16", href=FAVICON_16),
         rx.el.link(rel="apple-touch-icon", sizes="180x180", href=APPLE_TOUCH_ICON),
         rx.el.link(rel="manifest", href="/site.webmanifest"),
-        rx.el.link(rel="preconnect", href="https://fonts.googleapis.com"),
-        rx.el.link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin=""),
-        rx.el.link(
-            rel="stylesheet",
-            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap",
-        ),
     ],
     style={
         "@keyframes pulse_glow": {
