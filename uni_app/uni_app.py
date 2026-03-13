@@ -3499,19 +3499,19 @@ def _public_nav() -> rx.Component:
             rx.link(
                 rx.hstack(
                     rx.box(
-                        "A",
+                        rx.image(
+                            src="/a_logo.png",
+                            width="100%",
+                            height="100%",
+                            object_fit="cover",
+                        ),
                         width="44px",
                         height="44px",
                         border_radius="14px",
-                        display="flex",
-                        align_items="center",
-                        justify_content="center",
-                        background="linear-gradient(135deg,var(--landing-accent) 0%, var(--landing-accent-2) 100%)",
-                        color="#04111d",
-                        font_weight="900",
-                        font_size="1.2rem",
-                        font_family="var(--landing-display-font)",
-                        box_shadow="0 18px 44px rgba(16,185,129,0.22)",
+                        overflow="hidden",
+                        border="1px solid rgba(148,163,184,0.18)",
+                        background="rgba(4,10,24,0.8)",
+                        box_shadow="0 18px 44px rgba(16,185,129,0.18)",
                         flex_shrink="0",
                     ),
                     rx.vstack(
