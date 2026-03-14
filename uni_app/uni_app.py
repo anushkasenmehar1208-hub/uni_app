@@ -1,10 +1,12 @@
 from dotenv import load_dotenv
 load_dotenv()
+print("========== UNI_APP LOADED ==========")
 
 import os
 import threading
 import hashlib
 import asyncio
+import hmac
 import json
 import base64
 import re
@@ -224,7 +226,7 @@ def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg:
             return
         anon_uid = hashlib.sha256(str(uid).encode()).hexdigest()[:16]
         row = {
-            "ts": datetime.utcnow().isoformat() + "Z",
+            "ts": datetime.now(timezone.utc).isoformat(),
             "uid": anon_uid,
             "scope": (scope or "home")[:64],
             "user": _redact_training_text(user_text)[:1200],
@@ -259,6 +261,8 @@ SUPPORT_PHONE_LINK = "tel:+94767104776"
 BUSINESS_LOCATION = "Colombo, Sri Lanka"
 CURRENT_COPYRIGHT_YEAR = str(date.today().year)
 SESSION_SECRET          = os.getenv("SESSION_SECRET", "change-me-in-production").strip() or "change-me-in-production"
+if SESSION_SECRET == "change-me-in-production":
+    print("WARNING: SESSION_SECRET is set to the default value. Set a real secret in production!")
 GOOGLE_AUTH_URL         = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL        = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL     = "https://openidconnect.googleapis.com/v1/userinfo"
@@ -405,7 +409,7 @@ def _verify_ph_notify(
     secret_hash = _ph_secret_hash()
     raw = f"{merchant_id}{order_id}{amount}{currency}{status_code}{secret_hash}"
     expected = hashlib.md5(raw.encode()).hexdigest().upper()
-    return expected == md5sig.upper()
+    return hmac.compare_digest(expected, md5sig.upper())
 
 
 # ----------------------------
@@ -449,6 +453,15 @@ FULL_CURRICULUM = {
         ],
     },
 }
+
+SEMESTER_NAVIGATION = {
+    "Year 1": ["Semester 1", "Semester 2"],
+    "Year 2": ["Semester 3", "Semester 4"],
+    "Year 3": ["Semester 5", "Semester 6"],
+    "Year 4": ["Semester 7", "Semester 8"],
+}
+
+ONBOARDING_FINAL_STEP = 5
 
 
 # ----------------------------
@@ -506,6 +519,7 @@ class UserMemory(rx.Model, table=True):  # type: ignore
     degree: str = ""
     is_started: bool = False
     selected_year: str = ""
+    selected_semester: str = ""
     summary: str = ""
     updated_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -689,10 +703,11 @@ class AppState(reflex_local_auth.LocalAuthState):
     streak: int = 1
     selected_year: str = ""
     selected_semester: str = ""
-    view_mode: str = "home"
-    active_scope: str = "home"
+    view_mode: str = "semester"
+    active_scope: str = ""
 
     status_text: str = ""
+    show_semester_sidebar: bool = False
 
     sessions: list[dict] = []
     current_session_id: str = ""
@@ -720,9 +735,15 @@ class AppState(reflex_local_auth.LocalAuthState):
     payment_processing: bool = False
     payment_error: str = ""
 
-    @rx.var(cache=False)
+    _cached_uid: int = -1
+
+    @rx.var
     def is_authenticated_now(self) -> bool:
-        return self._uid() >= 0
+        return self._cached_uid >= 0
+
+    @rx.var
+    def has_selected_environment(self) -> bool:
+        return bool(self.selected_year and self.selected_semester)
 
     # ----------------------------------------------------------------
     # NEW: is_empty_chat — True when no real conversation has started
@@ -744,7 +765,6 @@ class AppState(reflex_local_auth.LocalAuthState):
             return 999
         try:
             created = datetime.fromisoformat(self.profile_created_at)
-            from datetime import timezone
             now = datetime.now(timezone.utc)
             if created.tzinfo is None:
                 created = created.replace(tzinfo=timezone.utc)
@@ -795,6 +815,11 @@ class AppState(reflex_local_auth.LocalAuthState):
         y = self.selected_year.replace("Year ", "").strip()
         s = self.selected_semester.replace("Semester ", "").strip()
         return f"{y}:{s}"
+
+    @rx.var
+    def semester_status_label(self) -> str:
+        parts = [p for p in [self.selected_year, self.selected_semester] if p]
+        return " • ".join(parts)
 
     @rx.var
     def account_display_name(self) -> str:
@@ -853,6 +878,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                 self.degree = memory.degree or ""
                 self.is_started = bool(memory.is_started)
                 self.selected_year = memory.selected_year or ""
+                self.selected_semester = memory.selected_semester or ""
                 self.memory_summary = memory.summary or ""
             if not (self.name or "").strip():
                 account = session.exec(
@@ -971,8 +997,11 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def _csrf_ok(self, form_data: dict[str, Any]) -> bool:
         token = str(form_data.get("csrf_token", "") or "")
-        return bool(token) and token == (self.auth_csrf_token or "")
-
+        expected = self.auth_csrf_token or ""
+        if not token or not expected:
+            return False
+        return hmac.compare_digest(token, expected)
+    
     @rx.event
     def init_auth_forms(self):
         self._ensure_auth_csrf()
@@ -1034,6 +1063,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
         self._clear_login_failures(username)
         self._login(int(user.id))
+        self._cached_uid = int(user.id)
         self.app_auth_token = self.auth_token
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
@@ -1067,7 +1097,8 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._ensure_auth_csrf()
         if not GOOGLE_OAUTH_ENABLED:
             return rx.redirect(auth_routes.LOGIN_ROUTE)
-        callback_url = "http://localhost:3000/auth/google/callback"
+        origin = self._router_origin().rstrip("/")
+        callback_url = f"{origin}/auth/google/callback"
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": callback_url,
@@ -1157,6 +1188,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
 
         self._login(resolved_uid)
+        self._cached_uid = resolved_uid
         self.app_auth_token = self.auth_token
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
@@ -1188,14 +1220,11 @@ class AppState(reflex_local_auth.LocalAuthState):
                 auth_sess = db.exec(
                     select(LocalAuthSession).where(
                         LocalAuthSession.session_id == token,
-                        LocalAuthSession.expiration >= datetime.utcnow()
+                        LocalAuthSession.expiration >= datetime.now(timezone.utc)
                     )
                 ).one_or_none()
                 if auth_sess and auth_sess.user_id is not None:
                     resolved_uid = int(auth_sess.user_id)
-                    # One-time use token: consume it immediately to prevent replay.
-                    db.delete(auth_sess)
-                    db.commit()
         except Exception as e:
             print(f"[Google Complete] DB error: {e}")
             yield rx.redirect(auth_routes.LOGIN_ROUTE)
@@ -1208,8 +1237,24 @@ class AppState(reflex_local_auth.LocalAuthState):
 
         print(f"[Google Complete] found session uid={resolved_uid}, logging in...")
         self._login(resolved_uid)
+        self._cached_uid = resolved_uid
         self.app_auth_token = self.auth_token
         new_token = self.auth_token
+
+        # One-time use token: consume AFTER successful login to allow retry on failure.
+        try:
+            with rx.session() as db:
+                auth_sess = db.exec(
+                    select(LocalAuthSession).where(
+                        LocalAuthSession.session_id == token,
+                    )
+                ).one_or_none()
+                if auth_sess:
+                    db.delete(auth_sess)
+                    db.commit()
+        except Exception as e:
+            print(f"[Google Complete] token cleanup error: {e}")
+
         print("[Google Complete] login done, navigating home...")
 
     # Set localStorage directly via JS THEN navigate — avoids async race condition
@@ -1350,7 +1395,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             plan_cfg   = PLANS[plan]
             amount     = plan_cfg["amount"]
             currency   = "LKR"
-            ts         = int(datetime.utcnow().timestamp() * 1000)
+            ts         = int(datetime.now(timezone.utc).timestamp() * 1000)
             order_id   = f"ALEXAI-{uid}-P{plan}-{ts}"
 
             with rx.session() as session:
@@ -1418,6 +1463,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.payment_error = "Something went wrong. Please try again."
             self.payment_processing = False
 
+    @rx.event
     def set_name(self, value: str):
         self.name = _normalize_person_name(value)
         uid = self._uid()
@@ -1427,12 +1473,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     def available_semesters(self) -> list[str]:
         if not self.selected_year:
             return []
-        mapping = {
-            "Year 1": ["Semester 1", "Semester 2"],
-            "Year 2": ["Semester 3", "Semester 4"],
-            "Year 3": ["Semester 5", "Semester 6"],
-        }
-        return mapping.get(self.selected_year, [])
+        return SEMESTER_NAVIGATION.get(self.selected_year, [])
 
     def _uid(self) -> int:
         tokens: list[str] = []
@@ -1467,10 +1508,16 @@ class AppState(reflex_local_auth.LocalAuthState):
             return f"y{y}s{s}"
         return f"{year}|{semester}"
 
+    def _semester_courses(self, year: str, semester: str) -> list[str]:
+        return FULL_CURRICULUM.get(year, {}).get(semester, [])
+
+    def _has_curriculum_for_semester(self, year: str, semester: str) -> bool:
+        return bool(self._semester_courses(year, semester))
+
     def _current_courses_for_scope(self) -> list[str]:
         if self.view_mode != "semester" or not self.selected_year or not self.selected_semester:
             return []
-        return FULL_CURRICULUM.get(self.selected_year, {}).get(self.selected_semester, [])
+        return self._semester_courses(self.selected_year, self.selected_semester)
 
     def _ensure_scope_memory(self, uid: int, scope: str) -> None:
         if uid < 0:
@@ -1623,7 +1670,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             if mem is None:
                 mem = UserMemory(user_id=uid)  # type: ignore
             mem.step = self.step; mem.name = normalized_name; mem.degree = self.degree
-            mem.is_started = self.is_started; mem.selected_year = self.selected_year
+            mem.is_started = self.is_started; mem.selected_year = self.selected_year; mem.selected_semester = self.selected_semester
             mem.summary = self.memory_summary
             session.add(mem)
             session.commit()
@@ -2010,11 +2057,69 @@ Recent conversation:
         lower = text.lower().strip()
         return any(t in lower for t in ["edit plan","change plan","modify plan","update plan","edit day","change day","swap day","reschedule"])
 
+    def _enter_semester_environment(self, uid: int, year: str, semester: str) -> bool:
+        if uid < 0 or not year or not semester:
+            return False
+        self.status_text = ""
+        self.selected_year = year
+        self.selected_semester = semester
+        self.view_mode = "semester"
+        self.active_scope = self._scope_key(year, semester)
+        self.show_semester_sidebar = False
+        self._save_memory(uid)
+        self._ensure_progress_for_year(uid, year)
+        self._refresh_today_plan(uid)
+        self._switch_scope(uid, self.active_scope)
+
+        existing_plan = self._get_study_plan(uid, self.active_scope)
+        if existing_plan:
+            day, topic_idx = self._get_day_progress(uid, self.active_scope)
+            self.current_day = day
+            self.current_topic_index = topic_idx
+            today_msg = self._build_today_message(existing_plan, day, topic_idx)
+            if not self.chat_history:
+                self.chat_history.append({"role": "assistant", "content": today_msg})
+                self._save_message(uid, "assistant", today_msg)
+            self.is_generating_plan = False
+            return False
+
+        if not self._has_curriculum_for_semester(year, semester):
+            self.current_day = 1
+            self.current_topic_index = 0
+            self.is_generating_plan = False
+            empty_msg = (
+                f"{semester} is now your main AI workspace.\n\n"
+                "This semester does not have course data yet, so the guided study plan cannot be generated until the curriculum is added."
+            )
+            if not self.chat_history:
+                self.chat_history.append({"role": "assistant", "content": empty_msg})
+                self._save_message(uid, "assistant", empty_msg)
+            return False
+
+        self.current_day = 1
+        self.current_topic_index = 0
+        self.is_generating_plan = True
+        gen_msg = "AI is generating your personalized 110 day study plan please wait"
+        if not self.chat_history or self.chat_history[-1].get("content") != gen_msg:
+            self.chat_history.append({"role": "assistant", "content": gen_msg})
+            self._save_message(uid, "assistant", gen_msg)
+        return True
+
+    @rx.event
+    def toggle_semester_sidebar(self):
+        self.show_semester_sidebar = not self.show_semester_sidebar
+
+    @rx.event
+    def close_semester_sidebar(self):
+        self.show_semester_sidebar = False
+
     @rx.event
     async def on_load(self):
         if not self.is_hydrated:
             return
         uid = self._uid()
+        self._cached_uid = uid
+        print(f"[on_load] FIRED — uid={uid}, step={self.step}, is_started={self.is_started}")
         if uid < 0:
             yield AppState.auth_redir
             return
@@ -2023,8 +2128,6 @@ Recent conversation:
         self._load_profile(uid)
         self.adaptive_profile = self._get_adaptive_profile(uid)
         self._migrate_legacy_messages_once(uid)
-        self.view_mode = "home"; self.selected_semester = ""
-        self._switch_scope(uid, "home")
         if not (self.name or "").strip():
             inferred_name = _extract_person_name(
                 self.account_display_name,
@@ -2035,10 +2138,20 @@ Recent conversation:
             if inferred_name:
                 self.name = inferred_name
                 self._save_memory(uid)
-        if self.selected_year:
-            self._ensure_progress_for_year(uid, self.selected_year)
-        self._refresh_today_plan(uid)
         self.status_text = ""
+        if self.is_started and self.selected_year and self.selected_semester:
+            should_generate = self._enter_semester_environment(uid, self.selected_year, self.selected_semester)
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            if should_generate:
+                yield
+                yield type(self).generate_study_plan
+            return
+        self.view_mode = "semester"
+        self.active_scope = self._scope_key(self.selected_year, self.selected_semester) if (self.selected_year and self.selected_semester) else ""
+        if self.is_started and not self.selected_year:
+            self.step = max(self.step, 3)
+        elif self.is_started and not self.selected_semester:
+            self.step = max(self.step, 4)
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
     @rx.event
@@ -2076,10 +2189,39 @@ Recent conversation:
     def next_step(self):
         uid = self._uid()
         try:
-            self.step = min(self.step + 1, 3)
+            self.step = min(self.step + 1, ONBOARDING_FINAL_STEP)
             self._save_memory(uid)
         except Exception as e:
             print(f"ERROR next_step: {e}")
+
+    @rx.event
+    def advance_from_year(self):
+        uid = self._uid()
+        try:
+            if not self.selected_year:
+                self.step = 3
+                return
+            self.step = 4
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR advance_from_year: {e}")
+
+    @rx.event
+    def advance_from_semester(self):
+        uid = self._uid()
+        try:
+            if not self.selected_year:
+                self.step = 3
+                self._save_memory(uid)
+                return
+            if not self.selected_semester:
+                self.step = 4
+                self._save_memory(uid)
+                return
+            self.step = 5
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR advance_from_semester: {e}")
 
     @rx.event
     def set_degree(self, value: str):
@@ -2091,32 +2233,16 @@ Recent conversation:
             print(f"ERROR set_degree: {e}")
 
     @rx.event
-    def start_app(self):
-        uid = self._uid()
-        try:
-            self.is_started = True
-            self._save_memory(uid)
-        except Exception as e:
-            print(f"ERROR start_app: {e}")
-
-    @rx.event
-    def back_to_years(self):
-        uid = self._uid()
-        try:
-            self.selected_year = ""; self.selected_semester = ""; self.status_text = ""
-            self._save_memory(uid); self._refresh_today_plan(uid)
-        except Exception as e:
-            print(f"ERROR back_to_years: {e}")
-
-    @rx.event
     def set_year(self, year: str):
         uid = self._uid()
         try:
-            if year == "Year 4":
-                msg = "we are still working on that"
-                self.status_text = msg
-                return
-            self.status_text = ""; self.selected_year = year; self.selected_semester = ""
+            self.status_text = ""
+            self.selected_year = year
+            if self.selected_semester not in SEMESTER_NAVIGATION.get(year, []):
+                self.selected_semester = ""
+            if self.selected_semester:
+                self.view_mode = "semester"
+                self.active_scope = self._scope_key(year, self.selected_semester)
             self._save_memory(uid)
             self._ensure_progress_for_year(uid, year)
             self._refresh_today_plan(uid)
@@ -2124,31 +2250,110 @@ Recent conversation:
             print(f"ERROR set_year: {e}")
 
     @rx.event
+    def choose_onboarding_year(self, year: str):
+        uid = self._uid()
+        print(f"[Onboarding] choose_onboarding_year called: year={year}, uid={uid}, step was {self.step}")
+        self.status_text = ""
+        self.selected_year = year
+        self.step = 4
+        self._save_memory(uid)
+        print(f"[Onboarding] step is now {self.step}")
+
+    @rx.event
+    def set_selected_semester(self, semester: str):
+        uid = self._uid()
+        try:
+            if not self.selected_year:
+                return
+            self.selected_semester = semester
+            self.view_mode = "semester"
+            self.active_scope = self._scope_key(self.selected_year, semester)
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR set_selected_semester: {e}")
+
+    @rx.event
+    def choose_onboarding_semester(self, semester: str):
+        uid = self._uid()
+        try:
+            if not self.selected_year:
+                self.step = 3
+                self._save_memory(uid)
+                return
+            self.selected_semester = semester
+            self.step = 5
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR choose_onboarding_semester: {e}")
+
+    @rx.event
+    def back_to_onboarding_year(self):
+        uid = self._uid()
+        try:
+            self.step = 3
+            self.selected_semester = ""
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR back_to_onboarding_year: {e}")
+
+    @rx.event
+    def back_to_years(self):
+        uid = self._uid()
+        try:
+            self.selected_year = ""
+            self.selected_semester = ""
+            self.active_scope = ""
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR back_to_years: {e}")
+
+    @rx.event
+    async def start_app(self):
+        uid = self._uid()
+        try:
+            self.is_started = True
+            if not self.selected_year:
+                self.step = max(self.step, 3)
+                self._save_memory(uid)
+                return
+            if not self.selected_semester:
+                self.step = max(self.step, 4)
+                self._save_memory(uid)
+                return
+            should_generate = self._enter_semester_environment(uid, self.selected_year, self.selected_semester)
+            if should_generate:
+                yield
+                yield type(self).generate_study_plan
+        except Exception as e:
+            print(f"ERROR start_app: {e}")
+
+    @rx.event
     async def open_semester(self, semester: str):
         uid = self._uid()
-        if uid < 0 or not self.selected_year: return
+        if uid < 0 or not self.selected_year:
+            return
         try:
-            self.selected_semester = semester; self.view_mode = "semester"
-            scope = self._scope_key(self.selected_year, semester)
-            self._switch_scope(uid, scope)
-            existing_plan = self._get_study_plan(uid, scope)
-            if existing_plan:
-                day, topic_idx = self._get_day_progress(uid, scope)
-                self.current_day = day; self.current_topic_index = topic_idx
-                today_msg = self._build_today_message(existing_plan, day, topic_idx)
-                # Avoid duplicating this auto message each time user re-opens the semester.
-                if not self.chat_history:
-                    self.chat_history.append({"role":"assistant","content":today_msg})
-                    self._save_message(uid,"assistant",today_msg)
-            else:
-                self.is_generating_plan = True
-                gen_msg = "AI is generating your personalized 110 day study plan please wait"
-                self.chat_history.append({"role":"assistant","content":gen_msg})
-                self._save_message(uid,"assistant",gen_msg)
+            should_generate = self._enter_semester_environment(uid, self.selected_year, semester)
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            if should_generate:
                 yield
                 yield type(self).generate_study_plan
         except Exception as e:
             print(f"ERROR open_semester: {e}")
+
+    @rx.event
+    async def open_dashboard_semester(self, year: str, semester: str):
+        uid = self._uid()
+        if uid < 0:
+            return
+        try:
+            should_generate = self._enter_semester_environment(uid, year, semester)
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            if should_generate:
+                yield
+                yield type(self).generate_study_plan
+        except Exception as e:
+            print(f"ERROR open_dashboard_semester: {e}")
 
     @rx.event
     async def generate_study_plan(self):
@@ -2233,11 +2438,6 @@ Subjects:\n{courses_text}"""
             self.chat_history.append({"role": "user", "content": user_msg})
             self._save_message(uid, "user", user_msg)
             yield
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             yield
 
@@ -2588,6 +2788,7 @@ Your response style rules:
     @rx.event
     def logout(self):
         self.app_auth_token = ""
+        self._cached_uid = -1
         return [reflex_local_auth.LocalAuthState.do_logout, rx.redirect(reflex_local_auth.routes.LOGIN_ROUTE)]
 
 
@@ -4119,7 +4320,27 @@ def onboarding_page():
                     rx.box(rx.vstack(rx.heading("What's your name?",size="7",color="white"),rx.input(placeholder="Enter your name",on_change=AppState.set_name,width="100%",size="3"),rx.button("Next",on_click=AppState.next_step,color_scheme="green",size="3"),spacing="4",width="400px"),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 3,
-                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.button("begin",on_click=AppState.start_app,color_scheme="green",size="3",style={"animation":"pulse_glow 2s infinite"})),
+                    rx.box(rx.vstack(
+                        rx.heading("Which year are you in?",size="7",color="white"),
+                        subject_button("Year 1", on_click=AppState.choose_onboarding_year("Year 1")),
+                        subject_button("Year 2", on_click=AppState.choose_onboarding_year("Year 2")),
+                        subject_button("Year 3", on_click=AppState.choose_onboarding_year("Year 3")),
+                        subject_button("Year 4", on_click=AppState.choose_onboarding_year("Year 4")),
+                        spacing="4",width="400px"),
+                        background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
+                rx.cond(AppState.step == 4,
+                    rx.box(rx.vstack(
+                        rx.heading("Which semester should Alex open?",size="7",color="white"),
+                        rx.text(AppState.selected_year,color="rgba(255,255,255,0.72)"),
+                        rx.foreach(
+                            AppState.available_semesters,
+                            lambda sem: subject_button(sem, on_click=AppState.choose_onboarding_semester(sem)),
+                        ),
+                        rx.button("Back",on_click=AppState.back_to_onboarding_year,variant="outline",color_scheme="gray",size="3"),
+                        spacing="4",width="400px"),
+                        background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
+                rx.cond(AppState.step == 5,
+                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.text(AppState.selected_year + " • " + AppState.selected_semester,color="rgba(255,255,255,0.72)"),rx.button("begin",on_click=AppState.start_app,color_scheme="green",size="3",style={"animation":"pulse_glow 2s infinite"},is_disabled=(AppState.selected_year == "") | (AppState.selected_semester == ""))),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 spacing="4",
             ),
@@ -4523,22 +4744,277 @@ def home_page():
     )
 
 
+def semester_nav_button(year: str, semester: str) -> rx.Component:
+    return rx.button(
+        semester,
+        on_click=AppState.open_dashboard_semester(year, semester),
+        width="100%",
+        justify_content="flex-start",
+        text_align="left",
+        variant="ghost",
+        style={
+            "background": rx.cond(
+                (AppState.selected_year == year) & (AppState.selected_semester == semester),
+                "rgba(0,255,136,0.12)",
+                "transparent",
+            ),
+            "border": rx.cond(
+                (AppState.selected_year == year) & (AppState.selected_semester == semester),
+                "1px solid rgba(0,255,136,0.28)",
+                "1px solid transparent",
+            ),
+            "color": rx.cond(
+                (AppState.selected_year == year) & (AppState.selected_semester == semester),
+                "#b7ffd9",
+                "rgba(255,255,255,0.72)",
+            ),
+            "font_weight": rx.cond(
+                (AppState.selected_year == year) & (AppState.selected_semester == semester),
+                "700",
+                "500",
+            ),
+            "border_radius": "12px",
+            "padding": "0.7em 0.9em",
+            "_hover": {
+                "background": "rgba(255,255,255,0.06)",
+                "color": "white",
+            },
+        },
+    )
+
+
+def semester_nav_group(year: str, semesters: list[str]) -> rx.Component:
+    return rx.vstack(
+        rx.text(
+            year,
+            color="rgba(255,255,255,0.4)",
+            font_size="0.72rem",
+            font_weight="700",
+            letter_spacing="1.4px",
+            text_transform="uppercase",
+        ),
+        *[semester_nav_button(year, semester) for semester in semesters],
+        spacing="2",
+        width="100%",
+        align_items="stretch",
+    )
+
+
+def semester_chat_history_list() -> rx.Component:
+    return rx.vstack(
+        rx.foreach(
+            AppState.sessions,
+            lambda s: rx.hstack(
+                rx.button(
+                    s["title"],
+                    on_click=AppState.switch_chat(s["id"]),
+                    variant="ghost",
+                    color=rx.cond(
+                        AppState.current_session_id == s["id"],
+                        "#00ff88",
+                        "rgba(255,255,255,0.55)",
+                    ),
+                    font_weight=rx.cond(
+                        AppState.current_session_id == s["id"],
+                        "600",
+                        "400",
+                    ),
+                    text_align="left",
+                    justify_content="flex-start",
+                    flex="1",
+                    overflow="hidden",
+                    text_overflow="ellipsis",
+                    white_space="nowrap",
+                    size="1",
+                    font_size="0.8rem",
+                ),
+                rx.icon_button(
+                    rx.icon(tag="trash_2", size=11),
+                    on_click=AppState.delete_session(s["id"]),
+                    variant="ghost",
+                    color_scheme="red",
+                    size="1",
+                    style={"opacity": "0.4", "_hover": {"opacity": "0.9"}},
+                ),
+                width="100%",
+                align="center",
+                spacing="1",
+            ),
+        ),
+        width="100%",
+        spacing="0",
+        align_items="stretch",
+        max_height="220px",
+        overflow_y="auto",
+    )
+
+
+def semester_sidebar_drawer() -> rx.Component:
+    return rx.cond(
+        AppState.show_semester_sidebar,
+        rx.fragment(
+            rx.box(
+                position="fixed",
+                inset="0",
+                background="rgba(0,0,0,0.58)",
+                z_index="30",
+                on_click=AppState.close_semester_sidebar,
+            ),
+            rx.box(
+                rx.vstack(
+                    rx.hstack(
+                        rx.vstack(
+                            rx.text(
+                                rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
+                                color="white",
+                                font_size="1rem",
+                                font_weight="700",
+                            ),
+                            rx.text(
+                                rx.cond(
+                                    AppState.semester_status_label != "",
+                                    AppState.semester_status_label,
+                                    "Choose your semester",
+                                ),
+                                color="rgba(0,255,136,0.72)",
+                                font_size="0.78rem",
+                                letter_spacing="1px",
+                            ),
+                            spacing="0",
+                            align_items="flex-start",
+                        ),
+                        rx.spacer(),
+                        rx.icon_button(
+                            rx.icon(tag="x", size=18),
+                            on_click=AppState.close_semester_sidebar,
+                            variant="ghost",
+                            color="rgba(255,255,255,0.7)",
+                        ),
+                        width="100%",
+                        align="center",
+                    ),
+                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
+                    rx.text(
+                        "SEMESTERS",
+                        color="rgba(255,255,255,0.28)",
+                        font_size="0.68rem",
+                        letter_spacing="2.4px",
+                        font_weight="700",
+                    ),
+                    semester_nav_group("Year 1", SEMESTER_NAVIGATION["Year 1"]),
+                    semester_nav_group("Year 2", SEMESTER_NAVIGATION["Year 2"]),
+                    semester_nav_group("Year 3", SEMESTER_NAVIGATION["Year 3"]),
+                    semester_nav_group("Year 4", SEMESTER_NAVIGATION["Year 4"]),
+                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
+                    sidebar_plan_widget(),
+                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
+                    rx.text(
+                        "CHATS",
+                        color="rgba(255,255,255,0.28)",
+                        font_size="0.68rem",
+                        letter_spacing="2.4px",
+                        font_weight="700",
+                    ),
+                    semester_chat_history_list(),
+                    spacing="4",
+                    width="100%",
+                    align_items="stretch",
+                ),
+                position="fixed",
+                top="0",
+                left="0",
+                width="320px",
+                height="100vh",
+                padding="1.3em 1.15em",
+                background="rgba(5,8,9,0.98)",
+                border_right="1px solid rgba(255,255,255,0.08)",
+                z_index="31",
+                style={
+                    "box_shadow": "24px 0 48px rgba(0,0,0,0.45)",
+                    "backdrop_filter": "blur(14px)",
+                },
+            ),
+        ),
+        rx.fragment(),
+    )
+
+
 def semester_page():
     return rx.box(
-        # Compact header — no banner image
+        semester_sidebar_drawer(),
         rx.hstack(
-            rx.button("Back to home", on_click=AppState.go_home, variant="outline", color_scheme="green"),
-            rx.heading(
-                AppState.semester_short_label,
-                size="6", color="white", font_family="monospace", letter_spacing="2px",
+            rx.hstack(
+                rx.icon_button(
+                    rx.icon(tag="menu", size=18),
+                    on_click=AppState.toggle_semester_sidebar,
+                    variant="soft",
+                    color_scheme="gray",
+                    size="2",
+                    style={
+                        "background": "rgba(255,255,255,0.08)",
+                        "border": "1px solid rgba(255,255,255,0.16)",
+                        "color": "rgba(255,255,255,0.88)",
+                    },
+                ),
+                rx.vstack(
+                    rx.text(
+                        rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
+                        color="white",
+                        font_size="1rem",
+                        font_weight="700",
+                    ),
+                    rx.text(
+                        AppState.semester_status_label + " • Day " + AppState.current_day.to_string() + " / 110",
+                        color="rgba(0,255,136,0.72)",
+                        font_size="0.78rem",
+                        letter_spacing="0.8px",
+                    ),
+                    spacing="0",
+                    align_items="flex-start",
+                ),
+                spacing="3",
+                align="center",
             ),
             rx.spacer(),
-            rx.badge(
-                rx.text("Day "), rx.text(AppState.current_day), rx.text("/110"),
-                color_scheme="blue", variant="solid", size="2",
+            rx.text(
+                "Alex AI",
+                color="white",
+                font_size="1.45rem",
+                font_weight="800",
+                letter_spacing="5px",
+                text_transform="uppercase",
+                style={
+                    "background": "linear-gradient(135deg, #ffffff 0%, #a8f5d0 100%)",
+                    "-webkit-background-clip": "text",
+                    "-webkit-text-fill-color": "transparent",
+                    "background-clip": "text",
+                },
             ),
-            settings_menu_button(),
-            width="100%", padding="1em 2em", flex_shrink="0", align="center",
+            rx.spacer(),
+            rx.hstack(
+                rx.button(
+                    "+ New chat",
+                    on_click=AppState.new_chat,
+                    size="2",
+                    style={
+                        "background": "rgba(0,255,136,0.12)",
+                        "border": "1px solid rgba(0,255,136,0.35)",
+                        "color": "#00ff88",
+                        "font_weight": "600",
+                        "border_radius": "8px",
+                        "font_size": "0.8rem",
+                        "_hover": {"background": "rgba(0,255,136,0.22)"},
+                    },
+                ),
+                settings_menu_button(),
+                spacing="2",
+                align="center",
+            ),
+            width="100%",
+            padding="1.2em 1.5em",
+            flex_shrink="0",
+            align="center",
+            border_bottom="1px solid rgba(255,255,255,0.06)",
         ),
         rx.cond(
             AppState.is_generating_plan,
@@ -5237,8 +5713,8 @@ def landing_page():
 @require_app_login
 def index():
     return rx.cond(
-        AppState.is_started,
-        rx.cond(AppState.view_mode == "home", home_page(), semester_page()),
+        AppState.is_started & AppState.has_selected_environment,
+        semester_page(),
         onboarding_page(),
     )
 
@@ -5415,6 +5891,23 @@ try:
     rx.Model.create_all()
 except Exception as e:
     print(f"ERROR create_all: {e}")
+
+
+def _ensure_usermemory_selected_semester_column() -> None:
+    try:
+        with rx.session() as session:
+            conn = session.connection()
+            if conn.dialect.name != "sqlite":
+                return
+            cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('usermemory')").fetchall()}
+            if "selected_semester" not in cols:
+                conn.exec_driver_sql("ALTER TABLE usermemory ADD COLUMN selected_semester VARCHAR NOT NULL DEFAULT ''")
+                session.commit()
+    except Exception as e:
+        print(f"ERROR ensure_usermemory_selected_semester_column: {e}")
+
+
+_ensure_usermemory_selected_semester_column()
 
 
 async def _payhere_notify_wrapper(request):
