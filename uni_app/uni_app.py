@@ -3340,7 +3340,11 @@ def chat_input_field() -> rx.Component:
         rx.hstack(
             rx.text_area(
                 id="chat_input",
-                placeholder="Ask Alex AI anything...",
+                placeholder=rx.cond(
+                    AppState.name != "",
+                    "Ask Alex AI anything " + AppState.name + "...",
+                    "Ask Alex AI anything...",
+                ),
                 value=AppState.chat_input,
                 on_change=AppState.set_chat_input,
                 color="rgba(255,255,255,0.88)",
@@ -3417,13 +3421,13 @@ def chat_input_field() -> rx.Component:
         # ── The ONE visible box ─────────────────────────────
         width="100%",
         border_radius="14px",
-        background="rgba(10, 16, 12, 0.90)",
-        border="1px solid rgba(34,197,94,0.16)",
+        background="rgba(7, 11, 9, 0.94)",
+        border="1px solid rgba(82, 120, 99, 0.18)",
         style={
             "transition": "border-color 0.2s ease, box-shadow 0.2s ease",
             "&:focus-within": {
-                "border": "1px solid rgba(52,211,153,0.46)",
-                "box_shadow": "0 0 0 1px rgba(52,211,153,0.18), 0 0 22px rgba(34,197,94,0.1)",
+                "border": "1px solid rgba(108, 155, 127, 0.34)",
+                "box_shadow": "0 0 0 1px rgba(68, 102, 83, 0.24), 0 0 22px rgba(8, 18, 14, 0.32)",
             },
         },
     )
@@ -4971,6 +4975,7 @@ def semester_page():
                     ),
                     spacing="0",
                     align_items="flex-start",
+                    padding_left="0.35em",
                 ),
                 spacing="3",
                 align="center",
@@ -5041,7 +5046,10 @@ def semester_page():
         ),
         rx.html("<style>@keyframes bounce{0%,100%{transform:translateY(0);opacity:0.4;}50%{transform:translateY(-6px);opacity:1;}}</style>"),
         width="100%", height="100vh", max_height="100vh", display="flex", flex_direction="column", overflow="hidden",
-        background="radial-gradient(circle at bottom right,#002d1a 0%,#050505 100%)",
+        background=(
+            "radial-gradient(circle at 82% 86%, rgba(12,38,26,0.52) 0%, rgba(7,18,13,0.2) 34%, transparent 58%),"
+            "linear-gradient(180deg, #060907 0%, #030504 54%, #020303 100%)"
+        ),
     )
 
 def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallable:
