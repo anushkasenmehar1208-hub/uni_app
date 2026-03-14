@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 load_dotenv()
-print("========== UNI_APP LOADED ==========")
 
 import os
 import threading
@@ -2122,7 +2121,6 @@ Recent conversation:
             return
         uid = self._uid()
         self._cached_uid = uid
-        print(f"[on_load] FIRED — uid={uid}, step={self.step}, is_started={self.is_started}")
         if uid < 0:
             yield AppState.auth_redir
             return
@@ -2142,6 +2140,7 @@ Recent conversation:
                 self.name = inferred_name
                 self._save_memory(uid)
         self.status_text = ""
+        self.onboarding_message = ""
         if self.is_started and self.selected_year and self.selected_semester:
             should_generate = self._enter_semester_environment(uid, self.selected_year, self.selected_semester)
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -2287,7 +2286,7 @@ Recent conversation:
     def set_degree(self, value: str):
         uid = self._uid()
         try:
-            self.degree = value
+            self.degree = value if value in self.options else ""
             self.onboarding_message = ""
             self._save_memory(uid)
         except Exception as e:
@@ -2297,6 +2296,12 @@ Recent conversation:
     def set_year(self, year: str):
         uid = self._uid()
         try:
+            if year not in SEMESTER_NAVIGATION:
+                self.selected_year = ""
+                self.selected_semester = ""
+                self.active_scope = ""
+                self._save_memory(uid)
+                return
             self.status_text = ""
             self.selected_year = year
             if self.selected_semester not in SEMESTER_NAVIGATION.get(year, []):
@@ -2334,6 +2339,8 @@ Recent conversation:
         uid = self._uid()
         try:
             if not self.selected_year:
+                return
+            if semester not in SEMESTER_NAVIGATION.get(self.selected_year, []):
                 return
             self.selected_semester = semester
             self.view_mode = "semester"
@@ -2381,6 +2388,8 @@ Recent conversation:
             self.selected_year = ""
             self.selected_semester = ""
             self.active_scope = ""
+            self.status_text = ""
+            self.onboarding_message = ""
             self._save_memory(uid)
         except Exception as e:
             print(f"ERROR back_to_years: {e}")
@@ -2392,12 +2401,15 @@ Recent conversation:
             self.is_started = True
             if not self.selected_year:
                 self.step = max(self.step, 3)
+                self.onboarding_message = "Please choose your year before Alex opens your study workspace."
                 self._save_memory(uid)
                 return
             if not self.selected_semester:
                 self.step = max(self.step, 4)
+                self.onboarding_message = "Please select a semester so Alex can open the correct study plan."
                 self._save_memory(uid)
                 return
+            self.onboarding_message = ""
             should_generate = self._enter_semester_environment(uid, self.selected_year, self.selected_semester)
             if should_generate:
                 yield
