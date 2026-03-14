@@ -2059,6 +2059,134 @@ Recent conversation:
         lower = text.lower().strip()
         return any(t in lower for t in ["edit plan","change plan","modify plan","update plan","edit day","change day","swap day","reschedule"])
 
+    def _current_focus_modules_label(self) -> str:
+        return self.selected_semester or "current semester"
+
+    def _alex_identity_reply(self) -> str:
+        return "I am Alex, your Software Engineering Mentor. I'm here to ensure you crush your degree."
+
+    def _alex_focus_redirect(self, student_name: str) -> str:
+        return (
+            f"I'm specialized in your Software Engineering journey, {student_name}. "
+            f"Let's stay focused on mastering your {self._current_focus_modules_label()} modules."
+        )
+
+    def _is_identity_question(self, text: str) -> bool:
+        lower = (text or "").lower().strip()
+        identity_markers = (
+            "who are you",
+            "what are you",
+            "are you ai",
+            "are you an ai",
+            "are you a chatbot",
+            "what model are you",
+            "which model are you",
+            "what llm",
+            "large language model",
+            "groq",
+            "llama",
+            "meta ai",
+        )
+        return any(marker in lower for marker in identity_markers)
+
+    def _is_off_topic_request(self, text: str) -> bool:
+        lower = (text or "").lower().strip()
+        if not lower:
+            return False
+
+        allowed_academic_terms = (
+            "software",
+            "engineering",
+            "code",
+            "coding",
+            "programming",
+            "algorithm",
+            "data structure",
+            "database",
+            "web",
+            "mobile",
+            "network",
+            "operating system",
+            "debug",
+            "bug",
+            "semester",
+            "module",
+            "course",
+            "assignment",
+            "exam",
+            "study",
+            "career",
+            "internship",
+            "cv",
+            "resume",
+            "interview",
+            "project",
+            "github",
+            "oop",
+            "architecture",
+            "requirement engineering",
+            "software testing",
+            "verification",
+            "validation",
+        )
+        if any(term in lower for term in allowed_academic_terms):
+            return False
+
+        off_topic_terms = (
+            "recipe",
+            "cook",
+            "cooking",
+            "bake",
+            "meal",
+            "diet",
+            "symptom",
+            "doctor",
+            "medicine",
+            "medical advice",
+            "diagnose",
+            "diagnosis",
+            "celebrity",
+            "actor",
+            "singer",
+            "movie gossip",
+            "horoscope",
+            "astrology",
+            "lottery",
+            "betting",
+            "football score",
+            "cricket score",
+            "politics",
+            "election",
+            "court case",
+            "legal advice",
+            "lawyer",
+            "divorce",
+            "visa lottery",
+        )
+        return any(term in lower for term in off_topic_terms)
+
+    def _alex_guardrail_reply(self, text: str, student_name: str) -> str:
+        if self._is_identity_question(text):
+            return self._alex_identity_reply()
+        if self._is_off_topic_request(text):
+            return self._alex_focus_redirect(student_name)
+        return ""
+
+    def _alex_system_prompt(self, student_name: str) -> str:
+        return f"""You are Alex, the Software Engineering Mentor inside Alex AI.
+
+Critical operating rules:
+1. Your knowledge is strictly locked to Software Engineering and Academic Success for this student's degree.
+2. If the student asks about unrelated topics such as cooking, medical advice, celebrity news, astrology, politics, or general law, politely decline and redirect them back to their Software Engineering journey.
+3. Never describe yourself as an AI, chatbot, large language model, or mention Groq, Meta, or Llama.
+4. If the student asks who you are, your answer must stay aligned with: "{self._alex_identity_reply()}"
+5. Use {student_name} naturally throughout the conversation so the support feels personal and consistent.
+6. When you share code, always wrap it in fenced markdown code blocks with the correct language.
+7. For complex technical questions, give a numbered step-by-step breakdown before the final answer or code.
+8. For career advice or analogies, prefer grounded Sri Lankan Software Engineering context when helpful, such as WSO2, Sysco LABS, IFS, internships, or local graduate expectations.
+9. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
+"""
+
     def _enter_semester_environment(self, uid: int, year: str, semester: str) -> bool:
         if uid < 0 or not year or not semester:
             return False
@@ -2523,6 +2651,7 @@ Subjects:\n{courses_text}"""
             )
             if inferred_name:
                 self.name = inferred_name
+        student_name = _normalize_person_name(self.name) or "Student"
 
         try:
             self.chat_history.append({"role": "user", "content": user_msg})
@@ -2559,6 +2688,17 @@ Subjects:\n{courses_text}"""
             print(f"ERROR save user msg: {e}")
 
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+
+        guardrail_reply = self._alex_guardrail_reply(user_msg, student_name)
+        if guardrail_reply:
+            self.chat_history.append({"role": "assistant", "content": guardrail_reply})
+            self._save_message(uid, "assistant", guardrail_reply)
+            self.is_processing = False
+            await self._maybe_auto_update_scope_summary(uid, self.active_scope)
+            await self._maybe_auto_update_global_memory(uid)
+            await self._maybe_auto_update_adaptive_profile(uid)
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            return
 
         # ============================
         # SEMESTER MODE
@@ -2636,8 +2776,7 @@ Subjects:\n{courses_text}"""
                 recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in self.chat_history[-14:]])
                 past_hits = self._past_hits_text(uid, scope, user_msg)
 
-                student_name = _normalize_person_name(self.name) or "Student"
-                teach_prompt = f"""You are Alex, a friendly and patient university tutor helping a {self.degree} student.
+                teach_prompt = f"""You are Alex, a friendly and patient Software Engineering mentor helping a {self.degree} student.
 
 Current context:
 - Day {day}/110 | Subject: {entry.get("subject","")} | Unit: {entry.get("unit","")} | Topic: {current_topic}
@@ -2670,7 +2809,10 @@ Your response style rules:
 16. Always refer to the student by name: {student_name}
 17. Acknowledge progress occasionally — remind {student_name} they are on Day {day}/110 and how far they've come
 18. If {student_name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
-19. Adapt to the adaptive profile above for pace, explanation depth, and examples."""
+19. Adapt to the adaptive profile above for pace, explanation depth, and examples.
+20. If code is needed, wrap it in fenced markdown code blocks with the correct language.
+21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
+22. If you use a career example or analogy, prefer Sri Lankan Software Engineering context where it fits naturally."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
@@ -2680,7 +2822,10 @@ Your response style rules:
                 buf = ""
                 last_scroll = 0
                 final_text = ""
-                groq_messages = [{"role": "user", "content": teach_prompt}]
+                groq_messages = [
+                    {"role": "system", "content": self._alex_system_prompt(student_name)},
+                    {"role": "user", "content": teach_prompt},
+                ]
 
                 try:
                     async for piece in _groq_stream_async(
@@ -2745,8 +2890,7 @@ Your response style rules:
         rules = "You are the HOME assistant\n" if self.active_scope == "home" else f"You are a SEMESTER assistant for scope {self.active_scope}\n"
         past_hits = self._past_hits_text(uid, self.active_scope, user_msg)
 
-        student_name = _normalize_person_name(self.name) or "Student"
-        prompt = f"""You are Alex, a friendly AI study companion inside a university planner app for a {self.degree} student.
+        prompt = f"""You are Alex, a friendly Software Engineering mentor inside a university planner app for a {self.degree} student.
 
 Student profile:
 - Degree: {self.degree} | Year: {self.selected_year} | Semester: {self.selected_semester}
@@ -2783,7 +2927,10 @@ Your response style rules:
 15. If the student makes a mistake, correct gently — say "Almost! Try thinking of it this way..."
 16. Always refer to the student by name: {student_name}
 17. If {student_name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
-18. Adapt to the adaptive profile above for pace, explanation depth, and examples."""
+18. Adapt to the adaptive profile above for pace, explanation depth, and examples.
+19. If code is needed, wrap it in fenced markdown code blocks with the correct language.
+20. If the question is technically complex, give a numbered breakdown before the final explanation or code.
+21. If you use a career example or analogy, prefer Sri Lankan Software Engineering context where it fits naturally."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
@@ -2797,7 +2944,10 @@ Your response style rules:
         try:
             async for piece in _groq_stream_async(
                 model_to_use,
-                [{"role": "user", "content": prompt}],  # or prompt for home mode
+                [
+                    {"role": "system", "content": self._alex_system_prompt(student_name)},
+                    {"role": "user", "content": prompt},
+                ],
                 max_tokens=2048,
             ):
                 buf += piece
