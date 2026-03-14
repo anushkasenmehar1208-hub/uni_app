@@ -704,7 +704,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     selected_year: str = ""
     selected_semester: str = ""
     view_mode: str = "semester"
-    active_scope: str = ""
+    active_scope: str = rx.LocalStorage(name="active_scope")
 
     status_text: str = ""
     onboarding_message: str = ""
@@ -1776,6 +1776,27 @@ class AppState(reflex_local_auth.LocalAuthState):
                     pass
         return out
 
+    def _memory_search_session_ids(self, uid: int, scope: str) -> list[int]:
+        if scope != "home":
+            return self._scope_session_ids(uid, scope)
+        if uid < 0:
+            return []
+        with rx.session() as session:
+            rows = session.exec(
+                select(ChatSession.id)
+                .where(ChatSession.user_id == uid)
+            ).all()
+        out: list[int] = []
+        for r in rows:
+            try:
+                out.append(int(r))
+            except Exception:
+                try:
+                    out.append(int(r[0]))
+                except Exception:
+                    pass
+        return out
+
     def _recent_msgs_for_session(self, uid: int, sid: int, n: int = 18) -> list[dict]:
         with rx.session() as session:
             rows = session.exec(
@@ -1804,7 +1825,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         if not kws:
             return ""
 
-        sids = self._scope_session_ids(uid, scope)
+        sids = self._memory_search_session_ids(uid, scope)
         if not sids:
             return ""
 
@@ -2269,6 +2290,11 @@ Critical operating rules:
                 self._save_memory(uid)
         self.status_text = ""
         self.onboarding_message = ""
+        if self.is_started and self.active_scope == "home":
+            self.view_mode = "home"
+            self._switch_scope(uid, "home")
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            return
         if self.is_started and self.selected_year and self.selected_semester:
             should_generate = self._enter_semester_environment(uid, self.selected_year, self.selected_semester)
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -2608,8 +2634,10 @@ Subjects:\n{courses_text}"""
         uid = self._uid()
         if uid < 0: return
         try:
-            self.view_mode = "home"; self.selected_semester = ""
+            self.view_mode = "home"
+            self.show_semester_sidebar = False
             self._switch_scope(uid, "home")
+            self._save_memory(uid)
         except Exception as e:
             print(f"ERROR go_home: {e}")
 
@@ -2887,7 +2915,11 @@ Your response style rules:
         scope_summary = self._get_scope_summary(uid, self.active_scope)
         all_scopes = self._get_all_scope_summaries_text(uid) if self.active_scope == "home" else ""
         next_courses = self._get_next_courses(uid, self.selected_year, 3) if self.selected_year else []
-        rules = "You are the HOME assistant\n" if self.active_scope == "home" else f"You are a SEMESTER assistant for scope {self.active_scope}\n"
+        rules = (
+            "You are the Alex AI cross-semester workspace assistant with access to all semester summaries and relevant semester chat memory.\n"
+            if self.active_scope == "home"
+            else f"You are a SEMESTER assistant for scope {self.active_scope}\n"
+        )
         past_hits = self._past_hits_text(uid, self.active_scope, user_msg)
 
         prompt = f"""You are Alex, a friendly Software Engineering mentor inside a university planner app for a {self.degree} student.
@@ -3029,6 +3061,7 @@ Your response style rules:
     def logout(self):
         self.app_auth_token = ""
         self._cached_uid = -1
+        self.active_scope = ""
         return [reflex_local_auth.LocalAuthState.do_logout, rx.redirect(reflex_local_auth.routes.LOGIN_ROUTE)]
 
 
@@ -4921,157 +4954,13 @@ def home_page():
         rx.flex(
             # ── Left sidebar ──────────────────────────────────
             rx.box(
-                rx.vstack(
-                    # Section label
-                    rx.text(
-                        "ACADEMIC YEAR",
-                        color="rgba(255,255,255,0.28)",
-                        font_size="0.68rem",
-                        letter_spacing="2.5px",
-                        font_weight="600",
-                        padding_left="4px",
-                    ),
-
-                    rx.cond(
-                        AppState.status_text != "",
-                        rx.callout(
-                            AppState.status_text,
-                            icon="info",
-                            color_scheme="yellow",
-                            width="100%",
-                            size="1",
-                        ),
-                    ),
-
-                    # Year / semester buttons
-                    rx.cond(
-                        AppState.selected_year == "",
-                        rx.vstack(
-                            subject_button("First Year",  on_click=AppState.set_year("Year 1")),
-                            subject_button("Second Year", on_click=AppState.set_year("Year 2")),
-                            subject_button("Third Year",  on_click=AppState.set_year("Year 3")),
-                            subject_button("Fourth Year", on_click=AppState.set_year("Year 4")),
-                            spacing="2",
-                            width="100%",
-                        ),
-                        rx.vstack(
-                            rx.button(
-                                "← Back",
-                                on_click=AppState.back_to_years,
-                                size="1",
-                                style={
-                                    "background": "transparent",
-                                    "border": "1px solid rgba(255,255,255,0.15)",
-                                    "color": "rgba(255,255,255,0.5)",
-                                    "font_size": "0.75rem",
-                                    "_hover": {"border_color": "rgba(255,255,255,0.4)", "color": "white"},
-                                },
-                            ),
-                            rx.text(
-                                AppState.selected_year,
-                                color="rgba(0,255,136,0.9)",
-                                font_size="0.75rem",
-                                font_weight="700",
-                                letter_spacing="1.5px",
-                                text_transform="uppercase",
-                                padding_left="4px",
-                            ),
-                            rx.foreach(
-                                AppState.available_semesters,
-                                lambda sem: subject_button(sem, on_click=AppState.open_semester(sem)),
-                            ),
-                            spacing="2",
-                            width="100%",
-                        ),
-                    ),
-
-                    # Divider
-                    rx.box(
-                        height="1px",
-                        background="rgba(255,255,255,0.07)",
-                        width="100%",
-                        margin_y="4px",
-                    ),
-
-                    # Upgrade / tier widget
-                    sidebar_plan_widget(),
-
-                    # Divider
-                    rx.box(
-                        height="1px",
-                        background="rgba(255,255,255,0.07)",
-                        width="100%",
-                        margin_y="4px",
-                    ),
-
-                    # Chat history
-                    rx.text(
-                        "CHATS",
-                        color="rgba(255,255,255,0.28)",
-                        font_size="0.68rem",
-                        letter_spacing="2.5px",
-                        font_weight="600",
-                        padding_left="4px",
-                    ),
-                    rx.vstack(
-                        rx.foreach(
-                            AppState.sessions,
-                            lambda s: rx.hstack(
-                                rx.button(
-                                    s["title"],
-                                    on_click=AppState.switch_chat(s["id"]),
-                                    variant="ghost",
-                                    color=rx.cond(
-                                        AppState.current_session_id == s["id"],
-                                        "#00ff88",
-                                        "rgba(255,255,255,0.55)",
-                                    ),
-                                    font_weight=rx.cond(
-                                        AppState.current_session_id == s["id"],
-                                        "600",
-                                        "400",
-                                    ),
-                                    text_align="left",
-                                    justify_content="flex-start",
-                                    flex="1",
-                                    overflow="hidden",
-                                    text_overflow="ellipsis",
-                                    white_space="nowrap",
-                                    size="1",
-                                    font_size="0.8rem",
-                                ),
-                                rx.icon_button(
-                                    rx.icon(tag="trash_2", size=11),
-                                    on_click=AppState.delete_session(s["id"]),
-                                    variant="ghost",
-                                    color_scheme="red",
-                                    size="1",
-                                    style={"opacity": "0.4", "_hover": {"opacity": "0.9"}},
-                                ),
-                                width="100%",
-                                align="center",
-                                spacing="1",
-                            ),
-                        ),
-                        width="100%",
-                        spacing="0",
-                        align_items="stretch",
-                        max_height="220px",
-                        overflow_y="auto",
-                    ),
-
-                    spacing="3",
-                    width="100%",
-                    padding="1.5em 1.4em",
-                    align_items="flex-start",
-                    height="100%",
-                    overflow_y="auto",
-                ),
-                width="260px",
+                workspace_sidebar_content(),
+                width="284px",
                 flex_shrink="0",
                 height="100%",
                 border_right="1px solid rgba(255,255,255,0.06)",
                 background="rgba(0,0,0,0.15)",
+                padding="1.35em 1.05em",
             ),
 
             # ── Chat area ─────────────────────────────────────
@@ -5128,7 +5017,9 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
                 "500",
             ),
             "border_radius": "12px",
-            "padding": "0.7em 0.9em",
+            "padding": "0.46em 0.72em",
+            "font_size": "0.78rem",
+            "min_height": "0",
             "_hover": {
                 "background": "rgba(255,255,255,0.06)",
                 "color": "white",
@@ -5148,7 +5039,7 @@ def semester_nav_group(year: str, semesters: list[str]) -> rx.Component:
             text_transform="uppercase",
         ),
         *[semester_nav_button(year, semester) for semester in semesters],
-        spacing="2",
+        spacing="1",
         width="100%",
         align_items="stretch",
     )
@@ -5198,8 +5089,117 @@ def semester_chat_history_list() -> rx.Component:
         width="100%",
         spacing="0",
         align_items="stretch",
-        max_height="220px",
+        flex="1",
+        min_height="0",
         overflow_y="auto",
+    )
+
+
+def alex_workspace_button() -> rx.Component:
+    return rx.button(
+        rx.vstack(
+            rx.text(
+                "Alex AI",
+                color="white",
+                font_size="0.95rem",
+                font_weight="700",
+                letter_spacing="0.04em",
+            ),
+            rx.text(
+                "Ask doubts in your growth",
+                color="rgba(226,232,240,0.68)",
+                font_size="0.76rem",
+                text_align="left",
+                line_height="1.45",
+            ),
+            spacing="1",
+            align_items="flex-start",
+            width="100%",
+        ),
+        on_click=AppState.go_home,
+        width="100%",
+        justify_content="flex-start",
+        variant="ghost",
+        style={
+            "height": "auto",
+            "padding": "0.9em 0.95em",
+            "border_radius": "14px",
+            "border": rx.cond(
+                AppState.view_mode == "home",
+                "1px solid rgba(0,255,136,0.3)",
+                "1px solid rgba(255,255,255,0.08)",
+            ),
+            "background": rx.cond(
+                AppState.view_mode == "home",
+                "linear-gradient(135deg, rgba(8,28,18,0.98) 0%, rgba(10,48,30,0.88) 100%)",
+                "rgba(255,255,255,0.03)",
+            ),
+            "box_shadow": rx.cond(
+                AppState.view_mode == "home",
+                "0 12px 24px rgba(0,0,0,0.22)",
+                "none",
+            ),
+            "_hover": {
+                "background": "rgba(255,255,255,0.07)",
+                "border": "1px solid rgba(255,255,255,0.16)",
+            },
+        },
+    )
+
+
+def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
+    header_blocks: list[rx.Component] = []
+    if show_close_button:
+        header_blocks.append(
+            rx.hstack(
+                rx.spacer(),
+                rx.icon_button(
+                    rx.icon(tag="x", size=18),
+                    on_click=AppState.close_semester_sidebar,
+                    variant="ghost",
+                    color="rgba(255,255,255,0.7)",
+                ),
+                width="100%",
+                align="center",
+            )
+        )
+
+    return rx.vstack(
+        *header_blocks,
+        alex_workspace_button(),
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
+        rx.text(
+            "SEMESTERS",
+            color="rgba(255,255,255,0.28)",
+            font_size="0.68rem",
+            letter_spacing="2.4px",
+            font_weight="700",
+        ),
+        semester_nav_group("Year 1", SEMESTER_NAVIGATION["Year 1"]),
+        semester_nav_group("Year 2", SEMESTER_NAVIGATION["Year 2"]),
+        semester_nav_group("Year 3", SEMESTER_NAVIGATION["Year 3"]),
+        semester_nav_group("Year 4", SEMESTER_NAVIGATION["Year 4"]),
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
+        rx.text(
+            "CHATS",
+            color="rgba(255,255,255,0.28)",
+            font_size="0.68rem",
+            letter_spacing="2.4px",
+            font_weight="700",
+        ),
+        rx.box(
+            semester_chat_history_list(),
+            width="100%",
+            flex="1",
+            min_height="0",
+        ),
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
+        sidebar_plan_widget(),
+        spacing="3",
+        width="100%",
+        height="100%",
+        min_height="0",
+        align_items="stretch",
     )
 
 
@@ -5215,65 +5215,7 @@ def semester_sidebar_drawer() -> rx.Component:
                 on_click=AppState.close_semester_sidebar,
             ),
             rx.box(
-                rx.vstack(
-                    rx.hstack(
-                        rx.vstack(
-                            rx.text(
-                                rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
-                                color="white",
-                                font_size="1rem",
-                                font_weight="700",
-                            ),
-                            rx.text(
-                                rx.cond(
-                                    AppState.semester_status_label != "",
-                                    AppState.semester_status_label,
-                                    "Choose your semester",
-                                ),
-                                color="rgba(0,255,136,0.72)",
-                                font_size="0.78rem",
-                                letter_spacing="1px",
-                            ),
-                            spacing="0",
-                            align_items="flex-start",
-                        ),
-                        rx.spacer(),
-                        rx.icon_button(
-                            rx.icon(tag="x", size=18),
-                            on_click=AppState.close_semester_sidebar,
-                            variant="ghost",
-                            color="rgba(255,255,255,0.7)",
-                        ),
-                        width="100%",
-                        align="center",
-                    ),
-                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-                    rx.text(
-                        "SEMESTERS",
-                        color="rgba(255,255,255,0.28)",
-                        font_size="0.68rem",
-                        letter_spacing="2.4px",
-                        font_weight="700",
-                    ),
-                    semester_nav_group("Year 1", SEMESTER_NAVIGATION["Year 1"]),
-                    semester_nav_group("Year 2", SEMESTER_NAVIGATION["Year 2"]),
-                    semester_nav_group("Year 3", SEMESTER_NAVIGATION["Year 3"]),
-                    semester_nav_group("Year 4", SEMESTER_NAVIGATION["Year 4"]),
-                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-                    sidebar_plan_widget(),
-                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-                    rx.text(
-                        "CHATS",
-                        color="rgba(255,255,255,0.28)",
-                        font_size="0.68rem",
-                        letter_spacing="2.4px",
-                        font_weight="700",
-                    ),
-                    semester_chat_history_list(),
-                    spacing="4",
-                    width="100%",
-                    align_items="stretch",
-                ),
+                workspace_sidebar_content(show_close_button=True),
                 position="fixed",
                 top="0",
                 left="0",
@@ -6072,7 +6014,7 @@ def landing_page():
 def index():
     return rx.cond(
         AppState.is_started & AppState.has_selected_environment,
-        semester_page(),
+        rx.cond(AppState.view_mode == "home", home_page(), semester_page()),
         onboarding_page(),
     )
 
@@ -6251,7 +6193,7 @@ except Exception as e:
     print(f"ERROR create_all: {e}")
 
 
-def _ensure_usermemory_selected_semester_column() -> None:
+def _ensure_usermemory_columns() -> None:
     try:
         with rx.session() as session:
             conn = session.connection()
@@ -6260,12 +6202,12 @@ def _ensure_usermemory_selected_semester_column() -> None:
             cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('usermemory')").fetchall()}
             if "selected_semester" not in cols:
                 conn.exec_driver_sql("ALTER TABLE usermemory ADD COLUMN selected_semester VARCHAR NOT NULL DEFAULT ''")
-                session.commit()
+            session.commit()
     except Exception as e:
-        print(f"ERROR ensure_usermemory_selected_semester_column: {e}")
+        print(f"ERROR ensure_usermemory_columns: {e}")
 
 
-_ensure_usermemory_selected_semester_column()
+_ensure_usermemory_columns()
 
 
 async def _payhere_notify_wrapper(request):
