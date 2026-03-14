@@ -186,6 +186,7 @@ TRIAL_DAYS       = 3
 ADAPTIVE_PROFILE_SCOPE = "__adaptive_profile__"
 USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]{3,32}$")
 PASSWORD_MIN_LEN = 8
+ONBOARDING_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s'-]*$")
 LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
@@ -707,6 +708,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     active_scope: str = ""
 
     status_text: str = ""
+    onboarding_message: str = ""
     show_semester_sidebar: bool = False
 
     sessions: list[dict] = []
@@ -1466,6 +1468,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     def set_name(self, value: str):
         self.name = _normalize_person_name(value)
+        self.onboarding_message = ""
         uid = self._uid()
         self._save_memory(uid)
 
@@ -2189,10 +2192,61 @@ Recent conversation:
     def next_step(self):
         uid = self._uid()
         try:
+            self.onboarding_message = ""
             self.step = min(self.step + 1, ONBOARDING_FINAL_STEP)
             self._save_memory(uid)
         except Exception as e:
             print(f"ERROR next_step: {e}")
+
+    @rx.event
+    def advance_from_degree(self):
+        uid = self._uid()
+        try:
+            if self.degree not in self.options:
+                self.step = 1
+                self.onboarding_message = "Please choose your degree first so Alex can build the right study path for you."
+                self._save_memory(uid)
+                return
+            self.onboarding_message = ""
+            self.step = 2
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR advance_from_degree: {e}")
+
+    @rx.event
+    def advance_from_name(self):
+        uid = self._uid()
+        try:
+            normalized_name = _normalize_person_name(self.name)
+            condensed_name = re.sub(r"[\s'-]", "", normalized_name)
+
+            if not normalized_name:
+                self.step = 2
+                self.onboarding_message = "Please enter your name so Alex knows how to address you professionally."
+                self._save_memory(uid)
+                return
+            if any(ch.isdigit() for ch in normalized_name):
+                self.step = 2
+                self.onboarding_message = "Names should only contain letters, so please remove any numbers and try again."
+                self._save_memory(uid)
+                return
+            if len(condensed_name) < 2:
+                self.step = 2
+                self.onboarding_message = "Please enter at least two letters so the name looks complete."
+                self._save_memory(uid)
+                return
+            if not ONBOARDING_NAME_PATTERN.fullmatch(normalized_name):
+                self.step = 2
+                self.onboarding_message = "Please use letters, spaces, apostrophes, or hyphens only for your name."
+                self._save_memory(uid)
+                return
+
+            self.name = normalized_name
+            self.onboarding_message = ""
+            self.step = 3
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR advance_from_name: {e}")
 
     @rx.event
     def advance_from_year(self):
@@ -2200,7 +2254,10 @@ Recent conversation:
         try:
             if not self.selected_year:
                 self.step = 3
+                self.onboarding_message = "Choose your current academic year to keep the plan matched to your progress."
+                self._save_memory(uid)
                 return
+            self.onboarding_message = ""
             self.step = 4
             self._save_memory(uid)
         except Exception as e:
@@ -2212,12 +2269,15 @@ Recent conversation:
         try:
             if not self.selected_year:
                 self.step = 3
+                self.onboarding_message = "Please select your year first, then we can open the correct semester."
                 self._save_memory(uid)
                 return
             if not self.selected_semester:
                 self.step = 4
+                self.onboarding_message = "Pick the semester you want Alex to open so we can continue."
                 self._save_memory(uid)
                 return
+            self.onboarding_message = ""
             self.step = 5
             self._save_memory(uid)
         except Exception as e:
@@ -2228,6 +2288,7 @@ Recent conversation:
         uid = self._uid()
         try:
             self.degree = value
+            self.onboarding_message = ""
             self._save_memory(uid)
         except Exception as e:
             print(f"ERROR set_degree: {e}")
@@ -2252,12 +2313,21 @@ Recent conversation:
     @rx.event
     def choose_onboarding_year(self, year: str):
         uid = self._uid()
-        print(f"[Onboarding] choose_onboarding_year called: year={year}, uid={uid}, step was {self.step}")
-        self.status_text = ""
-        self.selected_year = year
-        self.step = 4
-        self._save_memory(uid)
-        print(f"[Onboarding] step is now {self.step}")
+        try:
+            if year not in SEMESTER_NAVIGATION:
+                self.step = 3
+                self.onboarding_message = "Please choose one of the listed academic years to continue."
+                self._save_memory(uid)
+                return
+            self.status_text = ""
+            self.onboarding_message = ""
+            self.selected_year = year
+            if self.selected_semester not in SEMESTER_NAVIGATION.get(year, []):
+                self.selected_semester = ""
+            self.step = 4
+            self._save_memory(uid)
+        except Exception as e:
+            print(f"ERROR choose_onboarding_year: {e}")
 
     @rx.event
     def set_selected_semester(self, semester: str):
@@ -2278,9 +2348,16 @@ Recent conversation:
         try:
             if not self.selected_year:
                 self.step = 3
+                self.onboarding_message = "Please select your year first so the semester list stays accurate."
+                self._save_memory(uid)
+                return
+            if semester not in SEMESTER_NAVIGATION.get(self.selected_year, []):
+                self.step = 4
+                self.onboarding_message = "That semester does not match your selected year, so please choose one from the list below."
                 self._save_memory(uid)
                 return
             self.selected_semester = semester
+            self.onboarding_message = ""
             self.step = 5
             self._save_memory(uid)
         except Exception as e:
@@ -2292,6 +2369,7 @@ Recent conversation:
         try:
             self.step = 3
             self.selected_semester = ""
+            self.onboarding_message = ""
             self._save_memory(uid)
         except Exception as e:
             print(f"ERROR back_to_onboarding_year: {e}")
@@ -4311,6 +4389,20 @@ def support_page():
 # Onboarding
 # ──────────────────────────────────────────────────────────────
 def onboarding_page():
+    def onboarding_feedback() -> rx.Component:
+        return rx.cond(
+            AppState.onboarding_message != "",
+            rx.text(
+                AppState.onboarding_message,
+                color="rgba(255,236,204,0.86)",
+                font_size="0.83rem",
+                text_align="center",
+                line_height="1.55",
+                max_width="400px",
+            ),
+            rx.fragment(),
+        )
+
     return rx.box(
         rx.center(
             rx.vstack(
@@ -4318,10 +4410,10 @@ def onboarding_page():
                     rx.box(rx.vstack(rx.heading("Shall we begin",size="8"),rx.button("YES",color_scheme="green",on_click=AppState.next_step,size="3",style={"animation":"pulse_glow 2s infinite","cursor":"pointer"})),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 1,
-                    rx.box(rx.vstack(rx.heading("Whats your degree",size="7"),rx.select(AppState.options,placeholder="Choose your degree",on_change=AppState.set_degree,width="100%"),rx.button("next",on_click=AppState.next_step,color_scheme="green",size="3")),
+                    rx.box(rx.vstack(rx.heading("Whats your degree",size="7"),rx.select(AppState.options,placeholder="Choose your degree",value=AppState.degree,on_change=AppState.set_degree,width="100%"),rx.button("next",on_click=AppState.advance_from_degree,color_scheme="green",size="3"),onboarding_feedback()),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 2,
-                    rx.box(rx.vstack(rx.heading("What's your name?",size="7",color="white"),rx.input(placeholder="Enter your name",on_change=AppState.set_name,width="100%",size="3"),rx.button("Next",on_click=AppState.next_step,color_scheme="green",size="3"),spacing="4",width="400px"),
+                    rx.box(rx.vstack(rx.heading("What's your name?",size="7",color="white"),rx.input(placeholder="Enter your nick name",value=AppState.name,on_change=AppState.set_name,width="100%",size="3"),rx.button("Next",on_click=AppState.advance_from_name,color_scheme="green",size="3"),onboarding_feedback(),spacing="4",width="400px"),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 3,
                     rx.box(rx.vstack(
@@ -4330,6 +4422,7 @@ def onboarding_page():
                         subject_button("Year 2", on_click=AppState.choose_onboarding_year("Year 2")),
                         subject_button("Year 3", on_click=AppState.choose_onboarding_year("Year 3")),
                         subject_button("Year 4", on_click=AppState.choose_onboarding_year("Year 4")),
+                        onboarding_feedback(),
                         spacing="4",width="400px"),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 4,
@@ -4341,10 +4434,11 @@ def onboarding_page():
                             lambda sem: subject_button(sem, on_click=AppState.choose_onboarding_semester(sem)),
                         ),
                         rx.button("Back",on_click=AppState.back_to_onboarding_year,variant="outline",color_scheme="gray",size="3"),
+                        onboarding_feedback(),
                         spacing="4",width="400px"),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 5,
-                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.text(AppState.selected_year + " • " + AppState.selected_semester,color="rgba(255,255,255,0.72)"),rx.button("begin",on_click=AppState.start_app,color_scheme="green",size="3",style={"animation":"pulse_glow 2s infinite"},is_disabled=(AppState.selected_year == "") | (AppState.selected_semester == ""))),
+                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.text(AppState.selected_year + " • " + AppState.selected_semester,color="rgba(255,255,255,0.72)"),rx.button("begin",on_click=AppState.start_app,color_scheme="green",size="3",style={"animation":"pulse_glow 2s infinite"},is_disabled=(AppState.selected_year == "") | (AppState.selected_semester == "")),onboarding_feedback()),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 spacing="4",
             ),
