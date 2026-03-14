@@ -3917,6 +3917,72 @@ def _marketing_card(title: str, body: str, kicker: str = "") -> rx.Component:
     )
 
 
+def _legal_section_body(body: str) -> rx.Component:
+    rows: list[rx.Component] = []
+    for raw_line in (body or "").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if line.startswith("- "):
+            rows.append(
+                rx.hstack(
+                    rx.text("•", color="var(--landing-accent-2)", margin_top="2px"),
+                    rx.text(
+                        line[2:].strip(),
+                        color="rgba(226,232,240,0.76)",
+                        line_height="1.7",
+                        flex="1",
+                    ),
+                    align="start",
+                    spacing="3",
+                    width="100%",
+                )
+            )
+            continue
+
+        if ":" in line:
+            label, value = line.split(":", 1)
+            if label.strip() and value.strip():
+                rows.append(
+                    rx.hstack(
+                        rx.text(
+                            label.strip() + ":",
+                            color="rgba(226,232,240,0.92)",
+                            font_weight="600",
+                            width="88px",
+                            flex_shrink="0",
+                        ),
+                        rx.text(
+                            value.strip(),
+                            color="rgba(226,232,240,0.76)",
+                            line_height="1.7",
+                            flex="1",
+                        ),
+                        align="start",
+                        spacing="3",
+                        width="100%",
+                    )
+                )
+                continue
+
+        rows.append(
+            rx.text(
+                line,
+                color="rgba(226,232,240,0.76)",
+                line_height="1.7",
+                width="100%",
+            )
+        )
+
+    return rx.vstack(
+        *rows,
+        spacing="2",
+        align_items="flex-start",
+        width="100%",
+    )
+
+
 def _marketing_step_card(step: str, title: str, body: str) -> rx.Component:
     return rx.box(
         rx.vstack(
@@ -4280,7 +4346,35 @@ def legal_page_shell(title: str, subtitle: str, sections: list[tuple[str, str]])
                 width="100%",
             ),
             *[
-                _marketing_card(section_title, section_text, "Alex AI")
+                rx.box(
+                    rx.vstack(
+                        rx.text(
+                            "Alex AI",
+                            color="var(--landing-accent-2)",
+                            font_size="0.78rem",
+                            font_weight="700",
+                            letter_spacing="0.12em",
+                            text_transform="uppercase",
+                        ),
+                        rx.heading(
+                            section_title,
+                            size="5",
+                            color="white",
+                            font_family="var(--landing-display-font)",
+                        ),
+                        _legal_section_body(section_text),
+                        spacing="3",
+                        align_items="flex-start",
+                        width="100%",
+                    ),
+                    padding="24px",
+                    border_radius="22px",
+                    border="1px solid var(--landing-border)",
+                    background="linear-gradient(180deg,rgba(7,12,24,0.82),rgba(5,8,17,0.62))",
+                    box_shadow="0 20px 70px rgba(2,6,23,0.32)",
+                    backdrop_filter="blur(16px)",
+                    width="100%",
+                )
                 for section_title, section_text in sections
             ],
             spacing="5",
