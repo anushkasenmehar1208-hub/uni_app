@@ -1510,11 +1510,45 @@ class AppState(reflex_local_auth.LocalAuthState):
             return f"y{y}s{s}"
         return f"{year}|{semester}"
 
+    def _normalize_course_label(self, value: str) -> str:
+        text = (value or "").strip().lower()
+        if ":" in text:
+            text = text.split(":", 1)[1]
+        text = re.sub(r"[^a-z0-9]+", " ", text)
+        return " ".join(text.split())
+
     def _semester_courses(self, year: str, semester: str) -> list[str]:
         return FULL_CURRICULUM.get(year, {}).get(semester, [])
 
     def _has_curriculum_for_semester(self, year: str, semester: str) -> bool:
         return bool(self._semester_courses(year, semester))
+
+    def _plan_matches_semester(self, plan: list, year: str, semester: str) -> bool:
+        if not plan:
+            return True
+
+        expected = {
+            self._normalize_course_label(course)
+            for course in self._semester_courses(year, semester)
+            if self._normalize_course_label(course)
+        }
+        if not expected:
+            return True
+
+        subjects: list[str] = []
+        for entry in plan[:20]:
+            subject = self._normalize_course_label(str(entry.get("subject", "")))
+            if subject and subject not in subjects:
+                subjects.append(subject)
+
+        if not subjects:
+            return False
+
+        for subject in subjects:
+            for course in expected:
+                if subject == course or subject in course or course in subject:
+                    return True
+        return False
 
     def _current_courses_for_scope(self) -> list[str]:
         if self.view_mode != "semester" or not self.selected_year or not self.selected_semester:
@@ -1574,6 +1608,8 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
         try:
             sid = int(session_id)
+            if not self._session_in_scope(uid, sid, self.active_scope):
+                return
             with rx.session() as session:
                 for m in session.exec(select(ChatMessage2).where(ChatMessage2.session_id == sid)).all():
                     session.delete(m)
@@ -1605,6 +1641,61 @@ class AppState(reflex_local_auth.LocalAuthState):
                 session.refresh(sess)
             self.current_session_id = str(sess.id)
             self.current_session_choice = f"{sess.id}::{sess.title}"
+
+    def _session_in_scope(self, uid: int, sid: int, scope: str) -> bool:
+        if uid < 0 or sid <= 0:
+            return False
+        with rx.session() as session:
+            sess = session.exec(
+                select(ChatSession)
+                .where(ChatSession.id == sid)
+                .where(ChatSession.user_id == uid)
+            ).one_or_none()
+        return bool(sess and sess.scope == scope)
+
+    def _reset_scope_workspace(self, uid: int, scope: str) -> None:
+        if uid < 0 or not scope:
+            return
+        with rx.session() as session:
+            sessions = session.exec(
+                select(ChatSession)
+                .where(ChatSession.user_id == uid)
+                .where(ChatSession.scope == scope)
+            ).all()
+            for sess in sessions:
+                messages = session.exec(
+                    select(ChatMessage2).where(ChatMessage2.session_id == int(sess.id))
+                ).all()
+                for msg in messages:
+                    session.delete(msg)
+                session.delete(sess)
+
+            plan = session.exec(
+                select(SemesterStudyPlan)
+                .where(SemesterStudyPlan.user_id == uid)
+                .where(SemesterStudyPlan.scope == scope)
+            ).one_or_none()
+            if plan is not None:
+                session.delete(plan)
+
+            progress = session.exec(
+                select(DayProgress)
+                .where(DayProgress.user_id == uid)
+                .where(DayProgress.scope == scope)
+            ).one_or_none()
+            if progress is not None:
+                session.delete(progress)
+
+            scope_memory = session.exec(
+                select(ScopeMemory)
+                .where(ScopeMemory.user_id == uid)
+                .where(ScopeMemory.scope == scope)
+            ).one_or_none()
+            if scope_memory is not None:
+                scope_memory.summary = ""
+                session.add(scope_memory)
+
+            session.commit()
 
     def _load_sessions(self, uid: int, scope: str) -> None:
         with rx.session() as session:
@@ -1640,6 +1731,11 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.chat_history = []
             return
         sid = int(self.current_session_id)
+        if not self._session_in_scope(uid, sid, self.active_scope):
+            self.current_session_id = ""
+            self.current_session_choice = ""
+            self.chat_history = []
+            return
         with rx.session() as session:
             msgs = session.exec(
                 select(ChatMessage2).where(ChatMessage2.user_id == uid).where(ChatMessage2.session_id == sid).order_by(ChatMessage2.id)
@@ -1655,6 +1751,8 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def _save_message(self, uid: int, role: str, content: str) -> None:
         if uid < 0 or not self.current_session_id:
+            return
+        if not self._session_in_scope(uid, int(self.current_session_id), self.active_scope):
             return
         safe_content = sanitize_for_ui(content) if role == "assistant" else content
         with rx.session() as session:
@@ -2216,13 +2314,17 @@ Critical operating rules:
         self.selected_semester = semester
         self.view_mode = "semester"
         self.active_scope = self._scope_key(year, semester)
+        existing_plan = self._get_study_plan(uid, self.active_scope)
+        if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
+            self._reset_scope_workspace(uid, self.active_scope)
+            existing_plan = []
+        self.chat_history = []
         self.show_semester_sidebar = False
         self._save_memory(uid)
         self._ensure_progress_for_year(uid, year)
         self._refresh_today_plan(uid)
         self._switch_scope(uid, self.active_scope)
 
-        existing_plan = self._get_study_plan(uid, self.active_scope)
         if existing_plan:
             day, topic_idx = self._get_day_progress(uid, self.active_scope)
             self.current_day = day
@@ -2331,6 +2433,8 @@ Critical operating rules:
         uid = self._uid()
         if uid < 0: return
         try:
+            if not self._session_in_scope(uid, int(session_id), self.active_scope):
+                return
             self.current_session_id = session_id
             self._load_messages(uid)
         except Exception as e:
@@ -2608,7 +2712,8 @@ Critical operating rules:
         courses_text = "\n".join(self._current_courses_for_scope())
         try:
             prompt = f"""You are a university curriculum expert for {self.degree} students
-Generate a realistic detailed 110 day study plan for the following semester subjects
+Generate a realistic detailed 110 day study plan for {self.selected_year} {self.selected_semester}.
+Use only the following semester subjects and do not include modules from any other semester.
 Return ONLY a valid JSON array with exactly 110 items
 Each item: {{"day":<1-110>,"subject":"<name>","unit":"<unit>","topics":["<t1>","<t2>"]}}
 Subjects:\n{courses_text}"""
@@ -2799,6 +2904,7 @@ Subjects:\n{courses_text}"""
                 entry = self._get_today_entry(plan, day)
                 topics = entry.get("topics", [])
                 current_topic = topics[topic_idx] if topic_idx < len(topics) else ""
+                semester_courses = ", ".join(self._current_courses_for_scope())
 
                 scope_summary = self._get_scope_summary(uid, scope)
                 recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in self.chat_history[-14:]])
@@ -2807,6 +2913,8 @@ Subjects:\n{courses_text}"""
                 teach_prompt = f"""You are Alex, a friendly and patient Software Engineering mentor helping a {self.degree} student.
 
 Current context:
+- Active semester workspace: {self.selected_year}, {self.selected_semester}
+- Semester modules: {semester_courses}
 - Day {day}/110 | Subject: {entry.get("subject","")} | Unit: {entry.get("unit","")} | Topic: {current_topic}
 - Student memory: {scope_summary}
 - Adaptive profile from previous chats: {adaptive_profile}
@@ -2840,7 +2948,8 @@ Your response style rules:
 19. Adapt to the adaptive profile above for pace, explanation depth, and examples.
 20. If code is needed, wrap it in fenced markdown code blocks with the correct language.
 21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
-22. If you use a career example or analogy, prefer Sri Lankan Software Engineering context where it fits naturally."""
+22. If you use a career example or analogy, prefer Sri Lankan Software Engineering context where it fits naturally.
+23. Stay strictly inside the active semester workspace above. Do not mention modules from other semesters unless the student explicitly asks to compare them."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
