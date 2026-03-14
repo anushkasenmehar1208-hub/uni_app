@@ -116,11 +116,13 @@ def friendly_groq_error(e: Exception) -> str:
 def _groq_generate(model: str, contents: str) -> Any:
     """Drop-in replacement for Gemini generate_content using Groq."""
     class _R:
-        text = ""
+        def __init__(self):
+            self.text = ""
 
     if client is None:
-        _R.text = "API not ready"
-        return _R()
+        r = _R()
+        r.text = "API not ready"
+        return r
 
     try:
         resp = client.chat.completions.create(
@@ -128,11 +130,13 @@ def _groq_generate(model: str, contents: str) -> Any:
             messages=[{"role": "user", "content": contents}],
             max_tokens=2048,
         )
-        _R.text = resp.choices[0].message.content or ""
-        return _R()
+        r = _R()
+        r.text = resp.choices[0].message.content or ""
+        return r
     except Exception as e:
-        _R.text = friendly_groq_error(e)
-        return _R()
+        r = _R()
+        r.text = friendly_groq_error(e)
+        return r
 
 async def _groq_stream_async(model: str, messages: list[dict], max_tokens: int = 2048):
     try:
@@ -170,10 +174,11 @@ async def _groq_stream_async(model: str, messages: list[dict], max_tokens: int =
             item = await q.get()
             if item is DONE:
                 break
-            if isinstance(item, str):
-                if _is_rate_limit_text(item):
-                    yield RATE_LIMIT_UI_MESSAGE
-                    break
+            if not isinstance(item, str):
+                continue
+            if _is_rate_limit_text(item):
+                yield RATE_LIMIT_UI_MESSAGE
+                break
 
             yield item
 
@@ -208,6 +213,8 @@ def _redact_training_text(text: str) -> str:
     return t
 
 
+import fcntl
+
 def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg: str) -> None:
     """Store anonymized chat examples for optional offline model tuning later."""
     if not TRAINING_LOG_ENABLED:
@@ -233,7 +240,11 @@ def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg:
             "assistant": _redact_training_text(assistant_text)[:2800],
         }
         with TRAINING_DATA_PATH.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(row, ensure_ascii=True) + "\n")
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.write(json.dumps(row, ensure_ascii=True) + "\n")
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
     except Exception as e:
         print(f"ERROR training log append: {e}")
 
@@ -261,7 +272,10 @@ SUPPORT_PHONE_LINK = "tel:+94767104776"
 BUSINESS_LOCATION = "Colombo, Sri Lanka"
 CURRENT_COPYRIGHT_YEAR = str(date.today().year)
 SESSION_SECRET          = os.getenv("SESSION_SECRET", "change-me-in-production").strip() or "change-me-in-production"
+_IS_PRODUCTION = os.getenv("RAILWAY_ENVIRONMENT", "") or os.getenv("PRODUCTION", "")
 if SESSION_SECRET == "change-me-in-production":
+    if _IS_PRODUCTION:
+        raise RuntimeError("SESSION_SECRET must be set in production! Set a real secret via environment variable.")
     print("WARNING: SESSION_SECRET is set to the default value. Set a real secret in production!")
 GOOGLE_AUTH_URL         = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL        = "https://oauth2.googleapis.com/token"
@@ -434,12 +448,12 @@ FULL_CURRICULUM = {
     },
     "Year 2": {
         "Semester 3": [
-            "SENG:computer architecture and operating systems",
+            "SENG:Computer Architecture and Operating Systems",
             "SENG:Software Construction",
             "SENG:Requirement Engineering",
             "SENG:Software Modeling",
             "SENG:Web Application Development",
-            "SENG:interactive application development",
+            "SENG:Interactive Application Development",
             "SENG:Management for Software Engineering II"
         ],
         "Semester 4": [
@@ -448,8 +462,8 @@ FULL_CURRICULUM = {
             "SENG:Human-Computer Interaction",
             "SENG:Software Verification and Validation",
             "SENG:Mobile Application Development",
-            "SENG:embedded systems development",
-            "PMAT:mathematical methods",
+            "SENG:Embedded Systems Development",
+            "PMAT:Mathematical Methods",
         ],
     },
 }
@@ -796,7 +810,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def messages_left_today(self) -> int:
         if self.has_premium_access or self.is_in_trial:
-            return FREE_DAILY_LIMIT
+            return 999  # Unlimited
         return max(0, FREE_DAILY_LIMIT - self.daily_message_count)
 
     @rx.var
@@ -889,7 +903,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                     self.name = _normalize_person_name(account.username)
 
     def _check_and_reset_daily_count(self, uid: int) -> None:
-        today_str = date.today().isoformat()
+        today_str = datetime.now(timezone.utc).date().isoformat()
         if self.last_message_date != today_str:
             self.daily_message_count = 0
             self.last_message_date   = today_str
@@ -899,23 +913,26 @@ class AppState(reflex_local_auth.LocalAuthState):
                 ).one_or_none()
                 if profile:
                     profile.daily_message_count = 0
-                    profile.last_message_date   = date.today()
+                    profile.last_message_date   = datetime.now(timezone.utc).date()
                     session.add(profile)
                     session.commit()
 
     def _increment_daily_count(self, uid: int) -> None:
-        self.daily_message_count += 1
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
         self.last_message_date = today.isoformat()
         with rx.session() as session:
             profile = session.exec(
                 select(UserProfile).where(UserProfile.user_id == uid)
             ).one_or_none()
             if profile:
-                profile.daily_message_count = self.daily_message_count
-                profile.last_message_date   = today
+                # Use the DB value as source of truth to avoid race conditions
+                profile.daily_message_count = (profile.daily_message_count or 0) + 1
+                profile.last_message_date = today
                 session.add(profile)
                 session.commit()
+                self.daily_message_count = profile.daily_message_count
+            else:
+                self.daily_message_count += 1
 
     def _normalize_username(self, username: str) -> str:
         return (username or "").strip().lower()
@@ -1419,7 +1436,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
             return_url = f"{APP_BASE_URL}/payment/success"
             cancel_url = f"{APP_BASE_URL}/payment/cancel"
-            notify_url = f"{APP_BASE_URL}/api/payhere/notify"
+            notify_url = f"{API_BASE_URL}/api/payhere/notify"
 
             js = f"""
 (function() {{
@@ -1544,10 +1561,23 @@ class AppState(reflex_local_auth.LocalAuthState):
         if not subjects:
             return False
 
+        # Lenient matching: check word overlap between plan subjects and expected courses
+        expected_words = set()
+        for course in expected:
+            for w in course.split():
+                if len(w) >= 4:
+                    expected_words.add(w)
+
         for subject in subjects:
+            # Direct or substring match
             for course in expected:
                 if subject == course or subject in course or course in subject:
                     return True
+            # Word overlap: if 2+ significant words match, accept it
+            subj_words = {w for w in subject.split() if len(w) >= 4}
+            if len(subj_words & expected_words) >= 2:
+                return True
+
         return False
 
     def _current_courses_for_scope(self) -> list[str]:
@@ -1927,7 +1957,11 @@ class AppState(reflex_local_auth.LocalAuthState):
         if not sids:
             return ""
 
-        conds = [func.lower(ChatMessage2.content).like(f"%{k}%") for k in kws]
+        # Escape SQL LIKE wildcards to prevent injection
+        def _escape_like(s: str) -> str:
+            return s.replace("%", r"\%").replace("_", r"\_")
+
+        conds = [func.lower(ChatMessage2.content).like(f"%{_escape_like(k)}%") for k in kws]
 
         with rx.session() as session:
             rows = session.exec(
@@ -2306,6 +2340,29 @@ Critical operating rules:
 9. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
 """
 
+    def _reset_plan_only(self, uid: int, scope: str) -> None:
+        """Reset ONLY the study plan and day progress — preserve chat sessions and messages."""
+        if uid < 0 or not scope:
+            return
+        with rx.session() as session:
+            plan = session.exec(
+                select(SemesterStudyPlan)
+                .where(SemesterStudyPlan.user_id == uid)
+                .where(SemesterStudyPlan.scope == scope)
+            ).one_or_none()
+            if plan is not None:
+                session.delete(plan)
+
+            progress = session.exec(
+                select(DayProgress)
+                .where(DayProgress.user_id == uid)
+                .where(DayProgress.scope == scope)
+            ).one_or_none()
+            if progress is not None:
+                session.delete(progress)
+
+            session.commit()
+
     def _enter_semester_environment(self, uid: int, year: str, semester: str) -> bool:
         if uid < 0 or not year or not semester:
             return False
@@ -2316,9 +2373,9 @@ Critical operating rules:
         self.active_scope = self._scope_key(year, semester)
         existing_plan = self._get_study_plan(uid, self.active_scope)
         if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
-            self._reset_scope_workspace(uid, self.active_scope)
+            # Only clear the plan + day progress — NEVER delete chat sessions/messages
+            self._reset_plan_only(uid, self.active_scope)
             existing_plan = []
-        self.chat_history = []
         self.show_semester_sidebar = False
         self._save_memory(uid)
         self._ensure_progress_for_year(uid, year)
@@ -2373,7 +2430,7 @@ Critical operating rules:
         uid = self._uid()
         self._cached_uid = uid
         if uid < 0:
-            yield AppState.auth_redir
+            yield AppState.auth_redir()  # type: ignore
             return
         
         
