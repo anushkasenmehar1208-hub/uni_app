@@ -718,7 +718,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     selected_year: str = ""
     selected_semester: str = ""
     view_mode: str = "semester"
-    active_scope: str = rx.LocalStorage(name="active_scope")
+    active_scope: str = ""
 
     status_text: str = ""
     onboarding_message: str = ""
@@ -1756,12 +1756,13 @@ class AppState(reflex_local_auth.LocalAuthState):
                 session.add(ChatMessage2(user_id=uid, session_id=int(sess.id), role=self._safe_role(m.role), content=m.content))
             session.commit()
 
-    def _load_messages(self, uid: int) -> None:
+    def _load_messages(self, uid: int, scope: str = "") -> None:
+        effective_scope = scope or self.active_scope
         if not self.current_session_id:
             self.chat_history = []
             return
         sid = int(self.current_session_id)
-        if not self._session_in_scope(uid, sid, self.active_scope):
+        if not self._session_in_scope(uid, sid, effective_scope):
             self.current_session_id = ""
             self.current_session_choice = ""
             self.chat_history = []
@@ -1779,10 +1780,11 @@ class AppState(reflex_local_auth.LocalAuthState):
             for m in msgs
         ]
 
-    def _save_message(self, uid: int, role: str, content: str) -> None:
+    def _save_message(self, uid: int, role: str, content: str, scope: str = "") -> None:
+        effective_scope = scope or self.active_scope
         if uid < 0 or not self.current_session_id:
             return
-        if not self._session_in_scope(uid, int(self.current_session_id), self.active_scope):
+        if not self._session_in_scope(uid, int(self.current_session_id), effective_scope):
             return
         safe_content = sanitize_for_ui(content) if role == "assistant" else content
         with rx.session() as session:
@@ -2144,12 +2146,25 @@ Recent conversation:
             print(f"ERROR auto adaptive profile: {e}")
 
     def _switch_scope(self, uid: int, scope: str) -> None:
+        # CRITICAL: clear display state FIRST so if anything below fails,
+        # the user sees an empty chat — not another scope's messages.
+        old_scope = self.active_scope
+        old_session = self.current_session_id
         self.active_scope = scope
-        self.current_session_id = ""; self.current_session_choice = ""
-        self._ensure_scope_memory(uid, scope)
-        self._ensure_session(uid, scope)
-        self._load_sessions(uid, scope)
-        self._load_messages(uid)
+        self.current_session_id = ""
+        self.current_session_choice = ""
+        self.chat_history = []
+        self.sessions = []
+
+        try:
+            self._ensure_scope_memory(uid, scope)
+            self._ensure_session(uid, scope)
+            self._load_sessions(uid, scope)
+            self._load_messages(uid, scope)
+            print(f"[_switch_scope] {old_scope}(sid={old_session}) → {scope}(sid={self.current_session_id}), loaded {len(self.chat_history)} msgs")
+        except Exception as e:
+            print(f"ERROR _switch_scope({scope}): {e}")
+            # State is already cleared above, so UI shows empty — not stale data
 
     def _get_study_plan(self, uid: int, scope: str) -> list:
         if uid < 0: return []
@@ -2370,17 +2385,24 @@ Critical operating rules:
         self.selected_year = year
         self.selected_semester = semester
         self.view_mode = "semester"
-        self.active_scope = self._scope_key(year, semester)
-        existing_plan = self._get_study_plan(uid, self.active_scope)
+        new_scope = self._scope_key(year, semester)
+
+        # CRITICAL: clear display state IMMEDIATELY so stale data from previous
+        # scope never persists if anything below fails.
+        self.chat_history = []
+        self.sessions = []
+        self.active_scope = new_scope
+
+        existing_plan = self._get_study_plan(uid, new_scope)
         if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
             # Only clear the plan + day progress — NEVER delete chat sessions/messages
-            self._reset_plan_only(uid, self.active_scope)
+            self._reset_plan_only(uid, new_scope)
             existing_plan = []
         self.show_semester_sidebar = False
         self._save_memory(uid)
         self._ensure_progress_for_year(uid, year)
         self._refresh_today_plan(uid)
-        self._switch_scope(uid, self.active_scope)
+        self._switch_scope(uid, new_scope)
 
         if existing_plan:
             day, topic_idx = self._get_day_progress(uid, self.active_scope)
@@ -2449,17 +2471,19 @@ Critical operating rules:
                 self._save_memory(uid)
         self.status_text = ""
         self.onboarding_message = ""
-        if self.is_started and self.active_scope == "home":
-            self.view_mode = "home"
-            self._switch_scope(uid, "home")
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-            return
         if self.is_started and self.selected_year and self.selected_semester:
+            # Reconstruct active_scope from DB-stored year/semester
             should_generate = self._enter_semester_environment(uid, self.selected_year, self.selected_semester)
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             if should_generate:
                 yield
                 yield type(self).generate_study_plan
+            return
+        if self.is_started and not self.selected_year and not self.selected_semester:
+            # User was on the home/general workspace
+            self.view_mode = "home"
+            self._switch_scope(uid, "home")
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             return
         self.view_mode = "semester"
         self.active_scope = self._scope_key(self.selected_year, self.selected_semester) if (self.selected_year and self.selected_semester) else ""
@@ -2622,8 +2646,14 @@ Critical operating rules:
             if self.selected_semester not in SEMESTER_NAVIGATION.get(year, []):
                 self.selected_semester = ""
             if self.selected_semester:
-                self.view_mode = "semester"
-                self.active_scope = self._scope_key(year, self.selected_semester)
+                new_scope = self._scope_key(year, self.selected_semester)
+                # If app is running and scope actually changed, reload chat data
+                if self.is_started and new_scope != self.active_scope:
+                    self.view_mode = "semester"
+                    self._switch_scope(uid, new_scope)
+                else:
+                    self.view_mode = "semester"
+                    self.active_scope = new_scope
             self._save_memory(uid)
             self._ensure_progress_for_year(uid, year)
             self._refresh_today_plan(uid)
@@ -2659,7 +2689,12 @@ Critical operating rules:
                 return
             self.selected_semester = semester
             self.view_mode = "semester"
-            self.active_scope = self._scope_key(self.selected_year, semester)
+            new_scope = self._scope_key(self.selected_year, semester)
+            # If app is running and scope actually changed, reload chat data
+            if self.is_started and new_scope != self.active_scope:
+                self._switch_scope(uid, new_scope)
+            else:
+                self.active_scope = new_scope
             self._save_memory(uid)
         except Exception as e:
             print(f"ERROR set_selected_semester: {e}")
@@ -2752,7 +2787,10 @@ Critical operating rules:
         if uid < 0:
             return
         try:
+            new_scope = self._scope_key(year, semester)
+            print(f"[SCOPE SWITCH] {self.active_scope} → {new_scope} (Year: {year}, Semester: {semester})")
             should_generate = self._enter_semester_environment(uid, year, semester)
+            print(f"[SCOPE SWITCH] active_scope={self.active_scope}, session_id={self.current_session_id}, chat_msgs={len(self.chat_history)}")
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             if should_generate:
                 yield
@@ -2808,6 +2846,17 @@ Subjects:\n{courses_text}"""
         uid = self._uid()
         if uid < 0 or not self.chat_input.strip():
             return
+
+        # Scope safety: ensure current session belongs to active scope.
+        # If it doesn't (e.g. stale state after a failed scope switch), fix it now.
+        if self.current_session_id and self.active_scope:
+            try:
+                if not self._session_in_scope(uid, int(self.current_session_id), self.active_scope):
+                    print(f"[send_message] session {self.current_session_id} doesn't match scope {self.active_scope}, re-syncing")
+                    self._ensure_session(uid, self.active_scope)
+                    self._load_messages(uid)
+            except Exception as e:
+                print(f"[send_message] scope check error: {e}")
 
         self._check_and_reset_daily_count(uid)
 
