@@ -2528,8 +2528,6 @@ Critical operating rules:
     @rx.event
     async def on_load_scope_page(self):
         """Called when navigating to /s/[scope]. Reads scope from URL and loads everything fresh."""
-        if not self.is_hydrated:
-            return
         uid = self._uid()
         self._cached_uid = uid
         if uid < 0:
