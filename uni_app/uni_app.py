@@ -6556,12 +6556,34 @@ def _ensure_usermemory_columns() -> None:
     try:
         with rx.session() as session:
             conn = session.connection()
-            if conn.dialect.name != "sqlite":
-                return
-            cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('usermemory')").fetchall()}
-            if "selected_semester" not in cols:
-                conn.exec_driver_sql("ALTER TABLE usermemory ADD COLUMN selected_semester VARCHAR NOT NULL DEFAULT ''")
+            dialect = conn.dialect.name
+
+            if dialect == "sqlite":
+                cols = {
+                    str(row[1])
+                    for row in conn.exec_driver_sql("PRAGMA table_info('usermemory')").fetchall()
+                }
+
+                if "selected_year" not in cols:
+                    conn.exec_driver_sql(
+                        "ALTER TABLE usermemory ADD COLUMN selected_year VARCHAR NOT NULL DEFAULT ''"
+                    )
+
+                if "selected_semester" not in cols:
+                    conn.exec_driver_sql(
+                        "ALTER TABLE usermemory ADD COLUMN selected_semester VARCHAR NOT NULL DEFAULT ''"
+                    )
+
+            elif dialect in ("postgresql", "postgres"):
+                conn.exec_driver_sql(
+                    "ALTER TABLE public.usermemory ADD COLUMN IF NOT EXISTS selected_year VARCHAR NOT NULL DEFAULT ''"
+                )
+                conn.exec_driver_sql(
+                    "ALTER TABLE public.usermemory ADD COLUMN IF NOT EXISTS selected_semester VARCHAR NOT NULL DEFAULT ''"
+                )
+
             session.commit()
+
     except Exception as e:
         print(f"ERROR ensure_usermemory_columns: {e}")
 
