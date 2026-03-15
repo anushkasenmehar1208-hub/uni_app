@@ -502,6 +502,11 @@ def scope_to_route(scope_key: str) -> str:
     entry = SCOPE_ROUTE_MAP.get(scope_key or "home")
     return entry["route"] if entry else "/s/home"
 
+
+def _hard_navigate(route: str):
+    """Force a full browser navigation — guarantees fresh WebSocket + state."""
+    return rx.call_script(f"window.location.href = {json.dumps(route)}")
+
 ONBOARDING_FINAL_STEP = 5
 
 
@@ -2499,16 +2504,16 @@ Critical operating rules:
         self.onboarding_message = ""
 
         if self.is_started and self.active_scope == "home":
-            yield rx.redirect("/s/home")
+            yield _hard_navigate("/s/home")
             return
 
         if self.is_started and self.selected_year and self.selected_semester:
             scope = self._scope_key(self.selected_year, self.selected_semester)
-            yield rx.redirect(scope_to_route(scope))
+            yield _hard_navigate(scope_to_route(scope))
             return
 
         if self.is_started and not self.selected_year and not self.selected_semester:
-            yield rx.redirect("/s/home")
+            yield _hard_navigate("/s/home")
             return
 
         # Onboarding: user hasn't completed setup yet — stay on /app
@@ -2544,7 +2549,7 @@ Critical operating rules:
         scope_info = SCOPE_ROUTE_MAP.get(raw_scope)
         if scope_info is None:
             print(f"[ROUTE] unknown scope {raw_scope!r}, redirecting to home")
-            yield rx.redirect("/s/home")
+            yield _hard_navigate("/s/home")
             return
 
         # Not yet onboarded? Send to /app for onboarding
@@ -2800,7 +2805,7 @@ Critical operating rules:
                 scope = self._scope_key(year, self.selected_semester)
                 self.active_scope = scope
                 self._save_memory(uid)
-                return rx.redirect(scope_to_route(scope))
+                return _hard_navigate(scope_to_route(scope))
             elif self.selected_semester:
                 self.view_mode = "semester"
                 self.active_scope = self._scope_key(year, self.selected_semester)
@@ -2842,7 +2847,7 @@ Critical operating rules:
             if self.is_started:
                 self.active_scope = scope
                 self._save_memory(uid)
-                return rx.redirect(scope_to_route(scope))
+                return _hard_navigate(scope_to_route(scope))
             self.view_mode = "semester"
             self.active_scope = scope
             self._save_memory(uid)
@@ -2913,7 +2918,7 @@ Critical operating rules:
             scope = self._scope_key(self.selected_year, self.selected_semester)
             self.active_scope = scope
             self._save_memory(uid)
-            yield rx.redirect(scope_to_route(scope))
+            yield _hard_navigate(scope_to_route(scope))
         except Exception as e:
             print(f"ERROR start_app: {e}")
 
@@ -2926,7 +2931,7 @@ Critical operating rules:
         self.selected_semester = semester
         self.active_scope = scope
         self._save_memory(uid)
-        yield rx.redirect(scope_to_route(scope))
+        yield _hard_navigate(scope_to_route(scope))
 
     @rx.event
     async def open_dashboard_semester(self, year: str, semester: str):
@@ -2938,7 +2943,7 @@ Critical operating rules:
         self.selected_semester = semester
         self.active_scope = scope
         self._save_memory(uid)
-        yield rx.redirect(scope_to_route(scope))
+        yield _hard_navigate(scope_to_route(scope))
 
     @rx.event
     async def generate_study_plan(self):
@@ -2978,7 +2983,7 @@ Subjects:\n{courses_text}"""
         self.active_scope = "home"
         self.view_mode = "home"
         self._save_memory(uid)
-        yield rx.redirect("/s/home")
+        yield _hard_navigate("/s/home")
 
     @rx.event
     async def send_message(self):
@@ -5348,7 +5353,7 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
     is_active = (AppState.selected_year == year) & (AppState.selected_semester == semester)
     return rx.button(
         semester,
-        on_click=rx.redirect(route),
+        on_click=_hard_navigate(route),
         width="100%",
         justify_content="flex-start",
         text_align="left",
@@ -5458,7 +5463,7 @@ def alex_workspace_button() -> rx.Component:
             align_items="flex-start",
             width="100%",
         ),
-        on_click=rx.redirect("/s/home"),
+        on_click=_hard_navigate("/s/home"),
         width="100%",
         justify_content="flex-start",
         variant="ghost",
