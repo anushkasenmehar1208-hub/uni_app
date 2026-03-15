@@ -484,13 +484,13 @@ for _yr_label, _semesters in SEMESTER_NAVIGATION.items():
         _sem_num = _sem_label.replace("Semester ", "").strip()
         _scope_key = f"y{_yr_num}s{_sem_num}"
         SCOPE_ROUTE_MAP[_scope_key] = {
-            "route": f"/app/{_scope_key}",
+            "route": f"/s/{_scope_key}",
             "year": _yr_label,
             "semester": _sem_label,
             "view_mode": "semester",
         }
 SCOPE_ROUTE_MAP["home"] = {
-    "route": "/app/home",
+    "route": "/s/home",
     "year": "",
     "semester": "",
     "view_mode": "home",
@@ -498,9 +498,9 @@ SCOPE_ROUTE_MAP["home"] = {
 
 
 def scope_to_route(scope_key: str) -> str:
-    """Convert a scope key like 'y1s2' to its page route like '/app/y1s2'."""
+    """Convert a scope key like 'y1s2' to its page route like '/s/y1s2'."""
     entry = SCOPE_ROUTE_MAP.get(scope_key or "home")
-    return entry["route"] if entry else "/app/home"
+    return entry["route"] if entry else "/s/home"
 
 ONBOARDING_FINAL_STEP = 5
 
@@ -2499,7 +2499,7 @@ Critical operating rules:
         self.onboarding_message = ""
 
         if self.is_started and self.active_scope == "home":
-            yield rx.redirect("/app/home")
+            yield rx.redirect("/s/home")
             return
 
         if self.is_started and self.selected_year and self.selected_semester:
@@ -2508,7 +2508,7 @@ Critical operating rules:
             return
 
         if self.is_started and not self.selected_year and not self.selected_semester:
-            yield rx.redirect("/app/home")
+            yield rx.redirect("/s/home")
             return
 
         # Onboarding: user hasn't completed setup yet — stay on /app
@@ -2522,7 +2522,7 @@ Critical operating rules:
 
     @rx.event
     async def on_load_scope_page(self):
-        """Called when navigating to /app/[scope]. Reads scope from URL and loads everything fresh."""
+        """Called when navigating to /s/[scope]. Reads scope from URL and loads everything fresh."""
         if not self.is_hydrated:
             return
         uid = self._uid()
@@ -2531,15 +2531,20 @@ Critical operating rules:
             yield AppState.auth_redir()  # type: ignore
             return
 
-        self._load_profile(uid)
-        self.adaptive_profile = self._get_adaptive_profile(uid)
-        self._migrate_legacy_messages_once(uid)
+        try:
+            self._load_profile(uid)
+            self.adaptive_profile = self._get_adaptive_profile(uid)
+            self._migrate_legacy_messages_once(uid)
+        except Exception as e:
+            print(f"[ROUTE] profile load error: {e}")
 
         # Read scope from URL param
         raw_scope = str(self.router.page.params.get("scope", "home") or "home").strip()
+        print(f"[ROUTE] raw_scope from URL = {raw_scope!r}")
         scope_info = SCOPE_ROUTE_MAP.get(raw_scope)
         if scope_info is None:
-            yield rx.redirect("/app/home")
+            print(f"[ROUTE] unknown scope {raw_scope!r}, redirecting to home")
+            yield rx.redirect("/s/home")
             return
 
         # Not yet onboarded? Send to /app for onboarding
@@ -2589,48 +2594,51 @@ Critical operating rules:
             print(f"[ROUTE] ERROR loading scope {raw_scope}: {e}")
 
         # ── Semester-specific: study plan + progress ──
-        if view_mode == "semester" and year:
-            self._ensure_progress_for_year(uid, year)
-            self._refresh_today_plan(uid)
+        try:
+            if view_mode == "semester" and year:
+                self._ensure_progress_for_year(uid, year)
+                self._refresh_today_plan(uid)
 
-            existing_plan = self._get_study_plan(uid, raw_scope)
-            if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
-                self._reset_plan_only(uid, raw_scope)
-                existing_plan = []
+                existing_plan = self._get_study_plan(uid, raw_scope)
+                if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
+                    self._reset_plan_only(uid, raw_scope)
+                    existing_plan = []
 
-            if existing_plan:
-                day, topic_idx = self._get_day_progress(uid, raw_scope)
-                self.current_day = day
-                self.current_topic_index = topic_idx
-                today_msg = self._build_today_message(existing_plan, day, topic_idx)
-                if not self.chat_history:
-                    self.chat_history.append({"role": "assistant", "content": today_msg})
-                    self._save_message(uid, "assistant", today_msg)
+                if existing_plan:
+                    day, topic_idx = self._get_day_progress(uid, raw_scope)
+                    self.current_day = day
+                    self.current_topic_index = topic_idx
+                    today_msg = self._build_today_message(existing_plan, day, topic_idx)
+                    if not self.chat_history:
+                        self.chat_history.append({"role": "assistant", "content": today_msg})
+                        self._save_message(uid, "assistant", today_msg)
 
-            elif self._has_curriculum_for_semester(year, semester):
-                self.current_day = 1
-                self.current_topic_index = 0
-                self.is_generating_plan = True
-                gen_msg = "AI is generating your personalized 110 day study plan — please wait..."
-                if not self.chat_history or self.chat_history[-1].get("content") != gen_msg:
-                    self.chat_history.append({"role": "assistant", "content": gen_msg})
-                    self._save_message(uid, "assistant", gen_msg)
-                yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-                yield
-                yield type(self).generate_study_plan
-                return
+                elif self._has_curriculum_for_semester(year, semester):
+                    self.current_day = 1
+                    self.current_topic_index = 0
+                    self.is_generating_plan = True
+                    gen_msg = "AI is generating your personalized 110 day study plan — please wait..."
+                    if not self.chat_history or self.chat_history[-1].get("content") != gen_msg:
+                        self.chat_history.append({"role": "assistant", "content": gen_msg})
+                        self._save_message(uid, "assistant", gen_msg)
+                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    yield
+                    yield type(self).generate_study_plan
+                    return
 
-            else:
-                self.current_day = 1
-                self.current_topic_index = 0
-                empty_msg = (
-                    f"{semester} is now your main AI workspace.\n\n"
-                    "This semester does not have course data yet, so the guided study plan "
-                    "cannot be generated until the curriculum is added."
-                )
-                if not self.chat_history:
-                    self.chat_history.append({"role": "assistant", "content": empty_msg})
-                    self._save_message(uid, "assistant", empty_msg)
+                else:
+                    self.current_day = 1
+                    self.current_topic_index = 0
+                    empty_msg = (
+                        f"{semester} is now your main AI workspace.\n\n"
+                        "This semester does not have course data yet, so the guided study plan "
+                        "cannot be generated until the curriculum is added."
+                    )
+                    if not self.chat_history:
+                        self.chat_history.append({"role": "assistant", "content": empty_msg})
+                        self._save_message(uid, "assistant", empty_msg)
+        except Exception as e:
+            print(f"[ROUTE] ERROR study plan for {raw_scope}: {e}")
 
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
         yield rx.call_script(AUTO_SCROLL_OBSERVER_JS)
@@ -2970,7 +2978,7 @@ Subjects:\n{courses_text}"""
         self.active_scope = "home"
         self.view_mode = "home"
         self._save_memory(uid)
-        yield rx.redirect("/app/home")
+        yield rx.redirect("/s/home")
 
     @rx.event
     async def send_message(self):
@@ -5336,30 +5344,29 @@ def home_page():
 def semester_nav_button(year: str, semester: str) -> rx.Component:
     yr_num = year.replace("Year ", "").strip()
     sem_num = semester.replace("Semester ", "").strip()
-    route = f"/app/y{yr_num}s{sem_num}"
+    route = f"/s/y{yr_num}s{sem_num}"
     is_active = (AppState.selected_year == year) & (AppState.selected_semester == semester)
-    return rx.link(
-        rx.box(
-            rx.text(semester, font_size="0.78rem"),
-            width="100%",
-            text_align="left",
-            padding="0.46em 0.72em",
-            border_radius="12px",
-            style={
-                "background": rx.cond(is_active, "rgba(0,255,136,0.12)", "transparent"),
-                "border": rx.cond(is_active, "1px solid rgba(0,255,136,0.28)", "1px solid transparent"),
-                "color": rx.cond(is_active, "#b7ffd9", "rgba(255,255,255,0.72)"),
-                "font_weight": rx.cond(is_active, "700", "500"),
-                "cursor": "pointer",
-                "_hover": {
-                    "background": "rgba(255,255,255,0.06)",
-                    "color": "white",
-                },
-            },
-        ),
-        href=route,
+    return rx.button(
+        semester,
+        on_click=rx.redirect(route),
         width="100%",
-        text_decoration="none",
+        justify_content="flex-start",
+        text_align="left",
+        variant="ghost",
+        style={
+            "background": rx.cond(is_active, "rgba(0,255,136,0.12)", "transparent"),
+            "border": rx.cond(is_active, "1px solid rgba(0,255,136,0.28)", "1px solid transparent"),
+            "color": rx.cond(is_active, "#b7ffd9", "rgba(255,255,255,0.72)"),
+            "font_weight": rx.cond(is_active, "700", "500"),
+            "border_radius": "12px",
+            "padding": "0.46em 0.72em",
+            "font_size": "0.78rem",
+            "min_height": "0",
+            "_hover": {
+                "background": "rgba(255,255,255,0.06)",
+                "color": "white",
+            },
+        },
     )
 
 
@@ -5451,7 +5458,7 @@ def alex_workspace_button() -> rx.Component:
             align_items="flex-start",
             width="100%",
         ),
-        on_click=rx.redirect("/app/home"),
+        on_click=rx.redirect("/s/home"),
         width="100%",
         justify_content="flex-start",
         variant="ghost",
@@ -6353,7 +6360,7 @@ def index():
 
 
 @rx.page(
-    route="/app/[scope]",
+    route="/s/[scope]",
     title="Alex AI",
     description="Alex AI study workspace",
     image=FAVICON_32,
