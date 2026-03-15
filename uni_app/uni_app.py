@@ -505,6 +505,14 @@ def scope_to_route(scope_key: str) -> str:
     return entry["route"] if entry else "/s/home"
 
 
+def semester_scope_key(year: str, semester: str) -> str:
+    y = year.lower().replace("year", "").strip()
+    s = semester.lower().replace("semester", "").strip()
+    if y.isdigit() and s.isdigit():
+        return f"y{y}s{s}"
+    return f"{year}|{semester}"
+
+
 def _hard_navigate(route: str):
     """Force a full browser navigation — guarantees fresh WebSocket + state."""
     return rx.call_script(f"window.location.href = {json.dumps(route)}")
@@ -793,6 +801,14 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def has_selected_environment(self) -> bool:
         return bool(self.selected_year and self.selected_semester)
+
+    @rx.var
+    def is_home_scope_active(self) -> bool:
+        return self.active_scope == "home" and self.view_mode == "home"
+
+    @staticmethod
+    def is_semester_scope_active(year: str, semester: str):
+        return (AppState.view_mode == "semester") & (AppState.active_scope == semester_scope_key(year, semester))
 
     # ----------------------------------------------------------------
     # NEW: is_empty_chat — True when no real conversation has started
@@ -1576,11 +1592,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         return "assistant" if role == "bot" else role
 
     def _scope_key(self, year: str, semester: str) -> str:
-        y = year.lower().replace("year", "").strip()
-        s = semester.lower().replace("semester", "").strip()
-        if y.isdigit() and s.isdigit():
-            return f"y{y}s{s}"
-        return f"{year}|{semester}"
+        return semester_scope_key(year, semester)
 
     def _normalize_course_label(self, value: str) -> str:
         text = (value or "").strip().lower()
@@ -2547,16 +2559,22 @@ Critical operating rules:
         self.status_text = ""
         self.onboarding_message = ""
 
-        if self.selected_year and self.selected_semester:
-            self.view_mode = "semester"
-            self.active_scope = self._scope_key(self.selected_year, self.selected_semester)
+        if self.active_scope == "home" and self.view_mode == "home":
+            target_scope = "home"
+            target_view_mode = "home"
+        elif self.selected_year and self.selected_semester:
+            target_scope = self._scope_key(self.selected_year, self.selected_semester)
+            target_view_mode = "semester"
         else:
-            self.view_mode = "home"
-            self.active_scope = "home"
+            target_scope = "home"
+            target_view_mode = "home"
+
+        self.view_mode = target_view_mode
+        self.active_scope = target_scope
 
         if self.is_started:
-            self._switch_scope(uid, self.active_scope)
-            yield _hard_navigate(scope_to_route(self.active_scope))
+            self._switch_scope(uid, target_scope)
+            yield _hard_navigate(scope_to_route(target_scope))
             return
 
         # Onboarding: user hasn't completed setup yet — stay on /app
@@ -3004,7 +3022,9 @@ Subjects:\n{courses_text}"""
         if uid < 0: return
         self.active_scope = "home"
         self.view_mode = "home"
+        self.show_semester_sidebar = False
         self._save_memory(uid)
+        self._switch_scope(uid, "home")
         yield _hard_navigate("/s/home")
 
     @rx.event
@@ -3296,54 +3316,55 @@ Your response style rules:
         scope_summary = self._get_scope_summary(uid, self.active_scope)
         all_scopes = self._get_all_scope_summaries_text(uid) if self.active_scope == "home" else ""
         next_courses = self._get_next_courses(uid, self.selected_year, 3) if self.selected_year else []
-        rules = (
-            "You are the Alex AI cross-semester workspace assistant with access to all semester summaries and relevant semester chat memory.\n"
-            if self.active_scope == "home"
-            else f"You are a SEMESTER assistant for scope {self.active_scope}\n"
-        )
         past_hits = self._past_hits_text(uid, self.active_scope, user_msg)
 
-        prompt = f"""You are Alex, a friendly Software Engineering mentor inside a university planner app for a {self.degree} student.
+        prompt = f"""You are Alex AI, the central academic growth assistant inside the platform.
+Your main job is to analyze the student's learning journey across semesters,
+summarize progress,
+identify weak and strong areas,
+answer questions about growth, momentum, current direction, and academic status,
+and guide the student to the right semester section when needed.
 
-Student profile:
-- Degree: {self.degree} | Year: {self.selected_year} | Semester: {self.selected_semester}
-- Memory: {self.memory_summary}
-- Adaptive profile from previous chats: {adaptive_profile}
-- Scope summary: {scope_summary}
-- All scopes: {all_scopes}
+Student context:
+- Degree: {self.degree}
+- Saved current year: {self.selected_year}
+- Saved current semester: {self.selected_semester}
+- Long-term memory: {self.memory_summary}
+- Adaptive profile: {adaptive_profile}
+- Home scope summary: {scope_summary}
+- All semester scope summaries: {all_scopes}
 - Today's plan: {self.today_plan}
 - Upcoming courses: {chr(10).join(next_courses)}
-- Recent chat: {recent_text}
-- Past relevant chat (db search): {past_hits}
+- Recent home chat: {recent_text}
+- Relevant past chat memory: {past_hits}
+- Student just said: {user_msg}
 
-{rules}
-
-Your response style rules:
-1. Be warm and conversational — like a smart friend who knows their stuff
-2. Give clear, direct answers first — no long intros or filler
-3. Break complex things into digestible steps with simple language
-4. Use relatable real-world examples when explaining concepts
-5. End with ONE short check-in question to keep the student engaged
-6. If the student is just chatting, be natural and friendly
-7. Keep responses concise — quality over quantity
-8. Gently guide the student back to their studies if they go off track
-9. Keep responses SHORT — max 150-200 words per reply
-10. Use bullet points as much as possible instead of long paragraphs
-11. Never write walls of text — students lose focus fast
-12. Use emojis sparingly but effectively — one per section max (📌 for key point, ✅ for answer, 💡 for tip)
-13. When explaining a concept, always follow this structure:
-    - What it is (1 sentence)
-    - Why it matters (1 sentence)
-    - Simple example
-    - Quick practice
-14. Never start a response with "Great question!" or "Certainly!" — just answer directly
-15. If the student makes a mistake, correct gently — say "Almost! Try thinking of it this way..."
-16. Always refer to the student by name: {student_name}
-17. If {student_name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
-18. Adapt to the adaptive profile above for pace, explanation depth, and examples.
-19. If code is needed, wrap it in fenced markdown code blocks with the correct language.
-20. If the question is technically complex, give a numbered breakdown before the final explanation or code.
-21. If you use a career example or analogy, prefer Sri Lankan Software Engineering context where it fits naturally."""
+Behavior rules:
+1. In home mode, focus on overview, analysis, redirection, and academic guidance. Do not pretend to be the daily semester tutor.
+2. If the user asks about growth or progress, summarize from all available semester scope summaries, long-term memory, adaptive profile, and relevant past chat.
+3. For growth or progress questions, structure the answer as:
+   - Current snapshot
+   - Strengths
+   - Weak areas
+   - Best next move
+4. If the user asks what semester they are currently on, answer from the real saved current state above.
+5. For semester-navigation questions, structure the answer as:
+   - Current year/semester
+   - Why
+   - Best place to continue
+6. If the user asks about strengths, identify them from memory, adaptive profile, and semester summaries. If evidence is missing, say so clearly.
+7. If the user asks about weaknesses, identify them from memory, adaptive profile, and semester summaries. If evidence is missing, say so clearly.
+8. If semester data is missing, say that clearly instead of inventing progress.
+9. If the user asks a general academic question, answer normally, but keep the reply short and direct.
+10. If the user asks a very specific semester-topic teaching question, answer briefly and also say exactly: "This is better handled in your semester section for deeper guided teaching."
+11. If a semester is clearly the right place to continue, mention the matching year and semester directly.
+12. Keep responses short, clean, and direct.
+13. Use bullets first when they improve clarity. Avoid walls of text.
+14. Use {student_name} naturally so the support feels personal.
+15. Adapt to the adaptive profile for brevity, formatting, pace, and tone.
+16. If code is needed, wrap it in fenced markdown code blocks with the correct language.
+17. If the question is technically complex, give a short numbered breakdown before the final answer.
+18. Stay honest about what the stored memory does and does not show."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
@@ -3545,7 +3566,7 @@ AUTO_SCROLL_OBSERVER_JS = """
 # ═══════════════════════════════════════════════════════
 
 # FIX 1: subject_button — crisper border, tighter look
-def subject_button(label: str, on_click=None):
+def subject_button(label: str, on_click=None, is_active=False):
     return rx.button(
         label,
         width="100%",
@@ -3554,19 +3575,40 @@ def subject_button(label: str, on_click=None):
         color_scheme="green",
         on_click=on_click,
         style={
-            "border": "1px solid rgba(0,255,136,0.35)",
-            "background": "rgba(0,255,136,0.04)",
+            "border": rx.cond(
+                is_active,
+                "1px solid rgba(52,211,153,0.78)",
+                "1px solid rgba(0,255,136,0.35)",
+            ),
+            "background": rx.cond(
+                is_active,
+                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
+                "rgba(0,255,136,0.04)",
+            ),
             "text_transform": "uppercase",
             "font_weight": "600",
             "font_size": "0.82rem",
             "letter_spacing": "2px",
-            "color": "rgba(255,255,255,0.88)",
+            "color": rx.cond(is_active, "#ecfff6", "rgba(255,255,255,0.88)"),
             "border_radius": "10px",
             "transition": "all 0.2s ease",
+            "box_shadow": rx.cond(
+                is_active,
+                "0 10px 24px rgba(0,0,0,0.28), 0 0 0 1px rgba(52,211,153,0.18)",
+                "none",
+            ),
             "_hover": {
-                "background": "rgba(0,255,136,0.1)",
-                "border": "1px solid rgba(0,255,136,0.7)",
-                "color": "#00ff88",
+                "background": rx.cond(
+                    is_active,
+                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
+                    "rgba(0,255,136,0.1)",
+                ),
+                "border": rx.cond(
+                    is_active,
+                    "1px solid rgba(110,231,183,0.9)",
+                    "1px solid rgba(0,255,136,0.7)",
+                ),
+                "color": rx.cond(is_active, "#f4fff9", "#00ff88"),
                 "transform": "translateX(6px)",
             },
         },
@@ -5369,7 +5411,7 @@ def home_page():
 
 
 def semester_nav_button(year: str, semester: str) -> rx.Component:
-    is_active = (AppState.selected_year == year) & (AppState.selected_semester == semester)
+    is_active = AppState.is_semester_scope_active(year, semester)
     return rx.button(
         semester,
         on_click=AppState.open_dashboard_semester(year, semester),
@@ -5378,16 +5420,38 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
         text_align="left",
         variant="ghost",
         style={
-            "background": rx.cond(is_active, "rgba(0,255,136,0.12)", "transparent"),
-            "border": rx.cond(is_active, "1px solid rgba(0,255,136,0.28)", "1px solid transparent"),
-            "color": rx.cond(is_active, "#b7ffd9", "rgba(255,255,255,0.72)"),
+            "background": rx.cond(
+                is_active,
+                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
+                "rgba(255,255,255,0.01)",
+            ),
+            "border": rx.cond(
+                is_active,
+                "1px solid rgba(52,211,153,0.76)",
+                "1px solid rgba(255,255,255,0.04)",
+            ),
+            "color": rx.cond(is_active, "#ecfff6", "rgba(255,255,255,0.72)"),
             "font_weight": rx.cond(is_active, "700", "500"),
             "border_radius": "12px",
             "padding": "0.46em 0.72em",
             "font_size": "0.78rem",
             "min_height": "0",
+            "box_shadow": rx.cond(
+                is_active,
+                "0 10px 24px rgba(0,0,0,0.22), 0 0 0 1px rgba(52,211,153,0.14)",
+                "none",
+            ),
             "_hover": {
-                "background": "rgba(255,255,255,0.06)",
+                "background": rx.cond(
+                    is_active,
+                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
+                    "rgba(255,255,255,0.06)",
+                ),
+                "border": rx.cond(
+                    is_active,
+                    "1px solid rgba(110,231,183,0.88)",
+                    "1px solid rgba(255,255,255,0.12)",
+                ),
                 "color": "white",
             },
         },
@@ -5462,18 +5526,19 @@ def semester_chat_history_list() -> rx.Component:
 
 
 def alex_workspace_button() -> rx.Component:
+    is_active = AppState.is_home_scope_active
     return rx.button(
         rx.vstack(
             rx.text(
                 "Alex AI",
-                color="white",
+                color=rx.cond(is_active, "#f4fff9", "white"),
                 font_size="0.95rem",
                 font_weight="700",
                 letter_spacing="0.04em",
             ),
             rx.text(
                 "Ask doubts in your growth",
-                color="rgba(226,232,240,0.68)",
+                color=rx.cond(is_active, "rgba(240,255,248,0.86)", "rgba(226,232,240,0.68)"),
                 font_size="0.76rem",
                 text_align="left",
                 line_height="1.45",
@@ -5482,7 +5547,7 @@ def alex_workspace_button() -> rx.Component:
             align_items="flex-start",
             width="100%",
         ),
-        on_click=_hard_navigate("/s/home"),
+        on_click=AppState.go_home,
         width="100%",
         justify_content="flex-start",
         variant="ghost",
@@ -5491,23 +5556,31 @@ def alex_workspace_button() -> rx.Component:
             "padding": "0.9em 0.95em",
             "border_radius": "14px",
             "border": rx.cond(
-                AppState.view_mode == "home",
-                "1px solid rgba(0,255,136,0.3)",
+                is_active,
+                "1px solid rgba(52,211,153,0.78)",
                 "1px solid rgba(255,255,255,0.08)",
             ),
             "background": rx.cond(
-                AppState.view_mode == "home",
-                "linear-gradient(135deg, rgba(8,28,18,0.98) 0%, rgba(10,48,30,0.88) 100%)",
+                is_active,
+                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
                 "rgba(255,255,255,0.03)",
             ),
             "box_shadow": rx.cond(
-                AppState.view_mode == "home",
-                "0 12px 24px rgba(0,0,0,0.22)",
+                is_active,
+                "0 12px 24px rgba(0,0,0,0.24), 0 0 0 1px rgba(52,211,153,0.16)",
                 "none",
             ),
             "_hover": {
-                "background": "rgba(255,255,255,0.07)",
-                "border": "1px solid rgba(255,255,255,0.16)",
+                "background": rx.cond(
+                    is_active,
+                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
+                    "rgba(255,255,255,0.07)",
+                ),
+                "border": rx.cond(
+                    is_active,
+                    "1px solid rgba(110,231,183,0.9)",
+                    "1px solid rgba(255,255,255,0.16)",
+                ),
             },
         },
     )
