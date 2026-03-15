@@ -1640,6 +1640,20 @@ class AppState(reflex_local_auth.LocalAuthState):
             return []
         return self._semester_courses(self.selected_year, self.selected_semester)
 
+    def _set_default_semester_workspace(self, uid: int, year: str, semester: str, *, load_scope: bool = True) -> str:
+        if uid < 0 or not year or not semester:
+            return ""
+        scope = self._scope_key(year, semester)
+        self.selected_year = year
+        self.selected_semester = semester
+        self.view_mode = "semester"
+        self.active_scope = scope
+        self.show_semester_sidebar = False
+        self._save_memory(uid)
+        if load_scope:
+            self._switch_scope(uid, scope)
+        return scope
+
     def _ensure_scope_memory(self, uid: int, scope: str) -> None:
         if uid < 0:
             return
@@ -1915,7 +1929,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     # ----------------------------
     SCOPE_SUMMARY_TRIGGER_NEW_MSGS = 12
     GLOBAL_MEMORY_TRIGGER_NEW_MSGS = 24
-    ADAPTIVE_PROFILE_TRIGGER_NEW_MSGS = 8
+    ADAPTIVE_PROFILE_TRIGGER_NEW_MSGS = 4
     PAST_HITS_LIMIT = 8
     PAST_HITS_MAX_CHARS = 220
 
@@ -2175,22 +2189,29 @@ class AppState(reflex_local_auth.LocalAuthState):
         recent_msgs = self._recent_msgs_for_user(uid, 40)
         recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in recent_msgs])
 
-        prompt = f"""Build an adaptive tutoring profile from this chat history.
-Return ONLY short bullet points (max 10 bullets) under these labels:
+        prompt = f"""Build an adaptive tutoring profile from the user's recent study conversations.
+Return ONLY short bullet points.
+Maximum 12 bullets.
+Focus on stable tutoring preferences and learning patterns, not temporary chat details.
+
+Use these labels when supported by evidence:
 - Preferred explanation depth
-- Preferred format (bullets/examples/steps)
+- Preferred format
 - Pace and tone
 - Topics user struggles with
 - Topics user handles well
 - Common confusion triggers
+- Revision needs
+- Practice difficulty level
 - Best response patterns for this user
 
-Current profile:
+Current saved profile:
 {current}
 
-Recent conversation:
+Recent study conversations:
 {recent_text}
-"""
+
+Update the saved profile instead of overwriting randomly. Keep only durable tutoring insights."""
 
         try:
             resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
@@ -2526,25 +2547,22 @@ Critical operating rules:
         self.status_text = ""
         self.onboarding_message = ""
 
-        if self.is_started and self.active_scope == "home":
-            yield _hard_navigate("/s/home")
-            return
+        if self.selected_year and self.selected_semester:
+            self.view_mode = "semester"
+            self.active_scope = self._scope_key(self.selected_year, self.selected_semester)
+        else:
+            self.view_mode = "home"
+            self.active_scope = "home"
 
-        if self.is_started and self.selected_year and self.selected_semester:
-            scope = self._scope_key(self.selected_year, self.selected_semester)
-            yield _hard_navigate(scope_to_route(scope))
-            return
-
-        if self.is_started and not self.selected_year and not self.selected_semester:
-            yield _hard_navigate("/s/home")
+        if self.is_started:
+            self._switch_scope(uid, self.active_scope)
+            yield _hard_navigate(scope_to_route(self.active_scope))
             return
 
         # Onboarding: user hasn't completed setup yet — stay on /app
-        self.view_mode = "semester"
-        self.active_scope = self._scope_key(self.selected_year, self.selected_semester) if (self.selected_year and self.selected_semester) else ""
-        if self.is_started and not self.selected_year:
+        if not self.selected_year:
             self.step = max(self.step, 3)
-        elif self.is_started and not self.selected_semester:
+        elif not self.selected_semester:
             self.step = max(self.step, 4)
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
@@ -2587,8 +2605,9 @@ Critical operating rules:
         # ── Set all state from scratch ──
         self.view_mode = view_mode
         self.active_scope = raw_scope
-        self.selected_year = year
-        self.selected_semester = semester
+        if view_mode == "semester":
+            self.selected_year = year
+            self.selected_semester = semester
         self.show_semester_sidebar = False
         self.chat_history = []
         self.sessions = []
@@ -2823,13 +2842,10 @@ Critical operating rules:
             if self.selected_semester not in SEMESTER_NAVIGATION.get(year, []):
                 self.selected_semester = ""
             if self.selected_semester and self.is_started:
-                scope = self._scope_key(year, self.selected_semester)
-                self.active_scope = scope
-                self._save_memory(uid)
+                scope = self._set_default_semester_workspace(uid, year, self.selected_semester)
                 return _hard_navigate(scope_to_route(scope))
             elif self.selected_semester:
-                self.view_mode = "semester"
-                self.active_scope = self._scope_key(year, self.selected_semester)
+                self._set_default_semester_workspace(uid, year, self.selected_semester)
             self._save_memory(uid)
             self._ensure_progress_for_year(uid, year)
             self._refresh_today_plan(uid)
@@ -2863,15 +2879,9 @@ Critical operating rules:
                 return
             if semester not in SEMESTER_NAVIGATION.get(self.selected_year, []):
                 return
-            self.selected_semester = semester
-            scope = self._scope_key(self.selected_year, semester)
+            scope = self._set_default_semester_workspace(uid, self.selected_year, semester)
             if self.is_started:
-                self.active_scope = scope
-                self._save_memory(uid)
                 return _hard_navigate(scope_to_route(scope))
-            self.view_mode = "semester"
-            self.active_scope = scope
-            self._save_memory(uid)
         except Exception as e:
             print(f"ERROR set_selected_semester: {e}")
 
@@ -2889,7 +2899,7 @@ Critical operating rules:
                 self.onboarding_message = "That semester does not match your selected year, so please choose one from the list below."
                 self._save_memory(uid)
                 return
-            self.selected_semester = semester
+            self._set_default_semester_workspace(uid, self.selected_year, semester)
             self.onboarding_message = ""
             self.step = 5
             self._save_memory(uid)
@@ -2936,9 +2946,7 @@ Critical operating rules:
                 self._save_memory(uid)
                 return
             self.onboarding_message = ""
-            scope = self._scope_key(self.selected_year, self.selected_semester)
-            self.active_scope = scope
-            self._save_memory(uid)
+            scope = self._set_default_semester_workspace(uid, self.selected_year, self.selected_semester)
             yield _hard_navigate(scope_to_route(scope))
         except Exception as e:
             print(f"ERROR start_app: {e}")
@@ -2948,10 +2956,7 @@ Critical operating rules:
         uid = self._uid()
         if uid < 0 or not self.selected_year:
             return
-        scope = self._scope_key(self.selected_year, semester)
-        self.selected_semester = semester
-        self.active_scope = scope
-        self._save_memory(uid)
+        scope = self._set_default_semester_workspace(uid, self.selected_year, semester)
         yield _hard_navigate(scope_to_route(scope))
 
     @rx.event
@@ -2959,11 +2964,7 @@ Critical operating rules:
         uid = self._uid()
         if uid < 0:
             return
-        scope = self._scope_key(year, semester)
-        self.selected_year = year
-        self.selected_semester = semester
-        self.active_scope = scope
-        self._save_memory(uid)
+        scope = self._set_default_semester_workspace(uid, year, semester)
         yield _hard_navigate(scope_to_route(scope))
 
     @rx.event
@@ -3184,43 +3185,43 @@ Subjects:\n{courses_text}"""
                 teach_prompt = f"""You are Alex, a friendly and patient Software Engineering mentor helping a {self.degree} student.
 
 Current context:
+- Selected year: {self.selected_year}
+- Selected semester: {self.selected_semester}
 - Active semester workspace: {self.selected_year}, {self.selected_semester}
 - Semester modules: {semester_courses}
-- Day {day}/110 | Subject: {entry.get("subject","")} | Unit: {entry.get("unit","")} | Topic: {current_topic}
-- Student memory: {scope_summary}
+- Current day: {day}/110
+- Current subject: {entry.get("subject","")}
+- Current unit: {entry.get("unit","")}
+- Current topic: {current_topic}
+- Semester scope summary: {scope_summary}
+- Long-term student memory: {self.memory_summary}
 - Adaptive profile from previous chats: {adaptive_profile}
 - Recent conversation: {recent_text}
 - Past relevant chat (db search): {past_hits}
 - Student just said: {user_msg}
 
 Your response style rules:
-1. Talk like a helpful senior student, not a textbook — keep it warm and casual
-2. Explain the concept simply first (1-2 sentences), THEN go deeper
-3. Use a real-world example or analogy the student can relate to
-4. Give ONE small practice question at the end (not overwhelming)
-5. Keep responses focused — don't dump everything at once
-6. If the student seems confused, slow down and break it into smaller steps
-7. Use simple formatting: short paragraphs, avoid walls of text
-8. Encourage the student naturally — but don't be overly cheesy about it
-9. Keep responses SHORT — max 150-200 words per reply
-10. Use bullet points as much as possible instead of long paragraphs
-11. Never write walls of text — students lose focus fast
-12. Use emojis sparingly but effectively — one per section max (📌 for key point, ✅ for answer, 💡 for tip)
-13. When explaining a concept, always follow this structure:
-    - What it is (1 sentence)
-    - Why it matters (1 sentence)
-    - Simple example
-    - Quick practice
-14. Never start a response with "Great question!" or "Certainly!" — just answer directly
-15. If the student makes a mistake, correct gently — say "Almost! Try thinking of it this way..."
-16. Always refer to the student by name: {student_name}
-17. Acknowledge progress occasionally — remind {student_name} they are on Day {day}/110 and how far they've come
-18. If {student_name} says words like 'confused', 'don't understand', 'what?', 'huh' — immediately simplify and use an analogy
-19. Adapt to the adaptive profile above for pace, explanation depth, and examples.
-20. If code is needed, wrap it in fenced markdown code blocks with the correct language.
-21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
-22. If you use a career example or analogy, prefer Sri Lankan Software Engineering context where it fits naturally.
-23. Stay strictly inside the active semester workspace above. Do not mention modules from other semesters unless the student explicitly asks to compare them."""
+1. Stay warm, patient, mentor-like, and encouraging without sounding cheesy.
+2. Answer directly first, then add depth only when it helps.
+3. Stay strictly inside the active semester workspace above unless the student explicitly asks to compare another semester.
+4. Adapt to the adaptive profile, semester scope summary, and long-term student memory before deciding tone, depth, examples, and formatting.
+5. If the profile says the user prefers short answers, keep replies tighter and avoid extra theory.
+6. If the profile says the user likes steps or bullets, use that format first before paragraphs.
+7. If the profile says the user prefers examples, always include at least one concrete example.
+8. If the profile says the user struggles with this topic or a related prerequisite, slow down, simplify, define terms clearly, and build up in smaller steps.
+9. If the profile says revision is needed, briefly reconnect this explanation to that weaker concept before moving forward.
+10. Match the practice checkpoint to the user's likely difficulty level from the adaptive profile.
+11. Explain the concept simply first in 1-2 sentences, then go one level deeper.
+12. Use short paragraphs or bullets and avoid walls of text.
+13. Keep replies focused and usually around 120-200 words unless code or a careful step breakdown genuinely needs more.
+14. End with one small practice question, quick check, or next step.
+15. If the student seems confused, immediately simplify and use an analogy or concrete example.
+16. If the student makes a mistake, correct gently with wording like "Almost. Try thinking of it this way..."
+17. Use {student_name} naturally so the tutoring feels personal.
+18. Acknowledge progress occasionally by connecting the explanation to Day {day}/110.
+19. If code is needed, wrap it in fenced markdown code blocks with the correct language.
+20. If the question is technically complex, give a numbered breakdown before the final explanation or code.
+21. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
@@ -5368,13 +5369,10 @@ def home_page():
 
 
 def semester_nav_button(year: str, semester: str) -> rx.Component:
-    yr_num = year.replace("Year ", "").strip()
-    sem_num = semester.replace("Semester ", "").strip()
-    route = f"/s/y{yr_num}s{sem_num}"
     is_active = (AppState.selected_year == year) & (AppState.selected_semester == semester)
     return rx.button(
         semester,
-        on_click=_hard_navigate(route),
+        on_click=AppState.open_dashboard_semester(year, semester),
         width="100%",
         justify_content="flex-start",
         text_align="left",
