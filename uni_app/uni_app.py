@@ -51,7 +51,6 @@ GEMINI_MODEL      = GEMINI_FAST_MODEL
 RATE_LIMIT_UI_MESSAGE = "I'm taking a short break. Please try again in a few minutes."
 GENERIC_ERROR_UI_MESSAGE = "Alex had a small error. Please try again."
 STUDY_PLAN_TOTAL_DAYS = 110
-SEMESTER_PROGRESS_SEGMENTS = 16
 
 
 def _is_rate_limit_text(text: str) -> bool:
@@ -876,12 +875,9 @@ class AppState(reflex_local_auth.LocalAuthState):
         return f"Day {day} / {STUDY_PLAN_TOTAL_DAYS}"
 
     @rx.var
-    def semester_progress_filled_segments(self) -> int:
+    def semester_progress_width(self) -> str:
         day = max(0, min(self.current_day, STUDY_PLAN_TOTAL_DAYS))
-        if day <= 0:
-            return 0
-        filled = (day * SEMESTER_PROGRESS_SEGMENTS + STUDY_PLAN_TOTAL_DAYS - 1) // STUDY_PLAN_TOTAL_DAYS
-        return min(SEMESTER_PROGRESS_SEGMENTS, max(1, filled))
+        return f"{(day / STUDY_PLAN_TOTAL_DAYS) * 100:.2f}%"
 
     @rx.var
     def account_display_name(self) -> str:
@@ -5626,31 +5622,24 @@ def semester_page():
                         letter_spacing="0.8px",
                     ),
                     rx.vstack(
-                        rx.hstack(
-                            *[
-                                rx.box(
-                                    height="0.42rem",
-                                    flex="1",
-                                    border_radius="2px",
-                                    background=rx.cond(
-                                        AppState.semester_progress_filled_segments >= (idx + 1),
-                                        "linear-gradient(90deg, rgba(0,255,136,0.96) 0%, rgba(150,255,205,0.72) 100%)",
-                                        "rgba(255,255,255,0.12)",
-                                    ),
-                                    transition="background 180ms ease",
-                                    style={
-                                        "box_shadow": rx.cond(
-                                            AppState.semester_progress_filled_segments >= (idx + 1),
-                                            "0 0 10px rgba(0,255,136,0.18)",
-                                            "none",
-                                        ),
-                                    },
-                                )
-                                for idx in range(SEMESTER_PROGRESS_SEGMENTS)
-                            ],
-                            spacing="1",
+                        rx.box(
+                            rx.box(
+                                height="100%",
+                                width=AppState.semester_progress_width,
+                                border_radius="inherit",
+                                background="linear-gradient(90deg, rgba(0,255,136,0.96) 0%, rgba(150,255,205,0.78) 100%)",
+                                transition="width 220ms ease",
+                                min_width=rx.cond(AppState.current_day > 0, "0.35rem", "0"),
+                                style={
+                                    "box_shadow": "0 0 14px rgba(0,255,136,0.2)",
+                                },
+                            ),
                             width="100%",
-                            align="center",
+                            height="0.42rem",
+                            border_radius="999px",
+                            overflow="hidden",
+                            background="rgba(255,255,255,0.12)",
+                            border="1px solid rgba(255,255,255,0.05)",
                         ),
                         rx.text(
                             AppState.semester_progress_label,
