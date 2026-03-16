@@ -190,6 +190,11 @@ async def _groq_stream_async(model: str, messages: list[dict], max_tokens: int =
 FREE_DAILY_LIMIT = 5
 TRIAL_DAYS       = 3
 ADAPTIVE_PROFILE_SCOPE = "__adaptive_profile__"
+PLAN_GENERATION_STATUS_IDLE = "idle"
+PLAN_GENERATION_STATUS_RUNNING = "running"
+PLAN_GENERATION_STATUS_FAILED = "failed"
+PLAN_GENERATION_STALE_AFTER = timedelta(minutes=10)
+PLAN_GENERATION_FAILURE_TEXT = "Could not generate the study plan. Tap retry."
 USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]{3,32}$")
 PASSWORD_MIN_LEN = 8
 ONBOARDING_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s'-]*$")
@@ -603,6 +608,16 @@ class SemesterStudyPlan(rx.Model, table=True):  # type: ignore
     )
 
 
+class SemesterPlanGenerationState(rx.Model, table=True):  # type: ignore
+    user_id: int = Field(index=True, nullable=False)
+    scope: str = Field(index=True, nullable=False)
+    status: str = Field(default=PLAN_GENERATION_STATUS_IDLE, nullable=False)
+    error_message: str = Field(default="", nullable=False)
+    updated_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    )
+
+
 class DayProgress(rx.Model, table=True):  # type: ignore
     user_id: int = Field(index=True, nullable=False)
     scope: str = Field(index=True, nullable=False)
@@ -745,6 +760,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     auth_csrf_token: str = rx.SessionStorage(name="auth_csrf_token")
     post_login_redirect: str = ""
     root_public_ready: bool = False
+    plan_generation_error: str = ""
     login_error: str = ""
     register_error: str = ""
     register_success: bool = False
@@ -2320,6 +2336,43 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         try: return json.loads(row.plan_json)
         except Exception: return []
 
+    def _get_plan_generation_state(self, uid: int, scope: str) -> tuple[str, str, Optional[datetime]]:
+        if uid < 0 or not scope:
+            return (PLAN_GENERATION_STATUS_IDLE, "", None)
+        with rx.session() as session:
+            row = session.exec(
+                select(SemesterPlanGenerationState)
+                .where(SemesterPlanGenerationState.user_id == uid)
+                .where(SemesterPlanGenerationState.scope == scope)
+                .order_by(SemesterPlanGenerationState.updated_at.desc())
+            ).first()
+        if row is None:
+            return (PLAN_GENERATION_STATUS_IDLE, "", None)
+        return (row.status or PLAN_GENERATION_STATUS_IDLE, row.error_message or "", row.updated_at)
+
+    def _set_plan_generation_state(self, uid: int, scope: str, status: str, error_message: str = "") -> None:
+        if uid < 0 or not scope:
+            return
+        with rx.session() as session:
+            row = session.exec(
+                select(SemesterPlanGenerationState)
+                .where(SemesterPlanGenerationState.user_id == uid)
+                .where(SemesterPlanGenerationState.scope == scope)
+                .order_by(SemesterPlanGenerationState.updated_at.desc())
+            ).first()
+            if row is None:
+                row = SemesterPlanGenerationState(user_id=uid, scope=scope)  # type: ignore
+            row.status = status or PLAN_GENERATION_STATUS_IDLE
+            row.error_message = (error_message or "")[:300]
+            session.add(row)
+            session.commit()
+
+    def _plan_generation_is_stale(self, updated_at: Optional[datetime]) -> bool:
+        if updated_at is None:
+            return False
+        stamp = updated_at if updated_at.tzinfo is not None else updated_at.replace(tzinfo=timezone.utc)
+        return stamp < (datetime.now(timezone.utc) - PLAN_GENERATION_STALE_AFTER)
+
     def _save_study_plan(self, uid: int, scope: str, plan: list) -> None:
         if uid < 0: return
         with rx.session() as session:
@@ -2686,6 +2739,7 @@ Critical operating rules:
         self.current_session_id = ""
         self.current_session_choice = ""
         self.is_generating_plan = False
+        self.plan_generation_error = ""
         self.is_processing = False
 
         # Infer name if missing
@@ -2712,6 +2766,7 @@ Critical operating rules:
 
         # ── Semester-specific: study plan + progress ──
         queue_plan_generation = False
+        watch_plan_generation = False
         try:
             if view_mode == "semester" and year:
                 self._ensure_progress_for_year(uid, year)
@@ -2723,6 +2778,7 @@ Critical operating rules:
                     existing_plan = []
 
                 if existing_plan:
+                    self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_IDLE)
                     day, topic_idx = self._get_day_progress(uid, raw_scope)
                     self.current_day = day
                     self.current_topic_index = topic_idx
@@ -2732,14 +2788,27 @@ Critical operating rules:
                         self._save_message(uid, "assistant", today_msg)
 
                 elif self._has_curriculum_for_semester(year, semester):
+                    status, error_text, updated_at = self._get_plan_generation_state(uid, raw_scope)
                     self.current_day = 1
                     self.current_topic_index = 0
-                    self.is_generating_plan = True
-                    queue_plan_generation = True
+                    if status == PLAN_GENERATION_STATUS_RUNNING and not self._plan_generation_is_stale(updated_at):
+                        self.is_generating_plan = True
+                        self.plan_generation_error = ""
+                        watch_plan_generation = True
+                    elif status == PLAN_GENERATION_STATUS_FAILED or self._plan_generation_is_stale(updated_at):
+                        self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_FAILED, error_text or PLAN_GENERATION_FAILURE_TEXT)
+                        self.is_generating_plan = False
+                        self.plan_generation_error = error_text or PLAN_GENERATION_FAILURE_TEXT
+                    else:
+                        self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_RUNNING)
+                        self.is_generating_plan = True
+                        self.plan_generation_error = ""
+                        queue_plan_generation = True
 
                 else:
                     self.current_day = 1
                     self.current_topic_index = 0
+                    self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_IDLE)
                     empty_msg = (
                         f"{semester} is now your main AI workspace.\n\n"
                         "This semester does not have course data yet, so the guided study plan "
@@ -2757,6 +2826,8 @@ Critical operating rules:
         if queue_plan_generation:
             yield
             yield type(self).generate_study_plan(raw_scope, year, semester)
+        elif watch_plan_generation:
+            yield type(self).watch_study_plan_generation(raw_scope)
 
     @rx.event
     async def new_chat(self):
@@ -3045,12 +3116,25 @@ Critical operating rules:
         if uid < 0 or client is None or not target_scope:
             if target_scope == self.active_scope:
                 self.is_generating_plan = False
+                self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
+            return
+        if self._get_study_plan(uid, target_scope):
+            self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
+            if target_scope == self.active_scope:
+                self.is_generating_plan = False
+                self.plan_generation_error = ""
             return
         courses_text = "\n".join(self._semester_courses(target_year, target_semester))
         if not target_year or not target_semester or not courses_text.strip():
+            self._set_plan_generation_state(
+                uid,
+                target_scope,
+                PLAN_GENERATION_STATUS_FAILED,
+                "This semester is not ready for study plan generation yet.",
+            )
             if target_scope == self.active_scope:
-                self.chat_history.append({"role":"assistant","content":"This semester is not ready for study plan generation yet."})
                 self.is_generating_plan = False
+                self.plan_generation_error = "This semester is not ready for study plan generation yet."
             return
         try:
             prompt = f"""You are a university curriculum expert for {self.degree} students
@@ -3062,26 +3146,111 @@ Subjects:\n{courses_text}"""
             resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
             plan = self._extract_json_list((getattr(resp,"text","") or "").strip())
             if not plan or len(plan) < 10:
+                self._set_plan_generation_state(
+                    uid,
+                    target_scope,
+                    PLAN_GENERATION_STATUS_FAILED,
+                    PLAN_GENERATION_FAILURE_TEXT,
+                )
                 if target_scope == self.active_scope:
-                    self.chat_history.append({"role":"assistant","content":"Could not generate study plan please try reopening the semester"})
                     self.is_generating_plan = False
+                    self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
                 return
             self._save_study_plan(uid, target_scope, plan)
             self._save_day_progress(uid, target_scope, 1, 0)
+            self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
             if target_scope == self.active_scope:
                 self.current_day = 1
                 self.current_topic_index = 0
                 self._refresh_today_plan(uid)
+                self.plan_generation_error = ""
                 msg = "Your personalized 110 day study plan is ready\n\n" + self._build_today_message(plan, 1, 0)
                 self.chat_history.append({"role":"assistant","content":msg})
                 self._save_message(uid,"assistant",msg)
         except Exception as e:
             print(f"ERROR generate_study_plan: {e}")
+            self._set_plan_generation_state(
+                uid,
+                target_scope,
+                PLAN_GENERATION_STATUS_FAILED,
+                PLAN_GENERATION_FAILURE_TEXT,
+            )
             if target_scope == self.active_scope:
-                self.chat_history.append({"role":"assistant","content":"Something went wrong generating the plan"})
+                self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
         if target_scope == self.active_scope:
             self.is_generating_plan = False
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+
+    @rx.event
+    async def watch_study_plan_generation(self, scope: str = ""):
+        uid = self._uid()
+        target_scope = (scope or self.active_scope).strip()
+        if uid < 0 or not target_scope or target_scope != self.active_scope:
+            return
+
+        plan = self._get_study_plan(uid, target_scope)
+        if plan:
+            self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
+            day, topic_idx = self._get_day_progress(uid, target_scope)
+            self.current_day = day
+            self.current_topic_index = topic_idx
+            self._refresh_today_plan(uid)
+            self._load_sessions(uid, target_scope)
+            self._load_messages(uid, target_scope)
+            if not self.chat_history:
+                today_msg = self._build_today_message(plan, day, topic_idx)
+                self.chat_history.append({"role": "assistant", "content": today_msg})
+                self._save_message(uid, "assistant", today_msg, target_scope)
+            self.is_generating_plan = False
+            self.plan_generation_error = ""
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            return
+
+        status, error_text, updated_at = self._get_plan_generation_state(uid, target_scope)
+        if status == PLAN_GENERATION_STATUS_RUNNING and not self._plan_generation_is_stale(updated_at):
+            self.is_generating_plan = True
+            self.plan_generation_error = ""
+            await asyncio.sleep(3)
+            if target_scope == self.active_scope:
+                yield type(self).watch_study_plan_generation(target_scope)
+            return
+
+        if status == PLAN_GENERATION_STATUS_FAILED or self._plan_generation_is_stale(updated_at):
+            error_message = error_text or PLAN_GENERATION_FAILURE_TEXT
+            self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_FAILED, error_message)
+            self.is_generating_plan = False
+            self.plan_generation_error = error_message
+            return
+
+        self.is_generating_plan = False
+        self.plan_generation_error = ""
+
+    @rx.event
+    async def retry_study_plan_generation(self):
+        uid = self._uid()
+        if uid < 0 or self.view_mode != "semester" or not self.active_scope:
+            return
+        if self._get_study_plan(uid, self.active_scope):
+            self._set_plan_generation_state(uid, self.active_scope, PLAN_GENERATION_STATUS_IDLE)
+            self.is_generating_plan = False
+            self.plan_generation_error = ""
+            return
+
+        status, _, updated_at = self._get_plan_generation_state(uid, self.active_scope)
+        if status == PLAN_GENERATION_STATUS_RUNNING and not self._plan_generation_is_stale(updated_at):
+            self.is_generating_plan = True
+            self.plan_generation_error = ""
+            return
+
+        self._set_plan_generation_state(uid, self.active_scope, PLAN_GENERATION_STATUS_RUNNING)
+        self.is_generating_plan = True
+        self.plan_generation_error = ""
+        yield
+        yield type(self).generate_study_plan(
+            self.active_scope,
+            self.selected_year,
+            self.selected_semester,
+        )
 
     @rx.event
     async def go_home(self):
@@ -5876,6 +6045,35 @@ def semester_page():
                 padding="0.72em 1.5em",
                 background="linear-gradient(180deg, rgba(7,24,15,0.9) 0%, rgba(5,16,11,0.72) 100%)",
                 border_bottom="1px solid rgba(110,231,183,0.14)",
+            ),
+            rx.cond(
+                AppState.plan_generation_error != "",
+                rx.box(
+                    rx.hstack(
+                        rx.text(
+                            AppState.plan_generation_error,
+                            color="rgba(255,236,204,0.96)",
+                            font_size="0.86rem",
+                            font_weight="600",
+                        ),
+                        rx.spacer(),
+                        rx.button(
+                            "Retry",
+                            on_click=AppState.retry_study_plan_generation,
+                            size="1",
+                            variant="soft",
+                            color_scheme="orange",
+                        ),
+                        spacing="3",
+                        align="center",
+                        width="100%",
+                    ),
+                    width="100%",
+                    padding="0.72em 1.5em",
+                    background="linear-gradient(180deg, rgba(42,18,6,0.92) 0%, rgba(28,12,4,0.78) 100%)",
+                    border_bottom="1px solid rgba(251,191,36,0.18)",
+                ),
+                rx.fragment(),
             ),
         ),
         rx.box(
