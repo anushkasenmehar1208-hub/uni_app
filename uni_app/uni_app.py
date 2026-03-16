@@ -2820,10 +2820,10 @@ Critical operating rules:
 
         # ── Defer plan generation check ──
         if view_mode == "semester" and year:
-            yield type(self)._post_render_check_plan(raw_scope, year, semester)
+            yield type(self).post_render_check_plan(raw_scope, year, semester)
 
     @rx.event(background=True)
-    async def _post_render_check_plan(self, scope: str, year: str, semester: str):
+    async def post_render_check_plan(self, scope: str, year: str, semester: str):
         """Runs after hydration. Checks whether plan generation is needed."""
         async with self:
             uid = self._uid()
