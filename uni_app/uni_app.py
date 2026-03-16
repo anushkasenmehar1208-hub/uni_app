@@ -744,6 +744,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     app_auth_token: str = rx.LocalStorage(name=AUTH_TOKEN_LOCAL_STORAGE_KEY)
     auth_csrf_token: str = rx.SessionStorage(name="auth_csrf_token")
     post_login_redirect: str = ""
+    root_public_ready: bool = False
     login_error: str = ""
     register_error: str = ""
     register_success: bool = False
@@ -1125,6 +1126,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def on_load_public_landing(self):
+        self.root_public_ready = False
         if not self.is_hydrated:
             yield AppState.on_load_public_landing()  # type: ignore
             return
@@ -1132,10 +1134,16 @@ class AppState(reflex_local_auth.LocalAuthState):
         uid = self._uid()
         self._cached_uid = uid
         if uid < 0:
+            self.root_public_ready = True
             return
 
-        self._load_profile(uid)
-        yield _hard_navigate(self._authenticated_landing_route())
+        try:
+            self._load_profile(uid)
+            target_route = self._authenticated_landing_route()
+        except Exception as e:
+            print(f"[ROOT] landing redirect load error: {e}")
+            target_route = APP_DASHBOARD_ROUTE
+        yield _hard_navigate(target_route)
 
     @rx.event
     def handle_login(self, form_data: dict[str, Any]):
@@ -6104,6 +6112,35 @@ def reset_password_page():
     return _auth_page_shell(secure_reset_form())
 
 
+def _root_loading_gate() -> rx.Component:
+    return rx.center(
+        rx.vstack(
+            rx.text(
+                "Loading...",
+                color="white",
+                font_size="1.15rem",
+                font_weight="700",
+                font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+            ),
+            rx.text(
+                "Checking your workspace.",
+                color="rgba(226,232,240,0.7)",
+                font_size="0.96rem",
+            ),
+            spacing="2",
+            align_items="center",
+        ),
+        width="100vw",
+        min_height="100vh",
+        padding="24px",
+        background=(
+            "radial-gradient(circle at 24% 18%, rgba(52,211,153,0.12) 0%, rgba(52,211,153,0) 34%),"
+            "radial-gradient(circle at 82% 14%, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0) 28%),"
+            "linear-gradient(180deg, #07111b 0%, #050b12 52%, #03070d 100%)"
+        ),
+    )
+
+
 @rx.page(
     route="/",
     title="Alex AI | AI Study Assistant for University Students",
@@ -6466,7 +6503,7 @@ def landing_page():
         width="100%",
     )
 
-    return _public_page_frame(
+    public_landing = _public_page_frame(
         rx.vstack(
             hero,
             _marketing_section(
@@ -6502,6 +6539,11 @@ def landing_page():
             width="100%",
             align_items="stretch",
         )
+    )
+    return rx.cond(
+        AppState.root_public_ready & ~AppState.is_authenticated_now,
+        public_landing,
+        _root_loading_gate(),
     )
 
 
