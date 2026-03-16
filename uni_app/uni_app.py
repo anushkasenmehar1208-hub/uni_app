@@ -2696,7 +2696,7 @@ Critical operating rules:
     async def on_load_scope_page(self):
         """Called when navigating to /s/[scope].
         Minimum work for first paint: auth check, profile (1 DB call), scope routing.
-        All scope hydration is deferred to _post_render_hydrate_scope (background).
+        All scope hydration is deferred to post_render_hydrate_scope (background).
         """
         uid = self._uid()
         self._cached_uid = uid
@@ -2748,10 +2748,10 @@ Critical operating rules:
         yield rx.call_script(ENTER_TO_SEND_JS)
 
         # ── Defer all scope data loading to background ──
-        yield type(self)._post_render_hydrate_scope(raw_scope, year, semester, view_mode)
+        yield type(self).post_render_hydrate_scope(raw_scope, year, semester, view_mode)
 
     @rx.event(background=True)
-    async def _post_render_hydrate_scope(self, raw_scope: str, year: str, semester: str, view_mode: str):
+    async def post_render_hydrate_scope(self, raw_scope: str, year: str, semester: str, view_mode: str):
         """Background: loads sessions, chat history, progress, plan state.
         Runs after the semester shell is already visible and interactive.
         """
