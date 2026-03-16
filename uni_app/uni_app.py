@@ -2820,7 +2820,7 @@ Critical operating rules:
 
         # ── Defer plan generation check ──
         if view_mode == "semester" and year:
-            yield type(self).post_render_check_plan(raw_scope, year, semester)
+            yield AppState.post_render_check_plan(raw_scope, year, semester)
 
     @rx.event(background=True)
     async def post_render_check_plan(self, scope: str, year: str, semester: str):
