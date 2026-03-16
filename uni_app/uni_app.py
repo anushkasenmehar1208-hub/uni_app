@@ -1124,6 +1124,34 @@ class AppState(reflex_local_auth.LocalAuthState):
             return scope_to_route("home")
         return APP_DASHBOARD_ROUTE
 
+    def _preload_root_workspace_target(self, uid: int) -> str:
+        if uid < 0:
+            return APP_DASHBOARD_ROUTE
+        try:
+            with rx.session() as session:
+                memory = session.exec(
+                    select(UserMemory).where(UserMemory.user_id == uid)
+                ).one_or_none()
+        except Exception as e:
+            print(f"[ROOT] preload memory error: {e}")
+            return APP_DASHBOARD_ROUTE
+
+        if memory is not None:
+            self.step = int(memory.step or 0)
+            self.degree = memory.degree or self.degree
+            self.is_started = bool(memory.is_started)
+            self.selected_year = memory.selected_year or ""
+            self.selected_semester = memory.selected_semester or ""
+
+        target_route = self._authenticated_landing_route()
+        if target_route == scope_to_route("home"):
+            self.view_mode = "home"
+            self.active_scope = "home"
+        elif target_route.startswith("/s/") and self.selected_year and self.selected_semester:
+            self.view_mode = "semester"
+            self.active_scope = self._scope_key(self.selected_year, self.selected_semester)
+        return target_route
+
     @rx.event
     async def on_load_public_landing(self):
         self.root_public_ready = False
@@ -1138,12 +1166,11 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
 
         try:
-            self._load_profile(uid)
-            target_route = self._authenticated_landing_route()
+            target_route = self._preload_root_workspace_target(uid)
         except Exception as e:
             print(f"[ROOT] landing redirect load error: {e}")
             target_route = APP_DASHBOARD_ROUTE
-        yield _hard_navigate(target_route)
+        yield rx.redirect(target_route)
 
     @rx.event
     def handle_login(self, form_data: dict[str, Any]):
@@ -2550,10 +2577,6 @@ Critical operating rules:
         self.current_day = 1
         self.current_topic_index = 0
         self.is_generating_plan = True
-        gen_msg = "AI is generating your personalized 110 day study plan please wait"
-        if not self.chat_history or self.chat_history[-1].get("content") != gen_msg:
-            self.chat_history.append({"role": "assistant", "content": gen_msg})
-            self._save_message(uid, "assistant", gen_msg)
         return True
 
     @rx.event
@@ -2688,6 +2711,7 @@ Critical operating rules:
             print(f"[ROUTE] ERROR loading scope {raw_scope}: {e}")
 
         # ── Semester-specific: study plan + progress ──
+        queue_plan_generation = False
         try:
             if view_mode == "semester" and year:
                 self._ensure_progress_for_year(uid, year)
@@ -2711,14 +2735,7 @@ Critical operating rules:
                     self.current_day = 1
                     self.current_topic_index = 0
                     self.is_generating_plan = True
-                    gen_msg = "AI is generating your personalized 110 day study plan — please wait..."
-                    if not self.chat_history or self.chat_history[-1].get("content") != gen_msg:
-                        self.chat_history.append({"role": "assistant", "content": gen_msg})
-                        self._save_message(uid, "assistant", gen_msg)
-                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-                    yield
-                    yield type(self).generate_study_plan
-                    return
+                    queue_plan_generation = True
 
                 else:
                     self.current_day = 1
@@ -2737,6 +2754,9 @@ Critical operating rules:
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
         yield rx.call_script(AUTO_SCROLL_OBSERVER_JS)
         yield rx.call_script(ENTER_TO_SEND_JS)
+        if queue_plan_generation:
+            yield
+            yield type(self).generate_study_plan(raw_scope, year, semester)
 
     @rx.event
     async def new_chat(self):
@@ -3017,15 +3037,24 @@ Critical operating rules:
         yield _hard_navigate(scope_to_route(scope))
 
     @rx.event
-    async def generate_study_plan(self):
+    async def generate_study_plan(self, scope: str = "", year: str = "", semester: str = ""):
         uid = self._uid()
-        if uid < 0 or client is None:
-            self.is_generating_plan = False; return
-        scope = self.active_scope
-        courses_text = "\n".join(self._current_courses_for_scope())
+        target_scope = (scope or self.active_scope).strip()
+        target_year = year or self.selected_year
+        target_semester = semester or self.selected_semester
+        if uid < 0 or client is None or not target_scope:
+            if target_scope == self.active_scope:
+                self.is_generating_plan = False
+            return
+        courses_text = "\n".join(self._semester_courses(target_year, target_semester))
+        if not target_year or not target_semester or not courses_text.strip():
+            if target_scope == self.active_scope:
+                self.chat_history.append({"role":"assistant","content":"This semester is not ready for study plan generation yet."})
+                self.is_generating_plan = False
+            return
         try:
             prompt = f"""You are a university curriculum expert for {self.degree} students
-Generate a realistic detailed 110 day study plan for {self.selected_year} {self.selected_semester}.
+Generate a realistic detailed 110 day study plan for {target_year} {target_semester}.
 Use only the following semester subjects and do not include modules from any other semester.
 Return ONLY a valid JSON array with exactly 110 items
 Each item: {{"day":<1-110>,"subject":"<name>","unit":"<unit>","topics":["<t1>","<t2>"]}}
@@ -3033,19 +3062,26 @@ Subjects:\n{courses_text}"""
             resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
             plan = self._extract_json_list((getattr(resp,"text","") or "").strip())
             if not plan or len(plan) < 10:
-                self.chat_history.append({"role":"assistant","content":"Could not generate study plan please try reopening the semester"})
-                self.is_generating_plan = False; return
-            self._save_study_plan(uid, scope, plan)
-            self._save_day_progress(uid, scope, 1, 0)
-            self.current_day = 1; self.current_topic_index = 0
-            msg = "Your personalized 110 day study plan is ready\n\n" + self._build_today_message(plan, 1, 0)
-            self.chat_history.append({"role":"assistant","content":msg})
-            self._save_message(uid,"assistant",msg)
+                if target_scope == self.active_scope:
+                    self.chat_history.append({"role":"assistant","content":"Could not generate study plan please try reopening the semester"})
+                    self.is_generating_plan = False
+                return
+            self._save_study_plan(uid, target_scope, plan)
+            self._save_day_progress(uid, target_scope, 1, 0)
+            if target_scope == self.active_scope:
+                self.current_day = 1
+                self.current_topic_index = 0
+                self._refresh_today_plan(uid)
+                msg = "Your personalized 110 day study plan is ready\n\n" + self._build_today_message(plan, 1, 0)
+                self.chat_history.append({"role":"assistant","content":msg})
+                self._save_message(uid,"assistant",msg)
         except Exception as e:
             print(f"ERROR generate_study_plan: {e}")
-            self.chat_history.append({"role":"assistant","content":"Something went wrong generating the plan"})
-        self.is_generating_plan = False
-        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            if target_scope == self.active_scope:
+                self.chat_history.append({"role":"assistant","content":"Something went wrong generating the plan"})
+        if target_scope == self.active_scope:
+            self.is_generating_plan = False
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
     @rx.event
     async def go_home(self):
@@ -5824,17 +5860,22 @@ def semester_page():
         ),
         rx.cond(
             AppState.is_generating_plan,
-            rx.center(
-                rx.vstack(
-                    rx.spinner(size="3", color="green"),
-                    rx.text("🧠 Generating your 110-day study plan...", color="#00ff88", font_size="1.2em"),
-                    spacing="4",
+            rx.box(
+                rx.hstack(
+                    rx.spinner(size="1", color="#34d399"),
+                    rx.text(
+                        "Preparing your 110-day study plan in the background...",
+                        color="rgba(220,252,231,0.92)",
+                        font_size="0.86rem",
+                        font_weight="600",
+                    ),
+                    spacing="2",
+                    align="center",
                 ),
-                position="absolute",
-                top="80px",
-                left="0",
-                right="0",
-                z_index="10",
+                width="100%",
+                padding="0.72em 1.5em",
+                background="linear-gradient(180deg, rgba(7,24,15,0.9) 0%, rgba(5,16,11,0.72) 100%)",
+                border_bottom="1px solid rgba(110,231,183,0.14)",
             ),
         ),
         rx.box(
@@ -5859,7 +5900,10 @@ def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallabl
             rx.cond(
                 AppState.is_hydrated & AppState.is_authenticated_now,
                 page(),
-                rx.center(rx.text("Loading...", on_mount=AppState.auth_redir)),
+                rx.box(
+                    _fullscreen_loading_gate("Loading...", "Opening your workspace."),
+                    on_mount=AppState.auth_redir,
+                ),
             )
         )
 
@@ -6112,18 +6156,18 @@ def reset_password_page():
     return _auth_page_shell(secure_reset_form())
 
 
-def _root_loading_gate() -> rx.Component:
+def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
     return rx.center(
         rx.vstack(
             rx.text(
-                "Loading...",
+                title,
                 color="white",
                 font_size="1.15rem",
                 font_weight="700",
                 font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
             ),
             rx.text(
-                "Checking your workspace.",
+                subtitle,
                 color="rgba(226,232,240,0.7)",
                 font_size="0.96rem",
             ),
@@ -6543,7 +6587,7 @@ def landing_page():
     return rx.cond(
         AppState.root_public_ready & ~AppState.is_authenticated_now,
         public_landing,
-        _root_loading_gate(),
+        _fullscreen_loading_gate("Loading...", "Checking your workspace."),
     )
 
 
