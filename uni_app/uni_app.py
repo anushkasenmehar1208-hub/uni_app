@@ -6173,10 +6173,17 @@ def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallabl
     def protected_page():
         return rx.fragment(
             rx.cond(
-                AppState.is_hydrated & AppState.is_authenticated_now,
+                AppState.is_hydrated,
+                # Render the page shell immediately after hydration.
+                # on_load handles auth check + redirect for unauthenticated users.
                 page(),
+                # Pre-hydration: dark background only, no blocking text.
                 rx.box(
-                    _fullscreen_loading_gate("Loading...", "Opening your workspace."),
+                    width="100vw",
+                    min_height="100vh",
+                    background=(
+                        "linear-gradient(180deg, #060907 0%, #030504 54%, #020303 100%)"
+                    ),
                     on_mount=AppState.auth_redir,
                 ),
             )
