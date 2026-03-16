@@ -796,6 +796,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     is_processing: bool = False
 
     is_generating_plan: bool = False
+    scope_hydrating: bool = False
     current_day: int = 1
     current_topic_index: int = 0
 
@@ -2694,8 +2695,8 @@ Critical operating rules:
     @rx.event
     async def on_load_scope_page(self):
         """Called when navigating to /s/[scope].
-        Fast path: resolve auth/scope, load chat data, render page.
-        Plan generation is deferred to _post_render_check_plan (runs after first paint).
+        Minimum work for first paint: auth check, profile (1 DB call), scope routing.
+        All scope hydration is deferred to _post_render_hydrate_scope (background).
         """
         uid = self._uid()
         self._cached_uid = uid
@@ -2703,23 +2704,19 @@ Critical operating rules:
             yield AppState.auth_redir()  # type: ignore
             return
 
+        # ── Single DB call: profile + memory (needed for is_started, degree, name) ──
         try:
             self._load_profile(uid)
-            self.adaptive_profile = self._get_adaptive_profile(uid)
-            self._migrate_legacy_messages_once(uid)
         except Exception as e:
             print(f"[ROUTE] profile load error: {e}")
 
-        # Read scope from URL param
+        # ── Scope routing (no DB) ──
         raw_scope = str(self.router.page.params.get("scope", "home") or "home").strip()
-        print(f"[ROUTE] raw_scope from URL = {raw_scope!r}")
         scope_info = SCOPE_ROUTE_MAP.get(raw_scope)
         if scope_info is None:
-            print(f"[ROUTE] unknown scope {raw_scope!r}, redirecting to home")
             yield _hard_navigate("/s/home")
             return
 
-        # Not yet onboarded? Send to /app for onboarding
         if not self.is_started:
             yield rx.redirect(APP_DASHBOARD_ROUTE)
             return
@@ -2728,9 +2725,7 @@ Critical operating rules:
         semester = scope_info["semester"]
         view_mode = scope_info["view_mode"]
 
-        print(f"[ROUTE] Loading scope page: {raw_scope} (year={year}, semester={semester})")
-
-        # ── Set all state from scratch ──
+        # ── Set shell state (no DB) ──
         self.view_mode = view_mode
         self.active_scope = raw_scope
         if view_mode == "semester":
@@ -2744,78 +2739,103 @@ Critical operating rules:
         self.is_generating_plan = False
         self.plan_generation_error = ""
         self.is_processing = False
+        self.current_day = 1
+        self.current_topic_index = 0
+        self.scope_hydrating = True
 
-        # Infer name if missing
-        if not (self.name or "").strip():
-            inferred_name = _extract_person_name(
-                self.account_display_name, self.memory_summary, self.adaptive_profile,
-            )
-            if inferred_name:
-                self.name = inferred_name
-        self._save_memory(uid)
-
-        # ── Load scope data (chat history, sessions) ──
-        try:
-            self._ensure_scope_memory(uid, raw_scope)
-            self._ensure_session(uid, raw_scope)
-            self._load_sessions(uid, raw_scope)
-            self._load_messages(uid)
-            print(f"[ROUTE] Loaded {len(self.chat_history)} msgs for scope {raw_scope}, session={self.current_session_id}")
-        except Exception as e:
-            print(f"[ROUTE] ERROR loading scope {raw_scope}: {e}")
-
-        # ── Semester: load progress counters only (fast, no AI calls) ──
-        if view_mode == "semester" and year:
-            try:
-                self._ensure_progress_for_year(uid, year)
-                self._refresh_today_plan(uid)
-                existing_plan = self._get_study_plan(uid, raw_scope)
-                if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
-                    self._reset_plan_only(uid, raw_scope)
-                    existing_plan = []
-                if existing_plan:
-                    self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_IDLE)
-                    day, topic_idx = self._get_day_progress(uid, raw_scope)
-                    self.current_day = day
-                    self.current_topic_index = topic_idx
-                    today_msg = self._build_today_message(existing_plan, day, topic_idx)
-                    if not self.chat_history:
-                        self.chat_history.append({"role": "assistant", "content": today_msg})
-                        self._save_message(uid, "assistant", today_msg)
-                else:
-                    self.current_day = 1
-                    self.current_topic_index = 0
-            except Exception as e:
-                print(f"[ROUTE] ERROR loading plan data for {raw_scope}: {e}")
-
-        # ── Push full state + scripts to frontend (first paint) ──
+        # ══ FIRST PAINT ══  shell is now visible
         yield
-        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
-        yield rx.call_script(AUTO_SCROLL_OBSERVER_JS)
         yield rx.call_script(ENTER_TO_SEND_JS)
 
-        # ── Defer plan generation check to after render ──
+        # ── Defer all scope data loading to background ──
+        yield type(self)._post_render_hydrate_scope(raw_scope, year, semester, view_mode)
+
+    @rx.event(background=True)
+    async def _post_render_hydrate_scope(self, raw_scope: str, year: str, semester: str, view_mode: str):
+        """Background: loads sessions, chat history, progress, plan state.
+        Runs after the semester shell is already visible and interactive.
+        """
+        async with self:
+            uid = self._uid()
+            if uid < 0:
+                self.scope_hydrating = False
+                return
+
+            # ── Profile extras ──
+            try:
+                self.adaptive_profile = self._get_adaptive_profile(uid)
+                self._migrate_legacy_messages_once(uid)
+            except Exception as e:
+                print(f"[HYDRATE] profile extras error: {e}")
+
+            # Infer name if missing
+            if not (self.name or "").strip():
+                inferred_name = _extract_person_name(
+                    self.account_display_name, self.memory_summary, self.adaptive_profile,
+                )
+                if inferred_name:
+                    self.name = inferred_name
+            self._save_memory(uid)
+
+            # ── Load scope data (sessions, chat history) ──
+            try:
+                self._ensure_scope_memory(uid, raw_scope)
+                self._ensure_session(uid, raw_scope)
+                self._load_sessions(uid, raw_scope)
+                self._load_messages(uid)
+                print(f"[HYDRATE] Loaded {len(self.chat_history)} msgs for scope {raw_scope}")
+            except Exception as e:
+                print(f"[HYDRATE] ERROR loading scope {raw_scope}: {e}")
+
+            # ── Semester: load progress + existing plan ──
+            if view_mode == "semester" and year:
+                try:
+                    self._ensure_progress_for_year(uid, year)
+                    self._refresh_today_plan(uid)
+                    existing_plan = self._get_study_plan(uid, raw_scope)
+                    if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
+                        self._reset_plan_only(uid, raw_scope)
+                        existing_plan = []
+                    if existing_plan:
+                        self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_IDLE)
+                        day, topic_idx = self._get_day_progress(uid, raw_scope)
+                        self.current_day = day
+                        self.current_topic_index = topic_idx
+                        today_msg = self._build_today_message(existing_plan, day, topic_idx)
+                        if not self.chat_history:
+                            self.chat_history.append({"role": "assistant", "content": today_msg})
+                            self._save_message(uid, "assistant", today_msg)
+                    else:
+                        self.current_day = 1
+                        self.current_topic_index = 0
+                except Exception as e:
+                    print(f"[HYDRATE] ERROR loading plan data for {raw_scope}: {e}")
+
+            # ── Mark hydration complete ──
+            self.scope_hydrating = False
+
+        # ── Post-hydration JS (scroll, observer) ──
+        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+        yield rx.call_script(AUTO_SCROLL_OBSERVER_JS)
+
+        # ── Defer plan generation check ──
         if view_mode == "semester" and year:
             yield type(self)._post_render_check_plan(raw_scope, year, semester)
 
     @rx.event(background=True)
     async def _post_render_check_plan(self, scope: str, year: str, semester: str):
-        """Runs after the semester page is already visible and interactive.
-        Checks whether plan generation is needed and triggers it without blocking UI.
-        """
+        """Runs after hydration. Checks whether plan generation is needed."""
         async with self:
             uid = self._uid()
             if uid < 0 or not scope:
                 return
 
-            # Plan already loaded during on_load — nothing to do
             existing_plan = self._get_study_plan(uid, scope)
             if existing_plan:
                 self.is_generating_plan = False
                 self.plan_generation_error = ""
                 return
 
-            # No curriculum → just show info message
             if not self._has_curriculum_for_semester(year, semester):
                 self._set_plan_generation_state(uid, scope, PLAN_GENERATION_STATUS_IDLE)
                 empty_msg = (
@@ -2828,11 +2848,9 @@ Critical operating rules:
                     self._save_message(uid, "assistant", empty_msg)
                 return
 
-            # Check generation status to avoid duplicates
             status, error_text, updated_at = self._get_plan_generation_state(uid, scope)
 
             if status == PLAN_GENERATION_STATUS_RUNNING and not self._plan_generation_is_stale(updated_at):
-                # Another tab/session is already generating — just watch
                 self.is_generating_plan = True
                 self.plan_generation_error = ""
 
@@ -2843,13 +2861,11 @@ Critical operating rules:
 
         async with self:
             if status == PLAN_GENERATION_STATUS_FAILED or self._plan_generation_is_stale(updated_at):
-                # Previously failed — show error with retry, don't auto-retry
                 self._set_plan_generation_state(uid, scope, PLAN_GENERATION_STATUS_FAILED, error_text or PLAN_GENERATION_FAILURE_TEXT)
                 self.is_generating_plan = False
                 self.plan_generation_error = error_text or PLAN_GENERATION_FAILURE_TEXT
                 return
 
-            # Idle and no plan → start generation
             self._set_plan_generation_state(uid, scope, PLAN_GENERATION_STATUS_RUNNING)
             self.is_generating_plan = True
             self.plan_generation_error = ""
@@ -6115,6 +6131,27 @@ def semester_page():
                 ),
                 rx.fragment(),
             ),
+        ),
+        rx.cond(
+            AppState.scope_hydrating,
+            rx.box(
+                rx.hstack(
+                    rx.spinner(size="1", color="rgba(148,163,184,0.7)"),
+                    rx.text(
+                        "Loading workspace...",
+                        color="rgba(226,232,240,0.64)",
+                        font_size="0.82rem",
+                        font_weight="500",
+                    ),
+                    spacing="2",
+                    align="center",
+                ),
+                width="100%",
+                padding="0.55em 1.5em",
+                background="rgba(255,255,255,0.02)",
+                border_bottom="1px solid rgba(255,255,255,0.04)",
+            ),
+            rx.fragment(),
         ),
         rx.box(
             chat_panel(),
