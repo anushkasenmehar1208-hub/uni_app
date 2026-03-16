@@ -2693,7 +2693,10 @@ Critical operating rules:
 
     @rx.event
     async def on_load_scope_page(self):
-        """Called when navigating to /s/[scope]. Reads scope from URL and loads everything fresh."""
+        """Called when navigating to /s/[scope].
+        Fast path: resolve auth/scope, load chat data, render page.
+        Plan generation is deferred to _post_render_check_plan (runs after first paint).
+        """
         uid = self._uid()
         self._cached_uid = uid
         if uid < 0:
@@ -2751,10 +2754,7 @@ Critical operating rules:
                 self.name = inferred_name
         self._save_memory(uid)
 
-        # Force cleared state to frontend
-        yield
-
-        # ── Load scope data ──
+        # ── Load scope data (chat history, sessions) ──
         try:
             self._ensure_scope_memory(uid, raw_scope)
             self._ensure_session(uid, raw_scope)
@@ -2764,19 +2764,15 @@ Critical operating rules:
         except Exception as e:
             print(f"[ROUTE] ERROR loading scope {raw_scope}: {e}")
 
-        # ── Semester-specific: study plan + progress ──
-        queue_plan_generation = False
-        watch_plan_generation = False
-        try:
-            if view_mode == "semester" and year:
+        # ── Semester: load progress counters only (fast, no AI calls) ──
+        if view_mode == "semester" and year:
+            try:
                 self._ensure_progress_for_year(uid, year)
                 self._refresh_today_plan(uid)
-
                 existing_plan = self._get_study_plan(uid, raw_scope)
                 if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
                     self._reset_plan_only(uid, raw_scope)
                     existing_plan = []
-
                 if existing_plan:
                     self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_IDLE)
                     day, topic_idx = self._get_day_progress(uid, raw_scope)
@@ -2786,48 +2782,79 @@ Critical operating rules:
                     if not self.chat_history:
                         self.chat_history.append({"role": "assistant", "content": today_msg})
                         self._save_message(uid, "assistant", today_msg)
-
-                elif self._has_curriculum_for_semester(year, semester):
-                    status, error_text, updated_at = self._get_plan_generation_state(uid, raw_scope)
-                    self.current_day = 1
-                    self.current_topic_index = 0
-                    if status == PLAN_GENERATION_STATUS_RUNNING and not self._plan_generation_is_stale(updated_at):
-                        self.is_generating_plan = True
-                        self.plan_generation_error = ""
-                        watch_plan_generation = True
-                    elif status == PLAN_GENERATION_STATUS_FAILED or self._plan_generation_is_stale(updated_at):
-                        self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_FAILED, error_text or PLAN_GENERATION_FAILURE_TEXT)
-                        self.is_generating_plan = False
-                        self.plan_generation_error = error_text or PLAN_GENERATION_FAILURE_TEXT
-                    else:
-                        self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_RUNNING)
-                        self.is_generating_plan = True
-                        self.plan_generation_error = ""
-                        queue_plan_generation = True
-
                 else:
                     self.current_day = 1
                     self.current_topic_index = 0
-                    self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_IDLE)
-                    empty_msg = (
-                        f"{semester} is now your main AI workspace.\n\n"
-                        "This semester does not have course data yet, so the guided study plan "
-                        "cannot be generated until the curriculum is added."
-                    )
-                    if not self.chat_history:
-                        self.chat_history.append({"role": "assistant", "content": empty_msg})
-                        self._save_message(uid, "assistant", empty_msg)
-        except Exception as e:
-            print(f"[ROUTE] ERROR study plan for {raw_scope}: {e}")
+            except Exception as e:
+                print(f"[ROUTE] ERROR loading plan data for {raw_scope}: {e}")
 
+        # ── Push full state + scripts to frontend (first paint) ──
+        yield
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
         yield rx.call_script(AUTO_SCROLL_OBSERVER_JS)
         yield rx.call_script(ENTER_TO_SEND_JS)
-        if queue_plan_generation:
-            yield
-            yield type(self).generate_study_plan(raw_scope, year, semester)
-        elif watch_plan_generation:
-            yield type(self).watch_study_plan_generation(raw_scope)
+
+        # ── Defer plan generation check to after render ──
+        if view_mode == "semester" and year:
+            yield type(self)._post_render_check_plan(raw_scope, year, semester)
+
+    @rx.event(background=True)
+    async def _post_render_check_plan(self, scope: str, year: str, semester: str):
+        """Runs after the semester page is already visible and interactive.
+        Checks whether plan generation is needed and triggers it without blocking UI.
+        """
+        async with self:
+            uid = self._uid()
+            if uid < 0 or not scope:
+                return
+
+            # Plan already loaded during on_load — nothing to do
+            existing_plan = self._get_study_plan(uid, scope)
+            if existing_plan:
+                self.is_generating_plan = False
+                self.plan_generation_error = ""
+                return
+
+            # No curriculum → just show info message
+            if not self._has_curriculum_for_semester(year, semester):
+                self._set_plan_generation_state(uid, scope, PLAN_GENERATION_STATUS_IDLE)
+                empty_msg = (
+                    f"{semester} is now your main AI workspace.\n\n"
+                    "This semester does not have course data yet, so the guided study plan "
+                    "cannot be generated until the curriculum is added."
+                )
+                if not self.chat_history:
+                    self.chat_history.append({"role": "assistant", "content": empty_msg})
+                    self._save_message(uid, "assistant", empty_msg)
+                return
+
+            # Check generation status to avoid duplicates
+            status, error_text, updated_at = self._get_plan_generation_state(uid, scope)
+
+            if status == PLAN_GENERATION_STATUS_RUNNING and not self._plan_generation_is_stale(updated_at):
+                # Another tab/session is already generating — just watch
+                self.is_generating_plan = True
+                self.plan_generation_error = ""
+
+        # Watch outside the lock so UI stays responsive
+        if status == PLAN_GENERATION_STATUS_RUNNING and not self._plan_generation_is_stale(updated_at):
+            yield type(self).watch_study_plan_generation(scope)
+            return
+
+        async with self:
+            if status == PLAN_GENERATION_STATUS_FAILED or self._plan_generation_is_stale(updated_at):
+                # Previously failed — show error with retry, don't auto-retry
+                self._set_plan_generation_state(uid, scope, PLAN_GENERATION_STATUS_FAILED, error_text or PLAN_GENERATION_FAILURE_TEXT)
+                self.is_generating_plan = False
+                self.plan_generation_error = error_text or PLAN_GENERATION_FAILURE_TEXT
+                return
+
+            # Idle and no plan → start generation
+            self._set_plan_generation_state(uid, scope, PLAN_GENERATION_STATUS_RUNNING)
+            self.is_generating_plan = True
+            self.plan_generation_error = ""
+
+        yield type(self).generate_study_plan(scope, year, semester)
 
     @rx.event
     async def new_chat(self):
@@ -3107,79 +3134,92 @@ Critical operating rules:
         scope = self._set_default_semester_workspace(uid, year, semester)
         yield _hard_navigate(scope_to_route(scope))
 
-    @rx.event
+    @rx.event(background=True)
     async def generate_study_plan(self, scope: str = "", year: str = "", semester: str = ""):
-        uid = self._uid()
-        target_scope = (scope or self.active_scope).strip()
-        target_year = year or self.selected_year
-        target_semester = semester or self.selected_semester
-        if uid < 0 or client is None or not target_scope:
-            if target_scope == self.active_scope:
-                self.is_generating_plan = False
-                self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
-            return
-        if self._get_study_plan(uid, target_scope):
-            self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
-            if target_scope == self.active_scope:
-                self.is_generating_plan = False
-                self.plan_generation_error = ""
-            return
-        courses_text = "\n".join(self._semester_courses(target_year, target_semester))
-        if not target_year or not target_semester or not courses_text.strip():
-            self._set_plan_generation_state(
-                uid,
-                target_scope,
-                PLAN_GENERATION_STATUS_FAILED,
-                "This semester is not ready for study plan generation yet.",
-            )
-            if target_scope == self.active_scope:
-                self.is_generating_plan = False
-                self.plan_generation_error = "This semester is not ready for study plan generation yet."
-            return
-        try:
-            prompt = f"""You are a university curriculum expert for {self.degree} students
-Generate a realistic detailed 110 day study plan for {target_year} {target_semester}.
-Use only the following semester subjects and do not include modules from any other semester.
-Return ONLY a valid JSON array with exactly 110 items
-Each item: {{"day":<1-110>,"subject":"<name>","unit":"<unit>","topics":["<t1>","<t2>"]}}
-Subjects:\n{courses_text}"""
-            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
-            plan = self._extract_json_list((getattr(resp,"text","") or "").strip())
-            if not plan or len(plan) < 10:
+        # ── Read state under lock ──
+        async with self:
+            uid = self._uid()
+            target_scope = (scope or self.active_scope).strip()
+            target_year = year or self.selected_year
+            target_semester = semester or self.selected_semester
+            active = self.active_scope
+            degree = self.degree
+            if uid < 0 or client is None or not target_scope:
+                if target_scope == active:
+                    self.is_generating_plan = False
+                    self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
+                return
+            if self._get_study_plan(uid, target_scope):
+                self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
+                if target_scope == active:
+                    self.is_generating_plan = False
+                    self.plan_generation_error = ""
+                return
+            courses_text = "\n".join(self._semester_courses(target_year, target_semester))
+            if not target_year or not target_semester or not courses_text.strip():
                 self._set_plan_generation_state(
                     uid,
                     target_scope,
                     PLAN_GENERATION_STATUS_FAILED,
-                    PLAN_GENERATION_FAILURE_TEXT,
+                    "This semester is not ready for study plan generation yet.",
                 )
-                if target_scope == self.active_scope:
+                if target_scope == active:
                     self.is_generating_plan = False
-                    self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
+                    self.plan_generation_error = "This semester is not ready for study plan generation yet."
                 return
-            self._save_study_plan(uid, target_scope, plan)
-            self._save_day_progress(uid, target_scope, 1, 0)
-            self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
-            if target_scope == self.active_scope:
-                self.current_day = 1
-                self.current_topic_index = 0
-                self._refresh_today_plan(uid)
-                self.plan_generation_error = ""
-                msg = "Your personalized 110 day study plan is ready\n\n" + self._build_today_message(plan, 1, 0)
-                self.chat_history.append({"role":"assistant","content":msg})
-                self._save_message(uid,"assistant",msg)
+
+        # ── AI call outside lock — page stays fully interactive ──
+        try:
+            prompt = f"""You are a university curriculum expert for {degree} students
+Generate a realistic detailed 110 day study plan for {target_year} {target_semester}.
+Use only the following semester subjects and do not include modules from any other semester.
+Return ONLY a valid JSON array with exactly 110 items
+Each item: {{"day":<1-110>,"subject":"<n>","unit":"<unit>","topics":["<t1>","<t2>"]}}
+Subjects:\n{courses_text}"""
+            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
+            raw_text = (getattr(resp, "text", "") or "").strip()
         except Exception as e:
-            print(f"ERROR generate_study_plan: {e}")
-            self._set_plan_generation_state(
-                uid,
-                target_scope,
-                PLAN_GENERATION_STATUS_FAILED,
-                PLAN_GENERATION_FAILURE_TEXT,
-            )
-            if target_scope == self.active_scope:
-                self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
-        if target_scope == self.active_scope:
-            self.is_generating_plan = False
-            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            print(f"ERROR generate_study_plan AI call: {e}")
+            raw_text = ""
+
+        # ── Process result under lock ──
+        async with self:
+            active = self.active_scope
+            try:
+                if not raw_text:
+                    raise ValueError("Empty AI response")
+                plan = self._extract_json_list(raw_text)
+                if not plan or len(plan) < 10:
+                    self._set_plan_generation_state(
+                        uid, target_scope,
+                        PLAN_GENERATION_STATUS_FAILED, PLAN_GENERATION_FAILURE_TEXT,
+                    )
+                    if target_scope == active:
+                        self.is_generating_plan = False
+                        self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
+                    return
+                self._save_study_plan(uid, target_scope, plan)
+                self._save_day_progress(uid, target_scope, 1, 0)
+                self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
+                if target_scope == active:
+                    self.current_day = 1
+                    self.current_topic_index = 0
+                    self._refresh_today_plan(uid)
+                    self.plan_generation_error = ""
+                    msg = "Your personalized 110 day study plan is ready\n\n" + self._build_today_message(plan, 1, 0)
+                    self.chat_history.append({"role": "assistant", "content": msg})
+                    self._save_message(uid, "assistant", msg)
+            except Exception as e:
+                print(f"ERROR generate_study_plan: {e}")
+                self._set_plan_generation_state(
+                    uid, target_scope,
+                    PLAN_GENERATION_STATUS_FAILED, PLAN_GENERATION_FAILURE_TEXT,
+                )
+                if target_scope == active:
+                    self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
+            if target_scope == active:
+                self.is_generating_plan = False
+
 
     @rx.event
     async def watch_study_plan_generation(self, scope: str = ""):
