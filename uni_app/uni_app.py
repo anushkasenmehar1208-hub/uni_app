@@ -1114,6 +1114,29 @@ class AppState(reflex_local_auth.LocalAuthState):
         ):
             return rx.redirect(self.post_login_redirect or APP_DASHBOARD_ROUTE)
 
+    def _authenticated_landing_route(self) -> str:
+        if self.selected_year and self.selected_semester:
+            target_scope = self._scope_key(self.selected_year, self.selected_semester)
+            if target_scope in SCOPE_ROUTE_MAP:
+                return scope_to_route(target_scope)
+        if self.is_started:
+            return scope_to_route("home")
+        return APP_DASHBOARD_ROUTE
+
+    @rx.event
+    async def on_load_public_landing(self):
+        if not self.is_hydrated:
+            yield AppState.on_load_public_landing()  # type: ignore
+            return
+
+        uid = self._uid()
+        self._cached_uid = uid
+        if uid < 0:
+            return
+
+        self._load_profile(uid)
+        yield _hard_navigate(self._authenticated_landing_route())
+
     @rx.event
     def handle_login(self, form_data: dict[str, Any]):
         self._ensure_auth_csrf()
@@ -6086,6 +6109,7 @@ def reset_password_page():
     title="Alex AI | AI Study Assistant for University Students",
     description="Alex AI analyzes your degree, organizes each semester, and guides you day by day with a structured 105-day learning plan.",
     image=FAVICON_32,
+    on_load=AppState.on_load_public_landing,
     meta=[
         {"name": "keywords", "content": "AI study assistant, university students, semester learning, guided study plan"},
         {"name": "robots", "content": "index, follow"},
