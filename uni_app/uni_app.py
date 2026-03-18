@@ -1245,7 +1245,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
         host = ""
         try:
-            host = str(getattr(self.router.url, "host", "") or "").strip()
+            host = str(getattr(self.router.page, "host", "") or "").strip()
         except Exception:
             host = ""
         if host:
@@ -1276,9 +1276,9 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def handle_google_oauth_callback(self):
-        code = unquote(str(self.router.url.params.get("code", "") or "")).strip()
-        state = unquote(str(self.router.url.params.get("state", "") or "")).strip()
-        origin_b64 = str(self.router.url.params.get("origin_b64", "") or "").strip()
+        code = unquote(str(self.router.page.params.get("code", "") or "")).strip()
+        state = unquote(str(self.router.page.params.get("state", "") or "")).strip()
+        origin_b64 = str(self.router.page.params.get("origin_b64", "") or "").strip()
 
         if not code or not _google_state_is_valid(state):
             yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=1")
@@ -1371,7 +1371,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     
     @rx.event
     async def handle_google_complete(self):
-        token = self.router.url.params.get("token", "")
+        token = self.router.page.params.get("token", "")
         print(f"[Google Complete] token present: {bool(token)}")
 
         if not token:
@@ -2988,7 +2988,7 @@ Critical operating rules:
             print(f"[ROUTE] profile load error: {e}")
 
         # ── Scope routing (no DB) ──
-        raw_scope = str(self.router.url.params.get("scope", "home") or "home").strip()
+        raw_scope = str(self.router.page.params.get("scope", "home") or "home").strip()
         scope_info = SCOPE_ROUTE_MAP.get(raw_scope)
         if scope_info is None:
             yield _hard_navigate("/s/home")
