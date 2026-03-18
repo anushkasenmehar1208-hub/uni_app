@@ -4432,7 +4432,7 @@ def tier_status_bar() -> rx.Component:
         ),
         rx.spacer(),
         rx.text(AppState.active_model_name, color="rgba(140,150,160,0.25)", font_size="0.65rem", font_family="monospace"),
-        width="100%", max_width="780px", margin_x="auto", padding_x="1.5em", padding_y="4px", align="center",
+        width="100%", padding_x="1.5em", padding_y="4px", align="center",
     )
 
 
@@ -4761,9 +4761,10 @@ def active_chat_panel() -> rx.Component:
                                 color="rgba(220,228,236,0.88)",
                                 font_size="0.9rem",
                                 line_height="1.75",
-                                max_width="88%",
+                                width="100%",
                                 margin_left="0",
                                 style={
+                                    "& p:first-of-type": {"margin_top": "0"},
                                     "& p": {"margin_bottom": "0.65em"},
                                     "& p + ul, & p + ol": {"margin_top": "0.2em"},
                                     "& ul, & ol": {"padding_left": "1.6em", "margin_bottom": "0.55em"},
@@ -4819,13 +4820,12 @@ def active_chat_panel() -> rx.Component:
                 ),
                 rx.box(id="chat_bottom_anchor", height="1px"),
                 width="100%",
-                max_width="780px",
-                margin_x="auto",
-                padding_x="2em",
-                padding_top="0.15em",
-                padding_bottom="1em",
+                align_items="stretch",
+                spacing="0",
+                padding_x="1.5em",
+                padding_top="0",
+                padding_bottom="0.75em",
                 style={
-                    "padding_bottom": "80px",
                     "min_height": "100%",
                 }
             ),
@@ -4852,8 +4852,6 @@ def active_chat_panel() -> rx.Component:
             rx.box(
                 chat_input_field(),
                 width="100%",
-                max_width="780px",
-                margin_x="auto",
                 padding="0 1.5em 1.2em 1.5em",
             ),
             upgrade_button(),
