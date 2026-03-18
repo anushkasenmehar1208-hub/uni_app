@@ -115,7 +115,7 @@ def friendly_groq_error(e: Exception) -> str:
     return GENERIC_ERROR_UI_MESSAGE
 
 
-def _groq_generate(model: str, contents: str) -> Any:
+def _groq_generate(model: str, contents: str, max_tokens: int = 2048) -> Any:
     """Drop-in replacement for Gemini generate_content using Groq."""
     class _R:
         def __init__(self):
@@ -130,7 +130,7 @@ def _groq_generate(model: str, contents: str) -> Any:
         resp = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": contents}],
-            max_tokens=2048,
+            max_tokens=max_tokens,
         )
         r = _R()
         r.text = resp.choices[0].message.content or ""
@@ -2004,12 +2004,50 @@ class AppState(reflex_local_auth.LocalAuthState):
         return {}
 
     def _extract_json_list(self, text: str) -> list:
-        try: return json.loads(text)
-        except Exception: pass
+        # Strip markdown code fences
+        cleaned = (text or "").strip()
+        if cleaned.startswith("```"):
+            # Remove opening fence (```json or ```)
+            first_nl = cleaned.find("\n")
+            if first_nl != -1:
+                cleaned = cleaned[first_nl + 1:]
+            # Remove closing fence
+            if cleaned.rstrip().endswith("```"):
+                cleaned = cleaned.rstrip()[:-3].rstrip()
+
+        # Try direct parse
         try:
-            a, b = text.find("["), text.rfind("]")
-            if a != -1 and b != -1 and b > a: return json.loads(text[a:b+1])
-        except Exception: pass
+            result = json.loads(cleaned)
+            if isinstance(result, list):
+                return result
+        except Exception:
+            pass
+
+        # Extract outermost [ ... ]
+        a = cleaned.find("[")
+        if a == -1:
+            return []
+        b = cleaned.rfind("]")
+        if b != -1 and b > a:
+            try:
+                return json.loads(cleaned[a:b + 1])
+            except Exception:
+                pass
+
+        # Truncated array: find last complete object and close the array
+        fragment = cleaned[a:]
+        # Find last complete "}" and truncate there
+        last_brace = fragment.rfind("}")
+        if last_brace > 0:
+            truncated = fragment[:last_brace + 1] + "]"
+            try:
+                result = json.loads(truncated)
+                if isinstance(result, list):
+                    print(f"[PLAN-GEN] Recovered {len(result)} items from truncated JSON", flush=True)
+                    return result
+            except Exception:
+                pass
+
         return []
         # ----------------------------
     # memory tuning
@@ -3195,7 +3233,7 @@ Use only the following semester subjects and do not include modules from any oth
 Return ONLY a valid JSON array with exactly 110 items
 Each item: {{"day":<1-110>,"subject":"<n>","unit":"<unit>","topics":["<t1>","<t2>"]}}
 Subjects:\n{courses_text}"""
-            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
+            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt, 8192)
             raw_text = (getattr(resp, "text", "") or "").strip()
             print(f"[PLAN-GEN] Groq response len={len(raw_text)} first100='{raw_text[:100]}'", flush=True)
         except Exception as e:
