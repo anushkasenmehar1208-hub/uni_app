@@ -1245,7 +1245,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
         host = ""
         try:
-            host = str(getattr(self.router.page, "host", "") or "").strip()
+            host = str(getattr(self.router.url, "host", "") or "").strip()
         except Exception:
             host = ""
         if host:
@@ -1276,9 +1276,9 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def handle_google_oauth_callback(self):
-        code = unquote(str(self.router.page.params.get("code", "") or "")).strip()
-        state = unquote(str(self.router.page.params.get("state", "") or "")).strip()
-        origin_b64 = str(self.router.page.params.get("origin_b64", "") or "").strip()
+        code = unquote(str(self.router.url.params.get("code", "") or "")).strip()
+        state = unquote(str(self.router.url.params.get("state", "") or "")).strip()
+        origin_b64 = str(self.router.url.params.get("origin_b64", "") or "").strip()
 
         if not code or not _google_state_is_valid(state):
             yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=1")
@@ -1371,7 +1371,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     
     @rx.event
     async def handle_google_complete(self):
-        token = self.router.page.params.get("token", "")
+        token = self.router.url.params.get("token", "")
         print(f"[Google Complete] token present: {bool(token)}")
 
         if not token:
@@ -2711,7 +2711,7 @@ Critical operating rules:
             print(f"[ROUTE] profile load error: {e}")
 
         # ── Scope routing (no DB) ──
-        raw_scope = str(self.router.page.params.get("scope", "home") or "home").strip()
+        raw_scope = str(self.router.url.params.get("scope", "home") or "home").strip()
         scope_info = SCOPE_ROUTE_MAP.get(raw_scope)
         if scope_info is None:
             yield _hard_navigate("/s/home")
@@ -2748,7 +2748,7 @@ Critical operating rules:
         yield rx.call_script(ENTER_TO_SEND_JS)
 
         # ── Defer all scope data loading to background ──
-        yield type(self).post_render_hydrate_scope(raw_scope, year, semester, view_mode)
+        yield AppState.post_render_hydrate_scope(raw_scope, year, semester, view_mode)
 
     @rx.event(background=True)
     async def post_render_hydrate_scope(self, raw_scope: str, year: str, semester: str, view_mode: str):
@@ -2856,7 +2856,7 @@ Critical operating rules:
 
         # Watch outside the lock so UI stays responsive
         if status == PLAN_GENERATION_STATUS_RUNNING and not self._plan_generation_is_stale(updated_at):
-            yield type(self).watch_study_plan_generation(scope)
+            yield AppState.watch_study_plan_generation(scope)
             return
 
         async with self:
@@ -2870,7 +2870,7 @@ Critical operating rules:
             self.is_generating_plan = True
             self.plan_generation_error = ""
 
-        yield type(self).generate_study_plan(scope, year, semester)
+        yield AppState.generate_study_plan(scope, year, semester)
 
     @rx.event
     async def new_chat(self):
@@ -3268,7 +3268,7 @@ Subjects:\n{courses_text}"""
             self.plan_generation_error = ""
             await asyncio.sleep(3)
             if target_scope == self.active_scope:
-                yield type(self).watch_study_plan_generation(target_scope)
+                yield AppState.watch_study_plan_generation(target_scope)
             return
 
         if status == PLAN_GENERATION_STATUS_FAILED or self._plan_generation_is_stale(updated_at):
@@ -3302,7 +3302,7 @@ Subjects:\n{courses_text}"""
         self.is_generating_plan = True
         self.plan_generation_error = ""
         yield
-        yield type(self).generate_study_plan(
+        yield AppState.generate_study_plan(
             self.active_scope,
             self.selected_year,
             self.selected_semester,
