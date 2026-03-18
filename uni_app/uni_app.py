@@ -981,6 +981,21 @@ class AppState(reflex_local_auth.LocalAuthState):
     def set_chat_search(self, value: str):
         self.chat_search_query = value
 
+    def set_settings_edit_name(self, value: str):
+        self.settings_edit_name = value
+
+    def set_settings_pw_current(self, value: str):
+        self.settings_pw_current = value
+
+    def set_settings_pw_new(self, value: str):
+        self.settings_pw_new = value
+
+    def set_settings_pw_confirm(self, value: str):
+        self.settings_pw_confirm = value
+
+    def set_settings_delete_confirm(self, value: str):
+        self.settings_delete_confirm = value
+
     def set_language(self, lang: str):
         self.selected_language = lang
 
@@ -7507,7 +7522,7 @@ def settings_general_tab() -> rx.Component:
                 min_width="0",
             ),
             spacing="3",
-            align="flex-end",
+            align="end",
             width="100%",
         ),
 
