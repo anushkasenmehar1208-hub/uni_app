@@ -4675,23 +4675,49 @@ def chat_input_field() -> rx.Component:
 # ──────────────────────────────────────────────────────────────
 
 
+def workspace_wordmark(
+    font_size: str = "1.45rem",
+    letter_spacing: str = "5px",
+) -> rx.Component:
+    return rx.text(
+        "Alex AI",
+        color="white",
+        font_size=font_size,
+        font_weight="800",
+        letter_spacing=letter_spacing,
+        text_transform="uppercase",
+        text_align="center",
+        style={
+            "background": "linear-gradient(135deg, #ffffff 0%, #BFDBFE 100%)",
+            "-webkit-background-clip": "text",
+            "-webkit-text-fill-color": "transparent",
+            "background-clip": "text",
+        },
+    )
+
+
 def empty_chat_panel() -> rx.Component:
     return rx.box(
         rx.vstack(
             rx.spacer(),
 
-            # Single, clean logo
-            rx.box(
-                rx.image(
-                    src="/a_logo.png",
-                    width="72px",
-                    height="72px",
-                    object_fit="contain",
-                    style={
-                        "filter": "drop-shadow(0 0 16px rgba(96,165,250,0.25))",
-                        "opacity": "0.9",
-                    },
+            rx.vstack(
+                workspace_wordmark(font_size="1.6rem", letter_spacing="6px"),
+                # Single, clean logo
+                rx.box(
+                    rx.image(
+                        src="/a_logo.png",
+                        width="72px",
+                        height="72px",
+                        object_fit="contain",
+                        style={
+                            "filter": "drop-shadow(0 0 16px rgba(96,165,250,0.25))",
+                            "opacity": "0.9",
+                        },
+                    ),
                 ),
+                spacing="3",
+                align="center",
                 margin_bottom="8px",
             ),
 
@@ -5940,19 +5966,10 @@ def home_page():
                 rx.spacer(),
 
                 # Center: wordmark — clean, no glow blur
-                rx.text(
-                    "Alex AI",
-                    color="white",
-                    font_size="1.6rem",
-                    font_weight="800",
-                    letter_spacing="6px",
-                    text_transform="uppercase",
-                    style={
-                        "background": "linear-gradient(135deg, #ffffff 0%, #BFDBFE 100%)",
-                        "-webkit-background-clip": "text",
-                        "-webkit-text-fill-color": "transparent",
-                        "background-clip": "text",
-                    },
+                rx.cond(
+                    ~AppState.is_empty_chat,
+                    workspace_wordmark(font_size="1.6rem", letter_spacing="6px"),
+                    rx.box(),
                 ),
 
                 rx.spacer(),
@@ -6408,19 +6425,10 @@ def semester_page():
                 align="center",
             ),
             rx.spacer(),
-            rx.text(
-                "Alex AI",
-                color="white",
-                font_size="1.45rem",
-                font_weight="800",
-                letter_spacing="5px",
-                text_transform="uppercase",
-                style={
-                    "background": "linear-gradient(135deg, #ffffff 0%, #BFDBFE 100%)",
-                    "-webkit-background-clip": "text",
-                    "-webkit-text-fill-color": "transparent",
-                    "background-clip": "text",
-                },
+            rx.cond(
+                ~AppState.is_empty_chat,
+                workspace_wordmark(),
+                rx.box(),
             ),
             rx.spacer(),
             width="100%",
