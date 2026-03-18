@@ -6493,29 +6493,151 @@ def reset_password_page():
 
 def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
     return rx.center(
+        # ── Spotlight cone above logo ──
+        rx.box(
+            position="absolute",
+            top="-80px",
+            left="50%",
+            transform="translateX(-50%)",
+            width="160px",
+            height="200px",
+            background="linear-gradient(180deg, rgba(200,240,220,0.10) 0%, rgba(52,211,153,0.03) 60%, transparent 100%)",
+            clip_path="polygon(40% 0%, 60% 0%, 78% 100%, 22% 100%)",
+            animation="splashSpotlight 4s ease-in-out infinite",
+            pointer_events="none",
+        ),
         rx.vstack(
-            rx.text(
-                title,
-                color="white",
-                font_size="1.15rem",
-                font_weight="700",
-                font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+            # ── Logo with 3D float + glow ──
+            rx.box(
+                # Logo container with float + glow
+                rx.box(
+                    rx.image(
+                        src="/a_logo.png",
+                        width="110px",
+                        height="110px",
+                        border_radius="24px",
+                        object_fit="cover",
+                        display="block",
+                    ),
+                    # Glass highlight overlay
+                    rx.box(
+                        position="absolute",
+                        top="0",
+                        left="0",
+                        right="0",
+                        bottom="0",
+                        border_radius="24px",
+                        background="linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 40%)",
+                        pointer_events="none",
+                    ),
+                    width="110px",
+                    height="110px",
+                    border_radius="24px",
+                    overflow="hidden",
+                    border="1px solid rgba(52,211,153,0.10)",
+                    position="relative",
+                    animation="splashFloat 7s ease-in-out 1s infinite, splashGlowBreath 5s ease-in-out 1s infinite",
+                ),
+                animation="splashLogoEntry 1s cubic-bezier(0.16,1,0.3,1) both",
+                transform_style="preserve-3d",
             ),
+            # ── Floor shadow ──
+            rx.box(
+                width="70px",
+                height="8px",
+                border_radius="50%",
+                background="radial-gradient(ellipse, rgba(52,211,153,0.16) 0%, transparent 70%)",
+                filter="blur(3px)",
+                margin_top="-4px",
+                animation="splashShadow 7s ease-in-out 1s infinite",
+            ),
+            # ── Brand text ──
+            rx.text(
+                "A L E X   A I",
+                color="rgba(255,255,255,0.95)",
+                font_size="1.35rem",
+                font_weight="700",
+                letter_spacing="0.20em",
+                font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+                text_shadow="0 1px 10px rgba(52,211,153,0.12)",
+                animation="splashFadeUp 0.7s ease-out 0.4s both",
+                margin_top="12px",
+            ),
+            # ── Subtitle ──
             rx.text(
                 subtitle,
-                color="rgba(226,232,240,0.7)",
-                font_size="0.96rem",
+                color="rgba(226,232,240,0.35)",
+                font_size="0.8rem",
+                font_weight="400",
+                letter_spacing="0.04em",
+                animation="splashFadeUp 0.7s ease-out 0.6s both",
+            ),
+            # ── Shimmer loading bar ──
+            rx.box(
+                rx.box(
+                    width="40%",
+                    height="100%",
+                    border_radius="2px",
+                    background="linear-gradient(90deg, transparent, rgba(52,211,153,0.45), transparent)",
+                    animation="splashShimmer 1.5s ease-in-out infinite",
+                ),
+                width="90px",
+                height="2px",
+                border_radius="2px",
+                background="rgba(52,211,153,0.07)",
+                overflow="hidden",
+                margin_top="6px",
+                animation="splashFadeUp 0.7s ease-out 0.75s both",
             ),
             spacing="2",
             align_items="center",
         ),
+        # ── Keyframes ──
+        rx.el.style("""
+            @keyframes splashLogoEntry {
+                0% { opacity: 0; transform: perspective(900px) rotateX(20deg) rotateY(-8deg) scale(0.7) translateY(30px); }
+                60% { opacity: 1; transform: perspective(900px) rotateX(-2deg) rotateY(2deg) scale(1.02) translateY(-4px); }
+                100% { opacity: 1; transform: perspective(900px) rotateX(0) rotateY(0) scale(1) translateY(0); }
+            }
+            @keyframes splashFloat {
+                0%, 100% { transform: perspective(900px) translateY(0px) rotateX(0deg) rotateY(0deg); }
+                20% { transform: perspective(900px) translateY(-7px) rotateX(2deg) rotateY(-2.5deg); }
+                50% { transform: perspective(900px) translateY(-3px) rotateX(-1.5deg) rotateY(3deg); }
+                75% { transform: perspective(900px) translateY(-9px) rotateX(1deg) rotateY(-1.5deg); }
+            }
+            @keyframes splashGlowBreath {
+                0%, 100% { box-shadow: 0 6px 30px rgba(52,211,153,0.12), 0 0 50px rgba(52,211,153,0.06), 0 20px 50px rgba(0,0,0,0.5); }
+                50% { box-shadow: 0 10px 40px rgba(52,211,153,0.22), 0 0 70px rgba(52,211,153,0.10), 0 28px 60px rgba(0,0,0,0.6); }
+            }
+            @keyframes splashShadow {
+                0%, 100% { transform: scaleX(1) scaleY(1); opacity: 0.4; }
+                20% { transform: scaleX(0.92) scaleY(0.95); opacity: 0.5; }
+                50% { transform: scaleX(1.04) scaleY(1.02); opacity: 0.35; }
+                75% { transform: scaleX(0.9) scaleY(0.94); opacity: 0.5; }
+            }
+            @keyframes splashFadeUp {
+                0% { opacity: 0; transform: translateY(16px); }
+                100% { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes splashShimmer {
+                0% { transform: translateX(-120px); }
+                100% { transform: translateX(160px); }
+            }
+            @keyframes splashSpotlight {
+                0%, 100% { opacity: 0.07; }
+                50% { opacity: 0.14; }
+            }
+        """),
         width="100vw",
         min_height="100vh",
         padding="24px",
+        position="relative",
+        overflow="hidden",
+        perspective="900px",
         background=(
-            "radial-gradient(circle at 24% 18%, rgba(52,211,153,0.12) 0%, rgba(52,211,153,0) 34%),"
-            "radial-gradient(circle at 82% 14%, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0) 28%),"
-            "linear-gradient(180deg, #07111b 0%, #050b12 52%, #03070d 100%)"
+            "radial-gradient(ellipse at 50% 35%, rgba(52,211,153,0.09) 0%, transparent 55%),"
+            "radial-gradient(circle at 30% 70%, rgba(52,211,153,0.04) 0%, transparent 40%),"
+            "linear-gradient(180deg, #060f0a 0%, #040a07 50%, #030806 100%)"
         ),
     )
 
@@ -6922,7 +7044,7 @@ def landing_page():
     return rx.cond(
         AppState.root_public_ready & ~AppState.is_authenticated_now,
         public_landing,
-        _fullscreen_loading_gate("Loading...", "Checking your workspace."),
+        _fullscreen_loading_gate("Loading...", "Preparing your workspace"),
     )
 
 
