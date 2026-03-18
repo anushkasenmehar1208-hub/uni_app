@@ -789,6 +789,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     chat_search_query: str = ""
     selected_language: str = "English"
+    show_settings_modal: bool = False
 
     today_plan: str = ""
     memory_summary: str = ""
@@ -971,6 +972,12 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def set_language(self, lang: str):
         self.selected_language = lang
+
+    def toggle_settings_modal(self):
+        self.show_settings_modal = not self.show_settings_modal
+
+    def close_settings_modal(self):
+        self.show_settings_modal = False
 
     def _load_profile(self, uid: int) -> None:
         if uid < 0:
@@ -5717,51 +5724,7 @@ def profile_menu_button() -> rx.Component:
                     spacing="2",
                     align="center",
                 ),
-            ),
-            rx.menu.item(
-                rx.hstack(
-                    rx.icon(tag="globe", size=14, color="rgba(255,255,255,0.5)"),
-                    rx.text("Language", font_size="0.78rem"),
-                    spacing="2",
-                    align="center",
-                ),
-            ),
-            rx.menu.separator(),
-            rx.menu.item(
-                rx.hstack(
-                    rx.icon(tag="file_text", size=14, color="rgba(255,255,255,0.5)"),
-                    rx.text("Return Policy", font_size="0.78rem"),
-                    spacing="2",
-                    align="center",
-                ),
-                on_select=rx.redirect("/return-policy"),
-            ),
-            rx.menu.item(
-                rx.hstack(
-                    rx.icon(tag="shield", size=14, color="rgba(255,255,255,0.5)"),
-                    rx.text("Privacy Policy", font_size="0.78rem"),
-                    spacing="2",
-                    align="center",
-                ),
-                on_select=rx.redirect("/privacy-policy"),
-            ),
-            rx.menu.item(
-                rx.hstack(
-                    rx.icon(tag="scroll_text", size=14, color="rgba(255,255,255,0.5)"),
-                    rx.text("Terms", font_size="0.78rem"),
-                    spacing="2",
-                    align="center",
-                ),
-                on_select=rx.redirect("/terms"),
-            ),
-            rx.menu.item(
-                rx.hstack(
-                    rx.icon(tag="help_circle", size=14, color="rgba(255,255,255,0.5)"),
-                    rx.text("Support", font_size="0.78rem"),
-                    spacing="2",
-                    align="center",
-                ),
-                on_select=rx.redirect("/support"),
+                on_select=AppState.toggle_settings_modal,
             ),
             rx.menu.separator(),
             rx.menu.item(
@@ -5790,9 +5753,139 @@ def profile_menu_button() -> rx.Component:
                 "background": "rgba(5,10,12,0.98)",
                 "border": "1px solid rgba(52,211,153,0.22)",
                 "backdrop_filter": "blur(12px)",
-                "min_width": "220px",
+                "min_width": "200px",
             },
         ),
+    )
+
+
+def _settings_link_row(icon_tag: str, label: str, href: str) -> rx.Component:
+    return rx.hstack(
+        rx.icon(tag=icon_tag, size=15, color="rgba(255,255,255,0.45)"),
+        rx.text(label, font_size="0.8rem", color="rgba(255,255,255,0.78)"),
+        spacing="2",
+        align="center",
+        width="100%",
+        padding="9px 12px",
+        border_radius="8px",
+        cursor="pointer",
+        on_click=rx.redirect(href),
+        style={
+            "_hover": {"background": "rgba(255,255,255,0.06)", "color": "white"},
+        },
+    )
+
+
+def settings_modal() -> rx.Component:
+    lang_btn_style = {
+        "font_size": "0.74rem",
+        "padding": "5px 12px",
+        "border_radius": "6px",
+        "cursor": "pointer",
+        "border": "1px solid rgba(255,255,255,0.08)",
+        "background": "rgba(255,255,255,0.03)",
+        "color": "rgba(255,255,255,0.7)",
+        "_hover": {"background": "rgba(52,211,153,0.1)", "border": "1px solid rgba(52,211,153,0.3)"},
+    }
+    languages = ["English", "සිංහල", "தமிழ்", "हिन्दी", "中文", "日本語", "한국어"]
+    lang_keys = ["English", "Sinhala", "Tamil", "Hindi", "Chinese", "Japanese", "Korean"]
+
+    return rx.cond(
+        AppState.show_settings_modal,
+        rx.fragment(
+            # Backdrop
+            rx.box(
+                position="fixed",
+                inset="0",
+                background="rgba(0,0,0,0.6)",
+                z_index="1000",
+                on_click=AppState.close_settings_modal,
+                style={"backdrop_filter": "blur(4px)"},
+            ),
+            # Modal
+            rx.box(
+                rx.vstack(
+                    # Header
+                    rx.hstack(
+                        rx.text("Settings", color="white", font_size="1rem", font_weight="700"),
+                        rx.spacer(),
+                        rx.icon_button(
+                            rx.icon(tag="x", size=16),
+                            on_click=AppState.close_settings_modal,
+                            variant="ghost",
+                            color="rgba(255,255,255,0.5)",
+                            size="1",
+                        ),
+                        width="100%",
+                        align="center",
+                    ),
+                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
+
+                    # Language section
+                    rx.text("Language", color="rgba(255,255,255,0.4)", font_size="0.7rem", font_weight="700", letter_spacing="1.5px", text_transform="uppercase"),
+                    rx.hstack(
+                        *[
+                            rx.button(
+                                lang_label,
+                                on_click=AppState.set_language(lang_key),
+                                variant="ghost",
+                                size="1",
+                                style={
+                                    **lang_btn_style,
+                                    "background": rx.cond(
+                                        AppState.selected_language == lang_key,
+                                        "rgba(52,211,153,0.15)",
+                                        "rgba(255,255,255,0.03)",
+                                    ),
+                                    "border": rx.cond(
+                                        AppState.selected_language == lang_key,
+                                        "1px solid rgba(52,211,153,0.5)",
+                                        "1px solid rgba(255,255,255,0.08)",
+                                    ),
+                                    "color": rx.cond(
+                                        AppState.selected_language == lang_key,
+                                        "#34D399",
+                                        "rgba(255,255,255,0.7)",
+                                    ),
+                                },
+                            )
+                            for lang_label, lang_key in zip(languages, lang_keys)
+                        ],
+                        spacing="2",
+                        flex_wrap="wrap",
+                        width="100%",
+                    ),
+
+                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)", margin_top="4px"),
+
+                    # Links section
+                    rx.text("Legal & Support", color="rgba(255,255,255,0.4)", font_size="0.7rem", font_weight="700", letter_spacing="1.5px", text_transform="uppercase"),
+                    _settings_link_row("file_text", "Return Policy", "/return-policy"),
+                    _settings_link_row("shield", "Privacy Policy", "/privacy-policy"),
+                    _settings_link_row("scroll_text", "Terms of Service", "/terms"),
+                    _settings_link_row("help_circle", "Support", "/support"),
+
+                    spacing="3",
+                    width="100%",
+                    align_items="stretch",
+                ),
+                position="fixed",
+                top="50%",
+                left="50%",
+                transform="translate(-50%, -50%)",
+                width="min(92vw, 420px)",
+                padding="1.5em",
+                border_radius="16px",
+                background="rgba(8,12,14,0.98)",
+                border="1px solid rgba(52,211,153,0.2)",
+                z_index="1001",
+                style={
+                    "box_shadow": "0 24px 64px rgba(0,0,0,0.6)",
+                    "backdrop_filter": "blur(16px)",
+                },
+            ),
+        ),
+        rx.fragment(),
     )
 
 
@@ -5803,6 +5896,7 @@ def profile_menu_button() -> rx.Component:
 # FIX 2: home_page — clean header, aligned sidebar, no yellow blur
 def home_page():
     return rx.box(
+        settings_modal(),
         # ── Header ────────────────────────────────────────────
         rx.box(
             rx.hstack(
@@ -6224,6 +6318,7 @@ def semester_sidebar_drawer() -> rx.Component:
 def semester_page():
     return rx.box(
         semester_sidebar_drawer(),
+        settings_modal(),
         rx.hstack(
             rx.hstack(
                 rx.icon_button(
