@@ -4671,28 +4671,25 @@ def chat_input_field() -> rx.Component:
 def empty_chat_panel() -> rx.Component:
     return rx.box(
         rx.vstack(
-            rx.spacer(),
+            rx.box(height="12px"),
             # Premium centered empty state
             rx.vstack(
-                rx.box(
-                    rx.image(
-                        src="/a_logo.png",
-                        width="64px",
-                        height="64px",
-                        object_fit="contain",
-                        opacity="0.8",
-                    ),
-                    padding="16px",
-                    border_radius="20px",
-                    background="rgba(255,255,255,0.025)",
-                    border="1px solid rgba(255,255,255,0.05)",
+                rx.image(
+                    src="/alex_logo.svg",
+                    width="88px",
+                    height="88px",
+                    object_fit="contain",
+                    opacity="0.98",
+                    style={
+                        "filter": "drop-shadow(0 10px 24px rgba(0,0,0,0.18))",
+                    },
                 ),
                 rx.text(
                     "What do you want to learn today?",
                     color="rgba(200,210,220,0.45)",
                     font_size="1rem",
                     font_weight="400",
-                    margin_top="8px",
+                    margin_top="2px",
                 ),
                 spacing="3",
                 align="center",
@@ -4825,7 +4822,7 @@ def active_chat_panel() -> rx.Component:
                 max_width="780px",
                 margin_x="auto",
                 padding_x="2em",
-                padding_top="0.85em",
+                padding_top="0.15em",
                 padding_bottom="1em",
                 style={
                     "padding_bottom": "80px",
@@ -5933,7 +5930,6 @@ def home_page():
                 width="100%",
                 align="center",
                 padding="0.9em 2em 0.9em 1.4em",
-                border_bottom="1px solid rgba(255,255,255,0.04)",
             ),
             flex_shrink="0",
         ),
@@ -6365,7 +6361,6 @@ def semester_page():
             padding="0.8em 1.5em",
             flex_shrink="0",
             align="center",
-            border_bottom="1px solid rgba(255,255,255,0.04)",
         ),
         rx.cond(
             AppState.is_generating_plan,
