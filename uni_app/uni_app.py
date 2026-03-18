@@ -7400,364 +7400,382 @@ def scope_page():
 
 
 # ──────────────────────────────────────────────────────────────
-# Settings page (full page)
+# Settings page (full page) — Claude-style clean layout
 # ──────────────────────────────────────────────────────────────
-def _settings_tab_btn(label: str, icon_tag: str, tab_key: str) -> rx.Component:
+_SETTINGS_INPUT_STYLE = {
+    "background": "rgba(255,255,255,0.04)",
+    "border": "1px solid rgba(255,255,255,0.1)",
+    "color": "white",
+    "border_radius": "8px",
+    "font_size": "0.88rem",
+    "padding": "10px 14px",
+    "width": "100%",
+    "_focus": {"border": "1px solid rgba(52,211,153,0.4)", "outline": "none"},
+    "_placeholder": {"color": "rgba(255,255,255,0.25)"},
+}
+
+
+def _stab(label: str, tab_key: str) -> rx.Component:
     is_active = AppState.settings_tab == tab_key
-    return rx.button(
-        rx.hstack(
-            rx.icon(tag=icon_tag, size=15, color=rx.cond(is_active, "#34D399", "rgba(255,255,255,0.4)")),
-            rx.text(label, font_size="0.82rem", font_weight=rx.cond(is_active, "600", "400"),
-                    color=rx.cond(is_active, "white", "rgba(255,255,255,0.6)")),
-            spacing="2",
-            align="center",
-            width="100%",
+    return rx.box(
+        rx.text(
+            label,
+            font_size="0.88rem",
+            font_weight=rx.cond(is_active, "600", "400"),
+            color=rx.cond(is_active, "white", "rgba(255,255,255,0.5)"),
         ),
         on_click=AppState.set_settings_tab(tab_key),
+        padding="10px 16px",
+        border_radius="8px",
+        cursor="pointer",
         width="100%",
-        variant="ghost",
-        justify_content="flex-start",
+        background=rx.cond(is_active, "rgba(255,255,255,0.07)", "transparent"),
         style={
-            "padding": "10px 14px",
-            "border_radius": "10px",
-            "background": rx.cond(is_active, "rgba(52,211,153,0.1)", "transparent"),
-            "border": rx.cond(is_active, "1px solid rgba(52,211,153,0.25)", "1px solid transparent"),
-            "_hover": {"background": "rgba(255,255,255,0.05)"},
+            "_hover": {"background": rx.cond(is_active, "rgba(255,255,255,0.07)", "rgba(255,255,255,0.03)")},
         },
     )
 
 
-def _settings_section_label(text: str) -> rx.Component:
+def _slabel(label: str) -> rx.Component:
     return rx.text(
-        text,
-        color="rgba(255,255,255,0.3)",
-        font_size="0.68rem",
-        font_weight="700",
-        letter_spacing="2px",
-        text_transform="uppercase",
+        label,
+        font_size="0.75rem",
+        color="rgba(255,255,255,0.4)",
+        font_weight="500",
+        margin_bottom="4px",
     )
 
 
-def _settings_field_row(label: str, child: rx.Component) -> rx.Component:
-    return rx.vstack(
-        rx.text(label, color="rgba(255,255,255,0.55)", font_size="0.75rem", font_weight="600"),
-        child,
-        spacing="1",
-        width="100%",
-        align_items="stretch",
-    )
+def _sdivider() -> rx.Component:
+    return rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="10px")
 
 
 def settings_general_tab() -> rx.Component:
-    input_style = {
-        "background": "rgba(255,255,255,0.04)",
-        "border": "1px solid rgba(255,255,255,0.1)",
-        "color": "white",
-        "border_radius": "8px",
-        "font_size": "0.82rem",
-        "_focus": {"border": "1px solid rgba(52,211,153,0.4)"},
-    }
     return rx.vstack(
-        _settings_section_label("Profile"),
+        # ── Profile section ──
+        rx.text("Profile", color="white", font_size="1.15rem", font_weight="700"),
 
-        # Avatar placeholder
+        # Avatar + name row
         rx.hstack(
             rx.box(
                 rx.text(
                     AppState.username_initial,
-                    font_size="1.3rem",
+                    font_size="1.1rem",
                     font_weight="700",
                     color="#34D399",
                 ),
-                width="60px",
-                height="60px",
-                border_radius="14px",
+                width="48px",
+                height="48px",
+                border_radius="50%",
                 display="flex",
                 align_items="center",
                 justify_content="center",
                 background="rgba(52,211,153,0.1)",
                 border="1px solid rgba(52,211,153,0.2)",
+                flex_shrink="0",
             ),
             rx.vstack(
-                rx.text(AppState.display_name, color="white", font_size="0.95rem", font_weight="600"),
-                rx.text("Profile photo coming soon", color="rgba(255,255,255,0.3)", font_size="0.7rem"),
+                _slabel("Display name"),
+                rx.hstack(
+                    rx.input(
+                        value=AppState.settings_edit_name,
+                        on_change=AppState.set_settings_edit_name,
+                        style=_SETTINGS_INPUT_STYLE,
+                    ),
+                    rx.button(
+                        "Save",
+                        on_click=AppState.settings_save_name,
+                        size="2",
+                        style={
+                            "background": "#34D399",
+                            "color": "#064E3B",
+                            "font_weight": "600",
+                            "border_radius": "8px",
+                            "font_size": "0.8rem",
+                            "padding": "0 20px",
+                            "height": "38px",
+                            "flex_shrink": "0",
+                            "_hover": {"filter": "brightness(1.1)"},
+                        },
+                    ),
+                    spacing="2",
+                    width="100%",
+                    align="center",
+                ),
                 spacing="1",
-                align_items="flex-start",
+                flex="1",
+                min_width="0",
             ),
             spacing="3",
-            align="center",
+            align="flex-end",
+            width="100%",
         ),
 
-        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="4px"),
-
-        # Name field
-        _settings_field_row(
-            "Display Name",
-            rx.hstack(
-                rx.input(
-                    value=AppState.settings_edit_name,
-                    on_change=AppState.set_settings_edit_name,
-                    width="100%",
-                    style=input_style,
-                ),
-                rx.button(
-                    "Save",
-                    on_click=AppState.settings_save_name,
-                    size="2",
-                    style={
-                        "background": "#34D399",
-                        "color": "#064E3B",
-                        "font_weight": "600",
-                        "border_radius": "8px",
-                        "font_size": "0.78rem",
-                        "_hover": {"filter": "brightness(1.1)"},
-                    },
-                ),
-                spacing="2",
-                width="100%",
-            ),
-        ),
-
-        # Email (for Google users)
+        # Google sign-in indicator
         rx.cond(
             AppState.is_google_user,
-            _settings_field_row(
-                "Google Account",
-                rx.hstack(
-                    rx.icon(tag="mail", size=14, color="rgba(255,255,255,0.4)"),
-                    rx.text("Signed in via Google", color="rgba(255,255,255,0.5)", font_size="0.8rem"),
-                    spacing="2",
-                    align="center",
-                    padding="8px 12px",
-                    border_radius="8px",
-                    background="rgba(255,255,255,0.03)",
-                    border="1px solid rgba(255,255,255,0.06)",
-                    width="100%",
-                ),
+            rx.hstack(
+                rx.icon(tag="mail", size=15, color="rgba(255,255,255,0.35)"),
+                rx.text("Signed in with Google", color="rgba(255,255,255,0.4)", font_size="0.82rem"),
+                spacing="2",
+                align="center",
             ),
             rx.fragment(),
         ),
 
-        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="4px"),
+        _sdivider(),
 
-        # Password change (only for non-Google users)
+        # ── Change password (non-Google only) ──
         rx.cond(
             ~AppState.is_google_user,
             rx.vstack(
-                _settings_section_label("Change Password"),
+                rx.text("Password", color="white", font_size="1.15rem", font_weight="700"),
+                rx.text(
+                    "Update your account password.",
+                    color="rgba(255,255,255,0.35)",
+                    font_size="0.82rem",
+                ),
                 rx.cond(
                     AppState.settings_pw_error != "",
-                    rx.text(AppState.settings_pw_error, color="#f87171", font_size="0.76rem"),
+                    rx.text(AppState.settings_pw_error, color="#f87171", font_size="0.8rem"),
                     rx.fragment(),
                 ),
                 rx.cond(
                     AppState.settings_pw_success,
-                    rx.text("Password updated successfully.", color="#34D399", font_size="0.76rem"),
+                    rx.text("Password updated successfully.", color="#34D399", font_size="0.8rem"),
                     rx.fragment(),
                 ),
-                rx.input(
-                    placeholder="Current password",
-                    type="password",
-                    value=AppState.settings_pw_current,
-                    on_change=AppState.set_settings_pw_current,
+                rx.vstack(
+                    _slabel("Current password"),
+                    rx.input(
+                        placeholder="Enter current password",
+                        type="password",
+                        value=AppState.settings_pw_current,
+                        on_change=AppState.set_settings_pw_current,
+                        style=_SETTINGS_INPUT_STYLE,
+                    ),
+                    spacing="1",
                     width="100%",
-                    style=input_style,
                 ),
-                rx.input(
-                    placeholder="New password",
-                    type="password",
-                    value=AppState.settings_pw_new,
-                    on_change=AppState.set_settings_pw_new,
+                rx.hstack(
+                    rx.vstack(
+                        _slabel("New password"),
+                        rx.input(
+                            placeholder="Enter new password",
+                            type="password",
+                            value=AppState.settings_pw_new,
+                            on_change=AppState.set_settings_pw_new,
+                            style=_SETTINGS_INPUT_STYLE,
+                        ),
+                        spacing="1",
+                        flex="1",
+                    ),
+                    rx.vstack(
+                        _slabel("Confirm new password"),
+                        rx.input(
+                            placeholder="Confirm password",
+                            type="password",
+                            value=AppState.settings_pw_confirm,
+                            on_change=AppState.set_settings_pw_confirm,
+                            style=_SETTINGS_INPUT_STYLE,
+                        ),
+                        spacing="1",
+                        flex="1",
+                    ),
+                    spacing="3",
                     width="100%",
-                    style=input_style,
                 ),
-                rx.input(
-                    placeholder="Confirm new password",
-                    type="password",
-                    value=AppState.settings_pw_confirm,
-                    on_change=AppState.set_settings_pw_confirm,
-                    width="100%",
-                    style=input_style,
+                rx.box(
+                    rx.button(
+                        "Update password",
+                        on_click=AppState.settings_change_password,
+                        size="2",
+                        style={
+                            "background": "rgba(255,255,255,0.06)",
+                            "border": "1px solid rgba(255,255,255,0.12)",
+                            "color": "white",
+                            "font_weight": "600",
+                            "border_radius": "8px",
+                            "font_size": "0.8rem",
+                            "_hover": {"background": "rgba(255,255,255,0.1)"},
+                        },
+                    ),
                 ),
-                rx.button(
-                    "Update Password",
-                    on_click=AppState.settings_change_password,
-                    size="2",
-                    style={
-                        "background": "rgba(255,255,255,0.06)",
-                        "border": "1px solid rgba(255,255,255,0.12)",
-                        "color": "white",
-                        "font_weight": "600",
-                        "border_radius": "8px",
-                        "font_size": "0.78rem",
-                        "_hover": {"background": "rgba(255,255,255,0.1)"},
-                    },
-                ),
-                spacing="2",
+                spacing="3",
                 width="100%",
                 align_items="stretch",
             ),
             rx.fragment(),
         ),
 
-        spacing="3",
+        spacing="4",
         width="100%",
+        max_width="600px",
         align_items="stretch",
     )
 
 
 def settings_account_tab() -> rx.Component:
     return rx.vstack(
-        # User ID
-        _settings_section_label("Your ID"),
+        # ── User ID ──
+        rx.text("Your ID", color="white", font_size="1.15rem", font_weight="700"),
+        rx.text(
+            "Your unique identifier. Share it with support if needed.",
+            color="rgba(255,255,255,0.35)",
+            font_size="0.82rem",
+        ),
         rx.hstack(
-            rx.text(
-                AppState.user_unique_id,
-                font_family="monospace",
-                font_size="0.88rem",
-                font_weight="600",
-                color="white",
-                letter_spacing="1px",
+            rx.box(
+                rx.text(
+                    AppState.user_unique_id,
+                    font_family="monospace",
+                    font_size="0.92rem",
+                    font_weight="600",
+                    color="white",
+                    letter_spacing="1px",
+                ),
+                flex="1",
             ),
-            rx.spacer(),
-            rx.icon_button(
-                rx.icon(tag="copy", size=14),
+            rx.button(
+                rx.hstack(
+                    rx.icon(tag="copy", size=13),
+                    rx.text("Copy", font_size="0.76rem"),
+                    spacing="1",
+                    align="center",
+                ),
                 on_click=AppState.copy_user_id,
                 variant="ghost",
                 size="1",
-                color="rgba(255,255,255,0.5)",
-                title="Copy ID",
-                style={"_hover": {"color": "#34D399"}},
+                style={
+                    "color": "rgba(255,255,255,0.5)",
+                    "border": "1px solid rgba(255,255,255,0.1)",
+                    "border_radius": "6px",
+                    "padding": "4px 10px",
+                    "_hover": {"color": "#34D399", "border": "1px solid rgba(52,211,153,0.3)"},
+                },
             ),
             width="100%",
             align="center",
-            padding="10px 14px",
+            padding="14px 16px",
             border_radius="10px",
-            background="rgba(255,255,255,0.04)",
-            border="1px solid rgba(255,255,255,0.08)",
+            background="rgba(255,255,255,0.03)",
+            border="1px solid rgba(255,255,255,0.06)",
         ),
 
-        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="8px"),
+        _sdivider(),
 
-        # Logout
-        _settings_section_label("Session"),
+        # ── Logout ──
+        rx.text("Session", color="white", font_size="1.15rem", font_weight="700"),
         rx.button(
             rx.hstack(
-                rx.icon(tag="log_out", size=15, color="rgba(255,255,255,0.5)"),
-                rx.text("Log out", font_size="0.82rem"),
+                rx.icon(tag="log_out", size=15),
+                rx.text("Log out of your account", font_size="0.84rem"),
                 spacing="2",
                 align="center",
             ),
             on_click=AppState.logout,
-            width="100%",
+            width="fit-content",
             variant="ghost",
-            justify_content="flex-start",
             style={
-                "padding": "10px 14px",
-                "border_radius": "10px",
-                "border": "1px solid rgba(255,255,255,0.08)",
-                "background": "rgba(255,255,255,0.03)",
-                "_hover": {"background": "rgba(255,255,255,0.06)"},
+                "padding": "10px 20px",
+                "border_radius": "8px",
+                "border": "1px solid rgba(255,255,255,0.1)",
+                "color": "rgba(255,255,255,0.7)",
+                "_hover": {"background": "rgba(255,255,255,0.05)"},
             },
         ),
 
-        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="8px"),
+        _sdivider(),
 
-        # Delete account
-        _settings_section_label("Danger Zone"),
+        # ── Delete account ──
+        rx.text("Delete account", color="#f87171", font_size="1.15rem", font_weight="700"),
+        rx.text(
+            "Permanently delete your account and all associated data. This action cannot be undone.",
+            color="rgba(255,150,150,0.55)",
+            font_size="0.82rem",
+            line_height="1.6",
+        ),
         rx.vstack(
-            rx.text(
-                "Permanently delete your account and all data. This cannot be undone.",
-                color="rgba(255,150,150,0.6)",
-                font_size="0.75rem",
-                line_height="1.5",
-            ),
-            rx.text(
-                "Type DELETE to confirm:",
-                color="rgba(255,255,255,0.4)",
-                font_size="0.72rem",
-            ),
+            _slabel("Type DELETE to confirm"),
             rx.hstack(
                 rx.input(
                     placeholder="DELETE",
                     value=AppState.settings_delete_confirm,
                     on_change=AppState.set_settings_delete_confirm,
-                    width="140px",
                     style={
-                        "background": "rgba(255,255,255,0.04)",
-                        "border": "1px solid rgba(239,68,68,0.2)",
-                        "color": "white",
-                        "border_radius": "8px",
-                        "font_size": "0.8rem",
+                        **_SETTINGS_INPUT_STYLE,
+                        "width": "160px",
                         "font_family": "monospace",
+                        "border": "1px solid rgba(239,68,68,0.2)",
+                        "_focus": {"border": "1px solid rgba(239,68,68,0.5)"},
                     },
                 ),
                 rx.button(
-                    "Delete Account",
+                    "Delete my account",
                     on_click=AppState.settings_delete_account,
                     size="2",
                     style={
-                        "background": "rgba(239,68,68,0.15)",
-                        "border": "1px solid rgba(239,68,68,0.3)",
+                        "background": "rgba(239,68,68,0.12)",
+                        "border": "1px solid rgba(239,68,68,0.25)",
                         "color": "#f87171",
                         "font_weight": "600",
                         "border_radius": "8px",
-                        "font_size": "0.78rem",
-                        "_hover": {"background": "rgba(239,68,68,0.25)"},
+                        "font_size": "0.8rem",
+                        "_hover": {"background": "rgba(239,68,68,0.2)"},
                     },
                 ),
                 spacing="2",
                 align="center",
             ),
-            spacing="2",
-            width="100%",
-            padding="14px",
-            border_radius="12px",
-            background="rgba(239,68,68,0.04)",
-            border="1px solid rgba(239,68,68,0.12)",
+            spacing="1",
         ),
 
-        spacing="3",
+        spacing="4",
         width="100%",
+        max_width="600px",
         align_items="stretch",
     )
 
 
 def settings_learn_more_tab() -> rx.Component:
-    link_style = {
-        "padding": "12px 14px",
-        "border_radius": "10px",
-        "background": "rgba(255,255,255,0.03)",
-        "border": "1px solid rgba(255,255,255,0.06)",
-        "cursor": "pointer",
-        "_hover": {"background": "rgba(255,255,255,0.06)", "border": "1px solid rgba(255,255,255,0.1)"},
-    }
-
-    def _link_row(icon_tag: str, label: str, desc: str, href: str) -> rx.Component:
+    def _row(icon_tag: str, label: str, desc: str, href: str) -> rx.Component:
         return rx.hstack(
-            rx.icon(tag=icon_tag, size=18, color="rgba(255,255,255,0.4)"),
+            rx.icon(tag=icon_tag, size=18, color="rgba(255,255,255,0.35)"),
             rx.vstack(
-                rx.text(label, color="white", font_size="0.82rem", font_weight="600"),
-                rx.text(desc, color="rgba(255,255,255,0.35)", font_size="0.7rem"),
+                rx.text(label, color="white", font_size="0.88rem", font_weight="500"),
+                rx.text(desc, color="rgba(255,255,255,0.3)", font_size="0.75rem"),
                 spacing="0",
             ),
             rx.spacer(),
-            rx.icon(tag="chevron_right", size=14, color="rgba(255,255,255,0.2)"),
+            rx.icon(tag="chevron_right", size=14, color="rgba(255,255,255,0.15)"),
             width="100%",
             align="center",
             spacing="3",
+            padding="14px 16px",
+            border_radius="10px",
+            cursor="pointer",
             on_click=rx.redirect(href),
-            style=link_style,
+            background="rgba(255,255,255,0.02)",
+            border="1px solid rgba(255,255,255,0.05)",
+            style={
+                "_hover": {"background": "rgba(255,255,255,0.04)", "border": "1px solid rgba(255,255,255,0.08)"},
+            },
         )
 
     return rx.vstack(
-        _settings_section_label("Legal & Support"),
-        _link_row("file_text", "Return Policy", "View our return and refund policy", "/return-policy"),
-        _link_row("shield", "Privacy Policy", "How we handle your data", "/privacy-policy"),
-        _link_row("scroll_text", "Terms of Service", "Terms and conditions", "/terms"),
-        _link_row("help_circle", "Support", "Get help or contact us", "/support"),
-        spacing="2",
+        rx.text("Legal & Support", color="white", font_size="1.15rem", font_weight="700"),
+        rx.text(
+            "Policies, terms, and how to get help.",
+            color="rgba(255,255,255,0.35)",
+            font_size="0.82rem",
+        ),
+        _row("file_text", "Return Policy", "View our return and refund policy", "/return-policy"),
+        _row("shield", "Privacy Policy", "How we handle your data", "/privacy-policy"),
+        _row("scroll_text", "Terms of Service", "Terms and conditions of use", "/terms"),
+        _row("help_circle", "Support", "Get help or contact us", "/support"),
+        spacing="3",
         width="100%",
+        max_width="600px",
         align_items="stretch",
     )
 
@@ -7771,51 +7789,37 @@ def settings_learn_more_tab() -> rx.Component:
 @require_app_login
 def settings_page():
     return rx.box(
-        # Header
-        rx.hstack(
-            rx.icon_button(
-                rx.icon(tag="arrow_left", size=18),
-                on_click=rx.redirect("/s/home"),
-                variant="ghost",
-                color="rgba(255,255,255,0.7)",
-                size="2",
-                style={
-                    "background": "rgba(255,255,255,0.06)",
-                    "border": "1px solid rgba(255,255,255,0.1)",
-                    "_hover": {"background": "rgba(255,255,255,0.1)"},
-                },
-            ),
-            rx.text("Settings", color="white", font_size="1.1rem", font_weight="700"),
-            rx.spacer(),
-            rx.text(
-                "ALEX AI",
-                color="rgba(255,255,255,0.15)",
-                font_size="0.9rem",
-                font_weight="800",
-                letter_spacing="4px",
-            ),
-            width="100%",
-            align="center",
-            padding="1.2em 2em",
-            border_bottom="1px solid rgba(255,255,255,0.06)",
-        ),
-
-        # Body
         rx.flex(
-            # Left nav
+            # ── Left sidebar nav ──
             rx.vstack(
-                _settings_tab_btn("General", "user", "general"),
-                _settings_tab_btn("Account", "key_round", "account"),
-                _settings_tab_btn("Learn More", "info", "learn_more"),
+                rx.hstack(
+                    rx.icon_button(
+                        rx.icon(tag="arrow_left", size=16),
+                        on_click=rx.redirect("/s/home"),
+                        variant="ghost",
+                        size="1",
+                        color="rgba(255,255,255,0.5)",
+                        style={"_hover": {"color": "white"}},
+                    ),
+                    rx.text("Settings", color="white", font_size="1.3rem", font_weight="700"),
+                    spacing="2",
+                    align="center",
+                    padding_bottom="1.2em",
+                ),
+                _stab("General", "general"),
+                _stab("Account", "account"),
+                _stab("Learn More", "learn_more"),
                 spacing="1",
-                width="100%",
-                padding="1.2em 1em",
+                width="200px",
+                flex_shrink="0",
+                padding="2em 1.2em",
+                align_items="stretch",
             ),
 
-            # Divider
-            rx.box(width="1px", height="100%", background="rgba(255,255,255,0.06)"),
+            # ── Vertical divider ──
+            rx.box(width="1px", background="rgba(255,255,255,0.06)"),
 
-            # Content
+            # ── Content area ──
             rx.box(
                 rx.cond(
                     AppState.settings_tab == "general",
@@ -7827,26 +7831,17 @@ def settings_page():
                     ),
                 ),
                 flex="1",
-                padding="1.5em 2em",
+                padding="2em 3em",
                 overflow_y="auto",
                 min_width="0",
             ),
 
             width="100%",
-            flex="1",
-            min_height="0",
+            height="100vh",
             align_items="stretch",
         ),
-
         width="100%",
-        max_width="820px",
-        margin_x="auto",
-        height="100vh",
-        display="flex",
-        flex_direction="column",
-        background=(
-            "radial-gradient(ellipse at 80% 100%, #001a0d 0%, #050505 65%)"
-        ),
+        background="#0a0a0a",
     )
 
 
