@@ -4696,6 +4696,20 @@ def workspace_wordmark(
     )
 
 
+def centered_header_wordmark(
+    font_size: str = "1.45rem",
+    letter_spacing: str = "5px",
+) -> rx.Component:
+    return rx.box(
+        workspace_wordmark(font_size=font_size, letter_spacing=letter_spacing),
+        position="absolute",
+        left="50%",
+        top="50%",
+        transform="translate(-50%, -50%)",
+        pointer_events="none",
+    )
+
+
 def empty_chat_panel() -> rx.Component:
     return rx.box(
         rx.vstack(
@@ -5963,21 +5977,17 @@ def home_page():
                     align_items="flex-start",
                 ),
 
-                rx.spacer(),
-
-                # Center: wordmark — clean, no glow blur
                 rx.cond(
                     ~AppState.is_empty_chat,
-                    workspace_wordmark(font_size="1.6rem", letter_spacing="6px"),
+                    centered_header_wordmark(font_size="1.6rem", letter_spacing="6px"),
                     rx.box(),
                 ),
-
-                rx.spacer(),
 
                 width="100%",
                 align="center",
                 padding="1.55em 2em 1.15em 1.4em",
                 border_bottom="1px solid rgba(255,255,255,0.06)",
+                position="relative",
             ),
             flex_shrink="0",
         ),
@@ -6424,18 +6434,17 @@ def semester_page():
                 spacing="3",
                 align="center",
             ),
-            rx.spacer(),
             rx.cond(
                 ~AppState.is_empty_chat,
-                workspace_wordmark(),
+                centered_header_wordmark(),
                 rx.box(),
             ),
-            rx.spacer(),
             width="100%",
             padding="1.2em 1.5em",
             flex_shrink="0",
             align="center",
             border_bottom="1px solid rgba(255,255,255,0.06)",
+            position="relative",
         ),
         rx.cond(
             AppState.is_generating_plan,
