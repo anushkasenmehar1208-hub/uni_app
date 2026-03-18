@@ -787,6 +787,9 @@ class AppState(reflex_local_auth.LocalAuthState):
     current_session_id: str = ""
     current_session_choice: str = ""
 
+    chat_search_query: str = ""
+    selected_language: str = "English"
+
     today_plan: str = ""
     memory_summary: str = ""
     adaptive_profile: str = ""
@@ -950,6 +953,24 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def greeting_text(self) -> str:
         return "Hi, " + self.display_name if self.display_name else "Hi"
+
+    @rx.var
+    def filtered_sessions(self) -> list[dict]:
+        q = (self.chat_search_query or "").strip().lower()
+        if not q:
+            return self.sessions
+        return [s for s in self.sessions if q in (s.get("title", "") or "").lower()]
+
+    @rx.var
+    def username_initial(self) -> str:
+        name = self.display_name or self.account_display_name or ""
+        return name[0].upper() if name else "U"
+
+    def set_chat_search(self, value: str):
+        self.chat_search_query = value
+
+    def set_language(self, lang: str):
+        self.selected_language = lang
 
     def _load_profile(self, uid: int) -> None:
         if uid < 0:
@@ -3923,12 +3944,12 @@ def subject_button(label: str, on_click=None, is_active=False):
             "border": rx.cond(
                 is_active,
                 "1px solid rgba(52,211,153,0.78)",
-                "1px solid rgba(0,255,136,0.35)",
+                "1px solid rgba(52,211,153,0.35)",
             ),
             "background": rx.cond(
                 is_active,
                 "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
-                "rgba(0,255,136,0.04)",
+                "rgba(52,211,153,0.04)",
             ),
             "text_transform": "uppercase",
             "font_weight": "600",
@@ -3946,19 +3967,19 @@ def subject_button(label: str, on_click=None, is_active=False):
                 "background": rx.cond(
                     is_active,
                     "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
-                    "rgba(0,255,136,0.1)",
+                    "rgba(52,211,153,0.1)",
                 ),
                 "border": rx.cond(
                     is_active,
                     "1px solid rgba(110,231,183,0.9)",
-                    "1px solid rgba(0,255,136,0.7)",
+                    "1px solid rgba(52,211,153,0.7)",
                 ),
-                "color": rx.cond(is_active, "#f4fff9", "#00ff88"),
+                "color": rx.cond(is_active, "#f4fff9", "#34D399"),
                 "transform": "translateX(6px)",
             },
         },
     )
-PASSWORD_EYE_JS = """(function(){function a(){return'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';}function b(){return'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';}function c(){try{if(!document.body)return;document.querySelectorAll('input[type="password"]:not([data-eye-attached])').forEach(function(inp){try{inp.setAttribute('data-eye-attached','1');var w=document.createElement('div');w.style.cssText='position:relative;display:block;width:100%;';inp.parentNode.insertBefore(w,inp);w.appendChild(inp);var btn=document.createElement('button');btn.type='button';btn.style.cssText='position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;padding:0;cursor:pointer;color:#00ff88;z-index:99999;display:flex;align-items:center;';btn.innerHTML=a();btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();inp.type=inp.type==='password'?(btn.innerHTML=b(),'text'):(btn.innerHTML=a(),'password');});w.appendChild(btn);inp.style.paddingRight='40px';}catch(e){}});}catch(e){}}c();var t=0,iv=setInterval(function(){c();if(++t>60)clearInterval(iv);},300);try{new MutationObserver(c).observe(document.body,{childList:true,subtree:true});}catch(e){}})();"""
+PASSWORD_EYE_JS = """(function(){function a(){return'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';}function b(){return'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';}function c(){try{if(!document.body)return;document.querySelectorAll('input[type="password"]:not([data-eye-attached])').forEach(function(inp){try{inp.setAttribute('data-eye-attached','1');var w=document.createElement('div');w.style.cssText='position:relative;display:block;width:100%;';inp.parentNode.insertBefore(w,inp);w.appendChild(inp);var btn=document.createElement('button');btn.type='button';btn.style.cssText='position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;padding:0;cursor:pointer;color:#34D399;z-index:99999;display:flex;align-items:center;';btn.innerHTML=a();btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();inp.type=inp.type==='password'?(btn.innerHTML=b(),'text'):(btn.innerHTML=a(),'password');});w.appendChild(btn);inp.style.paddingRight='40px';}catch(e){}});}catch(e){}}c();var t=0,iv=setInterval(function(){c();if(++t>60)clearInterval(iv);},300);try{new MutationObserver(c).observe(document.body,{childList:true,subtree:true});}catch(e){}})();"""
 
 def password_eye_script() -> rx.Component:
     return rx.script(PASSWORD_EYE_JS)
@@ -4039,7 +4060,7 @@ def plan_card(
             rx.vstack(
                 *[
                     rx.hstack(
-                        rx.text("✓", color="#00ff88", font_weight="700", font_size="0.85rem"),
+                        rx.text("✓", color="#34D399", font_weight="700", font_size="0.85rem"),
                         rx.text(f, font_size="0.82rem", color="rgba(255,255,255,0.8)"),
                         spacing="2", align="center",
                     )
@@ -4244,7 +4265,7 @@ def tier_status_bar() -> rx.Component:
             variant="solid",
             style={
                 "background": rx.cond(AppState.has_premium_access, "linear-gradient(90deg,#b45309,#f59e0b)",
-                        rx.cond(AppState.is_in_trial, "linear-gradient(90deg,#065f46,#10b981)", "rgba(255,255,255,0.08)")),
+                        rx.cond(AppState.is_in_trial, "linear-gradient(90deg,#064E3B,#34D399)", "rgba(255,255,255,0.08)")),
                 "color": "white", "font_size": "0.7rem", "padding": "2px 10px", "border_radius": "20px",
             },
         ),
@@ -4262,76 +4283,102 @@ def tier_status_bar() -> rx.Component:
 
 def upgrade_button() -> rx.Component:
     return rx.box(
-        rx.button(
+        # ── Option D: Split card with PRO badge + feature highlights ──
+        rx.box(
+            # Top section: PRO badge + CTA
             rx.hstack(
-                rx.hstack(
-                    rx.box(
-                        rx.text("✦", color="#dcfce7", font_size="0.9rem", font_weight="800"),
-                        width="28px",
-                        height="28px",
-                        border_radius="999px",
-                        display="flex",
-                        align_items="center",
-                        justify_content="center",
-                        background="rgba(220,252,231,0.1)",
-                        border="1px solid rgba(220,252,231,0.14)",
-                        flex_shrink="0",
-                    ),
-                    rx.vstack(
+                rx.vstack(
+                    rx.hstack(
+                        rx.box(
+                            rx.text("PRO", font_size="0.6rem", font_weight="700", color="#064E3B", letter_spacing="0.5px"),
+                            padding="2px 8px",
+                            border_radius="4px",
+                            background="#34D399",
+                            flex_shrink="0",
+                        ),
                         rx.text(
-                            "Unlock Unlimited Access",
-                            font_weight="800",
-                            font_size="1rem",
+                            "Unlock full access",
+                            font_weight="600",
+                            font_size="0.88rem",
                             color="white",
-                            style={"text_shadow": "0 1px 4px rgba(0,0,0,0.45)"},
                         ),
-                        rx.text(
-                            "Unlimited chats, saved history, full semester access",
-                            color="rgba(220,252,231,0.72)",
-                            font_size="0.72rem",
-                            font_weight="500",
-                        ),
-                        spacing="0",
-                        align_items="flex-start",
+                        spacing="2",
+                        align="center",
                     ),
-                    spacing="3",
-                    align="center",
+                    rx.text(
+                        AppState.messages_left_today.to_string() + f" of {FREE_DAILY_LIMIT} free messages remaining today",
+                        color="rgba(255,255,255,0.3)",
+                        font_size="0.7rem",
+                    ),
+                    spacing="1",
+                    align_items="flex-start",
                 ),
                 rx.spacer(),
                 rx.box(
-                    rx.text("→", color="white", font_size="1.15rem", font_weight="700"),
-                    width="34px",
-                    height="34px",
-                    border_radius="10px",
-                    display="flex",
-                    align_items="center",
-                    justify_content="center",
-                    background="rgba(255,255,255,0.07)",
-                    border="1px solid rgba(255,255,255,0.08)",
+                    rx.text("Upgrade", font_size="0.76rem", font_weight="700", color="#064E3B"),
+                    padding="8px 18px",
+                    border_radius="8px",
+                    background="#34D399",
+                    cursor="pointer",
                     flex_shrink="0",
+                    style={
+                        "_hover": {"filter": "brightness(1.1)"},
+                    },
                 ),
-                align="center", spacing="3", width="100%",
+                width="100%",
+                align="center",
+                padding="14px 18px",
+                background="rgba(10,10,10,0.98)",
+            ),
+            # Bottom section: feature checkmarks
+            rx.hstack(
+                rx.hstack(
+                    rx.icon(tag="check", size=12, color="#34D399"),
+                    rx.text("Unlimited chats", color="rgba(255,255,255,0.4)", font_size="0.7rem"),
+                    spacing="1",
+                    align="center",
+                ),
+                rx.hstack(
+                    rx.icon(tag="check", size=12, color="#34D399"),
+                    rx.text("Saved history", color="rgba(255,255,255,0.4)", font_size="0.7rem"),
+                    spacing="1",
+                    align="center",
+                ),
+                rx.hstack(
+                    rx.icon(tag="check", size=12, color="#34D399"),
+                    rx.text("Full semester", color="rgba(255,255,255,0.4)", font_size="0.7rem"),
+                    spacing="1",
+                    align="center",
+                ),
+                spacing="4",
+                align="center",
+                width="100%",
+                padding="8px 18px",
+                background="rgba(8,8,8,0.98)",
+                border_top="1px solid rgba(255,255,255,0.04)",
             ),
             on_click=AppState.open_pricing_modal,
-            width="100%", min_height="74px", border_radius="16px",
+            width="100%",
+            border_radius="14px",
+            overflow="hidden",
+            border="1px solid rgba(255,255,255,0.08)",
+            cursor="pointer",
             style={
-                "background": "linear-gradient(135deg, rgba(12,34,21,0.98) 0%, rgba(18,90,58,0.92) 42%, rgba(6,8,7,0.99) 100%)",
-                "border": "1px solid rgba(110,231,183,0.24)",
-                "cursor": "pointer",
-                "box_shadow": "0 14px 34px rgba(0,0,0,0.42), 0 0 24px rgba(22,163,74,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
-                "transition": "all 0.25s ease",
-                "padding": "16px 24px",
+                "transition": "all 0.2s ease",
                 "_hover": {
-                    "box_shadow": "0 18px 40px rgba(0,0,0,0.5), 0 0 28px rgba(34,197,94,0.16), inset 0 1px 0 rgba(255,255,255,0.06)",
-                    "transform": "translateY(-2px)",
-                    "filter": "brightness(1.05)",
-                    "border": "1px solid rgba(134,239,172,0.34)",
+                    "border": "1px solid rgba(52,211,153,0.25)",
+                    "transform": "translateY(-1px)",
+                    "box_shadow": "0 8px 24px rgba(0,0,0,0.3)",
                 },
-                "_active": {"transform": "translateY(0)"},
             },
         ),
-        rx.text("🔒 You've reached your 5 free messages for today. Resets at midnight.",
-                color="rgba(255,255,255,0.35)", font_size="0.7rem", text_align="center", margin_top="8px"),
+        rx.text(
+            "Resets at midnight",
+            color="rgba(255,255,255,0.2)",
+            font_size="0.65rem",
+            text_align="center",
+            margin_top="6px",
+        ),
         width="100%", max_width="860px", margin_x="auto", padding="1em",
     )
 
@@ -4343,7 +4390,7 @@ def upgrade_button() -> rx.Component:
 # What changed:
 #   1. Unified container — input + button share ONE border/background
 #      so they read as a single component, not two floating elements
-#   2. Button color — dropped from #00ff88 neon to a calm white/frost tone
+#   2. Button color — dropped from #34D399 neon to a calm white/frost tone
 #      It still stands out but doesn't scream over the dark theme
 #   3. Glow removed — no more box-shadow bloom on the button
 #      Hover just brightens slightly — restrained and clean
@@ -4435,12 +4482,12 @@ def chat_input_field() -> rx.Component:
                         "rgba(255,255,255,0.04)",
                         "rgba(0,180,90,0.16)",
                     ),
-                    "border": "1px solid rgba(0,255,136,0.20)",
+                    "border": "1px solid rgba(52,211,153,0.20)",
                     "cursor": "pointer",
                     "transition": "all 0.18s ease",
                     "_hover": {
                         "background": "rgba(0,180,90,0.28)",
-                        "border": "1px solid rgba(0,255,136,0.40)",
+                        "border": "1px solid rgba(52,211,153,0.40)",
                         "transform": "translateY(-1px)",
                     },
                     "_active": {"transform": "translateY(0)"},
@@ -4489,7 +4536,7 @@ def empty_chat_panel() -> rx.Component:
                     height="72px",
                     object_fit="contain",
                     style={
-                        "filter": "drop-shadow(0 0 16px rgba(0,255,136,0.25))",
+                        "filter": "drop-shadow(0 0 16px rgba(52,211,153,0.25))",
                         "opacity": "0.9",
                     },
                 ),
@@ -4594,8 +4641,8 @@ def active_chat_panel() -> rx.Component:
                                     "& li::marker": {"color": "rgba(74,222,128,0.9)"},
                                     "& strong": {"color": "rgba(220,252,231,0.96)"},
                                     "& code": {
-                                        "background": "rgba(0,255,136,0.08)",
-                                        "border": "1px solid rgba(0,255,136,0.15)",
+                                        "background": "rgba(52,211,153,0.08)",
+                                        "border": "1px solid rgba(52,211,153,0.15)",
                                         "border_radius": "4px",
                                         "padding": "1px 6px",
                                         "font_size": "0.85em",
@@ -4618,7 +4665,7 @@ def active_chat_panel() -> rx.Component:
                                 <style>
                                     @keyframes alexorbit { from { transform: rotate(0deg) translateX(10px); } to { transform: rotate(360deg) translateX(10px); } }
                                 </style>
-                                <div style="width:4px;height:4px;background:#00ff88;border-radius:50%;position:absolute;top:50%;left:50%;margin-top:-2px;margin-left:-2px;animation:alexorbit 0.3s linear infinite;box-shadow:0 0 4px rgba(0,255,136,0.9);"></div>
+                                <div style="width:4px;height:4px;background:#34D399;border-radius:50%;position:absolute;top:50%;left:50%;margin-top:-2px;margin-left:-2px;animation:alexorbit 0.3s linear infinite;box-shadow:0 0 4px rgba(52,211,153,0.9);"></div>
                             </div>
                             <span style="color:rgba(255,255,255,0.3);font-size:0.8rem;font-weight:300;letter-spacing:0.5px;">Alex is thinking...</span>
                         </div>
@@ -5548,8 +5595,8 @@ def sidebar_plan_widget() -> rx.Component:
                 border_radius="10px",
                 cursor="pointer",
                 style={
-                    "background": "rgba(0,255,136,0.08)",
-                    "border": "1px solid rgba(0,255,136,0.25)",
+                    "background": "rgba(52,211,153,0.08)",
+                    "border": "1px solid rgba(52,211,153,0.25)",
                     "_hover": {"filter": "brightness(1.1)"},
                 },
             ),
@@ -5598,41 +5645,198 @@ def sidebar_plan_widget() -> rx.Component:
     )
 
 
-def settings_menu_button() -> rx.Component:
+def profile_menu_button() -> rx.Component:
+    lang_item_style = {
+        "font_size": "0.78rem",
+        "cursor": "pointer",
+        "padding": "6px 12px",
+        "border_radius": "6px",
+        "color": "rgba(255,255,255,0.7)",
+        "_hover": {"background": "rgba(255,255,255,0.06)", "color": "white"},
+    }
     return rx.menu.root(
         rx.menu.trigger(
-            rx.icon_button(
-                rx.icon(tag="settings", size=17),
-                variant="soft",
-                color_scheme="gray",
-                size="2",
-                title="Settings",
+            rx.hstack(
+                rx.box(
+                    rx.text(
+                        AppState.username_initial,
+                        font_size="0.72rem",
+                        font_weight="700",
+                        color="#34D399",
+                    ),
+                    width="30px",
+                    height="30px",
+                    border_radius="8px",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    background="rgba(52,211,153,0.1)",
+                    border="1px solid rgba(52,211,153,0.2)",
+                    flex_shrink="0",
+                ),
+                rx.vstack(
+                    rx.text(
+                        AppState.display_name,
+                        color="rgba(255,255,255,0.88)",
+                        font_size="0.78rem",
+                        font_weight="600",
+                        overflow="hidden",
+                        text_overflow="ellipsis",
+                        white_space="nowrap",
+                    ),
+                    rx.text(
+                        AppState.tier_label,
+                        color="rgba(255,255,255,0.35)",
+                        font_size="0.65rem",
+                    ),
+                    spacing="0",
+                    align_items="flex-start",
+                    min_width="0",
+                    flex="1",
+                ),
+                rx.icon(
+                    tag="chevron_up",
+                    size=14,
+                    color="rgba(255,255,255,0.3)",
+                    flex_shrink="0",
+                ),
+                width="100%",
+                align="center",
+                spacing="2",
+                padding="8px 10px",
+                border_radius="10px",
+                cursor="pointer",
                 style={
-                    "color": "rgba(245,248,255,0.86)",
-                    "background": "rgba(255,255,255,0.08)",
-                    "border": "1px solid rgba(255,255,255,0.22)",
-                    "box_shadow": "0 0 10px rgba(255,255,255,0.08)",
+                    "background": "rgba(255,255,255,0.03)",
+                    "border": "1px solid rgba(255,255,255,0.06)",
                     "_hover": {
-                        "background": "rgba(255,255,255,0.14)",
-                        "border": "1px solid rgba(255,255,255,0.32)",
+                        "background": "rgba(255,255,255,0.06)",
+                        "border": "1px solid rgba(255,255,255,0.1)",
                     },
                 },
             ),
             as_child=True,
         ),
         rx.menu.content(
-            rx.menu.item("Return Policy", on_select=rx.redirect("/return-policy")),
-            rx.menu.item("Privacy Policy", on_select=rx.redirect("/privacy-policy")),
-            rx.menu.item("Terms", on_select=rx.redirect("/terms")),
-            rx.menu.item("Support", on_select=rx.redirect("/support")),
+            rx.menu.label(
+                rx.hstack(
+                    rx.box(
+                        rx.text(
+                            AppState.username_initial,
+                            font_size="0.82rem",
+                            font_weight="700",
+                            color="#34D399",
+                        ),
+                        width="34px",
+                        height="34px",
+                        border_radius="8px",
+                        display="flex",
+                        align_items="center",
+                        justify_content="center",
+                        background="rgba(52,211,153,0.12)",
+                        border="1px solid rgba(52,211,153,0.22)",
+                    ),
+                    rx.vstack(
+                        rx.text(
+                            AppState.display_name,
+                            color="white",
+                            font_size="0.82rem",
+                            font_weight="600",
+                        ),
+                        rx.text(
+                            AppState.tier_label,
+                            color="rgba(255,255,255,0.4)",
+                            font_size="0.68rem",
+                        ),
+                        spacing="0",
+                    ),
+                    align="center",
+                    spacing="2",
+                    padding="4px 0",
+                ),
+            ),
             rx.menu.separator(),
-            rx.menu.item("Logout", on_select=AppState.logout),
-            align="end",
+            rx.menu.sub(
+                rx.menu.sub_trigger(
+                    rx.hstack(
+                        rx.icon(tag="globe", size=14, color="rgba(255,255,255,0.5)"),
+                        rx.text("Language", font_size="0.78rem"),
+                        spacing="2",
+                        align="center",
+                    ),
+                ),
+                rx.menu.sub_content(
+                    rx.menu.item("English", on_select=AppState.set_language("English"), **lang_item_style),
+                    rx.menu.item("සිංහල (Sinhala)", on_select=AppState.set_language("Sinhala"), **lang_item_style),
+                    rx.menu.item("தமிழ் (Tamil)", on_select=AppState.set_language("Tamil"), **lang_item_style),
+                    rx.menu.item("हिन्दी (Hindi)", on_select=AppState.set_language("Hindi"), **lang_item_style),
+                    rx.menu.item("中文 (Chinese)", on_select=AppState.set_language("Chinese"), **lang_item_style),
+                    rx.menu.item("日本語 (Japanese)", on_select=AppState.set_language("Japanese"), **lang_item_style),
+                    rx.menu.item("한국어 (Korean)", on_select=AppState.set_language("Korean"), **lang_item_style),
+                    style={
+                        "background": "rgba(5,10,12,0.98)",
+                        "border": "1px solid rgba(52,211,153,0.18)",
+                        "backdrop_filter": "blur(8px)",
+                    },
+                ),
+            ),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="settings", size=14, color="rgba(255,255,255,0.5)"),
+                    rx.text("Settings", font_size="0.78rem"),
+                    spacing="2",
+                    align="center",
+                ),
+            ),
+            rx.menu.sub(
+                rx.menu.sub_trigger(
+                    rx.hstack(
+                        rx.icon(tag="help_circle", size=14, color="rgba(255,255,255,0.5)"),
+                        rx.text("Help", font_size="0.78rem"),
+                        spacing="2",
+                        align="center",
+                    ),
+                ),
+                rx.menu.sub_content(
+                    rx.menu.item("Return Policy", on_select=rx.redirect("/return-policy")),
+                    rx.menu.item("Privacy Policy", on_select=rx.redirect("/privacy-policy")),
+                    rx.menu.item("Terms", on_select=rx.redirect("/terms")),
+                    rx.menu.item("Support", on_select=rx.redirect("/support")),
+                    style={
+                        "background": "rgba(5,10,12,0.98)",
+                        "border": "1px solid rgba(52,211,153,0.18)",
+                        "backdrop_filter": "blur(8px)",
+                    },
+                ),
+            ),
+            rx.menu.separator(),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="zap", size=14, color="#34D399"),
+                    rx.text("Upgrade to Premium", font_size="0.78rem", color="#34D399", font_weight="600"),
+                    spacing="2",
+                    align="center",
+                ),
+                on_select=AppState.open_pricing_modal,
+            ),
+            rx.menu.separator(),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="log_out", size=14, color="rgba(255,100,100,0.7)"),
+                    rx.text("Log out", font_size="0.78rem", color="rgba(255,100,100,0.7)"),
+                    spacing="2",
+                    align="center",
+                ),
+                on_select=AppState.logout,
+            ),
+            side="top",
+            align="start",
             side_offset=8,
             style={
                 "background": "rgba(5,10,12,0.98)",
-                "border": "1px solid rgba(0,255,136,0.22)",
-                "backdrop_filter": "blur(8px)",
+                "border": "1px solid rgba(52,211,153,0.22)",
+                "backdrop_filter": "blur(12px)",
+                "min_width": "220px",
             },
         ),
     )
@@ -5659,7 +5863,7 @@ def home_page():
                     ),
                     rx.text(
                         "Software Engineering",
-                        color="rgba(0,255,136,0.65)",
+                        color="rgba(52,211,153,0.65)",
                         font_size="0.72rem",
                         font_weight="500",
                         letter_spacing="1.5px",
@@ -5688,27 +5892,6 @@ def home_page():
                 ),
 
                 rx.spacer(),
-
-                # Right: actions
-                rx.hstack(
-                    rx.button(
-                        "+ New chat",
-                        on_click=AppState.new_chat,
-                        size="2",
-                        style={
-                            "background": "rgba(0,255,136,0.12)",
-                            "border": "1px solid rgba(0,255,136,0.35)",
-                            "color": "#00ff88",
-                            "font_weight": "600",
-                            "border_radius": "8px",
-                            "font_size": "0.8rem",
-                            "_hover": {"background": "rgba(0,255,136,0.22)"},
-                        },
-                    ),
-                    settings_menu_button(),
-                    spacing="2",
-                    align="center",
-                ),
 
                 width="100%",
                 align="center",
@@ -5823,7 +6006,7 @@ def semester_nav_group(year: str, semesters: list[str]) -> rx.Component:
 def semester_chat_history_list() -> rx.Component:
     return rx.vstack(
         rx.foreach(
-            AppState.sessions,
+            AppState.filtered_sessions,
             lambda s: rx.hstack(
                 rx.button(
                     s["title"],
@@ -5831,7 +6014,7 @@ def semester_chat_history_list() -> rx.Component:
                     variant="ghost",
                     color=rx.cond(
                         AppState.current_session_id == s["id"],
-                        "#00ff88",
+                        "#34D399",
                         "rgba(255,255,255,0.55)",
                     ),
                     font_weight=rx.cond(
@@ -5950,6 +6133,70 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
 
     return rx.vstack(
         *header_blocks,
+        # ── New chat button ────────────────────────────────
+        rx.button(
+            rx.hstack(
+                rx.icon(tag="plus", size=15, color="#34D399"),
+                rx.text("New chat", font_size="0.8rem", font_weight="600", color="rgba(255,255,255,0.88)"),
+                spacing="2",
+                align="center",
+                width="100%",
+            ),
+            on_click=AppState.new_chat,
+            width="100%",
+            variant="ghost",
+            style={
+                "height": "38px",
+                "border_radius": "10px",
+                "border": "1px solid rgba(52,211,153,0.25)",
+                "background": "rgba(52,211,153,0.06)",
+                "justify_content": "flex-start",
+                "_hover": {
+                    "background": "rgba(52,211,153,0.12)",
+                    "border": "1px solid rgba(52,211,153,0.4)",
+                },
+            },
+        ),
+        # ── Search input ───────────────────────────────────
+        rx.box(
+            rx.hstack(
+                rx.icon(tag="search", size=14, color="rgba(255,255,255,0.3)"),
+                rx.input(
+                    placeholder="Search chats...",
+                    value=AppState.chat_search_query,
+                    on_change=AppState.set_chat_search,
+                    variant="soft",
+                    size="1",
+                    style={
+                        "background": "transparent",
+                        "border": "none",
+                        "outline": "none",
+                        "color": "rgba(255,255,255,0.8)",
+                        "font_size": "0.76rem",
+                        "width": "100%",
+                        "padding": "0",
+                        "height": "auto",
+                        "box_shadow": "none",
+                        "&::placeholder": {"color": "rgba(255,255,255,0.25)"},
+                    },
+                ),
+                spacing="2",
+                align="center",
+                width="100%",
+                padding="7px 10px",
+                border_radius="8px",
+                background="rgba(255,255,255,0.04)",
+                border="1px solid rgba(255,255,255,0.06)",
+                style={
+                    "_focus_within": {
+                        "border": "1px solid rgba(52,211,153,0.3)",
+                        "background": "rgba(255,255,255,0.06)",
+                    },
+                },
+            ),
+            width="100%",
+        ),
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
         alex_workspace_button(),
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
         rx.text(
@@ -5978,7 +6225,8 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             min_height="0",
         ),
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-        sidebar_plan_widget(),
+        # ── Profile button (replaces plan widget) ──────────
+        profile_menu_button(),
         spacing="3",
         width="100%",
         height="100%",
@@ -6045,7 +6293,7 @@ def semester_page():
                     ),
                     rx.text(
                         AppState.semester_status_label,
-                        color="rgba(0,255,136,0.72)",
+                        color="rgba(52,211,153,0.72)",
                         font_size="0.78rem",
                         letter_spacing="0.8px",
                     ),
@@ -6111,25 +6359,6 @@ def semester_page():
                 },
             ),
             rx.spacer(),
-            rx.hstack(
-                rx.button(
-                    "+ New chat",
-                    on_click=AppState.new_chat,
-                    size="2",
-                    style={
-                        "background": "rgba(0,255,136,0.12)",
-                        "border": "1px solid rgba(0,255,136,0.35)",
-                        "color": "#00ff88",
-                        "font_weight": "600",
-                        "border_radius": "8px",
-                        "font_size": "0.8rem",
-                        "_hover": {"background": "rgba(0,255,136,0.22)"},
-                    },
-                ),
-                settings_menu_button(),
-                spacing="2",
-                align="center",
-            ),
             width="100%",
             padding="1.2em 1.5em",
             flex_shrink="0",
@@ -6413,7 +6642,7 @@ def _auth_legal_footer() -> rx.Component:
         "color": "rgba(148,163,184,0.75)",
         "font_size": "0.78rem",
         "text_decoration": "none",
-        "_hover": {"color": "#00ff88", "text_decoration": "underline"},
+        "_hover": {"color": "#34D399", "text_decoration": "underline"},
         "transition": "color 0.15s ease",
         "white_space": "nowrap",
     }
@@ -7152,9 +7381,9 @@ app = rx.App(
     ],
     style={
         "@keyframes pulse_glow": {
-            "0%": {"box-shadow": "0 0 0px rgba(0,255,0,0)"},
-            "50%": {"box-shadow": "0 0 20px rgba(0,255,0,0.5)", "opacity": "0.8"},
-            "100%": {"box-shadow": "0 0 0px rgba(0,255,0,0)"},
+            "0%": {"box-shadow": "0 0 0px rgba(52,211,153,0)"},
+            "50%": {"box-shadow": "0 0 20px rgba(52,211,153,0.5)", "opacity": "0.8"},
+            "100%": {"box-shadow": "0 0 0px rgba(52,211,153,0)"},
         }
     },
 )
