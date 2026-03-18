@@ -5646,14 +5646,6 @@ def sidebar_plan_widget() -> rx.Component:
 
 
 def profile_menu_button() -> rx.Component:
-    lang_item_style = {
-        "font_size": "0.78rem",
-        "cursor": "pointer",
-        "padding": "6px 12px",
-        "border_radius": "6px",
-        "color": "rgba(255,255,255,0.7)",
-        "_hover": {"background": "rgba(255,255,255,0.06)", "color": "white"},
-    }
     return rx.menu.root(
         rx.menu.trigger(
             rx.hstack(
@@ -5718,68 +5710,6 @@ def profile_menu_button() -> rx.Component:
             as_child=True,
         ),
         rx.menu.content(
-            rx.menu.label(
-                rx.hstack(
-                    rx.box(
-                        rx.text(
-                            AppState.username_initial,
-                            font_size="0.82rem",
-                            font_weight="700",
-                            color="#34D399",
-                        ),
-                        width="34px",
-                        height="34px",
-                        border_radius="8px",
-                        display="flex",
-                        align_items="center",
-                        justify_content="center",
-                        background="rgba(52,211,153,0.12)",
-                        border="1px solid rgba(52,211,153,0.22)",
-                    ),
-                    rx.vstack(
-                        rx.text(
-                            AppState.display_name,
-                            color="white",
-                            font_size="0.82rem",
-                            font_weight="600",
-                        ),
-                        rx.text(
-                            AppState.tier_label,
-                            color="rgba(255,255,255,0.4)",
-                            font_size="0.68rem",
-                        ),
-                        spacing="0",
-                    ),
-                    align="center",
-                    spacing="2",
-                    padding="4px 0",
-                ),
-            ),
-            rx.menu.separator(),
-            rx.menu.sub(
-                rx.menu.sub_trigger(
-                    rx.hstack(
-                        rx.icon(tag="globe", size=14, color="rgba(255,255,255,0.5)"),
-                        rx.text("Language", font_size="0.78rem"),
-                        spacing="2",
-                        align="center",
-                    ),
-                ),
-                rx.menu.sub_content(
-                    rx.menu.item("English", on_select=AppState.set_language("English"), **lang_item_style),
-                    rx.menu.item("සිංහල (Sinhala)", on_select=AppState.set_language("Sinhala"), **lang_item_style),
-                    rx.menu.item("தமிழ் (Tamil)", on_select=AppState.set_language("Tamil"), **lang_item_style),
-                    rx.menu.item("हिन्दी (Hindi)", on_select=AppState.set_language("Hindi"), **lang_item_style),
-                    rx.menu.item("中文 (Chinese)", on_select=AppState.set_language("Chinese"), **lang_item_style),
-                    rx.menu.item("日本語 (Japanese)", on_select=AppState.set_language("Japanese"), **lang_item_style),
-                    rx.menu.item("한국어 (Korean)", on_select=AppState.set_language("Korean"), **lang_item_style),
-                    style={
-                        "background": "rgba(5,10,12,0.98)",
-                        "border": "1px solid rgba(52,211,153,0.18)",
-                        "backdrop_filter": "blur(8px)",
-                    },
-                ),
-            ),
             rx.menu.item(
                 rx.hstack(
                     rx.icon(tag="settings", size=14, color="rgba(255,255,255,0.5)"),
@@ -5788,26 +5718,50 @@ def profile_menu_button() -> rx.Component:
                     align="center",
                 ),
             ),
-            rx.menu.sub(
-                rx.menu.sub_trigger(
-                    rx.hstack(
-                        rx.icon(tag="help_circle", size=14, color="rgba(255,255,255,0.5)"),
-                        rx.text("Help", font_size="0.78rem"),
-                        spacing="2",
-                        align="center",
-                    ),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="globe", size=14, color="rgba(255,255,255,0.5)"),
+                    rx.text("Language", font_size="0.78rem"),
+                    spacing="2",
+                    align="center",
                 ),
-                rx.menu.sub_content(
-                    rx.menu.item("Return Policy", on_select=rx.redirect("/return-policy")),
-                    rx.menu.item("Privacy Policy", on_select=rx.redirect("/privacy-policy")),
-                    rx.menu.item("Terms", on_select=rx.redirect("/terms")),
-                    rx.menu.item("Support", on_select=rx.redirect("/support")),
-                    style={
-                        "background": "rgba(5,10,12,0.98)",
-                        "border": "1px solid rgba(52,211,153,0.18)",
-                        "backdrop_filter": "blur(8px)",
-                    },
+            ),
+            rx.menu.separator(),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="file_text", size=14, color="rgba(255,255,255,0.5)"),
+                    rx.text("Return Policy", font_size="0.78rem"),
+                    spacing="2",
+                    align="center",
                 ),
+                on_select=rx.redirect("/return-policy"),
+            ),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="shield", size=14, color="rgba(255,255,255,0.5)"),
+                    rx.text("Privacy Policy", font_size="0.78rem"),
+                    spacing="2",
+                    align="center",
+                ),
+                on_select=rx.redirect("/privacy-policy"),
+            ),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="scroll_text", size=14, color="rgba(255,255,255,0.5)"),
+                    rx.text("Terms", font_size="0.78rem"),
+                    spacing="2",
+                    align="center",
+                ),
+                on_select=rx.redirect("/terms"),
+            ),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="help_circle", size=14, color="rgba(255,255,255,0.5)"),
+                    rx.text("Support", font_size="0.78rem"),
+                    spacing="2",
+                    align="center",
+                ),
+                on_select=rx.redirect("/support"),
             ),
             rx.menu.separator(),
             rx.menu.item(
