@@ -1912,13 +1912,13 @@ class AppState(reflex_local_auth.LocalAuthState):
                 session.add(ChatMessage2(user_id=uid, session_id=int(sess.id), role=self._safe_role(m.role), content=m.content))
             session.commit()
 
-    def _load_messages(self, uid: int, scope: str = "") -> None:
+    def _load_messages(self, uid: int, scope: str = "", *, _trusted: bool = False) -> None:
         effective_scope = scope or self.active_scope
         if not self.current_session_id:
             self.chat_history = []
             return
         sid = int(self.current_session_id)
-        if not self._session_in_scope(uid, sid, effective_scope):
+        if not _trusted and not self._session_in_scope(uid, sid, effective_scope):
             self.current_session_id = ""
             self.current_session_choice = ""
             self.chat_history = []
@@ -1936,11 +1936,11 @@ class AppState(reflex_local_auth.LocalAuthState):
             for m in msgs
         ]
 
-    def _save_message(self, uid: int, role: str, content: str, scope: str = "") -> None:
+    def _save_message(self, uid: int, role: str, content: str, scope: str = "", trusted: bool = False) -> None:
         effective_scope = scope or self.active_scope
         if uid < 0 or not self.current_session_id:
             return
-        if not self._session_in_scope(uid, int(self.current_session_id), effective_scope):
+        if not trusted and not self._session_in_scope(uid, int(self.current_session_id), effective_scope):
             return
         safe_content = sanitize_for_ui(content) if role == "assistant" else content
         with rx.session() as session:
@@ -2205,27 +2205,152 @@ class AppState(reflex_local_auth.LocalAuthState):
             except Exception:
                 return 0
 
-    async def _maybe_auto_update_scope_summary(self, uid: int, scope: str) -> None:
+    # ──────────────────────────────────────────────────────────────
+    # Batched post-message threshold check – 1 DB session instead of ~8
+    # ──────────────────────────────────────────────────────────────
+    def _batch_check_update_thresholds(self, uid: int, scope: str) -> dict[str, bool]:
+        """Check all three auto-update thresholds in a single DB session.
+        Returns dict with keys: scope_summary, global_memory, adaptive_profile.
+        """
+        result = {"scope_summary": False, "global_memory": False, "adaptive_profile": False}
         if uid < 0 or client is None:
-            return
+            return result
 
-        self._ensure_scope_memory(uid, scope)
-        since_dt = self._scope_updated_at(uid, scope)
-        sids = self._scope_session_ids(uid, scope)
+        with rx.session() as session:
+            # Scope summary: need scope_updated_at, session_ids, count since
+            scope_row = session.exec(
+                select(ScopeMemory)
+                .where(ScopeMemory.user_id == uid)
+                .where(ScopeMemory.scope == scope)
+            ).one_or_none()
+            if scope_row is None:
+                session.add(ScopeMemory(user_id=uid, scope=scope, summary=""))  # type: ignore
+                session.flush()
+                scope_row = session.exec(
+                    select(ScopeMemory)
+                    .where(ScopeMemory.user_id == uid)
+                    .where(ScopeMemory.scope == scope)
+                ).one_or_none()
 
-        new_cnt = self._count_new_msgs_since(uid, sids, since_dt)
-        if new_cnt < self.SCOPE_SUMMARY_TRIGGER_NEW_MSGS:
-            return
+            scope_since = scope_row.updated_at if scope_row else None
 
+            # Session IDs for scope
+            if scope != "home":
+                sid_rows = session.exec(
+                    select(ChatSession.id)
+                    .where(ChatSession.user_id == uid)
+                    .where(ChatSession.scope == scope)
+                ).all()
+            else:
+                sid_rows = session.exec(
+                    select(ChatSession.id)
+                    .where(ChatSession.user_id == uid)
+                ).all()
+            sids: list[int] = []
+            for r in sid_rows:
+                try:
+                    sids.append(int(r))
+                except Exception:
+                    try:
+                        sids.append(int(r[0]))
+                    except Exception:
+                        pass
+
+            # Scope new message count
+            if scope_since and sids:
+                scope_cnt_raw = session.exec(
+                    select(func.count())
+                    .select_from(ChatMessage2)
+                    .where(ChatMessage2.user_id == uid)
+                    .where(ChatMessage2.session_id.in_(sids))
+                    .where(ChatMessage2.created_at > scope_since)
+                ).one()
+                try:
+                    scope_cnt = int(scope_cnt_raw)
+                except Exception:
+                    try:
+                        scope_cnt = int(scope_cnt_raw[0])
+                    except Exception:
+                        scope_cnt = 0
+            else:
+                scope_cnt = 999999
+
+            result["scope_summary"] = scope_cnt >= self.SCOPE_SUMMARY_TRIGGER_NEW_MSGS
+
+            # Global memory: user_memory updated_at + user-wide count
+            mem_row = session.exec(
+                select(UserMemory).where(UserMemory.user_id == uid)
+            ).one_or_none()
+            mem_since = mem_row.updated_at if mem_row else None
+
+            if mem_since:
+                mem_cnt_raw = session.exec(
+                    select(func.count())
+                    .select_from(ChatMessage2)
+                    .where(ChatMessage2.user_id == uid)
+                    .where(ChatMessage2.created_at > mem_since)
+                ).one()
+                try:
+                    mem_cnt = int(mem_cnt_raw)
+                except Exception:
+                    try:
+                        mem_cnt = int(mem_cnt_raw[0])
+                    except Exception:
+                        mem_cnt = 0
+            else:
+                mem_cnt = 999999
+
+            result["global_memory"] = mem_cnt >= self.GLOBAL_MEMORY_TRIGGER_NEW_MSGS
+
+            # Adaptive profile: adaptive scope updated_at + user-wide count
+            ap_row = session.exec(
+                select(ScopeMemory)
+                .where(ScopeMemory.user_id == uid)
+                .where(ScopeMemory.scope == ADAPTIVE_PROFILE_SCOPE)
+            ).one_or_none()
+            ap_since = ap_row.updated_at if ap_row else None
+
+            if ap_since:
+                ap_cnt_raw = session.exec(
+                    select(func.count())
+                    .select_from(ChatMessage2)
+                    .where(ChatMessage2.user_id == uid)
+                    .where(ChatMessage2.created_at > ap_since)
+                ).one()
+                try:
+                    ap_cnt = int(ap_cnt_raw)
+                except Exception:
+                    try:
+                        ap_cnt = int(ap_cnt_raw[0])
+                    except Exception:
+                        ap_cnt = 0
+            else:
+                ap_cnt = 999999
+
+            result["adaptive_profile"] = ap_cnt >= self.ADAPTIVE_PROFILE_TRIGGER_NEW_MSGS
+
+            session.commit()
+
+        return result
+
+    async def _run_needed_updates(self, uid: int, scope: str) -> None:
+        """Batch-check thresholds, then run only the updates that are needed."""
+        thresholds = self._batch_check_update_thresholds(uid, scope)
+        if thresholds["scope_summary"]:
+            await self._do_update_scope_summary(uid, scope)
+        if thresholds["global_memory"]:
+            await self._do_update_global_memory(uid)
+        if thresholds["adaptive_profile"]:
+            await self._do_update_adaptive_profile(uid)
+
+    async def _do_update_scope_summary(self, uid: int, scope: str) -> None:
+        """Actually run the scope summary update (Groq call). Threshold already checked."""
         current = self._get_scope_summary(uid, scope)
-
         if self.current_session_id:
             recent_msgs = self._recent_msgs_for_session(uid, int(self.current_session_id), 22)
         else:
             recent_msgs = self._recent_msgs_for_user(uid, 28)
-
         recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in recent_msgs])
-
         try:
             resp = await asyncio.to_thread(
                 _groq_generate,
@@ -2238,23 +2363,15 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"ERROR auto scope summary: {e}")
 
-    async def _maybe_auto_update_global_memory(self, uid: int) -> None:
-        if uid < 0 or client is None:
-            return
-
-        since_dt = self._user_memory_updated_at(uid)
-        new_cnt = self._count_user_new_msgs_since(uid, since_dt)
-        if new_cnt < self.GLOBAL_MEMORY_TRIGGER_NEW_MSGS:
-            return
-
+    async def _do_update_global_memory(self, uid: int) -> None:
+        """Actually run the global memory update (Groq call). Threshold already checked."""
         recent_msgs = self._recent_msgs_for_user(uid, 30)
         recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in recent_msgs])
-
         try:
             resp = await asyncio.to_thread(
                 _groq_generate,
                 GEMINI_FAST_MODEL,
-                f"Update long term memory summary. Keep short stable facts only.\nCurrent: {self.memory_summary}\nNew: {recent_text}\nReturn only updated memory text."
+                f"Update long term memory summary. Keep short facts only.\nCurrent: {self.memory_summary}\nNew: {recent_text}\nReturn only updated memory text."
             )
             new_sum = (getattr(resp, "text", "") or "").strip()
             if new_sum:
@@ -2263,19 +2380,11 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"ERROR auto global memory: {e}")
 
-    async def _maybe_auto_update_adaptive_profile(self, uid: int) -> None:
-        if uid < 0 or client is None:
-            return
-
-        since_dt = self._adaptive_profile_updated_at(uid)
-        new_cnt = self._count_user_new_msgs_since(uid, since_dt)
-        if new_cnt < self.ADAPTIVE_PROFILE_TRIGGER_NEW_MSGS:
-            return
-
+    async def _do_update_adaptive_profile(self, uid: int) -> None:
+        """Actually run the adaptive profile update (Groq call). Threshold already checked."""
         current = self._get_adaptive_profile(uid)
         recent_msgs = self._recent_msgs_for_user(uid, 40)
         recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in recent_msgs])
-
         prompt = f"""Build an adaptive tutoring profile from the user's recent study conversations.
 Return ONLY short bullet points.
 Maximum 12 bullets.
@@ -2299,7 +2408,6 @@ Recent study conversations:
 {recent_text}
 
 Update the saved profile instead of overwriting randomly. Keep only durable tutoring insights."""
-
         try:
             resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
             new_profile = (getattr(resp, "text", "") or "").strip()
@@ -2307,6 +2415,175 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                 self._set_adaptive_profile(uid, new_profile)
         except Exception as e:
             print(f"ERROR auto adaptive profile: {e}")
+
+
+    # ──────────────────────────────────────────────────────────────
+    # Batched scope hydration – ONE db session instead of ~15
+    # ──────────────────────────────────────────────────────────────
+    def _hydrate_scope_batch(self, uid: int, scope: str, year: str, semester: str, view_mode: str) -> dict:
+        """Read + ensure everything needed for scope hydration in a single DB session."""
+        out: dict[str, Any] = {
+            "adaptive_profile": "",
+            "sessions": [],
+            "current_session_id": "",
+            "current_session_title": "",
+            "messages": [],
+            "study_plan": [],
+            "day_progress": (1, 0),
+            "plan_gen_state": (PLAN_GENERATION_STATUS_IDLE, "", None),
+            "next_courses": [],
+            "legacy_migrated": False,
+        }
+
+        with rx.session() as session:
+            # 1. Adaptive profile scope memory (ensure + read)
+            ap_row = session.exec(
+                select(ScopeMemory)
+                .where(ScopeMemory.user_id == uid)
+                .where(ScopeMemory.scope == ADAPTIVE_PROFILE_SCOPE)
+            ).one_or_none()
+            if ap_row is None:
+                ap_row = ScopeMemory(user_id=uid, scope=ADAPTIVE_PROFILE_SCOPE, summary="")  # type: ignore
+                session.add(ap_row)
+            out["adaptive_profile"] = ap_row.summary or ""
+
+            # 2. Scope memory (ensure)
+            scope_row = session.exec(
+                select(ScopeMemory)
+                .where(ScopeMemory.user_id == uid)
+                .where(ScopeMemory.scope == scope)
+            ).one_or_none()
+            if scope_row is None:
+                session.add(ScopeMemory(user_id=uid, scope=scope, summary=""))  # type: ignore
+
+            # 3. Legacy migration check
+            has_new = session.exec(
+                select(ChatMessage2).where(ChatMessage2.user_id == uid).limit(1)
+            ).first()
+            if not has_new:
+                legacy = session.exec(
+                    select(ChatMessage)
+                    .where(ChatMessage.user_id == uid)
+                    .order_by(ChatMessage.id)
+                ).all()
+                if legacy:
+                    new_sess = ChatSession(user_id=uid, scope="home", title="Imported chat")  # type: ignore
+                    session.add(new_sess)
+                    session.flush()
+                    for m in legacy:
+                        session.add(ChatMessage2(
+                            user_id=uid,
+                            session_id=int(new_sess.id),
+                            role=self._safe_role(m.role),
+                            content=m.content,
+                        ))
+                    out["legacy_migrated"] = True
+
+            # 4. Sessions for scope (ensure + load)
+            all_sessions = session.exec(
+                select(ChatSession)
+                .where(ChatSession.user_id == uid)
+                .where(ChatSession.scope == scope)
+                .order_by(ChatSession.updated_at.desc())
+            ).all()
+            if not all_sessions:
+                new_sess = ChatSession(user_id=uid, scope=scope)  # type: ignore
+                session.add(new_sess)
+                session.flush()
+                all_sessions = [new_sess]
+
+            out["sessions"] = [{"id": str(r.id), "title": r.title} for r in all_sessions]
+            first = all_sessions[0]
+            out["current_session_id"] = str(first.id)
+            out["current_session_title"] = first.title or ""
+
+            # 5. Messages for current session (no separate scope check needed –
+            #    we just fetched sessions scoped to this scope above)
+            sid = int(first.id)
+            msgs = session.exec(
+                select(ChatMessage2)
+                .where(ChatMessage2.user_id == uid)
+                .where(ChatMessage2.session_id == sid)
+                .order_by(ChatMessage2.id)
+            ).all()
+            out["messages"] = [
+                {
+                    "role": m.role,
+                    "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
+                }
+                for m in msgs
+            ]
+
+            # 6. Semester-specific data
+            if view_mode == "semester" and year:
+                # Ensure progress rows
+                if year in FULL_CURRICULUM:
+                    items: list[tuple[str, str, int]] = []
+                    idx = 0
+                    for sem, courses in FULL_CURRICULUM[year].items():
+                        for course in courses:
+                            items.append((sem, course, idx))
+                            idx += 1
+                    existing_set = set(session.exec(
+                        select(StudyProgress.course)
+                        .where(StudyProgress.user_id == uid)
+                        .where(StudyProgress.year == year)
+                    ).all())
+                    for sem, course, order_index in items:
+                        if course not in existing_set:
+                            session.add(StudyProgress(
+                                user_id=uid, year=year, semester=sem,
+                                course=course, order_index=order_index,
+                            ))
+
+                # Next courses (for today plan)
+                next_rows = session.exec(
+                    select(StudyProgress)
+                    .where(StudyProgress.user_id == uid)
+                    .where(StudyProgress.year == year)
+                    .where(StudyProgress.status != "done")
+                    .order_by(StudyProgress.order_index)
+                ).all()
+                out["next_courses"] = [r.course for r in next_rows[:2]]
+
+                # Study plan
+                plan_row = session.exec(
+                    select(SemesterStudyPlan)
+                    .where(SemesterStudyPlan.user_id == uid)
+                    .where(SemesterStudyPlan.scope == scope)
+                ).one_or_none()
+                if plan_row and plan_row.plan_json:
+                    try:
+                        out["study_plan"] = json.loads(plan_row.plan_json)
+                    except Exception:
+                        pass
+
+                # Day progress
+                dp_row = session.exec(
+                    select(DayProgress)
+                    .where(DayProgress.user_id == uid)
+                    .where(DayProgress.scope == scope)
+                ).one_or_none()
+                if dp_row:
+                    out["day_progress"] = (dp_row.current_day, dp_row.current_topic_index)
+
+                # Plan generation state
+                pgs_row = session.exec(
+                    select(SemesterPlanGenerationState)
+                    .where(SemesterPlanGenerationState.user_id == uid)
+                    .where(SemesterPlanGenerationState.scope == scope)
+                    .order_by(SemesterPlanGenerationState.updated_at.desc())
+                ).first()
+                if pgs_row:
+                    out["plan_gen_state"] = (
+                        pgs_row.status or PLAN_GENERATION_STATUS_IDLE,
+                        pgs_row.error_message or "",
+                        pgs_row.updated_at,
+                    )
+
+            session.commit()
+
+        return out
 
     def _switch_scope(self, uid: int, scope: str) -> None:
         # CRITICAL: clear display state FIRST so if anything below fails,
@@ -2754,19 +3031,24 @@ Critical operating rules:
     async def post_render_hydrate_scope(self, raw_scope: str, year: str, semester: str, view_mode: str):
         """Background: loads sessions, chat history, progress, plan state.
         Runs after the semester shell is already visible and interactive.
+        Uses _hydrate_scope_batch for a single DB round-trip.
         """
         async with self:
-            uid = self._uid()
+            uid = self._cached_uid if self._cached_uid >= 0 else self._uid()
             if uid < 0:
                 self.scope_hydrating = False
                 return
 
-            # ── Profile extras ──
+            # ── Single DB session: read + ensure everything ──
             try:
-                self.adaptive_profile = self._get_adaptive_profile(uid)
-                self._migrate_legacy_messages_once(uid)
+                data = self._hydrate_scope_batch(uid, raw_scope, year, semester, view_mode)
             except Exception as e:
-                print(f"[HYDRATE] profile extras error: {e}")
+                print(f"[HYDRATE] batch read error: {e}")
+                self.scope_hydrating = False
+                return
+
+            # ── Apply batch results to state ──
+            self.adaptive_profile = data["adaptive_profile"]
 
             # Infer name if missing
             if not (self.name or "").strip():
@@ -2777,39 +3059,42 @@ Critical operating rules:
                     self.name = inferred_name
             self._save_memory(uid)
 
-            # ── Load scope data (sessions, chat history) ──
-            try:
-                self._ensure_scope_memory(uid, raw_scope)
-                self._ensure_session(uid, raw_scope)
-                self._load_sessions(uid, raw_scope)
-                self._load_messages(uid)
-                print(f"[HYDRATE] Loaded {len(self.chat_history)} msgs for scope {raw_scope}")
-            except Exception as e:
-                print(f"[HYDRATE] ERROR loading scope {raw_scope}: {e}")
+            # Sessions + messages
+            self.sessions = data["sessions"]
+            self.current_session_id = data["current_session_id"]
+            self.current_session_choice = f"{data['current_session_id']}::{data['current_session_title']}"
+            self.chat_history = data["messages"]
+            print(f"[HYDRATE] Loaded {len(self.chat_history)} msgs for scope {raw_scope}")
 
-            # ── Semester: load progress + existing plan ──
+            # ── Semester: apply plan data ──
             if view_mode == "semester" and year:
                 try:
-                    self._ensure_progress_for_year(uid, year)
-                    self._refresh_today_plan(uid)
-                    existing_plan = self._get_study_plan(uid, raw_scope)
+                    # Today plan from batch data
+                    nxt = data["next_courses"]
+                    self.today_plan = (
+                        "all done for this year" if not nxt
+                        else "\n".join([f"today focus {c}" for c in nxt])
+                    )
+
+                    existing_plan = data["study_plan"]
                     if existing_plan and not self._plan_matches_semester(existing_plan, year, semester):
                         self._reset_plan_only(uid, raw_scope)
                         existing_plan = []
+
                     if existing_plan:
                         self._set_plan_generation_state(uid, raw_scope, PLAN_GENERATION_STATUS_IDLE)
-                        day, topic_idx = self._get_day_progress(uid, raw_scope)
+                        day, topic_idx = data["day_progress"]
                         self.current_day = day
                         self.current_topic_index = topic_idx
                         today_msg = self._build_today_message(existing_plan, day, topic_idx)
                         if not self.chat_history:
                             self.chat_history.append({"role": "assistant", "content": today_msg})
-                            self._save_message(uid, "assistant", today_msg)
+                            self._save_message(uid, "assistant", today_msg, trusted=True)
                     else:
                         self.current_day = 1
                         self.current_topic_index = 0
                 except Exception as e:
-                    print(f"[HYDRATE] ERROR loading plan data for {raw_scope}: {e}")
+                    print(f"[HYDRATE] ERROR applying plan data for {raw_scope}: {e}")
 
             # ── Mark hydration complete ──
             self.scope_hydrating = False
@@ -2826,7 +3111,7 @@ Critical operating rules:
     async def post_render_check_plan(self, scope: str, year: str, semester: str):
         """Runs after hydration. Checks whether plan generation is needed."""
         async with self:
-            uid = self._uid()
+            uid = self._cached_uid if self._cached_uid >= 0 else self._uid()
             if uid < 0 or not scope:
                 return
 
@@ -3411,9 +3696,7 @@ Subjects:\n{courses_text}"""
             self.chat_history.append({"role": "assistant", "content": guardrail_reply})
             self._save_message(uid, "assistant", guardrail_reply)
             self.is_processing = False
-            await self._maybe_auto_update_scope_summary(uid, self.active_scope)
-            await self._maybe_auto_update_global_memory(uid)
-            await self._maybe_auto_update_adaptive_profile(uid)
+            await self._run_needed_updates(uid, self.active_scope)
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             return
 
@@ -3594,9 +3877,7 @@ Your response style rules:
                     self._save_message(uid, "assistant", final_text)
                     _append_training_example(uid, self.active_scope, user_msg, final_text)
                     self.is_processing = False
-                    await self._maybe_auto_update_scope_summary(uid, self.active_scope)
-                    await self._maybe_auto_update_global_memory(uid)
-                    await self._maybe_auto_update_adaptive_profile(uid)
+                    await self._run_needed_updates(uid, self.active_scope)
                     yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
                 return
@@ -3716,9 +3997,7 @@ Behavior rules:
             self._save_message(uid, "assistant", final_text)
             _append_training_example(uid, self.active_scope, user_msg, final_text)
             self.is_processing = False
-            await self._maybe_auto_update_scope_summary(uid, self.active_scope)
-            await self._maybe_auto_update_global_memory(uid)
-            await self._maybe_auto_update_adaptive_profile(uid)
+            await self._run_needed_updates(uid, self.active_scope)
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
         return
