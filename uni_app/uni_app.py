@@ -631,6 +631,7 @@ class DayProgress(rx.Model, table=True):  # type: ignore
 class UserProfile(rx.Model, table=True):  # type: ignore
     user_id: int = Field(index=True, unique=True, nullable=False)
     is_onboarded: bool = False
+    unique_id: str = Field(default="", nullable=False)
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
@@ -789,7 +790,17 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     chat_search_query: str = ""
     selected_language: str = "English"
-    show_settings_modal: bool = False
+
+    # Settings page
+    settings_tab: str = "general"
+    settings_edit_name: str = ""
+    settings_pw_current: str = ""
+    settings_pw_new: str = ""
+    settings_pw_confirm: str = ""
+    settings_pw_error: str = ""
+    settings_pw_success: bool = False
+    user_unique_id: str = ""
+    settings_delete_confirm: str = ""
 
     today_plan: str = ""
     memory_summary: str = ""
@@ -973,11 +984,124 @@ class AppState(reflex_local_auth.LocalAuthState):
     def set_language(self, lang: str):
         self.selected_language = lang
 
-    def toggle_settings_modal(self):
-        self.show_settings_modal = not self.show_settings_modal
+    @rx.var
+    def is_google_user(self) -> bool:
+        uname = getattr(self.authenticated_user, "username", "") or ""
+        return uname.lower().startswith("google_")
 
-    def close_settings_modal(self):
-        self.show_settings_modal = False
+    def go_to_settings(self):
+        self.settings_tab = "general"
+        self.settings_edit_name = self.name or ""
+        self.settings_pw_current = ""
+        self.settings_pw_new = ""
+        self.settings_pw_confirm = ""
+        self.settings_pw_error = ""
+        self.settings_pw_success = False
+        self.settings_delete_confirm = ""
+        return rx.redirect("/settings")
+
+    def copy_user_id(self):
+        uid_val = self.user_unique_id or ""
+        return rx.call_script(f"navigator.clipboard.writeText('{uid_val}')")
+
+    def set_settings_tab(self, tab: str):
+        self.settings_tab = tab
+        self.settings_pw_error = ""
+        self.settings_pw_success = False
+        self.settings_delete_confirm = ""
+
+    def settings_save_name(self):
+        new_name = (self.settings_edit_name or "").strip()
+        if not new_name:
+            return
+        uid = self._cached_uid
+        if uid < 0:
+            return
+        self.name = _normalize_person_name(new_name)
+        self.settings_edit_name = self.name
+        with rx.session() as session:
+            memory = session.exec(
+                select(UserMemory).where(UserMemory.user_id == uid)
+            ).one_or_none()
+            if memory is not None:
+                memory.name = self.name
+                session.add(memory)
+                session.commit()
+
+    def settings_change_password(self):
+        self.settings_pw_error = ""
+        self.settings_pw_success = False
+        uid = self._cached_uid
+        if uid < 0:
+            self.settings_pw_error = "Not authenticated."
+            return
+        current = self.settings_pw_current or ""
+        new_pw = self.settings_pw_new or ""
+        confirm = self.settings_pw_confirm or ""
+        if not current or not new_pw or not confirm:
+            self.settings_pw_error = "All fields are required."
+            return
+        if new_pw != confirm:
+            self.settings_pw_error = "New passwords do not match."
+            return
+        if len(new_pw) < PASSWORD_MIN_LEN:
+            self.settings_pw_error = f"Password must be at least {PASSWORD_MIN_LEN} characters."
+            return
+        with rx.session() as session:
+            user = session.exec(
+                select(LocalUser).where(LocalUser.id == uid)
+            ).one_or_none()
+            if user is None:
+                self.settings_pw_error = "User not found."
+                return
+            if not user.verify(current):
+                self.settings_pw_error = "Current password is incorrect."
+                return
+            user.password_hash = LocalUser.hash_password(new_pw)
+            session.add(user)
+            session.commit()
+        self.settings_pw_current = ""
+        self.settings_pw_new = ""
+        self.settings_pw_confirm = ""
+        self.settings_pw_success = True
+
+    def settings_delete_account(self):
+        confirm_text = (self.settings_delete_confirm or "").strip()
+        if confirm_text != "DELETE":
+            return
+        uid = self._cached_uid
+        if uid < 0:
+            return
+        with rx.session() as session:
+            for model_cls in [ChatSession, UserMemory, ScopeMemory, SemesterStudyPlan,
+                              SemesterPlanGenerationState, DayProgress, UserProfile, PaymentOrder]:
+                rows = session.exec(select(model_cls).where(model_cls.user_id == uid)).all()
+                for row in rows:
+                    session.delete(row)
+            auth_sessions = session.exec(
+                select(LocalAuthSession).where(LocalAuthSession.user_id == uid)
+            ).all()
+            for s in auth_sessions:
+                session.delete(s)
+            user = session.exec(select(LocalUser).where(LocalUser.id == uid)).one_or_none()
+            if user is not None:
+                session.delete(user)
+            session.commit()
+        self.app_auth_token = ""
+        self._cached_uid = -1
+        return [reflex_local_auth.LocalAuthState.do_logout, rx.redirect(auth_routes.LOGIN_ROUTE)]
+
+    def on_load_settings(self):
+        uid = self._uid()
+        if uid < 0:
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        self._cached_uid = uid
+        self._load_profile(uid)
+        self.settings_tab = "general"
+        self.settings_edit_name = self.name or ""
+        self.settings_pw_error = ""
+        self.settings_pw_success = False
+        self.settings_delete_confirm = ""
 
     def _load_profile(self, uid: int) -> None:
         if uid < 0:
@@ -1000,6 +1124,12 @@ class AppState(reflex_local_auth.LocalAuthState):
                 profile.last_message_date.isoformat()
                 if profile.last_message_date else ""
             )
+            if not (profile.unique_id or "").strip():
+                profile.unique_id = _generate_unique_id()
+                session.add(profile)
+                session.commit()
+                session.refresh(profile)
+            self.user_unique_id = profile.unique_id or ""
 
             memory = session.exec(
                 select(UserMemory).where(UserMemory.user_id == uid)
@@ -5724,7 +5854,7 @@ def profile_menu_button() -> rx.Component:
                     spacing="2",
                     align="center",
                 ),
-                on_select=AppState.toggle_settings_modal,
+                on_select=AppState.go_to_settings,
             ),
             rx.menu.separator(),
             rx.menu.item(
@@ -5759,134 +5889,6 @@ def profile_menu_button() -> rx.Component:
     )
 
 
-def _settings_link_row(icon_tag: str, label: str, href: str) -> rx.Component:
-    return rx.hstack(
-        rx.icon(tag=icon_tag, size=15, color="rgba(255,255,255,0.45)"),
-        rx.text(label, font_size="0.8rem", color="rgba(255,255,255,0.78)"),
-        spacing="2",
-        align="center",
-        width="100%",
-        padding="9px 12px",
-        border_radius="8px",
-        cursor="pointer",
-        on_click=rx.redirect(href),
-        style={
-            "_hover": {"background": "rgba(255,255,255,0.06)", "color": "white"},
-        },
-    )
-
-
-def settings_modal() -> rx.Component:
-    lang_btn_style = {
-        "font_size": "0.74rem",
-        "padding": "5px 12px",
-        "border_radius": "6px",
-        "cursor": "pointer",
-        "border": "1px solid rgba(255,255,255,0.08)",
-        "background": "rgba(255,255,255,0.03)",
-        "color": "rgba(255,255,255,0.7)",
-        "_hover": {"background": "rgba(52,211,153,0.1)", "border": "1px solid rgba(52,211,153,0.3)"},
-    }
-    languages = ["English", "සිංහල", "தமிழ்", "हिन्दी", "中文", "日本語", "한국어"]
-    lang_keys = ["English", "Sinhala", "Tamil", "Hindi", "Chinese", "Japanese", "Korean"]
-
-    return rx.cond(
-        AppState.show_settings_modal,
-        rx.fragment(
-            # Backdrop
-            rx.box(
-                position="fixed",
-                inset="0",
-                background="rgba(0,0,0,0.6)",
-                z_index="1000",
-                on_click=AppState.close_settings_modal,
-                style={"backdrop_filter": "blur(4px)"},
-            ),
-            # Modal
-            rx.box(
-                rx.vstack(
-                    # Header
-                    rx.hstack(
-                        rx.text("Settings", color="white", font_size="1rem", font_weight="700"),
-                        rx.spacer(),
-                        rx.icon_button(
-                            rx.icon(tag="x", size=16),
-                            on_click=AppState.close_settings_modal,
-                            variant="ghost",
-                            color="rgba(255,255,255,0.5)",
-                            size="1",
-                        ),
-                        width="100%",
-                        align="center",
-                    ),
-                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-
-                    # Language section
-                    rx.text("Language", color="rgba(255,255,255,0.4)", font_size="0.7rem", font_weight="700", letter_spacing="1.5px", text_transform="uppercase"),
-                    rx.hstack(
-                        *[
-                            rx.button(
-                                lang_label,
-                                on_click=AppState.set_language(lang_key),
-                                variant="ghost",
-                                size="1",
-                                style={
-                                    **lang_btn_style,
-                                    "background": rx.cond(
-                                        AppState.selected_language == lang_key,
-                                        "rgba(52,211,153,0.15)",
-                                        "rgba(255,255,255,0.03)",
-                                    ),
-                                    "border": rx.cond(
-                                        AppState.selected_language == lang_key,
-                                        "1px solid rgba(52,211,153,0.5)",
-                                        "1px solid rgba(255,255,255,0.08)",
-                                    ),
-                                    "color": rx.cond(
-                                        AppState.selected_language == lang_key,
-                                        "#34D399",
-                                        "rgba(255,255,255,0.7)",
-                                    ),
-                                },
-                            )
-                            for lang_label, lang_key in zip(languages, lang_keys)
-                        ],
-                        spacing="2",
-                        flex_wrap="wrap",
-                        width="100%",
-                    ),
-
-                    rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)", margin_top="4px"),
-
-                    # Links section
-                    rx.text("Legal & Support", color="rgba(255,255,255,0.4)", font_size="0.7rem", font_weight="700", letter_spacing="1.5px", text_transform="uppercase"),
-                    _settings_link_row("file_text", "Return Policy", "/return-policy"),
-                    _settings_link_row("shield", "Privacy Policy", "/privacy-policy"),
-                    _settings_link_row("scroll_text", "Terms of Service", "/terms"),
-                    _settings_link_row("help_circle", "Support", "/support"),
-
-                    spacing="3",
-                    width="100%",
-                    align_items="stretch",
-                ),
-                position="fixed",
-                top="50%",
-                left="50%",
-                transform="translate(-50%, -50%)",
-                width="min(92vw, 420px)",
-                padding="1.5em",
-                border_radius="16px",
-                background="rgba(8,12,14,0.98)",
-                border="1px solid rgba(52,211,153,0.2)",
-                z_index="1001",
-                style={
-                    "box_shadow": "0 24px 64px rgba(0,0,0,0.6)",
-                    "backdrop_filter": "blur(16px)",
-                },
-            ),
-        ),
-        rx.fragment(),
-    )
 
 
 # ──────────────────────────────────────────────────────────────
@@ -5896,7 +5898,6 @@ def settings_modal() -> rx.Component:
 # FIX 2: home_page — clean header, aligned sidebar, no yellow blur
 def home_page():
     return rx.box(
-        settings_modal(),
         # ── Header ────────────────────────────────────────────
         rx.box(
             rx.hstack(
@@ -6318,7 +6319,6 @@ def semester_sidebar_drawer() -> rx.Component:
 def semester_page():
     return rx.box(
         semester_sidebar_drawer(),
-        settings_modal(),
         rx.hstack(
             rx.hstack(
                 rx.icon_button(
@@ -7398,6 +7398,458 @@ def scope_page():
         semester_page(),
     )
 
+
+# ──────────────────────────────────────────────────────────────
+# Settings page (full page)
+# ──────────────────────────────────────────────────────────────
+def _settings_tab_btn(label: str, icon_tag: str, tab_key: str) -> rx.Component:
+    is_active = AppState.settings_tab == tab_key
+    return rx.button(
+        rx.hstack(
+            rx.icon(tag=icon_tag, size=15, color=rx.cond(is_active, "#34D399", "rgba(255,255,255,0.4)")),
+            rx.text(label, font_size="0.82rem", font_weight=rx.cond(is_active, "600", "400"),
+                    color=rx.cond(is_active, "white", "rgba(255,255,255,0.6)")),
+            spacing="2",
+            align="center",
+            width="100%",
+        ),
+        on_click=AppState.set_settings_tab(tab_key),
+        width="100%",
+        variant="ghost",
+        justify_content="flex-start",
+        style={
+            "padding": "10px 14px",
+            "border_radius": "10px",
+            "background": rx.cond(is_active, "rgba(52,211,153,0.1)", "transparent"),
+            "border": rx.cond(is_active, "1px solid rgba(52,211,153,0.25)", "1px solid transparent"),
+            "_hover": {"background": "rgba(255,255,255,0.05)"},
+        },
+    )
+
+
+def _settings_section_label(text: str) -> rx.Component:
+    return rx.text(
+        text,
+        color="rgba(255,255,255,0.3)",
+        font_size="0.68rem",
+        font_weight="700",
+        letter_spacing="2px",
+        text_transform="uppercase",
+    )
+
+
+def _settings_field_row(label: str, child: rx.Component) -> rx.Component:
+    return rx.vstack(
+        rx.text(label, color="rgba(255,255,255,0.55)", font_size="0.75rem", font_weight="600"),
+        child,
+        spacing="1",
+        width="100%",
+        align_items="stretch",
+    )
+
+
+def settings_general_tab() -> rx.Component:
+    input_style = {
+        "background": "rgba(255,255,255,0.04)",
+        "border": "1px solid rgba(255,255,255,0.1)",
+        "color": "white",
+        "border_radius": "8px",
+        "font_size": "0.82rem",
+        "_focus": {"border": "1px solid rgba(52,211,153,0.4)"},
+    }
+    return rx.vstack(
+        _settings_section_label("Profile"),
+
+        # Avatar placeholder
+        rx.hstack(
+            rx.box(
+                rx.text(
+                    AppState.username_initial,
+                    font_size="1.3rem",
+                    font_weight="700",
+                    color="#34D399",
+                ),
+                width="60px",
+                height="60px",
+                border_radius="14px",
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                background="rgba(52,211,153,0.1)",
+                border="1px solid rgba(52,211,153,0.2)",
+            ),
+            rx.vstack(
+                rx.text(AppState.display_name, color="white", font_size="0.95rem", font_weight="600"),
+                rx.text("Profile photo coming soon", color="rgba(255,255,255,0.3)", font_size="0.7rem"),
+                spacing="1",
+                align_items="flex-start",
+            ),
+            spacing="3",
+            align="center",
+        ),
+
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="4px"),
+
+        # Name field
+        _settings_field_row(
+            "Display Name",
+            rx.hstack(
+                rx.input(
+                    value=AppState.settings_edit_name,
+                    on_change=AppState.set_settings_edit_name,
+                    width="100%",
+                    style=input_style,
+                ),
+                rx.button(
+                    "Save",
+                    on_click=AppState.settings_save_name,
+                    size="2",
+                    style={
+                        "background": "#34D399",
+                        "color": "#064E3B",
+                        "font_weight": "600",
+                        "border_radius": "8px",
+                        "font_size": "0.78rem",
+                        "_hover": {"filter": "brightness(1.1)"},
+                    },
+                ),
+                spacing="2",
+                width="100%",
+            ),
+        ),
+
+        # Email (for Google users)
+        rx.cond(
+            AppState.is_google_user,
+            _settings_field_row(
+                "Google Account",
+                rx.hstack(
+                    rx.icon(tag="mail", size=14, color="rgba(255,255,255,0.4)"),
+                    rx.text("Signed in via Google", color="rgba(255,255,255,0.5)", font_size="0.8rem"),
+                    spacing="2",
+                    align="center",
+                    padding="8px 12px",
+                    border_radius="8px",
+                    background="rgba(255,255,255,0.03)",
+                    border="1px solid rgba(255,255,255,0.06)",
+                    width="100%",
+                ),
+            ),
+            rx.fragment(),
+        ),
+
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="4px"),
+
+        # Password change (only for non-Google users)
+        rx.cond(
+            ~AppState.is_google_user,
+            rx.vstack(
+                _settings_section_label("Change Password"),
+                rx.cond(
+                    AppState.settings_pw_error != "",
+                    rx.text(AppState.settings_pw_error, color="#f87171", font_size="0.76rem"),
+                    rx.fragment(),
+                ),
+                rx.cond(
+                    AppState.settings_pw_success,
+                    rx.text("Password updated successfully.", color="#34D399", font_size="0.76rem"),
+                    rx.fragment(),
+                ),
+                rx.input(
+                    placeholder="Current password",
+                    type="password",
+                    value=AppState.settings_pw_current,
+                    on_change=AppState.set_settings_pw_current,
+                    width="100%",
+                    style=input_style,
+                ),
+                rx.input(
+                    placeholder="New password",
+                    type="password",
+                    value=AppState.settings_pw_new,
+                    on_change=AppState.set_settings_pw_new,
+                    width="100%",
+                    style=input_style,
+                ),
+                rx.input(
+                    placeholder="Confirm new password",
+                    type="password",
+                    value=AppState.settings_pw_confirm,
+                    on_change=AppState.set_settings_pw_confirm,
+                    width="100%",
+                    style=input_style,
+                ),
+                rx.button(
+                    "Update Password",
+                    on_click=AppState.settings_change_password,
+                    size="2",
+                    style={
+                        "background": "rgba(255,255,255,0.06)",
+                        "border": "1px solid rgba(255,255,255,0.12)",
+                        "color": "white",
+                        "font_weight": "600",
+                        "border_radius": "8px",
+                        "font_size": "0.78rem",
+                        "_hover": {"background": "rgba(255,255,255,0.1)"},
+                    },
+                ),
+                spacing="2",
+                width="100%",
+                align_items="stretch",
+            ),
+            rx.fragment(),
+        ),
+
+        spacing="3",
+        width="100%",
+        align_items="stretch",
+    )
+
+
+def settings_account_tab() -> rx.Component:
+    return rx.vstack(
+        # User ID
+        _settings_section_label("Your ID"),
+        rx.hstack(
+            rx.text(
+                AppState.user_unique_id,
+                font_family="monospace",
+                font_size="0.88rem",
+                font_weight="600",
+                color="white",
+                letter_spacing="1px",
+            ),
+            rx.spacer(),
+            rx.icon_button(
+                rx.icon(tag="copy", size=14),
+                on_click=AppState.copy_user_id,
+                variant="ghost",
+                size="1",
+                color="rgba(255,255,255,0.5)",
+                title="Copy ID",
+                style={"_hover": {"color": "#34D399"}},
+            ),
+            width="100%",
+            align="center",
+            padding="10px 14px",
+            border_radius="10px",
+            background="rgba(255,255,255,0.04)",
+            border="1px solid rgba(255,255,255,0.08)",
+        ),
+
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="8px"),
+
+        # Logout
+        _settings_section_label("Session"),
+        rx.button(
+            rx.hstack(
+                rx.icon(tag="log_out", size=15, color="rgba(255,255,255,0.5)"),
+                rx.text("Log out", font_size="0.82rem"),
+                spacing="2",
+                align="center",
+            ),
+            on_click=AppState.logout,
+            width="100%",
+            variant="ghost",
+            justify_content="flex-start",
+            style={
+                "padding": "10px 14px",
+                "border_radius": "10px",
+                "border": "1px solid rgba(255,255,255,0.08)",
+                "background": "rgba(255,255,255,0.03)",
+                "_hover": {"background": "rgba(255,255,255,0.06)"},
+            },
+        ),
+
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)", margin_y="8px"),
+
+        # Delete account
+        _settings_section_label("Danger Zone"),
+        rx.vstack(
+            rx.text(
+                "Permanently delete your account and all data. This cannot be undone.",
+                color="rgba(255,150,150,0.6)",
+                font_size="0.75rem",
+                line_height="1.5",
+            ),
+            rx.text(
+                "Type DELETE to confirm:",
+                color="rgba(255,255,255,0.4)",
+                font_size="0.72rem",
+            ),
+            rx.hstack(
+                rx.input(
+                    placeholder="DELETE",
+                    value=AppState.settings_delete_confirm,
+                    on_change=AppState.set_settings_delete_confirm,
+                    width="140px",
+                    style={
+                        "background": "rgba(255,255,255,0.04)",
+                        "border": "1px solid rgba(239,68,68,0.2)",
+                        "color": "white",
+                        "border_radius": "8px",
+                        "font_size": "0.8rem",
+                        "font_family": "monospace",
+                    },
+                ),
+                rx.button(
+                    "Delete Account",
+                    on_click=AppState.settings_delete_account,
+                    size="2",
+                    style={
+                        "background": "rgba(239,68,68,0.15)",
+                        "border": "1px solid rgba(239,68,68,0.3)",
+                        "color": "#f87171",
+                        "font_weight": "600",
+                        "border_radius": "8px",
+                        "font_size": "0.78rem",
+                        "_hover": {"background": "rgba(239,68,68,0.25)"},
+                    },
+                ),
+                spacing="2",
+                align="center",
+            ),
+            spacing="2",
+            width="100%",
+            padding="14px",
+            border_radius="12px",
+            background="rgba(239,68,68,0.04)",
+            border="1px solid rgba(239,68,68,0.12)",
+        ),
+
+        spacing="3",
+        width="100%",
+        align_items="stretch",
+    )
+
+
+def settings_learn_more_tab() -> rx.Component:
+    link_style = {
+        "padding": "12px 14px",
+        "border_radius": "10px",
+        "background": "rgba(255,255,255,0.03)",
+        "border": "1px solid rgba(255,255,255,0.06)",
+        "cursor": "pointer",
+        "_hover": {"background": "rgba(255,255,255,0.06)", "border": "1px solid rgba(255,255,255,0.1)"},
+    }
+
+    def _link_row(icon_tag: str, label: str, desc: str, href: str) -> rx.Component:
+        return rx.hstack(
+            rx.icon(tag=icon_tag, size=18, color="rgba(255,255,255,0.4)"),
+            rx.vstack(
+                rx.text(label, color="white", font_size="0.82rem", font_weight="600"),
+                rx.text(desc, color="rgba(255,255,255,0.35)", font_size="0.7rem"),
+                spacing="0",
+            ),
+            rx.spacer(),
+            rx.icon(tag="chevron_right", size=14, color="rgba(255,255,255,0.2)"),
+            width="100%",
+            align="center",
+            spacing="3",
+            on_click=rx.redirect(href),
+            style=link_style,
+        )
+
+    return rx.vstack(
+        _settings_section_label("Legal & Support"),
+        _link_row("file_text", "Return Policy", "View our return and refund policy", "/return-policy"),
+        _link_row("shield", "Privacy Policy", "How we handle your data", "/privacy-policy"),
+        _link_row("scroll_text", "Terms of Service", "Terms and conditions", "/terms"),
+        _link_row("help_circle", "Support", "Get help or contact us", "/support"),
+        spacing="2",
+        width="100%",
+        align_items="stretch",
+    )
+
+
+@rx.page(
+    route="/settings",
+    title="Settings — Alex AI",
+    image=FAVICON_32,
+    on_load=AppState.on_load_settings,
+)
+@require_app_login
+def settings_page():
+    return rx.box(
+        # Header
+        rx.hstack(
+            rx.icon_button(
+                rx.icon(tag="arrow_left", size=18),
+                on_click=rx.redirect("/s/home"),
+                variant="ghost",
+                color="rgba(255,255,255,0.7)",
+                size="2",
+                style={
+                    "background": "rgba(255,255,255,0.06)",
+                    "border": "1px solid rgba(255,255,255,0.1)",
+                    "_hover": {"background": "rgba(255,255,255,0.1)"},
+                },
+            ),
+            rx.text("Settings", color="white", font_size="1.1rem", font_weight="700"),
+            rx.spacer(),
+            rx.text(
+                "ALEX AI",
+                color="rgba(255,255,255,0.15)",
+                font_size="0.9rem",
+                font_weight="800",
+                letter_spacing="4px",
+            ),
+            width="100%",
+            align="center",
+            padding="1.2em 2em",
+            border_bottom="1px solid rgba(255,255,255,0.06)",
+        ),
+
+        # Body
+        rx.flex(
+            # Left nav
+            rx.vstack(
+                _settings_tab_btn("General", "user", "general"),
+                _settings_tab_btn("Account", "key_round", "account"),
+                _settings_tab_btn("Learn More", "info", "learn_more"),
+                spacing="1",
+                width="100%",
+                padding="1.2em 1em",
+            ),
+
+            # Divider
+            rx.box(width="1px", height="100%", background="rgba(255,255,255,0.06)"),
+
+            # Content
+            rx.box(
+                rx.cond(
+                    AppState.settings_tab == "general",
+                    settings_general_tab(),
+                    rx.cond(
+                        AppState.settings_tab == "account",
+                        settings_account_tab(),
+                        settings_learn_more_tab(),
+                    ),
+                ),
+                flex="1",
+                padding="1.5em 2em",
+                overflow_y="auto",
+                min_width="0",
+            ),
+
+            width="100%",
+            flex="1",
+            min_height="0",
+            align_items="stretch",
+        ),
+
+        width="100%",
+        max_width="820px",
+        margin_x="auto",
+        height="100vh",
+        display="flex",
+        flex_direction="column",
+        background=(
+            "radial-gradient(ellipse at 80% 100%, #001a0d 0%, #050505 65%)"
+        ),
+    )
+
+
 class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         if ENFORCE_HTTPS:
@@ -7586,6 +8038,31 @@ def _ensure_usermemory_columns() -> None:
     except Exception as e:
         print(f"ERROR ensure_usermemory_columns: {e}")
 _ensure_usermemory_columns()
+
+
+def _generate_unique_id() -> str:
+    return f"AX-{secrets.token_hex(4).upper()}"
+
+
+def _ensure_userprofile_unique_id() -> None:
+    try:
+        with rx.session() as session:
+            conn = session.connection()
+            dialect = conn.dialect.name
+            if dialect == "sqlite":
+                cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('userprofile')").fetchall()}
+                if "unique_id" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN unique_id VARCHAR NOT NULL DEFAULT ''")
+            elif dialect == "postgresql":
+                result = conn.exec_driver_sql(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name='userprofile' AND column_name='unique_id'"
+                ).fetchone()
+                if result is None:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN unique_id VARCHAR NOT NULL DEFAULT ''")
+            session.commit()
+    except Exception as e:
+        print(f"ERROR ensure_userprofile_unique_id: {e}")
+_ensure_userprofile_unique_id()
 
 
 async def _payhere_notify_wrapper(request):
