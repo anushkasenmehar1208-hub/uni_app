@@ -6492,153 +6492,196 @@ def reset_password_page():
 
 
 def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
-    return rx.center(
-        # ── Spotlight cone above logo ──
+    return rx.box(
+        # ── Ambient background orbs (very subtle cool grey) ──
         rx.box(
+            rx.box(
+                position="absolute",
+                top="30%",
+                left="20%",
+                width="300px",
+                height="300px",
+                border_radius="50%",
+                background="radial-gradient(circle, rgba(140,160,180,0.03) 0%, transparent 70%)",
+                animation="splashAmbient 12s ease-in-out infinite",
+            ),
+            rx.box(
+                position="absolute",
+                top="50%",
+                right="15%",
+                width="200px",
+                height="200px",
+                border_radius="50%",
+                background="radial-gradient(circle, rgba(100,130,160,0.02) 0%, transparent 70%)",
+                animation="splashAmbient 10s ease-in-out 3s infinite",
+            ),
             position="absolute",
-            top="-80px",
-            left="50%",
-            transform="translateX(-50%)",
-            width="160px",
-            height="200px",
-            background="linear-gradient(180deg, rgba(200,240,220,0.10) 0%, rgba(52,211,153,0.03) 60%, transparent 100%)",
-            clip_path="polygon(40% 0%, 60% 0%, 78% 100%, 22% 100%)",
-            animation="splashSpotlight 4s ease-in-out infinite",
+            top="0",
+            left="0",
+            right="0",
+            bottom="0",
+            overflow="hidden",
             pointer_events="none",
         ),
+        # ── Main content ──
         rx.vstack(
-            # ── Logo with 3D float + glow ──
+            # ── Logo area: SVG draw → image reveal ──
             rx.box(
-                # Logo container with float + glow
+                # SVG stroke-drawing layer
+                rx.html("""<svg width="110" height="110" viewBox="0 0 110 110" style="position:absolute;inset:0;z-index:2;animation:splashSvgOut 3s ease-out forwards;">
+<rect x="0" y="0" width="110" height="110" rx="24" fill="rgba(8,9,11,0.95)"/>
+<path d="M55 20 L80 80 L72 80 L63 56 L55 38 L47 56 L38 80 L30 80 Z" fill="none" stroke="rgba(220,225,230,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1000" style="animation:splashDraw1 1.2s cubic-bezier(0.4,0,0.2,1) 0.3s forwards"/>
+<path d="M38 80 L30 80 L26 90 L42 90 Z" fill="none" stroke="rgba(220,225,230,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="600" style="animation:splashDraw2 0.6s cubic-bezier(0.4,0,0.2,1) 1.0s forwards"/>
+<path d="M72 80 L80 80 L84 90 L68 90 Z" fill="none" stroke="rgba(220,225,230,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="600" style="animation:splashDraw2 0.6s cubic-bezier(0.4,0,0.2,1) 1.1s forwards"/>
+<path d="M42 68 L55 38 L68 68" fill="none" stroke="rgba(220,225,230,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="600" style="animation:splashDraw2 0.8s cubic-bezier(0.4,0,0.2,1) 1.4s forwards"/>
+<path d="M36 72 L55 30 L74 72" fill="none" stroke="rgba(220,225,230,0.25)" stroke-width="1" stroke-dasharray="600" style="animation:splashDraw2 0.5s ease-out 1.8s forwards"/>
+</svg>"""),
+                # Scan line overlay
+                rx.html("""<div style="position:absolute;inset:0;z-index:3;overflow:hidden;border-radius:24px;pointer-events:none;">
+<div style="position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 20%,rgba(180,200,220,0.15) 50%,transparent 80%);animation:splashScan 1.5s linear 0.3s 2;"></div>
+</div>"""),
+                # Glitch flash
                 rx.box(
-                    rx.image(
-                        src="/a_logo.png",
-                        width="110px",
-                        height="110px",
-                        border_radius="24px",
-                        object_fit="cover",
-                        display="block",
-                    ),
-                    # Glass highlight overlay
-                    rx.box(
-                        position="absolute",
-                        top="0",
-                        left="0",
-                        right="0",
-                        bottom="0",
-                        border_radius="24px",
-                        background="linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 40%)",
-                        pointer_events="none",
-                    ),
+                    position="absolute",
+                    top="0",
+                    left="0",
+                    right="0",
+                    bottom="0",
+                    z_index="4",
+                    border_radius="24px",
+                    animation="splashGlitch 0.15s linear 2.0s 3",
+                    background="rgba(180,200,220,0.08)",
+                ),
+                # Real logo image (reveals after drawing)
+                rx.image(
+                    src="/a_logo.png",
                     width="110px",
                     height="110px",
+                    object_fit="cover",
                     border_radius="24px",
-                    overflow="hidden",
-                    border="1px solid rgba(52,211,153,0.10)",
-                    position="relative",
-                    animation="splashFloat 7s ease-in-out 1s infinite, splashGlowBreath 5s ease-in-out 1s infinite",
+                    display="block",
+                    position="absolute",
+                    top="0",
+                    left="0",
+                    z_index="5",
+                    animation="splashImgReveal 2.8s cubic-bezier(0.16,1,0.3,1) forwards",
                 ),
-                animation="splashLogoEntry 1s cubic-bezier(0.16,1,0.3,1) both",
-                transform_style="preserve-3d",
-            ),
-            # ── Floor shadow ──
-            rx.box(
-                width="70px",
-                height="8px",
-                border_radius="50%",
-                background="radial-gradient(ellipse, rgba(52,211,153,0.16) 0%, transparent 70%)",
-                filter="blur(3px)",
-                margin_top="-4px",
-                animation="splashShadow 7s ease-in-out 1s infinite",
+                # Subtle border
+                rx.box(
+                    position="absolute",
+                    top="0",
+                    left="0",
+                    right="0",
+                    bottom="0",
+                    z_index="6",
+                    border_radius="24px",
+                    border="1px solid rgba(180,200,220,0.06)",
+                    pointer_events="none",
+                ),
+                width="110px",
+                height="110px",
+                position="relative",
+                border_radius="24px",
+                animation="splashContainerGlow 2.8s ease-out both",
             ),
             # ── Brand text ──
             rx.text(
                 "A L E X   A I",
-                color="rgba(255,255,255,0.95)",
-                font_size="1.35rem",
-                font_weight="700",
-                letter_spacing="0.20em",
+                color="rgba(220,225,230,0.9)",
+                font_size="1.3rem",
+                font_weight="600",
                 font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-                text_shadow="0 1px 10px rgba(52,211,153,0.12)",
-                animation="splashFadeUp 0.7s ease-out 0.4s both",
-                margin_top="12px",
+                animation="splashTextIn 0.9s cubic-bezier(0.16,1,0.3,1) 2.2s both",
             ),
             # ── Subtitle ──
             rx.text(
                 subtitle,
-                color="rgba(226,232,240,0.35)",
-                font_size="0.8rem",
+                color="rgba(180,190,200,0.3)",
+                font_size="0.78rem",
                 font_weight="400",
-                letter_spacing="0.04em",
-                animation="splashFadeUp 0.7s ease-out 0.6s both",
+                letter_spacing="0.06em",
+                animation="splashSubIn 0.6s ease-out 2.6s both",
             ),
-            # ── Shimmer loading bar ──
+            # ── Loading bar ──
             rx.box(
                 rx.box(
-                    width="40%",
+                    width="100%",
                     height="100%",
-                    border_radius="2px",
-                    background="linear-gradient(90deg, transparent, rgba(52,211,153,0.45), transparent)",
-                    animation="splashShimmer 1.5s ease-in-out infinite",
+                    background="rgba(180,200,220,0.3)",
+                    animation="splashBarPulse 1.2s ease-in-out 3.3s infinite",
                 ),
-                width="90px",
-                height="2px",
-                border_radius="2px",
-                background="rgba(52,211,153,0.07)",
+                height="1.5px",
+                border_radius="1px",
+                background="rgba(180,200,220,0.12)",
                 overflow="hidden",
-                margin_top="6px",
-                animation="splashFadeUp 0.7s ease-out 0.75s both",
+                animation="splashBarGrow 0.5s ease-out 2.8s both",
             ),
-            spacing="2",
+            spacing="5",
             align_items="center",
+            position="relative",
+            z_index="1",
         ),
-        # ── Keyframes ──
+        # ── All keyframes ──
         rx.el.style("""
-            @keyframes splashLogoEntry {
-                0% { opacity: 0; transform: perspective(900px) rotateX(20deg) rotateY(-8deg) scale(0.7) translateY(30px); }
-                60% { opacity: 1; transform: perspective(900px) rotateX(-2deg) rotateY(2deg) scale(1.02) translateY(-4px); }
-                100% { opacity: 1; transform: perspective(900px) rotateX(0) rotateY(0) scale(1) translateY(0); }
+            @keyframes splashDraw1 {
+                0% { stroke-dashoffset: 1000; }
+                100% { stroke-dashoffset: 0; }
             }
-            @keyframes splashFloat {
-                0%, 100% { transform: perspective(900px) translateY(0px) rotateX(0deg) rotateY(0deg); }
-                20% { transform: perspective(900px) translateY(-7px) rotateX(2deg) rotateY(-2.5deg); }
-                50% { transform: perspective(900px) translateY(-3px) rotateX(-1.5deg) rotateY(3deg); }
-                75% { transform: perspective(900px) translateY(-9px) rotateX(1deg) rotateY(-1.5deg); }
+            @keyframes splashDraw2 {
+                0% { stroke-dashoffset: 600; }
+                100% { stroke-dashoffset: 0; }
             }
-            @keyframes splashGlowBreath {
-                0%, 100% { box-shadow: 0 6px 30px rgba(52,211,153,0.12), 0 0 50px rgba(52,211,153,0.06), 0 20px 50px rgba(0,0,0,0.5); }
-                50% { box-shadow: 0 10px 40px rgba(52,211,153,0.22), 0 0 70px rgba(52,211,153,0.10), 0 28px 60px rgba(0,0,0,0.6); }
+            @keyframes splashSvgOut {
+                0%, 75% { opacity: 1; }
+                100% { opacity: 0; }
             }
-            @keyframes splashShadow {
-                0%, 100% { transform: scaleX(1) scaleY(1); opacity: 0.4; }
-                20% { transform: scaleX(0.92) scaleY(0.95); opacity: 0.5; }
-                50% { transform: scaleX(1.04) scaleY(1.02); opacity: 0.35; }
-                75% { transform: scaleX(0.9) scaleY(0.94); opacity: 0.5; }
+            @keyframes splashImgReveal {
+                0%, 70% { opacity: 0; transform: scale(0.96); }
+                85% { opacity: 1; transform: scale(1.01); }
+                100% { opacity: 1; transform: scale(1); }
             }
-            @keyframes splashFadeUp {
-                0% { opacity: 0; transform: translateY(16px); }
-                100% { opacity: 1; transform: translateY(0); }
+            @keyframes splashScan {
+                0% { top: -2px; }
+                100% { top: 112px; }
             }
-            @keyframes splashShimmer {
-                0% { transform: translateX(-120px); }
-                100% { transform: translateX(160px); }
+            @keyframes splashGlitch {
+                0%, 100% { opacity: 0; }
+                50% { opacity: 0.08; }
             }
-            @keyframes splashSpotlight {
-                0%, 100% { opacity: 0.07; }
-                50% { opacity: 0.14; }
+            @keyframes splashContainerGlow {
+                0%, 60% { box-shadow: none; }
+                80% { box-shadow: 0 0 40px rgba(180,200,210,0.08), 0 0 80px rgba(180,200,210,0.03); }
+                100% { box-shadow: 0 0 30px rgba(180,200,210,0.05), 0 0 60px rgba(180,200,210,0.02); }
+            }
+            @keyframes splashTextIn {
+                0% { opacity: 0; letter-spacing: 0.6em; filter: blur(6px); }
+                100% { opacity: 1; letter-spacing: 0.20em; filter: blur(0); }
+            }
+            @keyframes splashSubIn {
+                0% { opacity: 0; transform: translateY(8px); }
+                100% { opacity: 0.3; transform: translateY(0); }
+            }
+            @keyframes splashBarGrow {
+                0% { width: 0; }
+                100% { width: 90px; }
+            }
+            @keyframes splashBarPulse {
+                0%, 100% { opacity: 0.25; }
+                50% { opacity: 0.6; }
+            }
+            @keyframes splashAmbient {
+                0%, 100% { opacity: 0.03; transform: translate(0,0) scale(1); }
+                50% { opacity: 0.06; transform: translate(-5px,3px) scale(1.05); }
             }
         """),
         width="100vw",
         min_height="100vh",
-        padding="24px",
+        display="flex",
+        align_items="center",
+        justify_content="center",
         position="relative",
         overflow="hidden",
-        perspective="900px",
-        background=(
-            "radial-gradient(ellipse at 50% 35%, rgba(52,211,153,0.09) 0%, transparent 55%),"
-            "radial-gradient(circle at 30% 70%, rgba(52,211,153,0.04) 0%, transparent 40%),"
-            "linear-gradient(180deg, #060f0a 0%, #040a07 50%, #030806 100%)"
-        ),
+        background="linear-gradient(180deg, #050607 0%, #08090b 50%, #050607 100%)",
     )
 
 
