@@ -4199,49 +4199,57 @@ AUTO_SCROLL_OBSERVER_JS = """
 # ═══════════════════════════════════════════════════════
 
 # FIX 1: subject_button — crisper border, tighter look
+NEUTRAL_SIDEBAR_ACTIVE_BG = "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.05) 100%)"
+NEUTRAL_SIDEBAR_ACTIVE_BG_HOVER = "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.07) 100%)"
+NEUTRAL_SIDEBAR_ACTIVE_BORDER = "1px solid rgba(255,255,255,0.16)"
+NEUTRAL_SIDEBAR_ACTIVE_BORDER_HOVER = "1px solid rgba(255,255,255,0.22)"
+NEUTRAL_SIDEBAR_ACTIVE_TEXT = "rgba(255,255,255,0.96)"
+NEUTRAL_SIDEBAR_ACTIVE_TEXT_SOFT = "rgba(255,255,255,0.82)"
+NEUTRAL_SIDEBAR_ACTIVE_SHADOW = "0 10px 24px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.05)"
+
 def subject_button(label: str, on_click=None, is_active=False):
     return rx.button(
         label,
         width="100%",
         height="52px",
         variant="outline",
-        color_scheme="green",
+        color_scheme="gray",
         on_click=on_click,
         style={
             "border": rx.cond(
                 is_active,
-                "1px solid rgba(52,211,153,0.78)",
-                "1px solid rgba(52,211,153,0.35)",
+                NEUTRAL_SIDEBAR_ACTIVE_BORDER,
+                "1px solid rgba(255,255,255,0.08)",
             ),
             "background": rx.cond(
                 is_active,
-                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
-                "rgba(52,211,153,0.04)",
+                NEUTRAL_SIDEBAR_ACTIVE_BG,
+                "rgba(255,255,255,0.03)",
             ),
             "text_transform": "uppercase",
             "font_weight": "600",
             "font_size": "0.82rem",
             "letter_spacing": "2px",
-            "color": rx.cond(is_active, "#ecfff6", "rgba(255,255,255,0.88)"),
+            "color": rx.cond(is_active, NEUTRAL_SIDEBAR_ACTIVE_TEXT, "rgba(255,255,255,0.88)"),
             "border_radius": "10px",
             "transition": "all 0.2s ease",
             "box_shadow": rx.cond(
                 is_active,
-                "0 10px 24px rgba(0,0,0,0.28), 0 0 0 1px rgba(52,211,153,0.18)",
+                NEUTRAL_SIDEBAR_ACTIVE_SHADOW,
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
-                    "rgba(52,211,153,0.1)",
+                    NEUTRAL_SIDEBAR_ACTIVE_BG_HOVER,
+                    "rgba(255,255,255,0.06)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    "1px solid rgba(110,231,183,0.9)",
-                    "1px solid rgba(52,211,153,0.7)",
+                    NEUTRAL_SIDEBAR_ACTIVE_BORDER_HOVER,
+                    "1px solid rgba(255,255,255,0.14)",
                 ),
-                "color": rx.cond(is_active, "#f4fff9", "#34D399"),
+                "color": "white",
                 "transform": "translateX(6px)",
             },
         },
@@ -6139,15 +6147,15 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
         style={
             "background": rx.cond(
                 is_active,
-                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
+                NEUTRAL_SIDEBAR_ACTIVE_BG,
                 "rgba(255,255,255,0.01)",
             ),
             "border": rx.cond(
                 is_active,
-                "1px solid rgba(52,211,153,0.76)",
+                NEUTRAL_SIDEBAR_ACTIVE_BORDER,
                 "1px solid rgba(255,255,255,0.04)",
             ),
-            "color": rx.cond(is_active, "#ecfff6", "rgba(255,255,255,0.72)"),
+            "color": rx.cond(is_active, NEUTRAL_SIDEBAR_ACTIVE_TEXT, "rgba(255,255,255,0.72)"),
             "font_weight": rx.cond(is_active, "700", "500"),
             "border_radius": "12px",
             "padding": "0.46em 0.72em",
@@ -6155,18 +6163,18 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
             "min_height": "0",
             "box_shadow": rx.cond(
                 is_active,
-                "0 10px 24px rgba(0,0,0,0.22), 0 0 0 1px rgba(52,211,153,0.14)",
+                NEUTRAL_SIDEBAR_ACTIVE_SHADOW,
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
+                    NEUTRAL_SIDEBAR_ACTIVE_BG_HOVER,
                     "rgba(255,255,255,0.06)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    "1px solid rgba(110,231,183,0.88)",
+                    NEUTRAL_SIDEBAR_ACTIVE_BORDER_HOVER,
                     "1px solid rgba(255,255,255,0.12)",
                 ),
                 "color": "white",
@@ -6330,14 +6338,14 @@ def alex_workspace_button() -> rx.Component:
         rx.vstack(
             rx.text(
                 "Alex AI",
-                color=rx.cond(is_active, "#f4fff9", "white"),
+                color=rx.cond(is_active, NEUTRAL_SIDEBAR_ACTIVE_TEXT, "white"),
                 font_size="0.95rem",
                 font_weight="700",
                 letter_spacing="0.04em",
             ),
             rx.text(
                 "Ask doubts in your growth",
-                color=rx.cond(is_active, "rgba(240,255,248,0.86)", "rgba(226,232,240,0.68)"),
+                color=rx.cond(is_active, NEUTRAL_SIDEBAR_ACTIVE_TEXT_SOFT, "rgba(226,232,240,0.68)"),
                 font_size="0.76rem",
                 text_align="left",
                 line_height="1.45",
@@ -6356,28 +6364,28 @@ def alex_workspace_button() -> rx.Component:
             "border_radius": "14px",
             "border": rx.cond(
                 is_active,
-                "1px solid rgba(52,211,153,0.78)",
+                NEUTRAL_SIDEBAR_ACTIVE_BORDER,
                 "1px solid rgba(255,255,255,0.08)",
             ),
             "background": rx.cond(
                 is_active,
-                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
+                NEUTRAL_SIDEBAR_ACTIVE_BG,
                 "rgba(255,255,255,0.03)",
             ),
             "box_shadow": rx.cond(
                 is_active,
-                "0 12px 24px rgba(0,0,0,0.24), 0 0 0 1px rgba(52,211,153,0.16)",
+                NEUTRAL_SIDEBAR_ACTIVE_SHADOW,
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
+                    NEUTRAL_SIDEBAR_ACTIVE_BG_HOVER,
                     "rgba(255,255,255,0.07)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    "1px solid rgba(110,231,183,0.9)",
+                    NEUTRAL_SIDEBAR_ACTIVE_BORDER_HOVER,
                     "1px solid rgba(255,255,255,0.16)",
                 ),
             },
