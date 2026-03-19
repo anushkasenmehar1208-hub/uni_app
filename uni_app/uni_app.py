@@ -4677,7 +4677,7 @@ def empty_chat_panel() -> rx.Component:
         # ── Ambient glow — radial gradient anchored behind the hero ──
         rx.box(
             position="absolute",
-            top="38%",
+            top="52%",
             left="50%",
             width="680px",
             height="420px",
@@ -4688,8 +4688,8 @@ def empty_chat_panel() -> rx.Component:
             z_index="0",
         ),
         rx.vstack(
-            # ── Upper breathing room — slightly reduced to push content up ──
-            rx.box(flex="1.1"),
+            # ── Upper breathing room — pushes composition to lower-center like ChatGPT ──
+            rx.box(flex="3"),
             # ── Hero composition — single unified focal point ──
             rx.vstack(
                 # ── Session context line — ties course info to the hero ──
@@ -4739,10 +4739,11 @@ def empty_chat_panel() -> rx.Component:
                 rx.box(
                     rx.image(
                         src="/alex_logo.svg",
-                        width="52px",
-                        height="52px",
+                        width="100%",
+                        height="100%",
                         object_fit="contain",
                         opacity="0.95",
+                        padding="12px",
                         style={
                             "filter": "drop-shadow(0 2px 12px rgba(180,200,240,0.06))",
                         },
@@ -4756,6 +4757,7 @@ def empty_chat_panel() -> rx.Component:
                     background="linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))",
                     border="1px solid rgba(255,255,255,0.07)",
                     box_shadow="0 4px 24px rgba(0,0,0,0.2), 0 1px 3px rgba(255,255,255,0.02) inset",
+                    overflow="hidden",
                 ),
                 # ── Headline ──
                 rx.text(
@@ -4791,7 +4793,7 @@ def empty_chat_panel() -> rx.Component:
                 z_index="1",
             ),
             # ── Lower breathing room ──
-            rx.box(flex="2.8"),
+            rx.box(flex="1.6"),
             spacing="0",
             align="center",
             width="100%",
