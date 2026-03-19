@@ -4890,7 +4890,7 @@ def active_chat_panel() -> rx.Component:
                 width="100%",
                 align_items="stretch",
                 spacing="0",
-                max_width="780px",
+                max_width="680px",
                 margin_x="auto",
                 padding_x="1.5em",
                 padding_top="1em",
@@ -4921,7 +4921,7 @@ def active_chat_panel() -> rx.Component:
             rx.box(
                 chat_input_field(),
                 width="100%",
-                max_width="828px",
+                max_width="728px",
                 margin_x="auto",
                 padding="0 1.5em 0 1.5em",
             ),
@@ -6391,7 +6391,11 @@ def nav_rail() -> rx.Component:
     return rx.vstack(
         # ── Top group ──
         _nav_rail_btn("panel_left", AppState.toggle_semester_sidebar),
-        _nav_rail_btn("square_pen", AppState.new_chat),
+        rx.cond(
+            AppState.is_home_scope_active,
+            _nav_rail_btn("square_pen", AppState.new_chat),
+            rx.fragment(),
+        ),
         _nav_rail_btn("search", AppState.toggle_semester_sidebar),
         rx.spacer(),
         # ── Bottom group ──
