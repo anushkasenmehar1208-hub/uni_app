@@ -4422,18 +4422,17 @@ def tier_status_bar() -> rx.Component:
             AppState.tier_label,
             font_size="0.68rem",
             font_weight="500",
-            color="rgba(160,175,195,0.45)",
-            letter_spacing="0.01em",
+            color="rgba(160,170,180,0.5)",
         ),
         rx.cond(
             ~AppState.has_premium_access & ~AppState.is_in_trial,
             rx.text(AppState.messages_left_today.to_string() + f" / {FREE_DAILY_LIMIT} left",
-                    color="rgba(140,155,175,0.32)", font_size="0.68rem"),
+                    color="rgba(140,150,160,0.35)", font_size="0.68rem"),
             rx.fragment(),
         ),
         rx.spacer(),
-        rx.text(AppState.active_model_name, color="rgba(140,155,175,0.22)", font_size="0.65rem", font_family="'SF Mono', 'Fira Code', monospace", letter_spacing="0.02em"),
-        width="100%", padding_x="4px", padding_y="5px", align="center",
+        rx.text(AppState.active_model_name, color="rgba(140,150,160,0.25)", font_size="0.65rem", font_family="monospace"),
+        width="100%", padding_x="0", padding_y="4px", align="center",
     )
 
 
@@ -4591,9 +4590,9 @@ def chat_input_field() -> rx.Component:
                 on_change=AppState.set_chat_input,
                 color="rgba(236,240,244,0.92)",
                 flex="1",
-                min_height="46px",
+                min_height="44px",
                 max_height="140px",
-                padding="14px 4px 14px 20px",
+                padding="13px 4px 13px 18px",
                 font_size="0.9rem",
                 line_height="1.55",
                 style={
@@ -4602,7 +4601,7 @@ def chat_input_field() -> rx.Component:
                     "outline": "none",
                     "box_shadow": "none",
                     "resize": "none",
-                    "_placeholder": {"color": "rgba(160,175,195,0.3)"},
+                    "_placeholder": {"color": "rgba(160,170,180,0.35)"},
                     "_focus": {
                         "background": "transparent",
                         "border": "none",
@@ -4617,14 +4616,14 @@ def chat_input_field() -> rx.Component:
                 rx.cond(
                     AppState.is_processing,
                     rx.spinner(size="1", color="rgba(255,255,255,0.4)"),
-                    rx.icon(tag="arrow_up", size=15, color="rgba(255,255,255,0.85)"),
+                    rx.icon(tag="arrow_up", size=15, color="white"),
                 ),
                 id="chat_send_btn",
                 on_click=AppState.send_message,
                 is_disabled=AppState.is_processing,
-                width="34px",
-                height="34px",
-                border_radius="10px",
+                width="32px",
+                height="32px",
+                border_radius="8px",
                 flex_shrink="0",
                 align_self="flex-end",
                 margin_bottom="8px",
@@ -4632,19 +4631,18 @@ def chat_input_field() -> rx.Component:
                 style={
                     "background": rx.cond(
                         AppState.is_processing,
-                        "rgba(255,255,255,0.04)",
-                        "rgba(255,255,255,0.1)",
+                        "rgba(255,255,255,0.05)",
+                        "rgba(255,255,255,0.12)",
                     ),
-                    "border": "1px solid rgba(255,255,255,0.06)",
+                    "border": "none",
                     "cursor": "pointer",
-                    "transition": "all 0.2s ease",
+                    "transition": "all 0.15s ease",
                     "_hover": {
-                        "background": "rgba(255,255,255,0.18)",
-                        "border": "1px solid rgba(255,255,255,0.1)",
+                        "background": "rgba(255,255,255,0.2)",
                     },
                     "_active": {"transform": "scale(0.95)"},
                     "_disabled": {
-                        "opacity": "0.2",
+                        "opacity": "0.25",
                         "cursor": "not-allowed",
                     },
                 },
@@ -4655,16 +4653,14 @@ def chat_input_field() -> rx.Component:
         ),
         rx.script(ENTER_TO_SEND_JS),
         width="100%",
-        border_radius="18px",
-        background="rgba(255,255,255,0.03)",
-        border="1px solid rgba(255,255,255,0.07)",
-        box_shadow="0 2px 12px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(255,255,255,0.03) inset",
+        border_radius="16px",
+        background="rgba(255,255,255,0.04)",
+        border="1px solid rgba(255,255,255,0.08)",
         style={
-            "transition": "border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease",
+            "transition": "border-color 0.2s ease, box-shadow 0.2s ease",
             "&:focus-within": {
-                "border": "1px solid rgba(160,180,220,0.18)",
-                "box_shadow": "0 2px 16px rgba(0,0,0,0.2), 0 0 0 1px rgba(140,170,220,0.06), 0 0 0 0.5px rgba(255,255,255,0.04) inset",
-                "background": "rgba(255,255,255,0.04)",
+                "border": "1px solid rgba(255,255,255,0.16)",
+                "box_shadow": "0 0 0 1px rgba(255,255,255,0.04)",
             },
         },
     )
@@ -4674,140 +4670,98 @@ def chat_input_field() -> rx.Component:
 
 def empty_chat_panel() -> rx.Component:
     return rx.box(
-        # ── Ambient glow — radial gradient anchored behind the hero ──
-        rx.box(
-            position="absolute",
-            top="52%",
-            left="50%",
-            width="680px",
-            height="420px",
-            border_radius="50%",
-            background="radial-gradient(ellipse at center, rgba(140,160,200,0.035) 0%, rgba(100,140,200,0.015) 35%, transparent 70%)",
-            transform="translate(-50%, -50%)",
-            pointer_events="none",
-            z_index="0",
-        ),
         rx.vstack(
-            rx.box(
-                rx.vstack(
-                    # ── Session context line — ties course info to the hero ──
-                    rx.hstack(
-                        rx.box(
-                            width="16px",
-                            height="1px",
-                            background="linear-gradient(90deg, transparent, rgba(160,175,200,0.18))",
-                            flex_shrink="0",
-                        ),
-                        rx.text(
-                            rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
-                            color="rgba(200,210,225,0.55)",
-                            font_size="0.72rem",
-                            font_weight="500",
-                            letter_spacing="0.06em",
-                            text_transform="uppercase",
-                        ),
-                        rx.text("·", color="rgba(160,170,180,0.25)", font_size="0.72rem"),
-                        rx.text(
-                            AppState.semester_status_label,
-                            color="rgba(160,170,180,0.35)",
-                            font_size="0.72rem",
-                            font_weight="400",
-                            letter_spacing="0.02em",
-                        ),
-                        rx.text("·", color="rgba(160,170,180,0.2)", font_size="0.72rem"),
-                        rx.text(
-                            AppState.semester_progress_label,
-                            color="rgba(160,170,180,0.35)",
-                            font_size="0.72rem",
-                            font_weight="400",
-                            letter_spacing="0.02em",
-                        ),
-                        rx.box(
-                            width="16px",
-                            height="1px",
-                            background="linear-gradient(90deg, rgba(160,175,200,0.18), transparent)",
-                            flex_shrink="0",
-                        ),
-                        spacing="2",
-                        align="center",
-                        justify="center",
-                        margin_bottom="28px",
-                    ),
-                    # ── Logo mark — edge-to-edge so the logo fully fills the card ──
-                    rx.box(
-                        rx.image(
-                            src="/a_logo.png",
-                            width="100%",
-                            height="100%",
-                            object_fit="cover",
-                            opacity="0.96",
-                            style={
-                                "transform": "scale(1.04)",
-                                "filter": "drop-shadow(0 4px 18px rgba(180,200,240,0.08))",
-                            },
-                        ),
-                        width="78px",
-                        height="78px",
-                        display="flex",
-                        align_items="center",
-                        justify_content="center",
-                        border_radius="22px",
-                        background="rgba(7,10,16,0.92)",
-                        border="1px solid rgba(255,255,255,0.08)",
-                        box_shadow="0 8px 30px rgba(0,0,0,0.22), 0 1px 3px rgba(255,255,255,0.02) inset",
-                        overflow="hidden",
-                    ),
-                    # ── Headline ──
-                    rx.text(
-                        "What do you want to learn today?",
-                        color="rgba(220,228,240,0.52)",
-                        font_size="1.05rem",
-                        font_weight="400",
-                        letter_spacing="0.01em",
-                        margin_top="20px",
-                    ),
-                    spacing="0",
-                    align="center",
-                    width="100%",
-                    max_width="720px",
-                    padding_x="1.5em",
-                    position="relative",
-                    z_index="1",
-                    margin_bottom="clamp(2.5rem, 8vh, 5.5rem)",
+            # ── Workspace session header — centered, top of content ──
+            rx.vstack(
+                rx.text(
+                    rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
+                    color="rgba(240,244,248,0.88)",
+                    font_size="0.92rem",
+                    font_weight="600",
+                    letter_spacing="0.01em",
                 ),
-                flex="1",
-                width="100%",
-                min_height="0",
-                display="flex",
-                align_items="center",
-                justify_content="center",
+                rx.hstack(
+                    rx.text(
+                        AppState.semester_status_label,
+                        color="rgba(160,170,180,0.38)",
+                        font_size="0.7rem",
+                        font_weight="400",
+                    ),
+                    rx.text("·", color="rgba(160,170,180,0.2)", font_size="0.7rem"),
+                    rx.text(
+                        AppState.semester_progress_label,
+                        color="rgba(160,170,180,0.38)",
+                        font_size="0.7rem",
+                        font_weight="400",
+                    ),
+                    spacing="1",
+                    align="center",
+                ),
+                spacing="0",
+                align="center",
+                padding_top="1em",
+                padding_bottom="0.5em",
             ),
-            # ── Bottom-docked composer — aligned like ChatGPT's home composer ──
-            rx.box(
+            # ── Upper breathing room — golden ratio (~38% of remaining) ──
+            rx.box(flex="1.5"),
+            # ── Hero section — single cohesive unit ──
+            rx.vstack(
+                # Logo in subtle glass container
+                rx.box(
+                    rx.image(
+                        src="/alex_logo.svg",
+                        width="64px",
+                        height="64px",
+                        object_fit="contain",
+                        opacity="0.92",
+                        style={
+                            "filter": "drop-shadow(0 4px 20px rgba(255,255,255,0.03))",
+                        },
+                    ),
+                    width="80px",
+                    height="80px",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    border_radius="18px",
+                    background="rgba(255,255,255,0.02)",
+                    border="1px solid rgba(255,255,255,0.045)",
+                ),
+                # Prompt text
+                rx.text(
+                    "What do you want to learn today?",
+                    color="rgba(200,210,220,0.35)",
+                    font_size="0.95rem",
+                    font_weight="400",
+                    letter_spacing="0.015em",
+                    margin_top="16px",
+                ),
+                # Input — tightly coupled to hero
                 rx.box(
                     rx.cond(
                         AppState.can_send_message,
                         chat_input_field(),
                         upgrade_button(),
                     ),
-                    rx.box(
-                        tier_status_bar(),
-                        width="100%",
-                        padding_top="6px",
-                    ),
                     width="100%",
-                    max_width="720px",
-                    margin_x="auto",
-                    padding_x="1.5em",
-                    padding_bottom="1.2em",
-                    position="relative",
-                    z_index="1",
+                    margin_top="32px",
                 ),
+                # Tier status tucked under input
+                rx.box(
+                    tier_status_bar(),
+                    width="100%",
+                    padding_top="2px",
+                ),
+                spacing="0",
+                align="center",
                 width="100%",
-                flex_shrink="0",
+                max_width="640px",
+                padding_x="1em",
             ),
+            # ── Lower breathing room — absorbs remaining space ──
+            rx.box(flex="2.6"),
             spacing="0",
-            align="stretch",
+            align="center",
             width="100%",
             height="100%",
         ),
@@ -4817,8 +4771,6 @@ def empty_chat_panel() -> rx.Component:
         display="flex",
         flex_direction="column",
         align_items="center",
-        position="relative",
-        overflow="hidden",
     )
 
 # ── FIX 2: active_chat_panel ─────────────────────────
@@ -6408,13 +6360,12 @@ def semester_sidebar_drawer() -> rx.Component:
 # Icon rail — slim vertical toolbar (left edge)
 # ──────────────────────────────────────────────────────────────
 _RAIL_ICON_STYLE = {
-    "color": "rgba(200,210,225,0.32)",
+    "color": "rgba(200,210,220,0.35)",
     "background": "transparent",
     "border": "none",
     "border_radius": "8px",
     "cursor": "pointer",
-    "transition": "all 0.2s ease",
-    "_hover": {"color": "rgba(220,230,245,0.7)", "background": "rgba(255,255,255,0.04)"},
+    "_hover": {"color": "rgba(230,235,240,0.8)", "background": "rgba(255,255,255,0.045)"},
 }
 
 
@@ -6441,7 +6392,7 @@ def icon_rail_sidebar() -> rx.Component:
                 AppState.username_initial,
                 font_size="0.62rem",
                 font_weight="700",
-                color="rgba(220,230,240,0.55)",
+                color="rgba(220,230,240,0.6)",
             ),
             width="28px",
             height="28px",
@@ -6449,7 +6400,7 @@ def icon_rail_sidebar() -> rx.Component:
             display="flex",
             align_items="center",
             justify_content="center",
-            background="rgba(255,255,255,0.035)",
+            background="rgba(255,255,255,0.04)",
             border="1px solid rgba(255,255,255,0.06)",
             cursor="pointer",
             on_click=AppState.go_to_settings,
@@ -6461,8 +6412,8 @@ def icon_rail_sidebar() -> rx.Component:
         align="center",
         spacing="1",
         flex_shrink="0",
-        border_right="1px solid rgba(255,255,255,0.035)",
-        background="rgba(255,255,255,0.008)",
+        border_right="1px solid rgba(255,255,255,0.04)",
+        background="transparent",
     )
 
 
@@ -6475,22 +6426,22 @@ def floating_workspace_header() -> rx.Component:
             rx.vstack(
                 rx.text(
                     rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
-                    color="rgba(220,230,245,0.8)",
-                    font_size="0.84rem",
+                    color="rgba(240,244,248,0.85)",
+                    font_size="0.85rem",
                     font_weight="600",
                     letter_spacing="0.01em",
                 ),
                 rx.hstack(
                     rx.text(
                         AppState.semester_status_label,
-                        color="rgba(160,175,195,0.4)",
+                        color="rgba(160,170,180,0.38)",
                         font_size="0.68rem",
                         font_weight="400",
                     ),
-                    rx.text("·", color="rgba(160,175,195,0.22)", font_size="0.68rem"),
+                    rx.text("·", color="rgba(160,170,180,0.2)", font_size="0.68rem"),
                     rx.text(
                         AppState.semester_progress_label,
-                        color="rgba(160,175,195,0.4)",
+                        color="rgba(160,170,180,0.38)",
                         font_size="0.68rem",
                         font_weight="400",
                     ),
@@ -6509,9 +6460,9 @@ def floating_workspace_header() -> rx.Component:
         top="0",
         left="0",
         right="0",
-        padding_top="0.65em",
-        padding_bottom="1.4em",
-        background="linear-gradient(to bottom, #0a0a0c 55%, rgba(10,10,12,0.0) 100%)",
+        padding_top="0.6em",
+        padding_bottom="1.2em",
+        background="linear-gradient(to bottom, #0a0a0c 50%, rgba(10,10,12,0.0) 100%)",
         z_index="5",
         pointer_events="none",
     )
