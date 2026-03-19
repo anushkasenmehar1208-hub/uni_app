@@ -4432,7 +4432,7 @@ def tier_status_bar() -> rx.Component:
         ),
         rx.spacer(),
         rx.text(AppState.active_model_name, color="rgba(140,150,160,0.25)", font_size="0.65rem", font_family="monospace"),
-        width="100%", padding_x="1.5em", padding_y="4px", align="center",
+        width="100%", padding_x="0", padding_y="4px", align="center",
     )
 
 
@@ -4671,7 +4671,7 @@ def chat_input_field() -> rx.Component:
 def empty_chat_panel() -> rx.Component:
     return rx.box(
         rx.vstack(
-            rx.box(height="12px"),
+            rx.spacer(),
             # Premium centered empty state
             rx.vstack(
                 rx.image(
@@ -4695,8 +4695,9 @@ def empty_chat_panel() -> rx.Component:
                 align="center",
             ),
             rx.spacer(),
-            # Input bar
+            # Input bar — centered column
             rx.box(
+                tier_status_bar(),
                 rx.cond(
                     AppState.can_send_message,
                     chat_input_field(),
@@ -4704,9 +4705,9 @@ def empty_chat_panel() -> rx.Component:
                 ),
                 width="100%",
                 max_width="720px",
+                padding_x="1.5em",
+                padding_bottom="1.2em",
             ),
-            tier_status_bar(),
-            rx.box(height="24px"),
             spacing="4",
             align="center",
             width="100%",
@@ -4719,7 +4720,6 @@ def empty_chat_panel() -> rx.Component:
         flex_direction="column",
         align_items="center",
         justify_content="center",
-        padding="2em",
     )
 
 # ── FIX 2: active_chat_panel ─────────────────────────
@@ -4731,103 +4731,106 @@ def empty_chat_panel() -> rx.Component:
 
 def active_chat_panel() -> rx.Component:
     return rx.box(
-        # Scrollable messages
+        # ── Scrollable messages ──
         rx.box(
-            rx.vstack(
-                rx.foreach(
-                    AppState.chat_history,
-                    lambda msg: rx.box(
-                        rx.cond(
-                            msg["role"] == "user",
-                            # ── User message ──
-                            rx.box(
-                                rx.text(
-                                    msg["content"],
-                                    color="rgba(240,244,248,0.92)",
-                                    font_size="0.9rem",
-                                    line_height="1.65",
+            # Centered column like ChatGPT
+            rx.box(
+                rx.vstack(
+                    rx.foreach(
+                        AppState.chat_history,
+                        lambda msg: rx.box(
+                            rx.cond(
+                                msg["role"] == "user",
+                                # ── User message — right-aligned pill ──
+                                rx.box(
+                                    rx.text(
+                                        msg["content"],
+                                        color="rgba(240,244,248,0.95)",
+                                        font_size="0.92rem",
+                                        line_height="1.6",
+                                    ),
+                                    background="rgba(255,255,255,0.08)",
+                                    border_radius="20px 20px 4px 20px",
+                                    padding="10px 18px",
+                                    max_width="75%",
+                                    margin_left="auto",
+                                    width="fit-content",
                                 ),
-                                background="rgba(255,255,255,0.07)",
-                                border="1px solid rgba(255,255,255,0.08)",
-                                border_radius="18px 18px 4px 18px",
-                                padding="12px 18px",
-                                max_width="65%",
-                                margin_left="auto",
-                                margin_right="0",
+                                # ── Assistant message — clean full-width text ──
+                                rx.box(
+                                    rx.markdown(msg["content"]),
+                                    color="rgba(220,228,236,0.88)",
+                                    font_size="0.92rem",
+                                    line_height="1.8",
+                                    width="100%",
+                                    padding="2px 0",
+                                    style={
+                                        "& p:first-of-type": {"margin_top": "0"},
+                                        "& p": {"margin_bottom": "0.75em"},
+                                        "& p + ul, & p + ol": {"margin_top": "0.2em"},
+                                        "& ul, & ol": {"padding_left": "1.6em", "margin_bottom": "0.6em"},
+                                        "& li": {"margin_bottom": "0.35em"},
+                                        "& li::marker": {"color": "rgba(160,180,200,0.45)"},
+                                        "& strong": {"color": "rgba(240,245,250,0.95)", "font_weight": "600"},
+                                        "& code": {
+                                            "background": "rgba(255,255,255,0.06)",
+                                            "border": "1px solid rgba(255,255,255,0.08)",
+                                            "border_radius": "4px",
+                                            "padding": "1px 6px",
+                                            "font_size": "0.84em",
+                                            "color": "rgba(200,220,240,0.9)",
+                                        },
+                                        "& pre": {
+                                            "background": "rgba(0,0,0,0.3)",
+                                            "border": "1px solid rgba(255,255,255,0.06)",
+                                            "border_radius": "8px",
+                                            "padding": "14px 16px",
+                                            "overflow_x": "auto",
+                                            "margin": "0.5em 0",
+                                        },
+                                    },
+                                ),
                             ),
-                            # ── Assistant message ──
+                            width="100%",
+                            margin_bottom="24px",
+                            display="flex",
+                            flex_direction="column",
+                        ),
+                    ),
+                    rx.cond(
+                        AppState.is_processing,
+                        rx.hstack(
                             rx.box(
-                                rx.markdown(msg["content"]),
-                                color="rgba(220,228,236,0.88)",
-                                font_size="0.9rem",
-                                line_height="1.75",
-                                width="100%",
-                                margin_left="0",
-                                style={
-                                    "& p:first-of-type": {"margin_top": "0"},
-                                    "& p": {"margin_bottom": "0.65em"},
-                                    "& p + ul, & p + ol": {"margin_top": "0.2em"},
-                                    "& ul, & ol": {"padding_left": "1.6em", "margin_bottom": "0.55em"},
-                                    "& li": {"margin_bottom": "0.3em"},
-                                    "& li::marker": {"color": "rgba(160,180,200,0.5)"},
-                                    "& strong": {"color": "rgba(240,245,250,0.95)", "font_weight": "600"},
-                                    "& code": {
-                                        "background": "rgba(255,255,255,0.06)",
-                                        "border": "1px solid rgba(255,255,255,0.08)",
-                                        "border_radius": "4px",
-                                        "padding": "1px 6px",
-                                        "font_size": "0.84em",
-                                        "color": "rgba(200,220,240,0.9)",
-                                    },
-                                    "& pre": {
-                                        "background": "rgba(0,0,0,0.3)",
-                                        "border": "1px solid rgba(255,255,255,0.06)",
-                                        "border_radius": "8px",
-                                        "padding": "14px 16px",
-                                        "overflow_x": "auto",
-                                        "margin": "0.5em 0",
-                                    },
-                                },
+                                width="6px",
+                                height="6px",
+                                border_radius="50%",
+                                background="rgba(180,200,220,0.5)",
+                                style={"animation": "pulse 1.2s ease-in-out infinite"},
                             ),
+                            rx.text(
+                                "Alex is thinking...",
+                                color="rgba(180,190,200,0.35)",
+                                font_size="0.8rem",
+                                font_weight="400",
+                            ),
+                            spacing="2",
+                            align="center",
+                            padding_left="2px",
+                            margin_bottom="10px",
                         ),
-                        width="100%",
-                        margin_bottom="18px",
-                        display="flex",
-                        flex_direction="column",
                     ),
+                    rx.box(id="chat_bottom_anchor", height="1px"),
+                    width="100%",
+                    align_items="stretch",
+                    spacing="0",
+                    padding_top="1.5em",
+                    padding_bottom="0.75em",
                 ),
-                rx.cond(
-                    AppState.is_processing,
-                    rx.hstack(
-                        rx.box(
-                            width="6px",
-                            height="6px",
-                            border_radius="50%",
-                            background="rgba(180,200,220,0.5)",
-                            style={"animation": "pulse 1.2s ease-in-out infinite"},
-                        ),
-                        rx.text(
-                            "Alex is thinking...",
-                            color="rgba(180,190,200,0.35)",
-                            font_size="0.8rem",
-                            font_weight="400",
-                        ),
-                        spacing="2",
-                        align="center",
-                        padding_left="2px",
-                        margin_bottom="10px",
-                    ),
-                ),
-                rx.box(id="chat_bottom_anchor", height="1px"),
+                # ─ Centered column constraints ─
                 width="100%",
-                align_items="stretch",
-                spacing="0",
+                max_width="720px",
+                margin_x="auto",
                 padding_x="1.5em",
-                padding_top="0",
-                padding_bottom="0.75em",
-                style={
-                    "min_height": "100%",
-                }
             ),
             id="chat_scroll",
             flex="1",
@@ -4846,15 +4849,26 @@ def active_chat_panel() -> rx.Component:
         ),
         rx.script(AUTO_SCROLL_OBSERVER_JS),
         rx.html("<style>@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:0.7;transform:scale(1.2)}}</style>"),
-        tier_status_bar(),
-        rx.cond(
-            AppState.can_send_message,
+        # ── Bottom bar: centered to match chat column ──
+        rx.box(
             rx.box(
-                chat_input_field(),
+                tier_status_bar(),
+                rx.cond(
+                    AppState.can_send_message,
+                    rx.box(
+                        chat_input_field(),
+                        width="100%",
+                        padding_bottom="1.2em",
+                    ),
+                    upgrade_button(),
+                ),
                 width="100%",
-                padding="0 1.5em 1.2em 1.5em",
+                max_width="720px",
+                margin_x="auto",
+                padding_x="1.5em",
             ),
-            upgrade_button(),
+            width="100%",
+            flex_shrink="0",
         ),
         pricing_modal(),
         width="100%",
