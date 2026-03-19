@@ -4823,7 +4823,7 @@ def active_chat_panel() -> rx.Component:
                     width="100%",
                     align_items="stretch",
                     spacing="0",
-                    padding_top="1.5em",
+                    padding_top="3.5em",
                     padding_bottom="0.75em",
                 ),
                 # ─ Centered column constraints ─
@@ -6305,154 +6305,198 @@ def semester_sidebar_drawer() -> rx.Component:
     )
 
 
+def _icon_rail_button(icon_tag: str, on_click, tooltip: str = "") -> rx.Component:
+    return rx.icon_button(
+        rx.icon(tag=icon_tag, size=18),
+        on_click=on_click,
+        variant="ghost",
+        size="2",
+        style={
+            "color": "rgba(200,210,220,0.45)",
+            "background": "transparent",
+            "border": "none",
+            "border_radius": "8px",
+            "cursor": "pointer",
+            "_hover": {"color": "rgba(220,230,240,0.85)", "background": "rgba(255,255,255,0.06)"},
+        },
+    )
+
+
+def icon_rail_sidebar() -> rx.Component:
+    return rx.vstack(
+        # ── Top icons ──
+        _icon_rail_button("panel_left", AppState.toggle_semester_sidebar),
+        _icon_rail_button("square_pen", AppState.new_chat),
+        _icon_rail_button("search", AppState.toggle_semester_sidebar),
+        _icon_rail_button("message_square", AppState.toggle_semester_sidebar),
+        rx.spacer(),
+        # ── Bottom icons ──
+        _icon_rail_button("settings", AppState.go_to_settings),
+        rx.box(
+            rx.text(
+                AppState.username_initial,
+                font_size="0.7rem",
+                font_weight="700",
+                color="#34D399",
+            ),
+            width="30px",
+            height="30px",
+            border_radius="50%",
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            background="rgba(52,211,153,0.08)",
+            border="1px solid rgba(52,211,153,0.15)",
+            cursor="pointer",
+            on_click=AppState.go_to_settings,
+            style={"_hover": {"background": "rgba(52,211,153,0.15)"}},
+        ),
+        width="48px",
+        height="100vh",
+        padding_y="0.8em",
+        align="center",
+        spacing="1",
+        flex_shrink="0",
+        border_right="1px solid rgba(255,255,255,0.06)",
+        background="transparent",
+    )
+
+
+def floating_scope_header() -> rx.Component:
+    return rx.box(
+        rx.vstack(
+            rx.text(
+                rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
+                color="rgba(240,244,248,0.92)",
+                font_size="0.88rem",
+                font_weight="600",
+            ),
+            rx.hstack(
+                rx.text(
+                    AppState.semester_status_label,
+                    color="rgba(160,170,180,0.55)",
+                    font_size="0.72rem",
+                    font_weight="400",
+                ),
+                rx.text("·", color="rgba(160,170,180,0.3)", font_size="0.72rem"),
+                rx.text(
+                    AppState.semester_progress_label,
+                    color="rgba(160,170,180,0.55)",
+                    font_size="0.72rem",
+                    font_weight="400",
+                ),
+                spacing="1",
+                align="center",
+            ),
+            spacing="0",
+            align_items="flex-start",
+        ),
+        position="absolute",
+        top="0",
+        left="0",
+        right="0",
+        padding="0.7em 1.5em",
+        background="linear-gradient(to bottom, #0a0a0c 60%, transparent 100%)",
+        z_index="5",
+        pointer_events="none",
+    )
+
+
 def semester_page():
     return rx.box(
         semester_sidebar_drawer(),
-        # ── Slim header ──
-        rx.hstack(
-            rx.hstack(
-                rx.icon_button(
-                    rx.icon(tag="panel_left", size=17),
-                    on_click=AppState.toggle_semester_sidebar,
-                    variant="ghost",
-                    size="2",
-                    style={
-                        "color": "rgba(200,210,220,0.6)",
-                        "background": "transparent",
-                        "border": "none",
-                        "_hover": {"color": "rgba(220,230,240,0.9)", "background": "rgba(255,255,255,0.04)"},
-                    },
-                ),
-                rx.vstack(
-                    rx.text(
-                        rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
-                        color="rgba(240,244,248,0.92)",
-                        font_size="0.88rem",
-                        font_weight="600",
-                    ),
-                    rx.hstack(
-                        rx.text(
-                            AppState.semester_status_label,
-                            color="rgba(160,170,180,0.55)",
-                            font_size="0.72rem",
-                            font_weight="400",
-                        ),
-                        rx.text("·", color="rgba(160,170,180,0.3)", font_size="0.72rem"),
-                        rx.text(
-                            AppState.semester_progress_label,
-                            color="rgba(160,170,180,0.55)",
-                            font_size="0.72rem",
-                            font_weight="400",
-                        ),
-                        spacing="1",
-                        align="center",
-                    ),
-                    spacing="0",
-                    align_items="flex-start",
-                ),
-                spacing="2",
-                align="center",
-            ),
-            rx.spacer(),
-            # Thin progress bar
-            rx.box(
-                rx.box(
-                    width=AppState.semester_progress_percent,
-                    height="100%",
-                    background="rgba(255,255,255,0.2)",
-                    border_radius="2px",
-                    style={"transition": "width 0.3s ease"},
-                ),
-                width="60px",
-                height="3px",
-                border_radius="2px",
-                background="rgba(255,255,255,0.06)",
-                flex_shrink="0",
-            ),
-            width="100%",
-            padding="0.8em 1.5em",
-            flex_shrink="0",
-            align="center",
-        ),
-        rx.cond(
-            AppState.is_generating_plan,
-            rx.box(
-                rx.hstack(
-                    rx.spinner(size="1", color="rgba(180,200,220,0.6)"),
-                    rx.text(
-                        "Preparing your 110-day study plan...",
-                        color="rgba(200,210,220,0.7)",
-                        font_size="0.8rem",
-                        font_weight="400",
-                    ),
-                    spacing="2",
-                    align="center",
-                ),
-                width="100%",
-                padding="0.55em 1.5em",
-                background="rgba(255,255,255,0.015)",
-                border_bottom="1px solid rgba(255,255,255,0.03)",
-            ),
+        # ── Left icon rail ──
+        icon_rail_sidebar(),
+        # ── Main content area ──
+        rx.box(
+            # Floating header text (no bar)
+            floating_scope_header(),
+            # Status banners
             rx.cond(
-                AppState.plan_generation_error != "",
+                AppState.is_generating_plan,
                 rx.box(
                     rx.hstack(
+                        rx.spinner(size="1", color="rgba(180,200,220,0.6)"),
                         rx.text(
-                            AppState.plan_generation_error,
-                            color="rgba(255,200,150,0.85)",
+                            "Preparing your 110-day study plan...",
+                            color="rgba(200,210,220,0.7)",
                             font_size="0.8rem",
-                            font_weight="500",
+                            font_weight="400",
                         ),
-                        rx.spacer(),
-                        rx.button(
-                            "Retry",
-                            on_click=AppState.retry_study_plan_generation,
-                            size="1",
-                            variant="soft",
-                            color_scheme="orange",
-                        ),
-                        spacing="3",
+                        spacing="2",
                         align="center",
-                        width="100%",
                     ),
                     width="100%",
-                    padding="0.55em 1.5em",
-                    background="rgba(180,100,30,0.06)",
-                    border_bottom="1px solid rgba(251,191,36,0.1)",
+                    padding="3em 1.5em 0.55em 1.5em",
+                    background="transparent",
+                ),
+                rx.cond(
+                    AppState.plan_generation_error != "",
+                    rx.box(
+                        rx.hstack(
+                            rx.text(
+                                AppState.plan_generation_error,
+                                color="rgba(255,200,150,0.85)",
+                                font_size="0.8rem",
+                                font_weight="500",
+                            ),
+                            rx.spacer(),
+                            rx.button(
+                                "Retry",
+                                on_click=AppState.retry_study_plan_generation,
+                                size="1",
+                                variant="soft",
+                                color_scheme="orange",
+                            ),
+                            spacing="3",
+                            align="center",
+                            width="100%",
+                        ),
+                        width="100%",
+                        padding="3em 1.5em 0.55em 1.5em",
+                        background="rgba(180,100,30,0.06)",
+                        border_bottom="1px solid rgba(251,191,36,0.1)",
+                    ),
+                    rx.fragment(),
+                ),
+            ),
+            rx.cond(
+                AppState.scope_hydrating,
+                rx.box(
+                    rx.hstack(
+                        rx.spinner(size="1", color="rgba(160,170,180,0.5)"),
+                        rx.text(
+                            "Loading workspace...",
+                            color="rgba(160,170,180,0.5)",
+                            font_size="0.78rem",
+                            font_weight="400",
+                        ),
+                        spacing="2",
+                        align="center",
+                    ),
+                    width="100%",
+                    padding="3em 1.5em 0.55em 1.5em",
+                    background="transparent",
                 ),
                 rx.fragment(),
             ),
-        ),
-        rx.cond(
-            AppState.scope_hydrating,
             rx.box(
-                rx.hstack(
-                    rx.spinner(size="1", color="rgba(160,170,180,0.5)"),
-                    rx.text(
-                        "Loading workspace...",
-                        color="rgba(160,170,180,0.5)",
-                        font_size="0.78rem",
-                        font_weight="400",
-                    ),
-                    spacing="2",
-                    align="center",
-                ),
+                chat_panel(),
                 width="100%",
-                padding="0.5em 1.5em",
-                background="rgba(255,255,255,0.01)",
-                border_bottom="1px solid rgba(255,255,255,0.03)",
+                flex="1",
+                min_height="0",
+                overflow="hidden",
+                position="relative",
             ),
-            rx.fragment(),
-        ),
-        rx.box(
-            chat_panel(),
-            width="100%",
             flex="1",
-            min_height="0",
+            min_width="0",
+            height="100vh",
+            display="flex",
+            flex_direction="column",
             overflow="hidden",
             position="relative",
         ),
-        width="100%", height="100vh", max_height="100vh", display="flex", flex_direction="column", overflow="hidden",
+        width="100%", height="100vh", max_height="100vh", display="flex", flex_direction="row", overflow="hidden",
         background="#0a0a0c",
     )
 
