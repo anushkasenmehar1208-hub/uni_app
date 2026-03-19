@@ -4593,15 +4593,15 @@ def chat_input_field() -> rx.Component:
                 id="chat_input",
                 placeholder=rx.cond(
                     AppState.name != "",
-                    "Study with Alex AI...",
-                    "Study with Alex AI...",
+                    "Message Alex AI...",
+                    "Message Alex AI...",
                 ),
                 value=AppState.chat_input,
                 on_change=AppState.set_chat_input,
                 color="rgba(236,240,244,0.92)",
                 flex="1",
-                min_height="96px",
-                max_height="200px",
+                min_height="44px",
+                max_height="140px",
                 padding="13px 4px 13px 18px",
                 font_size="0.9rem",
                 line_height="1.55",
@@ -6300,24 +6300,80 @@ def semester_sidebar_drawer() -> rx.Component:
     )
 
 
+# ── Claude-style navigation rail ──────────────────────────────
+def _nav_rail_btn(icon_tag: str, on_click, tooltip: str = "") -> rx.Component:
+    return rx.icon_button(
+        rx.icon(tag=icon_tag, size=18),
+        on_click=on_click,
+        variant="ghost",
+        size="2",
+        style={
+            "color": "rgba(200,210,220,0.45)",
+            "background": "transparent",
+            "border": "none",
+            "border_radius": "8px",
+            "width": "36px",
+            "height": "36px",
+            "cursor": "pointer",
+            "_hover": {
+                "color": "rgba(220,230,240,0.85)",
+                "background": "rgba(255,255,255,0.06)",
+            },
+        },
+    )
+
+
+def nav_rail() -> rx.Component:
+    return rx.vstack(
+        # ── Top group ──
+        _nav_rail_btn("panel_left", AppState.toggle_semester_sidebar),
+        _nav_rail_btn("square_pen", AppState.new_chat),
+        _nav_rail_btn("search", AppState.toggle_semester_sidebar),
+        rx.spacer(),
+        # ── Bottom group ──
+        _nav_rail_btn("settings", rx.redirect("/settings")),
+        # User avatar
+        rx.box(
+            rx.text(
+                AppState.username_initial,
+                font_size="0.7rem",
+                font_weight="600",
+                color="rgba(220,225,232,0.8)",
+            ),
+            width="30px",
+            height="30px",
+            border_radius="50%",
+            background="rgba(255,255,255,0.08)",
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            margin_bottom="4px",
+            style={
+                "cursor": "pointer",
+                "_hover": {"background": "rgba(255,255,255,0.12)"},
+            },
+            on_click=rx.redirect("/settings"),
+        ),
+        align="center",
+        width="52px",
+        height="100vh",
+        flex_shrink="0",
+        padding_y="12px",
+        spacing="1",
+        border_right="1px solid rgba(255,255,255,0.06)",
+        background="#0a0a0c",
+    )
+
+
 def semester_page():
-    return rx.box(
-        semester_sidebar_drawer(),
-        # ── Slim header ──
-        rx.hstack(
+    return rx.hstack(
+        # ── Nav rail (left) ──
+        nav_rail(),
+        # ── Main content (right) ──
+        rx.box(
+            semester_sidebar_drawer(),
+            # ── Slim header ──
             rx.hstack(
-                rx.icon_button(
-                    rx.icon(tag="panel_left", size=17),
-                    on_click=AppState.toggle_semester_sidebar,
-                    variant="ghost",
-                    size="2",
-                    style={
-                        "color": "rgba(200,210,220,0.6)",
-                        "background": "transparent",
-                        "border": "none",
-                        "_hover": {"color": "rgba(220,230,240,0.9)", "background": "rgba(255,255,255,0.04)"},
-                    },
-                ),
                 rx.vstack(
                     rx.text(
                         rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
@@ -6345,109 +6401,112 @@ def semester_page():
                     spacing="0",
                     align_items="flex-start",
                 ),
-                spacing="2",
-                align="center",
-            ),
-            rx.spacer(),
-            # Thin progress bar
-            rx.box(
+                rx.spacer(),
+                # Thin progress bar
                 rx.box(
-                    width=AppState.semester_progress_percent,
-                    height="100%",
-                    background="rgba(255,255,255,0.2)",
-                    border_radius="2px",
-                    style={"transition": "width 0.3s ease"},
-                ),
-                width="60px",
-                height="3px",
-                border_radius="2px",
-                background="rgba(255,255,255,0.06)",
-                flex_shrink="0",
-            ),
-            width="100%",
-            padding="0.8em 1.5em",
-            flex_shrink="0",
-            align="center",
-        ),
-        rx.cond(
-            AppState.is_generating_plan,
-            rx.box(
-                rx.hstack(
-                    rx.spinner(size="1", color="rgba(180,200,220,0.6)"),
-                    rx.text(
-                        "Preparing your 110-day study plan...",
-                        color="rgba(200,210,220,0.7)",
-                        font_size="0.8rem",
-                        font_weight="400",
+                    rx.box(
+                        width=AppState.semester_progress_percent,
+                        height="100%",
+                        background="rgba(255,255,255,0.2)",
+                        border_radius="2px",
+                        style={"transition": "width 0.3s ease"},
                     ),
-                    spacing="2",
-                    align="center",
+                    width="60px",
+                    height="3px",
+                    border_radius="2px",
+                    background="rgba(255,255,255,0.06)",
+                    flex_shrink="0",
                 ),
                 width="100%",
-                padding="0.55em 1.5em",
-                background="rgba(255,255,255,0.015)",
-                border_bottom="1px solid rgba(255,255,255,0.03)",
+                padding="0.8em 1.5em",
+                flex_shrink="0",
+                align="center",
             ),
             rx.cond(
-                AppState.plan_generation_error != "",
+                AppState.is_generating_plan,
                 rx.box(
                     rx.hstack(
+                        rx.spinner(size="1", color="rgba(180,200,220,0.6)"),
                         rx.text(
-                            AppState.plan_generation_error,
-                            color="rgba(255,200,150,0.85)",
+                            "Preparing your 110-day study plan...",
+                            color="rgba(200,210,220,0.7)",
                             font_size="0.8rem",
-                            font_weight="500",
+                            font_weight="400",
                         ),
-                        rx.spacer(),
-                        rx.button(
-                            "Retry",
-                            on_click=AppState.retry_study_plan_generation,
-                            size="1",
-                            variant="soft",
-                            color_scheme="orange",
-                        ),
-                        spacing="3",
+                        spacing="2",
                         align="center",
-                        width="100%",
                     ),
                     width="100%",
                     padding="0.55em 1.5em",
-                    background="rgba(180,100,30,0.06)",
-                    border_bottom="1px solid rgba(251,191,36,0.1)",
+                    background="rgba(255,255,255,0.015)",
+                    border_bottom="1px solid rgba(255,255,255,0.03)",
+                ),
+                rx.cond(
+                    AppState.plan_generation_error != "",
+                    rx.box(
+                        rx.hstack(
+                            rx.text(
+                                AppState.plan_generation_error,
+                                color="rgba(255,200,150,0.85)",
+                                font_size="0.8rem",
+                                font_weight="500",
+                            ),
+                            rx.spacer(),
+                            rx.button(
+                                "Retry",
+                                on_click=AppState.retry_study_plan_generation,
+                                size="1",
+                                variant="soft",
+                                color_scheme="orange",
+                            ),
+                            spacing="3",
+                            align="center",
+                            width="100%",
+                        ),
+                        width="100%",
+                        padding="0.55em 1.5em",
+                        background="rgba(180,100,30,0.06)",
+                        border_bottom="1px solid rgba(251,191,36,0.1)",
+                    ),
+                    rx.fragment(),
+                ),
+            ),
+            rx.cond(
+                AppState.scope_hydrating,
+                rx.box(
+                    rx.hstack(
+                        rx.spinner(size="1", color="rgba(160,170,180,0.5)"),
+                        rx.text(
+                            "Loading workspace...",
+                            color="rgba(160,170,180,0.5)",
+                            font_size="0.78rem",
+                            font_weight="400",
+                        ),
+                        spacing="2",
+                        align="center",
+                    ),
+                    width="100%",
+                    padding="0.5em 1.5em",
+                    background="rgba(255,255,255,0.01)",
+                    border_bottom="1px solid rgba(255,255,255,0.03)",
                 ),
                 rx.fragment(),
             ),
-        ),
-        rx.cond(
-            AppState.scope_hydrating,
             rx.box(
-                rx.hstack(
-                    rx.spinner(size="1", color="rgba(160,170,180,0.5)"),
-                    rx.text(
-                        "Loading workspace...",
-                        color="rgba(160,170,180,0.5)",
-                        font_size="0.78rem",
-                        font_weight="400",
-                    ),
-                    spacing="2",
-                    align="center",
-                ),
+                chat_panel(),
                 width="100%",
-                padding="0.5em 1.5em",
-                background="rgba(255,255,255,0.01)",
-                border_bottom="1px solid rgba(255,255,255,0.03)",
+                flex="1",
+                min_height="0",
+                overflow="hidden",
+                position="relative",
             ),
-            rx.fragment(),
+            width="100%", flex="1", height="100%", max_height="100vh", display="flex", flex_direction="column", overflow="hidden",
+            background="#0a0a0c",
         ),
-        rx.box(
-            chat_panel(),
-            width="100%",
-            flex="1",
-            min_height="0",
-            overflow="hidden",
-            position="relative",
-        ),
-        width="100%", height="100vh", max_height="100vh", display="flex", flex_direction="column", overflow="hidden",
+        spacing="0",
+        width="100%",
+        height="100vh",
+        overflow="hidden",
         background="#0a0a0c",
     )
 
