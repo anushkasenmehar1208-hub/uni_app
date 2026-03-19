@@ -970,20 +970,17 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def greeting_text(self) -> str:
-        return "Hi, " + self.display_name if self.display_name else "Hi"
-
-    @rx.var
-    def time_of_day_greeting(self) -> str:
-        """Time-based greeting like Claude.ai: 'Morning, Lenu'"""
-        hour = datetime.now().hour
-        if hour < 12:
+        h = datetime.now().hour
+        if h < 12:
             tod = "Morning"
-        elif hour < 17:
+        elif h < 17:
             tod = "Afternoon"
         else:
             tod = "Evening"
         name = self.display_name
-        return f"{tod}, {name}" if name else f"Good {tod}"
+        if name:
+            return f"{tod}, {name}"
+        return f"Good {tod}"
 
     @rx.var
     def filtered_sessions(self) -> list[dict]:
@@ -4684,38 +4681,32 @@ def chat_input_field() -> rx.Component:
 def empty_chat_panel() -> rx.Component:
     return rx.box(
         rx.vstack(
-            # ── Centered greeting area (fills top ~60%) ──
-            rx.box(
-                rx.vstack(
-                    rx.image(
-                        src="/alex_logo.svg",
-                        width="52px",
-                        height="52px",
-                        object_fit="contain",
-                        opacity="0.85",
-                    ),
-                    rx.heading(
-                        AppState.time_of_day_greeting,
-                        color="rgba(220,225,232,0.85)",
-                        font_size="clamp(1.6rem, 4vw, 2.25rem)",
-                        font_weight="400",
-                        letter_spacing="-0.02em",
-                        text_align="center",
-                        line_height="1.3",
-                        style={
-                            "font_family": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                        },
-                    ),
-                    spacing="4",
-                    align="center",
+            # Vertically push content to ~40% from top (like Claude.ai)
+            rx.spacer(),
+            rx.spacer(),
+            # ── Greeting row: logo + time-based text ──
+            rx.hstack(
+                rx.image(
+                    src="/alex_logo.svg",
+                    width="42px",
+                    height="42px",
+                    object_fit="contain",
+                    opacity="0.85",
                 ),
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                flex="1",
-                width="100%",
+                rx.text(
+                    AppState.greeting_text,
+                    color="rgba(220,225,232,0.75)",
+                    font_size="1.85rem",
+                    font_weight="300",
+                    letter_spacing="-0.01em",
+                    line_height="1.2",
+                ),
+                spacing="4",
+                align="center",
             ),
-            # ── Input bar pinned toward bottom ──
+            # ── Spacer between greeting and input ──
+            rx.box(height="28px"),
+            # ── Input bar ──
             rx.box(
                 rx.cond(
                     AppState.can_send_message,
@@ -4723,11 +4714,12 @@ def empty_chat_panel() -> rx.Component:
                     upgrade_button(),
                 ),
                 width="100%",
-                max_width="720px",
+                max_width="680px",
             ),
+            # ── Footer: tier status ──
             tier_status_bar(),
-            rx.box(height="20px"),
-            spacing="4",
+            rx.spacer(),
+            spacing="0",
             align="center",
             width="100%",
             height="100%",
@@ -4738,6 +4730,7 @@ def empty_chat_panel() -> rx.Component:
         display="flex",
         flex_direction="column",
         align_items="center",
+        justify_content="center",
         padding="2em",
     )
 
