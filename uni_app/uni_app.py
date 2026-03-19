@@ -4680,22 +4680,20 @@ def chat_input_field() -> rx.Component:
 
 def empty_chat_panel() -> rx.Component:
     return rx.box(
+        # Centered content group — greeting + input stay together
         rx.vstack(
-            # Vertically push content to ~40% from top (like Claude.ai)
-            rx.spacer(),
-            rx.spacer(),
-            # ── Greeting row: logo + time-based text ──
+            # ── Logo + greeting inline ──
             rx.hstack(
                 rx.image(
                     src="/alex_logo.svg",
-                    width="42px",
-                    height="42px",
+                    width="40px",
+                    height="40px",
                     object_fit="contain",
-                    opacity="0.85",
+                    opacity="0.8",
                 ),
                 rx.text(
                     AppState.greeting_text,
-                    color="rgba(220,225,232,0.75)",
+                    color="rgba(220,225,232,0.7)",
                     font_size="1.85rem",
                     font_weight="300",
                     letter_spacing="-0.01em",
@@ -4704,8 +4702,8 @@ def empty_chat_panel() -> rx.Component:
                 spacing="4",
                 align="center",
             ),
-            # ── Spacer between greeting and input ──
-            rx.box(height="28px"),
+            # ── Gap ──
+            rx.box(height="32px"),
             # ── Input bar ──
             rx.box(
                 rx.cond(
@@ -4716,22 +4714,21 @@ def empty_chat_panel() -> rx.Component:
                 width="100%",
                 max_width="680px",
             ),
-            # ── Footer: tier status ──
+            # ── Tier status ──
             tier_status_bar(),
-            rx.spacer(),
             spacing="0",
             align="center",
             width="100%",
-            height="100%",
+            max_width="680px",
         ),
         pricing_modal(),
         width="100%",
         height="100%",
         display="flex",
-        flex_direction="column",
         align_items="center",
         justify_content="center",
         padding="2em",
+        padding_bottom="12vh",
     )
 
 # ── FIX 2: active_chat_panel ─────────────────────────
