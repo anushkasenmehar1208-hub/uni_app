@@ -785,6 +785,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     show_semester_sidebar: bool = False
 
     sessions: list[dict] = []
+    home_sessions: list[dict] = []
     current_session_id: str = ""
     current_session_choice: str = ""
 
@@ -989,6 +990,13 @@ class AppState(reflex_local_auth.LocalAuthState):
         if not q:
             return self.sessions
         return [s for s in self.sessions if q in (s.get("title", "") or "").lower()]
+
+    @rx.var
+    def filtered_home_sessions(self) -> list[dict]:
+        q = (self.chat_search_query or "").strip().lower()
+        if not q:
+            return self.home_sessions
+        return [s for s in self.home_sessions if q in (s.get("title", "") or "").lower()]
 
     @rx.var
     def username_initial(self) -> str:
@@ -2002,6 +2010,35 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"ERROR delete_session: {e}")
 
+    @rx.event
+    def delete_home_session(self, session_id: str):
+        """Delete an Alex AI home chat session (works from any scope)."""
+        uid = self._uid()
+        if uid < 0 or not session_id:
+            return
+        try:
+            sid = int(session_id)
+            if not self._session_in_scope(uid, sid, "home"):
+                return
+            with rx.session() as session:
+                for m in session.exec(select(ChatMessage2).where(ChatMessage2.session_id == sid)).all():
+                    session.delete(m)
+                sess = session.exec(select(ChatSession).where(ChatSession.id == sid)).one_or_none()
+                if sess:
+                    session.delete(sess)
+                session.commit()
+            # If we're on home and deleted the active session, reset
+            if self.active_scope == "home" and self.current_session_id == session_id:
+                self.current_session_id = ""
+                self.current_session_choice = ""
+                self._ensure_session(uid, "home")
+                self._load_messages(uid)
+                self._load_sessions(uid, "home")
+            # Always refresh home_sessions for the sidebar
+            self._load_home_sessions(uid)
+        except Exception as e:
+            print(f"ERROR delete_home_session: {e}")
+
     def _ensure_session(self, uid: int, scope: str) -> None:
         with rx.session() as session:
             sess = session.exec(
@@ -2086,6 +2123,16 @@ class AppState(reflex_local_auth.LocalAuthState):
             first = rows[0]
             self.current_session_id = str(first.id)
             self.current_session_choice = f"{first.id}::{first.title}"
+
+    def _load_home_sessions(self, uid: int) -> None:
+        with rx.session() as session:
+            rows = session.exec(
+                select(ChatSession)
+                .where(ChatSession.user_id == uid)
+                .where(ChatSession.scope == "home")
+                .order_by(ChatSession.updated_at.desc())
+            ).all()
+        self.home_sessions = [{"id": str(r.id), "title": r.title} for r in rows]
 
     def _migrate_legacy_messages_once(self, uid: int) -> None:
         with rx.session() as session:
@@ -2867,6 +2914,10 @@ Critical operating rules:
     @rx.event
     def toggle_semester_sidebar(self):
         self.show_semester_sidebar = not self.show_semester_sidebar
+        if self.show_semester_sidebar:
+            uid = self._uid()
+            if uid >= 0:
+                self._load_home_sessions(uid)
 
     @rx.event
     def close_semester_sidebar(self):
@@ -3044,6 +3095,12 @@ Critical operating rules:
                 except Exception as e:
                     print(f"[HYDRATE] ERROR loading plan data for {raw_scope}: {e}")
 
+            # ── Load home sessions for sidebar (always needed) ──
+            try:
+                self._load_home_sessions(uid)
+            except Exception as e:
+                print(f"[HYDRATE] ERROR loading home sessions: {e}")
+
             # ── Mark hydration complete ──
             self.scope_hydrating = False
 
@@ -3116,6 +3173,8 @@ Critical operating rules:
                 self.current_session_id = str(sess.id)
                 self.current_session_choice = f"{sess.id}::New chat"
             self._load_sessions(uid, self.active_scope)
+            if self.active_scope == "home":
+                self._load_home_sessions(uid)
             # NEW: reset to empty state (no welcome message stored)
             self.chat_history = []
         except Exception as e:
@@ -3560,11 +3619,36 @@ Subjects:\n{courses_text}"""
     async def go_home(self):
         uid = self._uid()
         if uid < 0: return
+        if self.active_scope == "home" and self.view_mode == "home":
+            self.show_semester_sidebar = False
+            return
         self.active_scope = "home"
         self.view_mode = "home"
         self.show_semester_sidebar = False
         self._save_memory(uid)
         self._switch_scope(uid, "home")
+        yield _hard_navigate("/s/home")
+
+    @rx.event
+    async def switch_to_home_chat(self, session_id: str):
+        """Navigate to Alex AI home and load a specific chat session."""
+        uid = self._uid()
+        if uid < 0: return
+        self.show_semester_sidebar = False
+        if self.active_scope == "home" and self.view_mode == "home":
+            # Already on home — just switch the session
+            if self._session_in_scope(uid, int(session_id), "home"):
+                self.current_session_id = session_id
+                self._load_messages(uid)
+                yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            return
+        # On a semester page — navigate to home
+        self.active_scope = "home"
+        self.view_mode = "home"
+        self._save_memory(uid)
+        self._switch_scope(uid, "home")
+        # Store session to load after navigation
+        self.current_session_id = session_id
         yield _hard_navigate("/s/home")
 
     @rx.event
@@ -3632,12 +3716,17 @@ Subjects:\n{courses_text}"""
                     needs_title = sess_row is not None and sess_row.title == "New chat"
                 if needs_title:
                     try:
+                        # Build context from available chat history
+                        chat_context = user_msg
+                        if len(self.chat_history) >= 3:
+                            recent = self.chat_history[-4:]
+                            chat_context = " | ".join([m.get("content", "")[:120] for m in recent])
                         title_resp = await asyncio.to_thread(
                             _groq_generate,
                             GEMINI_FAST_MODEL,
-                            f'Give a short 3-5 word title for: "{user_msg}". Reply with ONLY the title.',
+                            f'Give a short 3-6 word chat title summarizing this conversation. Reply with ONLY the title, no quotes.\n\nConversation: "{chat_context}"',
                         )
-                        new_title = (getattr(title_resp, "text", "") or "").strip()[:60]
+                        new_title = (getattr(title_resp, "text", "") or "").strip().strip('"').strip("'")[:60]
                         if new_title:
                             with rx.session() as db_sess:
                                 sr = db_sess.exec(select(ChatSession).where(ChatSession.id == sid)).one_or_none()
@@ -3646,6 +3735,8 @@ Subjects:\n{courses_text}"""
                                     db_sess.add(sr)
                                     db_sess.commit()
                             self._load_sessions(uid, self.active_scope)
+                            if self.active_scope == "home":
+                                self._load_home_sessions(uid)
                     except Exception as te:
                         print(f"ERROR auto_title: {te}")
 
@@ -6151,6 +6242,88 @@ def semester_chat_history_list() -> rx.Component:
     )
 
 
+def alex_chat_history_list() -> rx.Component:
+    """Chat history for Alex AI home chats — visible in sidebar from any page."""
+    return rx.vstack(
+        rx.foreach(
+            AppState.filtered_home_sessions,
+            lambda s: rx.hstack(
+                rx.button(
+                    rx.hstack(
+                        rx.icon(tag="message_square", size=12, color="rgba(255,255,255,0.25)"),
+                        rx.text(
+                            s["title"],
+                            overflow="hidden",
+                            text_overflow="ellipsis",
+                            white_space="nowrap",
+                            font_size="0.78rem",
+                        ),
+                        spacing="2",
+                        align="center",
+                        width="100%",
+                    ),
+                    on_click=AppState.switch_to_home_chat(s["id"]),
+                    variant="ghost",
+                    color=rx.cond(
+                        (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"]),
+                        "rgba(255,255,255,0.9)",
+                        "rgba(255,255,255,0.5)",
+                    ),
+                    font_weight=rx.cond(
+                        (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"]),
+                        "600",
+                        "400",
+                    ),
+                    text_align="left",
+                    justify_content="flex-start",
+                    flex="1",
+                    overflow="hidden",
+                    size="1",
+                    style={
+                        "border_radius": "8px",
+                        "padding": "6px 8px",
+                        "background": rx.cond(
+                            (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"]),
+                            "rgba(255,255,255,0.06)",
+                            "transparent",
+                        ),
+                        "_hover": {"background": "rgba(255,255,255,0.06)"},
+                    },
+                ),
+                rx.icon_button(
+                    rx.icon(tag="trash_2", size=11),
+                    on_click=AppState.delete_home_session(s["id"]),
+                    variant="ghost",
+                    color_scheme="red",
+                    size="1",
+                    style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0"},
+                ),
+                width="100%",
+                align="center",
+                spacing="1",
+                style={
+                    "& .rt-IconButton": {"opacity": "0", "transition": "opacity 0.15s"},
+                    "_hover": {"& .rt-IconButton": {"opacity": "0.4"}},
+                },
+            ),
+        ),
+        width="100%",
+        spacing="0",
+        align_items="stretch",
+        flex="1",
+        min_height="0",
+        overflow_y="auto",
+        style={
+            "&::-webkit-scrollbar": {"width": "3px"},
+            "&::-webkit-scrollbar-track": {"background": "transparent"},
+            "&::-webkit-scrollbar-thumb": {
+                "background": "rgba(255,255,255,0.06)",
+                "border_radius": "4px",
+            },
+        },
+    )
+
+
 def alex_workspace_button() -> rx.Component:
     is_active = AppState.is_home_scope_active
     return rx.button(
@@ -6219,41 +6392,84 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             rx.hstack(
                 rx.spacer(),
                 rx.icon_button(
-                    rx.icon(tag="x", size=18),
+                    rx.icon(tag="panel_left", size=18),
                     on_click=AppState.close_semester_sidebar,
                     variant="ghost",
-                    color="rgba(255,255,255,0.7)",
+                    style={
+                        "color": "rgba(200,210,220,0.45)",
+                        "background": "transparent",
+                        "border": "none",
+                        "border_radius": "8px",
+                        "cursor": "pointer",
+                        "_hover": {
+                            "color": "rgba(220,230,240,0.85)",
+                            "background": "rgba(255,255,255,0.06)",
+                        },
+                    },
                 ),
                 width="100%",
                 align="center",
             )
         )
 
+    # Build flat semester buttons (S1–S8)
+    all_semester_buttons: list[rx.Component] = []
+    for yr_label, sems in SEMESTER_NAVIGATION.items():
+        for sem in sems:
+            all_semester_buttons.append(semester_nav_button(yr_label, sem))
+
     return rx.vstack(
         *header_blocks,
-        # ── New chat button ────────────────────────────────
-        rx.button(
-            rx.hstack(
-                rx.icon(tag="plus", size=15, color="#34D399"),
-                rx.text("New chat", font_size="0.8rem", font_weight="600", color="rgba(255,255,255,0.88)"),
-                spacing="2",
-                align="center",
-                width="100%",
-            ),
-            on_click=AppState.new_chat,
+        # ── Alex AI workspace button ──
+        alex_workspace_button(),
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)"),
+        # ── Semesters (flat, no year groups) ──
+        rx.text(
+            "SEMESTERS",
+            color="rgba(255,255,255,0.28)",
+            font_size="0.68rem",
+            letter_spacing="2.4px",
+            font_weight="700",
+        ),
+        rx.vstack(
+            *all_semester_buttons,
+            spacing="1",
             width="100%",
-            variant="ghost",
-            style={
-                "height": "38px",
-                "border_radius": "10px",
-                "border": "1px solid rgba(52,211,153,0.25)",
-                "background": "rgba(52,211,153,0.06)",
-                "justify_content": "flex-start",
-                "_hover": {
-                    "background": "rgba(52,211,153,0.12)",
-                    "border": "1px solid rgba(52,211,153,0.4)",
-                },
-            },
+            align_items="stretch",
+        ),
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)"),
+        # ── Alex AI Chat History ──
+        rx.hstack(
+            rx.text(
+                "ALEX AI CHATS",
+                color="rgba(255,255,255,0.28)",
+                font_size="0.68rem",
+                letter_spacing="2.4px",
+                font_weight="700",
+            ),
+            rx.spacer(),
+            rx.cond(
+                AppState.is_home_scope_active,
+                rx.icon_button(
+                    rx.icon(tag="plus", size=14),
+                    on_click=AppState.new_chat,
+                    variant="ghost",
+                    size="1",
+                    style={
+                        "color": "rgba(255,255,255,0.35)",
+                        "background": "transparent",
+                        "border": "none",
+                        "cursor": "pointer",
+                        "_hover": {
+                            "color": "rgba(255,255,255,0.7)",
+                            "background": "rgba(255,255,255,0.06)",
+                        },
+                    },
+                ),
+                rx.fragment(),
+            ),
+            width="100%",
+            align="center",
         ),
         # ── Search input ───────────────────────────────────
         rx.box(
@@ -6294,36 +6510,14 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             ),
             width="100%",
         ),
-        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-        alex_workspace_button(),
-        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-        rx.text(
-            "SEMESTERS",
-            color="rgba(255,255,255,0.28)",
-            font_size="0.68rem",
-            letter_spacing="2.4px",
-            font_weight="700",
-        ),
-        semester_nav_group("Year 1", SEMESTER_NAVIGATION["Year 1"]),
-        semester_nav_group("Year 2", SEMESTER_NAVIGATION["Year 2"]),
-        semester_nav_group("Year 3", SEMESTER_NAVIGATION["Year 3"]),
-        semester_nav_group("Year 4", SEMESTER_NAVIGATION["Year 4"]),
-        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-        rx.text(
-            "CHATS",
-            color="rgba(255,255,255,0.28)",
-            font_size="0.68rem",
-            letter_spacing="2.4px",
-            font_weight="700",
-        ),
         rx.box(
-            semester_chat_history_list(),
+            alex_chat_history_list(),
             width="100%",
             flex="1",
             min_height="0",
         ),
-        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)"),
-        # ── Profile button (replaces plan widget) ──────────
+        rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)"),
+        # ── Profile button ──────────
         profile_menu_button(),
         spacing="3",
         width="100%",
