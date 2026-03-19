@@ -4432,73 +4432,76 @@ def tier_status_bar() -> rx.Component:
         ),
         rx.spacer(),
         rx.text(AppState.active_model_name, color="rgba(140,150,160,0.25)", font_size="0.65rem", font_family="monospace"),
-        width="100%", max_width="780px", margin_x="auto", padding_x="1.5em", padding_y="4px", align="center",
+        width="100%", padding_x="1.5em", padding_y="4px", align="center",
     )
 
 
 def upgrade_button() -> rx.Component:
     return rx.box(
+        # ── Option D: Split card with PRO badge + feature highlights ──
         rx.box(
+            # Top section: PRO badge + CTA
             rx.hstack(
                 rx.vstack(
                     rx.hstack(
                         rx.box(
-                            rx.text("PRO", font_size="0.58rem", font_weight="700", color="#0a0a0c", letter_spacing="0.5px"),
-                            padding="2px 7px",
+                            rx.text("PRO", font_size="0.6rem", font_weight="700", color="#064E3B", letter_spacing="0.5px"),
+                            padding="2px 8px",
                             border_radius="4px",
-                            background="rgba(220,230,240,0.85)",
+                            background="#34D399",
                             flex_shrink="0",
                         ),
                         rx.text(
                             "Unlock full access",
-                            font_weight="500",
-                            font_size="0.85rem",
-                            color="rgba(240,244,248,0.9)",
+                            font_weight="600",
+                            font_size="0.88rem",
+                            color="white",
                         ),
                         spacing="2",
                         align="center",
                     ),
                     rx.text(
-                        AppState.messages_left_today.to_string() + f" of {FREE_DAILY_LIMIT} free messages remaining",
-                        color="rgba(160,170,180,0.35)",
-                        font_size="0.68rem",
+                        AppState.messages_left_today.to_string() + f" of {FREE_DAILY_LIMIT} free messages remaining today",
+                        color="rgba(255,255,255,0.3)",
+                        font_size="0.7rem",
                     ),
                     spacing="1",
                     align_items="flex-start",
                 ),
                 rx.spacer(),
                 rx.box(
-                    rx.text("Upgrade", font_size="0.74rem", font_weight="600", color="#0a0a0c"),
-                    padding="7px 16px",
+                    rx.text("Upgrade", font_size="0.76rem", font_weight="700", color="#064E3B"),
+                    padding="8px 18px",
                     border_radius="8px",
-                    background="rgba(220,230,240,0.85)",
+                    background="#34D399",
                     cursor="pointer",
                     flex_shrink="0",
                     style={
-                        "_hover": {"background": "rgba(240,244,248,0.95)"},
+                        "_hover": {"filter": "brightness(1.1)"},
                     },
                 ),
                 width="100%",
                 align="center",
                 padding="14px 18px",
-                background="rgba(255,255,255,0.025)",
+                background="rgba(10,10,10,0.98)",
             ),
+            # Bottom section: feature checkmarks
             rx.hstack(
                 rx.hstack(
-                    rx.icon(tag="check", size=11, color="rgba(160,170,180,0.5)"),
-                    rx.text("Unlimited chats", color="rgba(160,170,180,0.35)", font_size="0.68rem"),
+                    rx.icon(tag="check", size=12, color="#34D399"),
+                    rx.text("Unlimited chats", color="rgba(255,255,255,0.4)", font_size="0.7rem"),
                     spacing="1",
                     align="center",
                 ),
                 rx.hstack(
-                    rx.icon(tag="check", size=11, color="rgba(160,170,180,0.5)"),
-                    rx.text("Saved history", color="rgba(160,170,180,0.35)", font_size="0.68rem"),
+                    rx.icon(tag="check", size=12, color="#34D399"),
+                    rx.text("Saved history", color="rgba(255,255,255,0.4)", font_size="0.7rem"),
                     spacing="1",
                     align="center",
                 ),
                 rx.hstack(
-                    rx.icon(tag="check", size=11, color="rgba(160,170,180,0.5)"),
-                    rx.text("Full semester", color="rgba(160,170,180,0.35)", font_size="0.68rem"),
+                    rx.icon(tag="check", size=12, color="#34D399"),
+                    rx.text("Full semester", color="rgba(255,255,255,0.4)", font_size="0.7rem"),
                     spacing="1",
                     align="center",
                 ),
@@ -4506,30 +4509,32 @@ def upgrade_button() -> rx.Component:
                 align="center",
                 width="100%",
                 padding="8px 18px",
-                background="rgba(255,255,255,0.015)",
-                border_top="1px solid rgba(255,255,255,0.03)",
+                background="rgba(8,8,8,0.98)",
+                border_top="1px solid rgba(255,255,255,0.04)",
             ),
             on_click=AppState.open_pricing_modal,
             width="100%",
-            border_radius="12px",
+            border_radius="14px",
             overflow="hidden",
-            border="1px solid rgba(255,255,255,0.06)",
+            border="1px solid rgba(255,255,255,0.08)",
             cursor="pointer",
             style={
                 "transition": "all 0.2s ease",
                 "_hover": {
-                    "border": "1px solid rgba(255,255,255,0.1)",
+                    "border": "1px solid rgba(52,211,153,0.25)",
+                    "transform": "translateY(-1px)",
+                    "box_shadow": "0 8px 24px rgba(0,0,0,0.3)",
                 },
             },
         ),
         rx.text(
             "Resets at midnight",
-            color="rgba(140,150,160,0.2)",
-            font_size="0.62rem",
+            color="rgba(255,255,255,0.2)",
+            font_size="0.65rem",
             text_align="center",
             margin_top="6px",
         ),
-        width="100%", max_width="780px", margin_x="auto", padding="1em",
+        width="100%", max_width="860px", margin_x="auto", padding="1em",
     )
 
 
@@ -4666,28 +4671,25 @@ def chat_input_field() -> rx.Component:
 def empty_chat_panel() -> rx.Component:
     return rx.box(
         rx.vstack(
-            rx.spacer(),
+            rx.box(height="12px"),
             # Premium centered empty state
             rx.vstack(
-                rx.box(
-                    rx.image(
-                        src="/a_logo.png",
-                        width="64px",
-                        height="64px",
-                        object_fit="contain",
-                        opacity="0.8",
-                    ),
-                    padding="16px",
-                    border_radius="20px",
-                    background="rgba(255,255,255,0.025)",
-                    border="1px solid rgba(255,255,255,0.05)",
+                rx.image(
+                    src="/alex_logo.svg",
+                    width="88px",
+                    height="88px",
+                    object_fit="contain",
+                    opacity="0.98",
+                    style={
+                        "filter": "drop-shadow(0 10px 24px rgba(0,0,0,0.18))",
+                    },
                 ),
                 rx.text(
                     "What do you want to learn today?",
                     color="rgba(200,210,220,0.45)",
                     font_size="1rem",
                     font_weight="400",
-                    margin_top="8px",
+                    margin_top="2px",
                 ),
                 spacing="3",
                 align="center",
@@ -4759,9 +4761,10 @@ def active_chat_panel() -> rx.Component:
                                 color="rgba(220,228,236,0.88)",
                                 font_size="0.9rem",
                                 line_height="1.75",
-                                max_width="88%",
+                                width="100%",
                                 margin_left="0",
                                 style={
+                                    "& p:first-of-type": {"margin_top": "0"},
                                     "& p": {"margin_bottom": "0.65em"},
                                     "& p + ul, & p + ol": {"margin_top": "0.2em"},
                                     "& ul, & ol": {"padding_left": "1.6em", "margin_bottom": "0.55em"},
@@ -4817,13 +4820,12 @@ def active_chat_panel() -> rx.Component:
                 ),
                 rx.box(id="chat_bottom_anchor", height="1px"),
                 width="100%",
-                max_width="780px",
-                margin_x="auto",
-                padding_x="2em",
-                padding_top="1.5em",
-                padding_bottom="1em",
+                align_items="stretch",
+                spacing="0",
+                padding_x="1.5em",
+                padding_top="0",
+                padding_bottom="0.75em",
                 style={
-                    "padding_bottom": "80px",
                     "min_height": "100%",
                 }
             ),
@@ -4850,8 +4852,6 @@ def active_chat_panel() -> rx.Component:
             rx.box(
                 chat_input_field(),
                 width="100%",
-                max_width="780px",
-                margin_x="auto",
                 padding="0 1.5em 1.2em 1.5em",
             ),
             upgrade_button(),
@@ -5796,8 +5796,8 @@ def profile_menu_button() -> rx.Component:
                     rx.text(
                         AppState.username_initial,
                         font_size="0.72rem",
-                        font_weight="600",
-                        color="rgba(220,230,240,0.8)",
+                        font_weight="700",
+                        color="#34D399",
                     ),
                     width="30px",
                     height="30px",
@@ -5805,23 +5805,23 @@ def profile_menu_button() -> rx.Component:
                     display="flex",
                     align_items="center",
                     justify_content="center",
-                    background="rgba(255,255,255,0.06)",
-                    border="1px solid rgba(255,255,255,0.08)",
+                    background="rgba(52,211,153,0.1)",
+                    border="1px solid rgba(52,211,153,0.2)",
                     flex_shrink="0",
                 ),
                 rx.vstack(
                     rx.text(
                         AppState.display_name,
-                        color="rgba(220,230,240,0.8)",
+                        color="rgba(255,255,255,0.88)",
                         font_size="0.78rem",
-                        font_weight="500",
+                        font_weight="600",
                         overflow="hidden",
                         text_overflow="ellipsis",
                         white_space="nowrap",
                     ),
                     rx.text(
                         AppState.tier_label,
-                        color="rgba(160,170,180,0.35)",
+                        color="rgba(255,255,255,0.35)",
                         font_size="0.65rem",
                     ),
                     spacing="0",
@@ -5831,21 +5831,22 @@ def profile_menu_button() -> rx.Component:
                 ),
                 rx.icon(
                     tag="chevron_up",
-                    size=13,
-                    color="rgba(160,170,180,0.3)",
+                    size=14,
+                    color="rgba(255,255,255,0.3)",
                     flex_shrink="0",
                 ),
                 width="100%",
                 align="center",
                 spacing="2",
                 padding="8px 10px",
-                border_radius="8px",
+                border_radius="10px",
                 cursor="pointer",
                 style={
-                    "background": "transparent",
-                    "border": "1px solid transparent",
+                    "background": "rgba(255,255,255,0.03)",
+                    "border": "1px solid rgba(255,255,255,0.06)",
                     "_hover": {
-                        "background": "rgba(255,255,255,0.03)",
+                        "background": "rgba(255,255,255,0.06)",
+                        "border": "1px solid rgba(255,255,255,0.1)",
                     },
                 },
             ),
@@ -5885,8 +5886,8 @@ def profile_menu_button() -> rx.Component:
             align="start",
             side_offset=8,
             style={
-                "background": "rgba(12,12,16,0.98)",
-                "border": "1px solid rgba(255,255,255,0.08)",
+                "background": "rgba(5,10,12,0.98)",
+                "border": "1px solid rgba(52,211,153,0.22)",
                 "backdrop_filter": "blur(12px)",
                 "min_width": "200px",
             },
@@ -5924,19 +5925,9 @@ def home_page():
                     spacing="0",
                     align_items="flex-start",
                 ),
-                rx.spacer(),
-                rx.text(
-                    "ALEX AI",
-                    color="rgba(255,255,255,0.12)",
-                    font_size="0.82rem",
-                    font_weight="700",
-                    letter_spacing="4px",
-                ),
-                rx.spacer(),
                 width="100%",
                 align="center",
                 padding="0.9em 2em 0.9em 1.4em",
-                border_bottom="1px solid rgba(255,255,255,0.04)",
             ),
             flex_shrink="0",
         ),
@@ -6048,8 +6039,8 @@ def semester_chat_history_list() -> rx.Component:
                     variant="ghost",
                     color=rx.cond(
                         AppState.current_session_id == s["id"],
-                        "rgba(240,244,248,0.9)",
-                        "rgba(180,190,200,0.45)",
+                        "#34D399",
+                        "rgba(255,255,255,0.55)",
                     ),
                     font_weight=rx.cond(
                         AppState.current_session_id == s["id"],
@@ -6170,8 +6161,8 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
         # ── New chat button ────────────────────────────────
         rx.button(
             rx.hstack(
-                rx.icon(tag="plus", size=14, color="rgba(200,210,220,0.5)"),
-                rx.text("New chat", font_size="0.8rem", font_weight="500", color="rgba(200,210,220,0.7)"),
+                rx.icon(tag="plus", size=15, color="#34D399"),
+                rx.text("New chat", font_size="0.8rem", font_weight="600", color="rgba(255,255,255,0.88)"),
                 spacing="2",
                 align="center",
                 width="100%",
@@ -6180,14 +6171,14 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             width="100%",
             variant="ghost",
             style={
-                "height": "36px",
-                "border_radius": "8px",
-                "border": "1px solid rgba(255,255,255,0.08)",
-                "background": "rgba(255,255,255,0.03)",
+                "height": "38px",
+                "border_radius": "10px",
+                "border": "1px solid rgba(52,211,153,0.25)",
+                "background": "rgba(52,211,153,0.06)",
                 "justify_content": "flex-start",
                 "_hover": {
-                    "background": "rgba(255,255,255,0.06)",
-                    "border": "1px solid rgba(255,255,255,0.12)",
+                    "background": "rgba(52,211,153,0.12)",
+                    "border": "1px solid rgba(52,211,153,0.4)",
                 },
             },
         ),
@@ -6223,8 +6214,8 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
                 border="1px solid rgba(255,255,255,0.06)",
                 style={
                     "_focus_within": {
-                        "border": "1px solid rgba(255,255,255,0.12)",
-                        "background": "rgba(255,255,255,0.04)",
+                        "border": "1px solid rgba(52,211,153,0.3)",
+                        "background": "rgba(255,255,255,0.06)",
                     },
                 },
             ),
@@ -6349,14 +6340,6 @@ def semester_page():
                 align="center",
             ),
             rx.spacer(),
-            rx.text(
-                "ALEX AI",
-                color="rgba(255,255,255,0.12)",
-                font_size="0.82rem",
-                font_weight="700",
-                letter_spacing="4px",
-            ),
-            rx.spacer(),
             # Thin progress bar
             rx.box(
                 rx.box(
@@ -6376,7 +6359,6 @@ def semester_page():
             padding="0.8em 1.5em",
             flex_shrink="0",
             align="center",
-            border_bottom="1px solid rgba(255,255,255,0.04)",
         ),
         rx.cond(
             AppState.is_generating_plan,
@@ -7827,9 +7809,9 @@ app = rx.App(
     ],
     style={
         "@keyframes pulse_glow": {
-            "0%": {"box-shadow": "0 0 0px rgba(180,200,220,0)"},
-            "50%": {"box-shadow": "0 0 20px rgba(180,200,220,0.3)", "opacity": "0.8"},
-            "100%": {"box-shadow": "0 0 0px rgba(180,200,220,0)"},
+            "0%": {"box-shadow": "0 0 0px rgba(52,211,153,0)"},
+            "50%": {"box-shadow": "0 0 20px rgba(52,211,153,0.5)", "opacity": "0.8"},
+            "100%": {"box-shadow": "0 0 0px rgba(52,211,153,0)"},
         }
     },
 )
