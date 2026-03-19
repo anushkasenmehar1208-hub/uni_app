@@ -814,6 +814,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     scope_hydrating: bool = False
     current_day: int = 1
     current_topic_index: int = 0
+    current_topic_name: str = ""
 
     profile_created_at: str = ""
     is_premium_1: bool = False
@@ -2637,6 +2638,7 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         subject, unit, topics = entry.get("subject",""), entry.get("unit",""), entry.get("topics",[])
         if not topics: return f"Day {day}/110\nSubject {subject}\nUnit {unit}\n\nNo topics found for today"
         current_topic = topics[topic_index] if topic_index < len(topics) else topics[-1]
+        self.current_topic_name = current_topic
         remaining = topics[topic_index:]
         msg = f"Day {day}/110\nSubject {subject}\nUnit {unit}\n\nToday topic {current_topic}\n\n"
         if len(remaining) > 1: msg += f"Remaining today {', '.join(remaining[1:])}\n\n"
@@ -2845,6 +2847,7 @@ Critical operating rules:
         if not self._has_curriculum_for_semester(year, semester):
             self.current_day = 1
             self.current_topic_index = 0
+            self.current_topic_name = ""
             self.is_generating_plan = False
             empty_msg = (
                 f"{semester} is now your main AI workspace.\n\n"
@@ -2857,6 +2860,7 @@ Critical operating rules:
 
         self.current_day = 1
         self.current_topic_index = 0
+        self.current_topic_name = ""
         self.is_generating_plan = True
         return True
 
@@ -2968,6 +2972,7 @@ Critical operating rules:
         self.is_processing = False
         self.current_day = 1
         self.current_topic_index = 0
+        self.current_topic_name = ""
         self.scope_hydrating = True
 
         # ══ FIRST PAINT ══  shell is now visible
@@ -3035,6 +3040,7 @@ Critical operating rules:
                     else:
                         self.current_day = 1
                         self.current_topic_index = 0
+                        self.current_topic_name = ""
                 except Exception as e:
                     print(f"[HYDRATE] ERROR loading plan data for {raw_scope}: {e}")
 
@@ -3705,6 +3711,7 @@ Subjects:\n{courses_text}"""
                     if topic_idx + 1 < len(topics):
                         topic_idx += 1
                         self.current_topic_index = topic_idx
+                        self.current_topic_name = topics[topic_idx]
                         self._save_day_progress(uid, scope, day, topic_idx)
                         remaining = topics[topic_idx:]
                         msg = f"Moving to the next topic\n\nDay {day}/110 | {entry.get('subject','')} | {entry.get('unit','')}\n\nCurrent topic {topics[topic_idx]}\n"
@@ -3730,6 +3737,7 @@ Subjects:\n{courses_text}"""
                 entry = self._get_today_entry(plan, day)
                 topics = entry.get("topics", [])
                 current_topic = topics[topic_idx] if topic_idx < len(topics) else ""
+                self.current_topic_name = current_topic
                 semester_courses = ", ".join(self._current_courses_for_scope())
 
                 scope_summary = self._get_scope_summary(uid, scope)
@@ -4442,7 +4450,7 @@ def tier_status_bar() -> rx.Component:
         ),
         rx.spacer(),
         rx.text(AppState.active_model_name, color="rgba(140,150,160,0.25)", font_size="0.65rem", font_family="monospace"),
-        width="100%", padding_x="1.5em", padding_y="4px", align="center",
+        width="100%", max_width="728px", margin_x="auto", padding_x="1.5em", padding_top="4px", padding_bottom="12px", align="center",
     )
 
 
@@ -4714,7 +4722,7 @@ def empty_chat_panel() -> rx.Component:
                 width="100%",
                 max_width="680px",
             ),
-            # ── Tier status ──
+            # ── Tier status (below input) ──
             tier_status_bar(),
             spacing="0",
             align="center",
@@ -4740,6 +4748,17 @@ def empty_chat_panel() -> rx.Component:
 
 def active_chat_panel() -> rx.Component:
     return rx.box(
+        # ── Top fade overlay ──
+        rx.box(
+            position="absolute",
+            top="0",
+            left="0",
+            right="0",
+            height="40px",
+            background="linear-gradient(to bottom, #0a0a0c 0%, transparent 100%)",
+            z_index="2",
+            pointer_events="none",
+        ),
         # Scrollable messages
         rx.box(
             rx.vstack(
@@ -4748,7 +4767,7 @@ def active_chat_panel() -> rx.Component:
                     lambda msg: rx.box(
                         rx.cond(
                             msg["role"] == "user",
-                            # ── User message ──
+                            # ── User message (right-aligned pill) ──
                             rx.box(
                                 rx.text(
                                     msg["content"],
@@ -4756,51 +4775,72 @@ def active_chat_panel() -> rx.Component:
                                     font_size="0.9rem",
                                     line_height="1.65",
                                 ),
-                                background="rgba(255,255,255,0.07)",
-                                border="1px solid rgba(255,255,255,0.08)",
-                                border_radius="18px 18px 4px 18px",
+                                background="rgba(255,255,255,0.08)",
+                                border_radius="20px",
                                 padding="12px 18px",
-                                max_width="65%",
+                                max_width="75%",
                                 margin_left="auto",
                                 margin_right="0",
                             ),
-                            # ── Assistant message ──
-                            rx.box(
-                                rx.markdown(msg["content"]),
-                                color="rgba(220,228,236,0.88)",
-                                font_size="0.9rem",
-                                line_height="1.75",
+                            # ── Assistant message (avatar + text) ──
+                            rx.hstack(
+                                rx.box(
+                                    rx.image(
+                                        src="/alex_logo.svg",
+                                        width="16px",
+                                        height="16px",
+                                        object_fit="contain",
+                                    ),
+                                    width="28px",
+                                    height="28px",
+                                    border_radius="50%",
+                                    background="rgba(255,255,255,0.08)",
+                                    display="flex",
+                                    align_items="center",
+                                    justify_content="center",
+                                    flex_shrink="0",
+                                    margin_top="2px",
+                                ),
+                                rx.box(
+                                    rx.markdown(msg["content"]),
+                                    color="rgba(220,228,236,0.88)",
+                                    font_size="0.9rem",
+                                    line_height="1.75",
+                                    flex="1",
+                                    min_width="0",
+                                    style={
+                                        "& p:first-of-type": {"margin_top": "0"},
+                                        "& p": {"margin_bottom": "0.65em"},
+                                        "& p + ul, & p + ol": {"margin_top": "0.2em"},
+                                        "& ul, & ol": {"padding_left": "1.6em", "margin_bottom": "0.55em"},
+                                        "& li": {"margin_bottom": "0.3em"},
+                                        "& li::marker": {"color": "rgba(160,180,200,0.5)"},
+                                        "& strong": {"color": "rgba(240,245,250,0.95)", "font_weight": "600"},
+                                        "& code": {
+                                            "background": "rgba(255,255,255,0.06)",
+                                            "border": "1px solid rgba(255,255,255,0.08)",
+                                            "border_radius": "4px",
+                                            "padding": "1px 6px",
+                                            "font_size": "0.84em",
+                                            "color": "rgba(200,220,240,0.9)",
+                                        },
+                                        "& pre": {
+                                            "background": "rgba(0,0,0,0.3)",
+                                            "border": "1px solid rgba(255,255,255,0.06)",
+                                            "border_radius": "8px",
+                                            "padding": "14px 16px",
+                                            "overflow_x": "auto",
+                                            "margin": "0.5em 0",
+                                        },
+                                    },
+                                ),
+                                spacing="3",
+                                align_items="flex-start",
                                 width="100%",
-                                margin_left="0",
-                                style={
-                                    "& p:first-of-type": {"margin_top": "0"},
-                                    "& p": {"margin_bottom": "0.65em"},
-                                    "& p + ul, & p + ol": {"margin_top": "0.2em"},
-                                    "& ul, & ol": {"padding_left": "1.6em", "margin_bottom": "0.55em"},
-                                    "& li": {"margin_bottom": "0.3em"},
-                                    "& li::marker": {"color": "rgba(160,180,200,0.5)"},
-                                    "& strong": {"color": "rgba(240,245,250,0.95)", "font_weight": "600"},
-                                    "& code": {
-                                        "background": "rgba(255,255,255,0.06)",
-                                        "border": "1px solid rgba(255,255,255,0.08)",
-                                        "border_radius": "4px",
-                                        "padding": "1px 6px",
-                                        "font_size": "0.84em",
-                                        "color": "rgba(200,220,240,0.9)",
-                                    },
-                                    "& pre": {
-                                        "background": "rgba(0,0,0,0.3)",
-                                        "border": "1px solid rgba(255,255,255,0.06)",
-                                        "border_radius": "8px",
-                                        "padding": "14px 16px",
-                                        "overflow_x": "auto",
-                                        "margin": "0.5em 0",
-                                    },
-                                },
                             ),
                         ),
                         width="100%",
-                        margin_bottom="18px",
+                        margin_bottom="24px",
                         display="flex",
                         flex_direction="column",
                     ),
@@ -4809,21 +4849,40 @@ def active_chat_panel() -> rx.Component:
                     AppState.is_processing,
                     rx.hstack(
                         rx.box(
-                            width="6px",
-                            height="6px",
+                            rx.image(
+                                src="/alex_logo.svg",
+                                width="16px",
+                                height="16px",
+                                object_fit="contain",
+                            ),
+                            width="28px",
+                            height="28px",
                             border_radius="50%",
-                            background="rgba(180,200,220,0.5)",
-                            style={"animation": "pulse 1.2s ease-in-out infinite"},
+                            background="rgba(255,255,255,0.08)",
+                            display="flex",
+                            align_items="center",
+                            justify_content="center",
+                            flex_shrink="0",
                         ),
-                        rx.text(
-                            "Alex is thinking...",
-                            color="rgba(180,190,200,0.35)",
-                            font_size="0.8rem",
-                            font_weight="400",
+                        rx.hstack(
+                            rx.box(
+                                width="6px",
+                                height="6px",
+                                border_radius="50%",
+                                background="rgba(180,200,220,0.5)",
+                                style={"animation": "pulse 1.2s ease-in-out infinite"},
+                            ),
+                            rx.text(
+                                "Alex is thinking...",
+                                color="rgba(180,190,200,0.35)",
+                                font_size="0.8rem",
+                                font_weight="400",
+                            ),
+                            spacing="2",
+                            align="center",
                         ),
-                        spacing="2",
+                        spacing="3",
                         align="center",
-                        padding_left="2px",
                         margin_bottom="10px",
                     ),
                 ),
@@ -4831,8 +4890,10 @@ def active_chat_panel() -> rx.Component:
                 width="100%",
                 align_items="stretch",
                 spacing="0",
+                max_width="680px",
+                margin_x="auto",
                 padding_x="1.5em",
-                padding_top="0",
+                padding_top="1em",
                 padding_bottom="0.75em",
                 style={
                     "min_height": "100%",
@@ -4855,16 +4916,19 @@ def active_chat_panel() -> rx.Component:
         ),
         rx.script(AUTO_SCROLL_OBSERVER_JS),
         rx.html("<style>@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:0.7;transform:scale(1.2)}}</style>"),
-        tier_status_bar(),
         rx.cond(
             AppState.can_send_message,
             rx.box(
                 chat_input_field(),
                 width="100%",
-                padding="0 1.5em 1.2em 1.5em",
+                max_width="728px",
+                margin_x="auto",
+                padding="0 1.5em 0 1.5em",
             ),
             upgrade_button(),
         ),
+        # ── Tier status BELOW input ──
+        tier_status_bar(),
         pricing_modal(),
         width="100%",
         height="100%",
@@ -6372,8 +6436,9 @@ def semester_page():
         # ── Main content (right) ──
         rx.box(
             semester_sidebar_drawer(),
-            # ── Slim header ──
+            # ── Top info (no bar, no border — just text) ──
             rx.hstack(
+                # Left: degree + semester/day + progress pip
                 rx.vstack(
                     rx.text(
                         rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
@@ -6395,6 +6460,21 @@ def semester_page():
                             font_size="0.72rem",
                             font_weight="400",
                         ),
+                        rx.box(
+                            rx.box(
+                                width=AppState.semester_progress_percent,
+                                height="100%",
+                                background="rgba(255,255,255,0.2)",
+                                border_radius="2px",
+                                style={"transition": "width 0.3s ease"},
+                            ),
+                            width="48px",
+                            height="3px",
+                            border_radius="2px",
+                            background="rgba(255,255,255,0.06)",
+                            flex_shrink="0",
+                            margin_left="6px",
+                        ),
                         spacing="1",
                         align="center",
                     ),
@@ -6402,23 +6482,31 @@ def semester_page():
                     align_items="flex-start",
                 ),
                 rx.spacer(),
-                # Thin progress bar
-                rx.box(
-                    rx.box(
-                        width=AppState.semester_progress_percent,
-                        height="100%",
-                        background="rgba(255,255,255,0.2)",
-                        border_radius="2px",
-                        style={"transition": "width 0.3s ease"},
+                # Right: current topic heading
+                rx.cond(
+                    AppState.current_topic_name != "",
+                    rx.vstack(
+                        rx.text(
+                            AppState.current_topic_name,
+                            color="rgba(240,244,248,0.85)",
+                            font_size="0.92rem",
+                            font_weight="500",
+                            letter_spacing="-0.01em",
+                            text_align="right",
+                        ),
+                        rx.text(
+                            "current topic",
+                            color="rgba(160,170,180,0.4)",
+                            font_size="0.68rem",
+                            text_align="right",
+                        ),
+                        spacing="0",
+                        align_items="flex-end",
                     ),
-                    width="60px",
-                    height="3px",
-                    border_radius="2px",
-                    background="rgba(255,255,255,0.06)",
-                    flex_shrink="0",
+                    rx.fragment(),
                 ),
                 width="100%",
-                padding="0.8em 1.5em",
+                padding="14px 1.5em 10px",
                 flex_shrink="0",
                 align="center",
             ),
