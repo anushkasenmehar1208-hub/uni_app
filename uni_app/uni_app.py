@@ -4199,57 +4199,49 @@ AUTO_SCROLL_OBSERVER_JS = """
 # ═══════════════════════════════════════════════════════
 
 # FIX 1: subject_button — crisper border, tighter look
-NEUTRAL_SIDEBAR_ACTIVE_BG = "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.05) 100%)"
-NEUTRAL_SIDEBAR_ACTIVE_BG_HOVER = "linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.07) 100%)"
-NEUTRAL_SIDEBAR_ACTIVE_BORDER = "1px solid rgba(255,255,255,0.16)"
-NEUTRAL_SIDEBAR_ACTIVE_BORDER_HOVER = "1px solid rgba(255,255,255,0.22)"
-NEUTRAL_SIDEBAR_ACTIVE_TEXT = "rgba(255,255,255,0.96)"
-NEUTRAL_SIDEBAR_ACTIVE_TEXT_SOFT = "rgba(255,255,255,0.82)"
-NEUTRAL_SIDEBAR_ACTIVE_SHADOW = "0 10px 24px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.05)"
-
 def subject_button(label: str, on_click=None, is_active=False):
     return rx.button(
         label,
         width="100%",
         height="52px",
         variant="outline",
-        color_scheme="gray",
+        color_scheme="green",
         on_click=on_click,
         style={
             "border": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_BORDER,
-                "1px solid rgba(255,255,255,0.08)",
+                "1px solid rgba(52,211,153,0.78)",
+                "1px solid rgba(52,211,153,0.35)",
             ),
             "background": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_BG,
-                "rgba(255,255,255,0.03)",
+                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
+                "rgba(52,211,153,0.04)",
             ),
             "text_transform": "uppercase",
             "font_weight": "600",
             "font_size": "0.82rem",
             "letter_spacing": "2px",
-            "color": rx.cond(is_active, NEUTRAL_SIDEBAR_ACTIVE_TEXT, "rgba(255,255,255,0.88)"),
+            "color": rx.cond(is_active, "#ecfff6", "rgba(255,255,255,0.88)"),
             "border_radius": "10px",
             "transition": "all 0.2s ease",
             "box_shadow": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_SHADOW,
+                "0 10px 24px rgba(0,0,0,0.28), 0 0 0 1px rgba(52,211,153,0.18)",
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    NEUTRAL_SIDEBAR_ACTIVE_BG_HOVER,
-                    "rgba(255,255,255,0.06)",
+                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
+                    "rgba(52,211,153,0.1)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    NEUTRAL_SIDEBAR_ACTIVE_BORDER_HOVER,
-                    "1px solid rgba(255,255,255,0.14)",
+                    "1px solid rgba(110,231,183,0.9)",
+                    "1px solid rgba(52,211,153,0.7)",
                 ),
-                "color": "white",
+                "color": rx.cond(is_active, "#f4fff9", "#34D399"),
                 "transform": "translateX(6px)",
             },
         },
@@ -4549,7 +4541,7 @@ def tier_status_bar() -> rx.Component:
         ),
         rx.spacer(),
         rx.text(AppState.active_model_name, color="rgba(140,150,160,0.25)", font_size="0.65rem", font_family="monospace"),
-        width="100%", max_width="728px", margin_x="auto", padding_x="1.5em", padding_top="4px", padding_bottom="12px", align="center",
+        width="100%", max_width="700px", margin_x="auto", padding_x="1.5em", padding_top="4px", padding_bottom="10px", align="center",
     )
 
 
@@ -4707,11 +4699,11 @@ def chat_input_field() -> rx.Component:
                 on_change=AppState.set_chat_input,
                 color="rgba(236,240,244,0.92)",
                 flex="1",
-                min_height="96px",
-                max_height="200px",
-                padding="13px 4px 13px 18px",
-                font_size="0.9rem",
-                line_height="1.55",
+                min_height="52px",
+                max_height="160px",
+                padding="12px 4px 12px 18px",
+                font_size="0.88rem",
+                line_height="1.5",
                 style={
                     "background": "transparent",
                     "border": "none",
@@ -4740,11 +4732,11 @@ def chat_input_field() -> rx.Component:
                 is_disabled=AppState.is_processing,
                 width="32px",
                 height="32px",
-                border_radius="8px",
+                border_radius="10px",
                 flex_shrink="0",
                 align_self="flex-end",
-                margin_bottom="8px",
-                margin_right="8px",
+                margin_bottom="6px",
+                margin_right="6px",
                 style={
                     "background": rx.cond(
                         AppState.is_processing,
@@ -4770,14 +4762,14 @@ def chat_input_field() -> rx.Component:
         ),
         rx.script(ENTER_TO_SEND_JS),
         width="100%",
-        border_radius="16px",
-        background="rgba(255,255,255,0.04)",
-        border="1px solid rgba(255,255,255,0.08)",
+        border_radius="20px",
+        background="rgba(255,255,255,0.035)",
+        border="1px solid rgba(255,255,255,0.07)",
         style={
             "transition": "border-color 0.2s ease, box-shadow 0.2s ease",
             "&:focus-within": {
-                "border": "1px solid rgba(255,255,255,0.16)",
-                "box_shadow": "0 0 0 1px rgba(255,255,255,0.04)",
+                "border": "1px solid rgba(255,255,255,0.14)",
+                "box_shadow": "0 0 0 1px rgba(255,255,255,0.03)",
             },
         },
     )
@@ -4810,7 +4802,7 @@ def empty_chat_panel() -> rx.Component:
                 align="center",
             ),
             # ── Gap ──
-            rx.box(height="32px"),
+            rx.box(height="24px"),
             # ── Input bar ──
             rx.box(
                 rx.cond(
@@ -4819,14 +4811,14 @@ def empty_chat_panel() -> rx.Component:
                     upgrade_button(),
                 ),
                 width="100%",
-                max_width="680px",
+                max_width="660px",
             ),
             # ── Tier status (below input) ──
             tier_status_bar(),
             spacing="0",
             align="center",
             width="100%",
-            max_width="680px",
+            max_width="660px",
         ),
         pricing_modal(),
         width="100%",
@@ -4835,7 +4827,7 @@ def empty_chat_panel() -> rx.Component:
         align_items="center",
         justify_content="center",
         padding="2em",
-        padding_bottom="12vh",
+        padding_bottom="8vh",
     )
 
 # ── FIX 2: active_chat_panel ─────────────────────────
@@ -4853,7 +4845,7 @@ def active_chat_panel() -> rx.Component:
             top="0",
             left="0",
             right="0",
-            height="40px",
+            height="32px",
             background="linear-gradient(to bottom, #0a0a0c 0%, transparent 100%)",
             z_index="2",
             pointer_events="none",
@@ -4871,12 +4863,12 @@ def active_chat_panel() -> rx.Component:
                                 rx.text(
                                     msg["content"],
                                     color="rgba(240,244,248,0.92)",
-                                    font_size="0.9rem",
-                                    line_height="1.65",
+                                    font_size="0.88rem",
+                                    line_height="1.6",
                                 ),
                                 background="rgba(255,255,255,0.08)",
                                 border_radius="20px",
-                                padding="12px 18px",
+                                padding="10px 16px",
                                 max_width="75%",
                                 margin_left="auto",
                                 margin_right="0",
@@ -4903,16 +4895,16 @@ def active_chat_panel() -> rx.Component:
                                 rx.box(
                                     rx.markdown(msg["content"]),
                                     color="rgba(220,228,236,0.88)",
-                                    font_size="0.9rem",
-                                    line_height="1.75",
+                                    font_size="0.88rem",
+                                    line_height="1.7",
                                     flex="1",
                                     min_width="0",
                                     style={
                                         "& p:first-of-type": {"margin_top": "0"},
-                                        "& p": {"margin_bottom": "0.65em"},
-                                        "& p + ul, & p + ol": {"margin_top": "0.2em"},
-                                        "& ul, & ol": {"padding_left": "1.6em", "margin_bottom": "0.55em"},
-                                        "& li": {"margin_bottom": "0.3em"},
+                                        "& p": {"margin_bottom": "0.55em"},
+                                        "& p + ul, & p + ol": {"margin_top": "0.15em"},
+                                        "& ul, & ol": {"padding_left": "1.5em", "margin_bottom": "0.5em"},
+                                        "& li": {"margin_bottom": "0.25em"},
                                         "& li::marker": {"color": "rgba(160,180,200,0.5)"},
                                         "& strong": {"color": "rgba(240,245,250,0.95)", "font_weight": "600"},
                                         "& code": {
@@ -4939,7 +4931,7 @@ def active_chat_panel() -> rx.Component:
                             ),
                         ),
                         width="100%",
-                        margin_bottom="24px",
+                        margin_bottom="20px",
                         display="flex",
                         flex_direction="column",
                     ),
@@ -4989,11 +4981,11 @@ def active_chat_panel() -> rx.Component:
                 width="100%",
                 align_items="stretch",
                 spacing="0",
-                max_width="680px",
+                max_width="660px",
                 margin_x="auto",
                 padding_x="1.5em",
-                padding_top="1em",
-                padding_bottom="0.75em",
+                padding_top="0.5em",
+                padding_bottom="0.5em",
                 style={
                     "min_height": "100%",
                 }
@@ -5020,7 +5012,7 @@ def active_chat_panel() -> rx.Component:
             rx.box(
                 chat_input_field(),
                 width="100%",
-                max_width="728px",
+                max_width="700px",
                 margin_x="auto",
                 padding="0 1.5em 0 1.5em",
             ),
@@ -6147,15 +6139,15 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
         style={
             "background": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_BG,
+                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
                 "rgba(255,255,255,0.01)",
             ),
             "border": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_BORDER,
+                "1px solid rgba(52,211,153,0.76)",
                 "1px solid rgba(255,255,255,0.04)",
             ),
-            "color": rx.cond(is_active, NEUTRAL_SIDEBAR_ACTIVE_TEXT, "rgba(255,255,255,0.72)"),
+            "color": rx.cond(is_active, "#ecfff6", "rgba(255,255,255,0.72)"),
             "font_weight": rx.cond(is_active, "700", "500"),
             "border_radius": "12px",
             "padding": "0.46em 0.72em",
@@ -6163,18 +6155,18 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
             "min_height": "0",
             "box_shadow": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_SHADOW,
+                "0 10px 24px rgba(0,0,0,0.22), 0 0 0 1px rgba(52,211,153,0.14)",
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    NEUTRAL_SIDEBAR_ACTIVE_BG_HOVER,
+                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
                     "rgba(255,255,255,0.06)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    NEUTRAL_SIDEBAR_ACTIVE_BORDER_HOVER,
+                    "1px solid rgba(110,231,183,0.88)",
                     "1px solid rgba(255,255,255,0.12)",
                 ),
                 "color": "white",
@@ -6338,14 +6330,14 @@ def alex_workspace_button() -> rx.Component:
         rx.vstack(
             rx.text(
                 "Alex AI",
-                color=rx.cond(is_active, NEUTRAL_SIDEBAR_ACTIVE_TEXT, "white"),
+                color=rx.cond(is_active, "#f4fff9", "white"),
                 font_size="0.95rem",
                 font_weight="700",
                 letter_spacing="0.04em",
             ),
             rx.text(
                 "Ask doubts in your growth",
-                color=rx.cond(is_active, NEUTRAL_SIDEBAR_ACTIVE_TEXT_SOFT, "rgba(226,232,240,0.68)"),
+                color=rx.cond(is_active, "rgba(240,255,248,0.86)", "rgba(226,232,240,0.68)"),
                 font_size="0.76rem",
                 text_align="left",
                 line_height="1.45",
@@ -6364,28 +6356,28 @@ def alex_workspace_button() -> rx.Component:
             "border_radius": "14px",
             "border": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_BORDER,
+                "1px solid rgba(52,211,153,0.78)",
                 "1px solid rgba(255,255,255,0.08)",
             ),
             "background": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_BG,
+                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
                 "rgba(255,255,255,0.03)",
             ),
             "box_shadow": rx.cond(
                 is_active,
-                NEUTRAL_SIDEBAR_ACTIVE_SHADOW,
+                "0 12px 24px rgba(0,0,0,0.24), 0 0 0 1px rgba(52,211,153,0.16)",
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    NEUTRAL_SIDEBAR_ACTIVE_BG_HOVER,
+                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
                     "rgba(255,255,255,0.07)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    NEUTRAL_SIDEBAR_ACTIVE_BORDER_HOVER,
+                    "1px solid rgba(110,231,183,0.9)",
                     "1px solid rgba(255,255,255,0.16)",
                 ),
             },
@@ -6712,7 +6704,7 @@ def semester_page():
                     rx.fragment(),
                 ),
                 width="100%",
-                padding="14px 1.5em 10px",
+                padding="10px 1.5em 6px",
                 flex_shrink="0",
                 align="center",
             ),
