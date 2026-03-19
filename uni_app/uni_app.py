@@ -4890,7 +4890,7 @@ def active_chat_panel() -> rx.Component:
                 width="100%",
                 align_items="stretch",
                 spacing="0",
-                max_width="680px",
+                max_width="780px",
                 margin_x="auto",
                 padding_x="1.5em",
                 padding_top="1em",
@@ -4921,7 +4921,7 @@ def active_chat_panel() -> rx.Component:
             rx.box(
                 chat_input_field(),
                 width="100%",
-                max_width="728px",
+                max_width="828px",
                 margin_x="auto",
                 padding="0 1.5em 0 1.5em",
             ),
