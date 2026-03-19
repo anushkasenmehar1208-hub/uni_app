@@ -973,6 +973,19 @@ class AppState(reflex_local_auth.LocalAuthState):
         return "Hi, " + self.display_name if self.display_name else "Hi"
 
     @rx.var
+    def time_of_day_greeting(self) -> str:
+        """Time-based greeting like Claude.ai: 'Morning, Lenu'"""
+        hour = datetime.now().hour
+        if hour < 12:
+            tod = "Morning"
+        elif hour < 17:
+            tod = "Afternoon"
+        else:
+            tod = "Evening"
+        name = self.display_name
+        return f"{tod}, {name}" if name else f"Good {tod}"
+
+    @rx.var
     def filtered_sessions(self) -> list[dict]:
         q = (self.chat_search_query or "").strip().lower()
         if not q:
@@ -4671,31 +4684,38 @@ def chat_input_field() -> rx.Component:
 def empty_chat_panel() -> rx.Component:
     return rx.box(
         rx.vstack(
-            rx.box(height="12px"),
-            # Premium centered empty state
-            rx.vstack(
-                rx.image(
-                    src="/alex_logo.svg",
-                    width="88px",
-                    height="88px",
-                    object_fit="contain",
-                    opacity="0.98",
-                    style={
-                        "filter": "drop-shadow(0 10px 24px rgba(0,0,0,0.18))",
-                    },
+            # ── Centered greeting area (fills top ~60%) ──
+            rx.box(
+                rx.vstack(
+                    rx.image(
+                        src="/alex_logo.svg",
+                        width="52px",
+                        height="52px",
+                        object_fit="contain",
+                        opacity="0.85",
+                    ),
+                    rx.heading(
+                        AppState.time_of_day_greeting,
+                        color="rgba(220,225,232,0.85)",
+                        font_size="clamp(1.6rem, 4vw, 2.25rem)",
+                        font_weight="400",
+                        letter_spacing="-0.02em",
+                        text_align="center",
+                        line_height="1.3",
+                        style={
+                            "font_family": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                        },
+                    ),
+                    spacing="4",
+                    align="center",
                 ),
-                rx.text(
-                    "What do you want to learn today?",
-                    color="rgba(200,210,220,0.45)",
-                    font_size="1rem",
-                    font_weight="400",
-                    margin_top="2px",
-                ),
-                spacing="3",
-                align="center",
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                flex="1",
+                width="100%",
             ),
-            rx.spacer(),
-            # Input bar
+            # ── Input bar pinned toward bottom ──
             rx.box(
                 rx.cond(
                     AppState.can_send_message,
@@ -4706,7 +4726,7 @@ def empty_chat_panel() -> rx.Component:
                 max_width="720px",
             ),
             tier_status_bar(),
-            rx.box(height="24px"),
+            rx.box(height="20px"),
             spacing="4",
             align="center",
             width="100%",
@@ -4718,7 +4738,6 @@ def empty_chat_panel() -> rx.Component:
         display="flex",
         flex_direction="column",
         align_items="center",
-        justify_content="center",
         padding="2em",
     )
 
