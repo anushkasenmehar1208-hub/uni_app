@@ -3246,16 +3246,20 @@ Critical operating rules:
             return
         upload_file = files[0]
         content_type = upload_file.content_type or ""
+        self.image_name = upload_file.filename or "image"
+        yield
+        
         if content_type not in ALLOWED_IMAGE_TYPES:
             self.image_error = f"Unsupported file type. Please upload a PNG, JPG, or WebP image."
+            self.image_name = ""
             return
         data = await upload_file.read()
         if len(data) > MAX_IMAGE_BYTES:
             self.image_error = f"Image is too large (max 20 MB). Please choose a smaller file."
+            self.image_name = ""
             return
         self._image_data = data
         self._image_mime = content_type
-        self.image_name = upload_file.filename or "image"
 
     @rx.event
     def clear_image(self):
@@ -3774,8 +3778,24 @@ Subjects:\n{courses_text}"""
         student_name = _normalize_person_name(self.name) or "Student"
 
         try:
-            self.chat_history.append({"role": "user", "content": user_msg})
+            user_msg_dict: dict[str, Any] = {"role": "user", "content": user_msg}
+            if has_image_attached:
+                b64 = base64.b64encode(image_bytes).decode("utf-8")
+                user_msg_dict["image_data"] = f"data:{image_mime};base64,{b64}"
+                user_msg_dict["has_image"] = True
+                if not user_msg:
+                    user_msg_dict["content"] = "[Image uploaded]"
+                    user_msg = "[Image uploaded]"
+                    
+            self.chat_history.append(user_msg_dict)
             self._save_message(uid, "user", user_msg)
+            
+            if has_image_attached:
+                self._image_data = b""
+                self._image_mime = ""
+                self.image_name = ""
+                self.image_error = ""
+                
             yield
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             yield
@@ -3818,11 +3838,8 @@ Subjects:\n{courses_text}"""
 
         # ── IMAGE VISION PATH ──
         if has_image_attached:
-            vision_prompt = user_msg or "Describe this image clearly"
-            display_msg = user_msg or "[Image uploaded]"
-            # Update the user message shown in chat if it was image-only
-            if not user_msg:
-                self.chat_history[-1]["content"] = display_msg
+            vision_prompt = user_msg if user_msg and user_msg != "[Image uploaded]" else "Describe this image clearly"
+            display_msg = user_msg
 
             self.chat_history.append({"role": "assistant", "content": ""})
             assistant_index = len(self.chat_history) - 1
@@ -3842,11 +3859,6 @@ Subjects:\n{courses_text}"""
             self._save_message(uid, "assistant", vision_reply)
             _append_training_example(uid, self.active_scope, display_msg, vision_reply)
             self.is_processing = False
-            # Clear image state
-            self._image_data = b""
-            self._image_mime = ""
-            self.image_name = ""
-            self.image_error = ""
             await self._maybe_auto_update_scope_summary(uid, self.active_scope)
             await self._maybe_auto_update_global_memory(uid)
             await self._maybe_auto_update_adaptive_profile(uid)
@@ -4824,14 +4836,14 @@ def chat_input_field() -> rx.Component:
                     text_overflow="ellipsis",
                 ),
                 rx.button(
-                    rx.icon(tag="x", size=10, color="rgba(255,255,255,0.5)"),
+                    rx.icon(tag="x", size=14, color="rgba(255,255,255,0.7)"),
                     on_click=[
                         AppState.clear_image,
                         rx.clear_selected_files("image_upload_zone"),
                     ],
-                    width="18px",
-                    height="18px",
-                    min_width="18px",
+                    width="24px",
+                    height="24px",
+                    min_width="24px",
                     padding="0",
                     border_radius="50%",
                     style={
@@ -4859,7 +4871,9 @@ def chat_input_field() -> rx.Component:
         ),
         rx.hstack(
             # ── Attach image button ──
-            rx.upload(
+            rx.cond(
+                ~AppState.has_image,
+                rx.upload(
                 rx.button(
                     rx.icon(tag="paperclip", size=15, color="rgba(255,255,255,0.45)"),
                     width="34px",
@@ -4902,6 +4916,7 @@ def chat_input_field() -> rx.Component:
                 display="flex",
                 align_items="flex-end",
                 flex_shrink="0",
+            ),
             ),
             rx.text_area(
                 id="chat_input",
@@ -5189,6 +5204,16 @@ def active_chat_panel() -> rx.Component:
                             msg["role"] == "user",
                             # ── User message (compact right-aligned pill) ──
                             rx.box(
+                                rx.cond(
+                                    msg.contains("has_image"),
+                                    rx.image(
+                                        src=msg["image_data"].to(str),  # type: ignore
+                                        width="100%",
+                                        max_width="280px",
+                                        border_radius="10px",
+                                        margin_bottom="8px",
+                                    )
+                                ),
                                 rx.text(
                                     msg["content"],
                                     color="rgba(240,244,248,0.92)",
