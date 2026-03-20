@@ -848,6 +848,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     image_name: str = ""
     image_error: str = ""
     _image_loading: bool = False
+    image_preview_url: str = ""
 
     is_generating_plan: bool = False
     scope_hydrating: bool = False
@@ -3264,6 +3265,7 @@ Critical operating rules:
             self._image_mime = ""
             self.image_name = ""
             self._image_loading = False
+            self.image_preview_url = ""
             self.image_error = "Unsupported file type. Please upload a PNG, JPG, or WebP image."
             return
 
@@ -3276,6 +3278,7 @@ Critical operating rules:
             self._image_mime = ""
             self.image_name = ""
             self._image_loading = False
+            self.image_preview_url = ""
             self.image_error = "Image is too large (max 20 MB). Please choose a smaller file."
             return
 
@@ -3284,6 +3287,7 @@ Critical operating rules:
         self._image_mime = content_type
         self._image_loading = False
         self.image_error = ""
+        self.image_preview_url = f"data:{content_type};base64,{base64.b64encode(data).decode()}"
 
     @rx.event
     def clear_image(self):
@@ -3293,6 +3297,7 @@ Critical operating rules:
         self.image_name = ""
         self.image_error = ""
         self._image_loading = False
+        self.image_preview_url = ""
 
     @rx.event
     def next_step(self):
@@ -3821,6 +3826,7 @@ Subjects:\n{courses_text}"""
                 self.image_name = ""
                 self.image_error = ""
                 self._image_loading = False
+                self.image_preview_url = ""
                 
             yield
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -4794,28 +4800,61 @@ def upgrade_button() -> rx.Component:
 
 
 # ═══════════════════════════════════════════════════════
-# INPUT + BUTTON FIX — Replace chat_input_field() only
+# INPUT BOX — thumbnail preview + drag-and-drop
 # ═══════════════════════════════════════════════════════
-#
-# What changed:
-#   1. Unified container — input + button share ONE border/background
-#      so they read as a single component, not two floating elements
-#   2. Button color — dropped from #34D399 neon to a calm white/frost tone
-#      It still stands out but doesn't scream over the dark theme
-#   3. Glow removed — no more box-shadow bloom on the button
-#      Hover just brightens slightly — restrained and clean
-#   4. Button is now INSIDE the box, right edge, vertically centered
-#      Gap between textarea and button is gone
 
-# ═══════════════════════════════════════════════════════
-# INPUT BOX FINAL FIX — kills the double-box issue
-# Replace chat_input_field() with this
-# ═══════════════════════════════════════════════════════
-#
-# Root cause: rx.text_area renders a <textarea> with its own
-# Radix/browser background + border that sits ON TOP of the shell.
-# Fix: inject a <style> tag that nukes all default textarea styling
-# so the shell is the ONLY visible box.
+# JS: drag-and-drop visual feedback on the composer shell.
+# Toggles a CSS class so the border highlights on dragover.
+# Also handles the actual file drop → feeds it into the
+# hidden rx.upload input so Reflex's on_drop fires normally.
+DRAG_DROP_JS = """
+(function() {
+  if (window.__dragDropInit) return;
+  window.__dragDropInit = true;
+
+  function setup() {
+    var shell = document.getElementById('composer_shell');
+    if (!shell) { setTimeout(setup, 200); return; }
+
+    var counter = 0;  // track nested dragenter/dragleave
+
+    shell.addEventListener('dragenter', function(e) {
+      e.preventDefault();
+      counter++;
+      shell.classList.add('drag-over');
+    });
+    shell.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    });
+    shell.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      counter--;
+      if (counter <= 0) { counter = 0; shell.classList.remove('drag-over'); }
+    });
+    shell.addEventListener('drop', function(e) {
+      e.preventDefault();
+      counter = 0;
+      shell.classList.remove('drag-over');
+      var files = e.dataTransfer.files;
+      if (!files || !files.length) return;
+      // Feed the dropped file into the hidden rx.upload input
+      var inp = document.querySelector('#image_upload_zone input[type=\"file\"]');
+      if (!inp) return;
+      var dt = new DataTransfer();
+      dt.items.add(files[0]);
+      inp.files = dt.files;
+      inp.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setup();
+  }
+})();
+"""
+
 
 def chat_input_field() -> rx.Component:
     return rx.box(
@@ -4844,58 +4883,80 @@ def chat_input_field() -> rx.Component:
           #image_upload_zone input[type="file"] {
             display: none !important;
           }
+          /* Drag-over highlight */
+          #composer_shell.drag-over {
+            border-color: rgba(160,210,255,0.35) !important;
+            background: rgba(160,210,255,0.06) !important;
+          }
+          #composer_shell.drag-over #drag_drop_hint {
+            display: flex !important;
+          }
         </style>
         """),
-        # ── Image selected chip ──
+        # ── Thumbnail preview (ChatGPT-style) ──
         rx.cond(
-            AppState.has_image,
-            rx.hstack(
-                rx.icon(tag="image", size=14, color="rgba(160,210,255,0.8)"),
-                rx.cond(
-                    AppState.image_loading,
-                    rx.text(
-                        "Loading image...",
-                        color="rgba(180,195,210,0.6)",
-                        font_size="0.75rem",
-                        font_style="italic",
-                        font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            AppState.image_preview_url != "",
+            rx.box(
+                rx.box(
+                    rx.image(
+                        src=AppState.image_preview_url,
+                        width="100%",
+                        height="100%",
+                        object_fit="cover",
+                        border_radius="8px",
                     ),
-                    rx.text(
-                        AppState.image_name,
-                        color="rgba(200,215,230,0.85)",
-                        font_size="0.75rem",
-                        font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                        max_width="180px",
-                        overflow="hidden",
-                        white_space="nowrap",
-                        text_overflow="ellipsis",
+                    # ── Remove X on thumbnail ──
+                    rx.button(
+                        rx.text("✕", font_size="10px", font_weight="700",
+                                color="white", line_height="1"),
+                        on_click=[
+                            AppState.clear_image,
+                            rx.clear_selected_files("image_upload_zone"),
+                        ],
+                        width="20px",
+                        height="20px",
+                        min_width="20px",
+                        padding="0",
+                        display="inline-flex",
+                        align_items="center",
+                        justify_content="center",
+                        border_radius="50%",
+                        position="absolute",
+                        top="-6px",
+                        right="-6px",
+                        z_index="2",
+                        style={
+                            "background": "rgba(0,0,0,0.65)",
+                            "border": "1.5px solid rgba(255,255,255,0.2)",
+                            "cursor": "pointer",
+                            "backdrop_filter": "blur(4px)",
+                            "transition": "all 0.12s ease",
+                            "_hover": {"background": "rgba(255,60,60,0.7)"},
+                        },
                     ),
+                    position="relative",
+                    width="56px",
+                    height="56px",
+                    flex_shrink="0",
                 ),
-                rx.button(
-                    rx.text("✕", font_size="13px", font_weight="700", color="rgba(255,255,255,0.85)", line_height="1"),
-                    on_click=[
-                        AppState.clear_image,
-                        rx.clear_selected_files("image_upload_zone"),
-                    ],
-                    width="28px",
-                    height="28px",
-                    min_width="28px",
-                    padding="0",
-                    display="inline-flex",
-                    align_items="center",
-                    justify_content="center",
-                    border_radius="50%",
-                    style={
-                        "background": "rgba(255,255,255,0.10)",
-                        "border": "none",
-                        "cursor": "pointer",
-                        "transition": "all 0.12s ease",
-                        "_hover": {"background": "rgba(255,80,80,0.25)"},
-                    },
+                padding="10px 16px 0 16px",
+            ),
+        ),
+        # ── Image loading indicator ──
+        rx.cond(
+            AppState.image_loading,
+            rx.hstack(
+                rx.spinner(size="1", color="rgba(160,210,255,0.6)"),
+                rx.text(
+                    "Loading image...",
+                    color="rgba(180,195,210,0.6)",
+                    font_size="0.75rem",
+                    font_style="italic",
+                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 ),
                 spacing="2",
                 align="center",
-                padding="6px 12px 0 20px",
+                padding="8px 16px 0 16px",
             ),
         ),
         # ── Image error text ──
@@ -4909,11 +4970,40 @@ def chat_input_field() -> rx.Component:
                 font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             ),
         ),
+        # ── Drag-and-drop hint overlay (hidden by default, shown via CSS) ──
+        rx.box(
+            rx.hstack(
+                rx.icon(tag="image", size=16, color="rgba(160,210,255,0.7)"),
+                rx.text(
+                    "Drop image here",
+                    color="rgba(160,210,255,0.7)",
+                    font_size="0.8rem",
+                    font_weight="500",
+                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                ),
+                spacing="2",
+                align="center",
+                justify="center",
+            ),
+            id="drag_drop_hint",
+            display="none",
+            position="absolute",
+            top="0",
+            left="0",
+            right="0",
+            bottom="0",
+            z_index="10",
+            align_items="center",
+            justify_content="center",
+            border_radius="24px",
+            background="rgba(160,210,255,0.04)",
+            pointer_events="none",
+        ),
         rx.hstack(
-            # ── Attach image button (hidden when image already selected) ──
-            rx.cond(
-                ~AppState.has_image,
-                rx.upload(
+            # ── Attach image button (+ icon) ──
+            rx.upload(
+                rx.cond(
+                    ~AppState.has_image,
                     rx.button(
                         rx.text(
                             "+",
@@ -4946,36 +5036,35 @@ def chat_input_field() -> rx.Component:
                             "_active": {"transform": "scale(0.93)"},
                         },
                     ),
-                    id="image_upload_zone",
-                    accept={
-                        "image/png": [".png"],
-                        "image/jpeg": [".jpg", ".jpeg"],
-                        "image/webp": [".webp"],
-                    },
-                    max_files=1,
-                    multiple=False,
-                    on_drop=[
-                        AppState.handle_image_upload,  # type: ignore
-                        rx.clear_selected_files("image_upload_zone"),
-                    ],
-                    no_drag=True,
-                    no_keyboard=True,
-                    border="none",
-                    padding="0",
-                    width="auto",
-                    background="transparent",
-                    display="flex",
-                    align_items="flex-end",
-                    flex_shrink="0",
+                    # When image is selected, keep the upload zone alive but invisible
+                    # so drag-drop JS can still find the input element
+                    rx.box(width="0px", height="0px", overflow="hidden"),
                 ),
+                id="image_upload_zone",
+                accept={
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                    "image/webp": [".webp"],
+                },
+                max_files=1,
+                multiple=False,
+                on_drop=[
+                    AppState.handle_image_upload,  # type: ignore
+                    rx.clear_selected_files("image_upload_zone"),
+                ],
+                no_drag=True,
+                no_keyboard=True,
+                border="none",
+                padding="0",
+                width="auto",
+                background="transparent",
+                display="flex",
+                align_items="flex-end",
+                flex_shrink="0",
             ),
             rx.text_area(
                 id="chat_input",
-                placeholder=rx.cond(
-                    AppState.name != "",
-                    "Learn with Alex AI...",
-                    "Learn with Alex AI...",
-                ),
+                placeholder="Learn with Alex AI...",
                 value=AppState.chat_input,
                 on_change=AppState.set_chat_input,
                 color="rgba(236,240,244,0.92)",
@@ -5043,12 +5132,15 @@ def chat_input_field() -> rx.Component:
             width="100%",
         ),
         rx.script(ENTER_TO_SEND_JS),
+        rx.script(DRAG_DROP_JS),
+        id="composer_shell",
         width="100%",
         border_radius="24px",
         background="rgba(255,255,255,0.04)",
         border="1px solid rgba(255,255,255,0.08)",
+        position="relative",
         style={
-            "transition": "border-color 0.2s ease, box-shadow 0.2s ease",
+            "transition": "border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
             "&:focus-within": {
                 "border": "1px solid rgba(255,255,255,0.14)",
                 "box_shadow": "0 0 0 1px rgba(255,255,255,0.03)",
