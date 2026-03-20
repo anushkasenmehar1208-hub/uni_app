@@ -5870,13 +5870,13 @@ def onboarding_page():
         rx.center(
             rx.vstack(
                 rx.cond(AppState.step == 0,
-                    rx.box(rx.vstack(rx.heading("Shall we begin",size="8"),rx.button("YES",color_scheme="green",on_click=AppState.next_step,size="3",style={"animation":"pulse_glow 2s infinite","cursor":"pointer"})),
+                    rx.box(rx.vstack(rx.heading("Shall we begin",size="8"),rx.button("YES",background="#34D399",color="#064E3B",on_click=AppState.next_step,size="3",style={"animation":"pulse_glow 2s infinite","cursor":"pointer","_hover":{"filter":"brightness(1.1)"}})),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 1,
-                    rx.box(rx.vstack(rx.heading("Whats your degree",size="7"),rx.select(AppState.options,placeholder="Choose your degree",value=AppState.degree,on_change=AppState.set_degree,width="100%"),rx.button("next",on_click=AppState.advance_from_degree,color_scheme="green",size="3"),onboarding_feedback()),
+                    rx.box(rx.vstack(rx.heading("Whats your degree",size="7"),rx.select(AppState.options,placeholder="Choose your degree",value=AppState.degree,on_change=AppState.set_degree,width="100%"),rx.button("next",on_click=AppState.advance_from_degree,background="#34D399",color="#064E3B",style={"cursor":"pointer","_hover":{"filter":"brightness(1.1)"}},size="3"),onboarding_feedback()),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 2,
-                    rx.box(rx.vstack(rx.heading("What's your name?",size="7",color="white"),rx.input(placeholder="Enter your nick name",value=AppState.name,on_change=AppState.set_name,width="100%",size="3"),rx.button("Next",on_click=AppState.advance_from_name,color_scheme="green",size="3"),onboarding_feedback(),spacing="4",width="400px"),
+                    rx.box(rx.vstack(rx.heading("What's your name?",size="7",color="white"),rx.input(placeholder="Enter your nick name",value=AppState.name,on_change=AppState.set_name,width="100%",size="3"),rx.button("Next",on_click=AppState.advance_from_name,background="#34D399",color="#064E3B",style={"cursor":"pointer","_hover":{"filter":"brightness(1.1)"}},size="3"),onboarding_feedback(),spacing="4",width="400px"),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 3,
                     rx.box(rx.vstack(
@@ -5901,7 +5901,7 @@ def onboarding_page():
                         spacing="4",width="400px"),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 rx.cond(AppState.step == 5,
-                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.text(AppState.selected_year + " • " + AppState.selected_semester,color="rgba(255,255,255,0.72)"),rx.button("begin",on_click=AppState.start_app,color_scheme="green",size="3",style={"animation":"pulse_glow 2s infinite"},is_disabled=(AppState.selected_year == "") | (AppState.selected_semester == "")),onboarding_feedback()),
+                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.text(AppState.selected_year + " • " + AppState.selected_semester,color="rgba(255,255,255,0.72)"),rx.button("begin",on_click=AppState.start_app,background="#34D399",color="#064E3B",size="3",style={"animation":"pulse_glow 2s infinite","cursor":"pointer","_hover":{"filter":"brightness(1.1)"}},is_disabled=(AppState.selected_year == "") | (AppState.selected_semester == "")),onboarding_feedback()),
                         background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
                 spacing="4",
             ),
