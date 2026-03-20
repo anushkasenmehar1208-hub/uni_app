@@ -4823,7 +4823,7 @@ def chat_input_field() -> rx.Component:
         "box_shadow": "0 0 0 1px rgba(255,255,255,0.04), 0 22px 60px rgba(0,0,0,0.38)",
     }
 
-    return rx.upload(
+    return rx.upload.root(
         rx.html("""
         <style>
           #chat_input,
@@ -5119,10 +5119,12 @@ def chat_input_field() -> rx.Component:
         ],
         drag_active_style=composer_drag_active_style,
         width="100%",
+        padding="0",
         border_radius="24px",
         background="rgba(255,255,255,0.04)",
         border="1px solid rgba(255,255,255,0.08)",
         position="relative",
+        text_align="left",
         style=composer_shell_style,
     )
 # NEW: Empty chat state — centered like ChatGPT home
