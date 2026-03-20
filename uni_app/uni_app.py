@@ -47,6 +47,9 @@ else:
 GEMINI_FAST_MODEL = "llama-3.3-70b-versatile"
 GEMINI_PRO_MODEL  = "llama-3.3-70b-versatile"
 GEMINI_MODEL      = GEMINI_FAST_MODEL
+VISION_MODEL      = "meta-llama/llama-4-scout-17b-16e-instruct"
+ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp"}
+MAX_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MB
 
 RATE_LIMIT_UI_MESSAGE = "I'm taking a short break. Please try again in a few minutes."
 GENERIC_ERROR_UI_MESSAGE = "Alex had a small error. Please try again."
@@ -139,6 +142,31 @@ def _groq_generate(model: str, contents: str, max_tokens: int = 2048) -> Any:
         r = _R()
         r.text = friendly_groq_error(e)
         return r
+
+
+def _groq_read_image(image_bytes: bytes, mime_type: str, prompt: str) -> str:
+    """Send an image + prompt to the Groq vision model and return the response text."""
+    if client is None:
+        return "API not ready"
+    try:
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        data_url = f"data:{mime_type};base64,{b64}"
+        resp = client.chat.completions.create(
+            model=VISION_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": data_url}},
+                    ],
+                }
+            ],
+            max_tokens=2048,
+        )
+        return resp.choices[0].message.content or ""
+    except Exception as e:
+        return friendly_groq_error(e)
 
 async def _groq_stream_async(model: str, messages: list[dict], max_tokens: int = 2048):
     try:
@@ -814,6 +842,12 @@ class AppState(reflex_local_auth.LocalAuthState):
     chat_input: str = ""
     is_processing: bool = False
 
+    # Image upload state
+    _image_data: bytes = b""
+    _image_mime: str = ""
+    image_name: str = ""
+    image_error: str = ""
+
     is_generating_plan: bool = False
     scope_hydrating: bool = False
     current_day: int = 1
@@ -894,6 +928,10 @@ class AppState(reflex_local_auth.LocalAuthState):
         if self.is_in_trial:
             return True
         return self.daily_message_count < FREE_DAILY_LIMIT
+
+    @rx.var
+    def has_image(self) -> bool:
+        return len(self._image_data) > 0
 
     @rx.var
     def messages_left_today(self) -> int:
@@ -3201,6 +3239,33 @@ Critical operating rules:
         self.chat_input = value
 
     @rx.event
+    async def handle_image_upload(self, files: list[rx.UploadFile]):
+        """Handle image file selection for vision chat."""
+        self.image_error = ""
+        if not files:
+            return
+        upload_file = files[0]
+        content_type = upload_file.content_type or ""
+        if content_type not in ALLOWED_IMAGE_TYPES:
+            self.image_error = f"Unsupported file type. Please upload a PNG, JPG, or WebP image."
+            return
+        data = await upload_file.read()
+        if len(data) > MAX_IMAGE_BYTES:
+            self.image_error = f"Image is too large (max 20 MB). Please choose a smaller file."
+            return
+        self._image_data = data
+        self._image_mime = content_type
+        self.image_name = upload_file.filename or "image"
+
+    @rx.event
+    def clear_image(self):
+        """Remove the selected image before sending."""
+        self._image_data = b""
+        self._image_mime = ""
+        self.image_name = ""
+        self.image_error = ""
+
+    @rx.event
     def next_step(self):
         uid = self._uid()
         try:
@@ -3657,7 +3722,7 @@ Subjects:\n{courses_text}"""
     @rx.event
     async def send_message(self):
         uid = self._uid()
-        if uid < 0 or not self.chat_input.strip():
+        if uid < 0 or (not self.chat_input.strip() and not self._image_data):
             return
 
         # Scope safety: ensure current session belongs to active scope.
@@ -3686,6 +3751,9 @@ Subjects:\n{courses_text}"""
             return
 
         user_msg = self.chat_input.strip()
+        has_image_attached = bool(self._image_data)
+        image_bytes = self._image_data
+        image_mime = self._image_mime
         self.chat_input = ""
         self.is_processing = True
 
@@ -3747,6 +3815,43 @@ Subjects:\n{courses_text}"""
             print(f"ERROR save user msg: {e}")
 
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+
+        # ── IMAGE VISION PATH ──
+        if has_image_attached:
+            vision_prompt = user_msg or "Describe this image clearly"
+            display_msg = user_msg or "[Image uploaded]"
+            # Update the user message shown in chat if it was image-only
+            if not user_msg:
+                self.chat_history[-1]["content"] = display_msg
+
+            self.chat_history.append({"role": "assistant", "content": ""})
+            assistant_index = len(self.chat_history) - 1
+            yield
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+
+            try:
+                vision_reply = await asyncio.to_thread(
+                    _groq_read_image, image_bytes, image_mime, vision_prompt
+                )
+                vision_reply = sanitize_for_ui(vision_reply.strip() or "I couldn't read that image. Please try again.")
+            except Exception as e:
+                print(f"ERROR vision: {e}")
+                vision_reply = friendly_groq_error(e)
+
+            self.chat_history[assistant_index]["content"] = vision_reply
+            self._save_message(uid, "assistant", vision_reply)
+            _append_training_example(uid, self.active_scope, display_msg, vision_reply)
+            self.is_processing = False
+            # Clear image state
+            self._image_data = b""
+            self._image_mime = ""
+            self.image_name = ""
+            self.image_error = ""
+            await self._maybe_auto_update_scope_summary(uid, self.active_scope)
+            await self._maybe_auto_update_global_memory(uid)
+            await self._maybe_auto_update_adaptive_profile(uid)
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            return
 
         guardrail_reply = self._alex_guardrail_reply(user_msg, student_name)
         if guardrail_reply:
@@ -4688,9 +4793,95 @@ def chat_input_field() -> rx.Component:
             -webkit-appearance: none !important;
             resize: none !important;
           }
+          #image_upload_zone {
+            display: none !important;
+          }
         </style>
         """),
+        # ── Image selected chip ──
+        rx.cond(
+            AppState.has_image,
+            rx.hstack(
+                rx.icon(tag="image", size=12, color="rgba(160,210,255,0.8)"),
+                rx.text(
+                    AppState.image_name,
+                    color="rgba(200,215,230,0.85)",
+                    font_size="0.75rem",
+                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    max_width="180px",
+                    overflow="hidden",
+                    white_space="nowrap",
+                    text_overflow="ellipsis",
+                ),
+                rx.button(
+                    rx.icon(tag="x", size=10, color="rgba(255,255,255,0.5)"),
+                    on_click=AppState.clear_image,
+                    width="18px",
+                    height="18px",
+                    min_width="18px",
+                    padding="0",
+                    border_radius="50%",
+                    style={
+                        "background": "rgba(255,255,255,0.08)",
+                        "border": "none",
+                        "cursor": "pointer",
+                        "_hover": {"background": "rgba(255,255,255,0.16)"},
+                    },
+                ),
+                spacing="2",
+                align="center",
+                padding="4px 12px 0 20px",
+            ),
+        ),
+        # ── Image error text ──
+        rx.cond(
+            AppState.image_error != "",
+            rx.text(
+                AppState.image_error,
+                color="rgba(255,120,120,0.85)",
+                font_size="0.72rem",
+                padding="2px 20px 0 20px",
+                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            ),
+        ),
         rx.hstack(
+            # ── Attach image button ──
+            rx.upload(
+                rx.button(
+                    rx.icon(tag="paperclip", size=15, color="rgba(255,255,255,0.45)"),
+                    width="34px",
+                    height="34px",
+                    min_width="34px",
+                    border_radius="12px",
+                    flex_shrink="0",
+                    align_self="flex-end",
+                    margin_bottom="6px",
+                    margin_left="6px",
+                    style={
+                        "background": "transparent",
+                        "border": "none",
+                        "cursor": "pointer",
+                        "transition": "all 0.15s ease",
+                        "_hover": {
+                            "background": "rgba(255,255,255,0.08)",
+                        },
+                        "_active": {"transform": "scale(0.95)"},
+                    },
+                ),
+                id="image_upload_zone",
+                accept={
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                    "image/webp": [".webp"],
+                },
+                max_files=1,
+                on_drop=AppState.handle_image_upload,  # type: ignore
+                no_drag=True,
+                no_keyboard=True,
+                border="none",
+                padding="0",
+                width="auto",
+            ),
             rx.text_area(
                 id="chat_input",
                 placeholder=rx.cond(
@@ -4704,7 +4895,7 @@ def chat_input_field() -> rx.Component:
                 flex="1",
                 min_height="52px",
                 max_height="160px",
-                padding="14px 4px 14px 20px",
+                padding="14px 4px 14px 12px",
                 font_size="0.92rem",
                 line_height="1.5",
                 font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
