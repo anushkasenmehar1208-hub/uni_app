@@ -3246,29 +3246,44 @@ Critical operating rules:
     @rx.event
     async def handle_image_upload(self, files: list[rx.UploadFile]):
         """Handle image file selection for vision chat."""
+        # 1. Clear previous error immediately
         self.image_error = ""
         if not files:
             return
         upload_file = files[0]
-        content_type = upload_file.content_type or ""
+
+        # 2. Show filename chip instantly — before any I/O
         self.image_name = upload_file.filename or "image"
         self._image_loading = True
-        yield  # show filename chip immediately
+        yield  # flush to frontend so the chip renders now
 
+        # 3. Validate content type
+        content_type = upload_file.content_type or ""
         if content_type not in ALLOWED_IMAGE_TYPES:
-            self.image_error = f"Unsupported file type. Please upload a PNG, JPG, or WebP image."
+            self._image_data = b""
+            self._image_mime = ""
             self.image_name = ""
             self._image_loading = False
+            self.image_error = "Unsupported file type. Please upload a PNG, JPG, or WebP image."
             return
+
+        # 4. Read file bytes (the slow part)
         data = await upload_file.read()
+
+        # 5. Validate size
         if len(data) > MAX_IMAGE_BYTES:
-            self.image_error = f"Image is too large (max 20 MB). Please choose a smaller file."
+            self._image_data = b""
+            self._image_mime = ""
             self.image_name = ""
             self._image_loading = False
+            self.image_error = "Image is too large (max 20 MB). Please choose a smaller file."
             return
+
+        # 6. All good — store image
         self._image_data = data
         self._image_mime = content_type
         self._image_loading = False
+        self.image_error = ""
 
     @rx.event
     def clear_image(self):
@@ -4895,53 +4910,64 @@ def chat_input_field() -> rx.Component:
             ),
         ),
         rx.hstack(
-            # ── Attach image button ──
+            # ── Attach image button (hidden when image already selected) ──
             rx.cond(
                 ~AppState.has_image,
                 rx.upload(
-                rx.button(
-                    rx.icon(tag="paperclip", size=15, color="rgba(255,255,255,0.45)"),
-                    width="34px",
-                    height="34px",
-                    min_width="34px",
-                    border_radius="12px",
-                    flex_shrink="0",
-                    align_self="flex-end",
-                    margin_bottom="6px",
-                    margin_left="6px",
-                    style={
-                        "background": "transparent",
-                        "border": "none",
-                        "cursor": "pointer",
-                        "transition": "all 0.15s ease",
-                        "_hover": {
-                            "background": "rgba(255,255,255,0.08)",
+                    rx.button(
+                        rx.text(
+                            "+",
+                            font_size="22px",
+                            font_weight="400",
+                            color="rgba(255,255,255,0.50)",
+                            line_height="1",
+                            user_select="none",
+                        ),
+                        width="38px",
+                        height="38px",
+                        min_width="38px",
+                        border_radius="50%",
+                        display="inline-flex",
+                        align_items="center",
+                        justify_content="center",
+                        flex_shrink="0",
+                        align_self="flex-end",
+                        margin_bottom="5px",
+                        margin_left="6px",
+                        style={
+                            "background": "transparent",
+                            "border": "1px solid rgba(255,255,255,0.12)",
+                            "cursor": "pointer",
+                            "transition": "all 0.15s ease",
+                            "_hover": {
+                                "background": "rgba(255,255,255,0.08)",
+                                "border": "1px solid rgba(255,255,255,0.20)",
+                            },
+                            "_active": {"transform": "scale(0.93)"},
                         },
-                        "_active": {"transform": "scale(0.95)"},
+                    ),
+                    id="image_upload_zone",
+                    accept={
+                        "image/png": [".png"],
+                        "image/jpeg": [".jpg", ".jpeg"],
+                        "image/webp": [".webp"],
                     },
+                    max_files=1,
+                    multiple=False,
+                    on_drop=[
+                        AppState.handle_image_upload,  # type: ignore
+                        rx.clear_selected_files("image_upload_zone"),
+                    ],
+                    no_drag=True,
+                    no_keyboard=True,
+                    border="none",
+                    padding="0",
+                    width="auto",
+                    background="transparent",
+                    display="flex",
+                    align_items="flex-end",
+                    flex_shrink="0",
                 ),
-                id="image_upload_zone",
-                accept={
-                    "image/png": [".png"],
-                    "image/jpeg": [".jpg", ".jpeg"],
-                    "image/webp": [".webp"],
-                },
-                max_files=1,
-                multiple=False,
-                on_drop=[
-                    AppState.handle_image_upload,  # type: ignore
-                    rx.clear_selected_files("image_upload_zone"),
-                ],
-                no_drag=True,
-                no_keyboard=True,
-                border="none",
-                padding="0",
-                width="auto",
-                background="transparent",
-                display="flex",
-                align_items="flex-end",
-                flex_shrink="0",
-            ),
             ),
             rx.text_area(
                 id="chat_input",
