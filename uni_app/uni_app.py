@@ -202,10 +202,10 @@ LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
 ICON_ASSET_VERSION = "20260320b"
-FAVICON_ICO = f"/favicon.ico?v={ICON_ASSET_VERSION}"
-FAVICON_32 = f"/favicon-32x32.png?v={ICON_ASSET_VERSION}"
-FAVICON_16 = f"/favicon-16x16.png?v={ICON_ASSET_VERSION}"
-APPLE_TOUCH_ICON = f"/apple-touch-icon.png?v={ICON_ASSET_VERSION}"
+FAVICON_ICO = "/favicon-v2.ico"
+FAVICON_32 = "/favicon-32x32-v2.png"
+FAVICON_16 = "/favicon-16x16-v2.png"
+APPLE_TOUCH_ICON = "/apple-touch-icon-v2.png"
 SITE_WEBMANIFEST = f"/site.webmanifest?v={ICON_ASSET_VERSION}"
 SAFARI_PINNED_TAB = f"/safari-pinned-tab.svg?v={ICON_ASSET_VERSION}"
 
