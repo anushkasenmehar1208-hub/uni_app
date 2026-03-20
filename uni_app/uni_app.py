@@ -4836,15 +4836,19 @@ DRAG_DROP_JS = """
       e.preventDefault();
       counter = 0;
       shell.classList.remove('drag-over');
+      
       var files = e.dataTransfer.files;
       if (!files || !files.length) return;
-      // Feed the dropped file into the hidden rx.upload input
-      var inp = document.querySelector('#image_upload_zone input[type=\"file\"]');
-      if (!inp) return;
-      var dt = new DataTransfer();
-      dt.items.add(files[0]);
-      inp.files = dt.files;
-      inp.dispatchEvent(new Event('change', {bubbles: true}));
+      
+      var dropzone = document.getElementById('image_upload_zone');
+      if (!dropzone) return;
+      
+      var dropEvent = new DragEvent('drop', {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: e.dataTransfer
+      });
+      dropzone.dispatchEvent(dropEvent);
     });
   }
   if (document.readyState === 'loading') {
@@ -4885,8 +4889,8 @@ def chat_input_field() -> rx.Component:
           }
           /* Drag-over highlight */
           #composer_shell.drag-over {
-            border-color: rgba(160,210,255,0.35) !important;
-            background: rgba(160,210,255,0.06) !important;
+            border-color: rgba(255,255,255,0.3) !important;
+            background: rgba(255,255,255,0.04) !important;
           }
           #composer_shell.drag-over #drag_drop_hint {
             display: flex !important;
@@ -4972,18 +4976,23 @@ def chat_input_field() -> rx.Component:
         ),
         # ── Drag-and-drop hint overlay (hidden by default, shown via CSS) ──
         rx.box(
-            rx.hstack(
-                rx.icon(tag="image", size=16, color="rgba(160,210,255,0.7)"),
+            rx.vstack(
+                rx.icon(tag="upload", size=24, color="rgba(255,255,255,0.9)"),
                 rx.text(
                     "Drop image here",
-                    color="rgba(160,210,255,0.7)",
-                    font_size="0.8rem",
+                    color="rgba(255,255,255,0.9)",
+                    font_size="0.95rem",
                     font_weight="500",
                     font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 ),
-                spacing="2",
+                spacing="3",
                 align="center",
                 justify="center",
+                padding="24px 32px",
+                border_radius="16px",
+                background="rgba(40,40,40,0.8)",
+                box_shadow="0 8px 32px rgba(0,0,0,0.3)",
+                border="1px solid rgba(255,255,255,0.1)",
             ),
             id="drag_drop_hint",
             display="none",
@@ -4996,7 +5005,8 @@ def chat_input_field() -> rx.Component:
             align_items="center",
             justify_content="center",
             border_radius="24px",
-            background="rgba(160,210,255,0.04)",
+            background="rgba(0,0,0,0.4)",
+            style={"backdrop_filter": "blur(4px)"},
             pointer_events="none",
         ),
         rx.hstack(
@@ -5052,7 +5062,6 @@ def chat_input_field() -> rx.Component:
                     AppState.handle_image_upload,  # type: ignore
                     rx.clear_selected_files("image_upload_zone"),
                 ],
-                no_drag=True,
                 no_keyboard=True,
                 border="none",
                 padding="0",
