@@ -4794,6 +4794,16 @@ def chat_input_field() -> rx.Component:
             resize: none !important;
           }
           #image_upload_zone {
+            display: flex !important;
+            align-items: flex-end !important;
+            width: auto !important;
+            min-width: auto !important;
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+            text-align: left !important;
+          }
+          #image_upload_zone input[type="file"] {
             display: none !important;
           }
         </style>
@@ -4815,7 +4825,10 @@ def chat_input_field() -> rx.Component:
                 ),
                 rx.button(
                     rx.icon(tag="x", size=10, color="rgba(255,255,255,0.5)"),
-                    on_click=AppState.clear_image,
+                    on_click=[
+                        AppState.clear_image,
+                        rx.clear_selected_files("image_upload_zone"),
+                    ],
                     width="18px",
                     height="18px",
                     min_width="18px",
@@ -4875,12 +4888,20 @@ def chat_input_field() -> rx.Component:
                     "image/webp": [".webp"],
                 },
                 max_files=1,
-                on_drop=AppState.handle_image_upload,  # type: ignore
+                multiple=False,
+                on_drop=[
+                    AppState.handle_image_upload,  # type: ignore
+                    rx.clear_selected_files("image_upload_zone"),
+                ],
                 no_drag=True,
                 no_keyboard=True,
                 border="none",
                 padding="0",
                 width="auto",
+                background="transparent",
+                display="flex",
+                align_items="flex-end",
+                flex_shrink="0",
             ),
             rx.text_area(
                 id="chat_input",
