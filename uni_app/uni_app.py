@@ -6191,15 +6191,15 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
         style={
             "background": rx.cond(
                 is_active,
-                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
+                "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.12) 100%)",
                 "rgba(255,255,255,0.01)",
             ),
             "border": rx.cond(
                 is_active,
-                "1px solid rgba(52,211,153,0.76)",
+                "1px solid rgba(255,255,255,0.15)",
                 "1px solid rgba(255,255,255,0.04)",
             ),
-            "color": rx.cond(is_active, "#ecfff6", "rgba(255,255,255,0.72)"),
+            "color": rx.cond(is_active, "white", "rgba(255,255,255,0.72)"),
             "font_weight": rx.cond(is_active, "700", "500"),
             "border_radius": "12px",
             "padding": "0.46em 0.72em",
@@ -6207,18 +6207,18 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
             "min_height": "0",
             "box_shadow": rx.cond(
                 is_active,
-                "0 10px 24px rgba(0,0,0,0.22), 0 0 0 1px rgba(52,211,153,0.14)",
+                "0 10px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08)",
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
+                    "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.14) 100%)",
                     "rgba(255,255,255,0.06)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    "1px solid rgba(110,231,183,0.88)",
+                    "1px solid rgba(255,255,255,0.22)",
                     "1px solid rgba(255,255,255,0.12)",
                 ),
                 "color": "white",
@@ -6382,14 +6382,14 @@ def alex_workspace_button() -> rx.Component:
         rx.vstack(
             rx.text(
                 "Alex AI",
-                color=rx.cond(is_active, "#f4fff9", "white"),
+                color="white",
                 font_size="0.95rem",
                 font_weight="700",
                 letter_spacing="0.04em",
             ),
             rx.text(
                 "Ask doubts in your growth",
-                color=rx.cond(is_active, "rgba(240,255,248,0.86)", "rgba(226,232,240,0.68)"),
+                color=rx.cond(is_active, "rgba(255,255,255,0.86)", "rgba(226,232,240,0.68)"),
                 font_size="0.76rem",
                 text_align="left",
                 line_height="1.45",
@@ -6408,28 +6408,28 @@ def alex_workspace_button() -> rx.Component:
             "border_radius": "14px",
             "border": rx.cond(
                 is_active,
-                "1px solid rgba(52,211,153,0.78)",
+                "1px solid rgba(255,255,255,0.15)",
                 "1px solid rgba(255,255,255,0.08)",
             ),
             "background": rx.cond(
                 is_active,
-                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
+                "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.12) 100%)",
                 "rgba(255,255,255,0.03)",
             ),
             "box_shadow": rx.cond(
                 is_active,
-                "0 12px 24px rgba(0,0,0,0.24), 0 0 0 1px rgba(52,211,153,0.16)",
+                "0 12px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08)",
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
+                    "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.14) 100%)",
                     "rgba(255,255,255,0.07)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    "1px solid rgba(110,231,183,0.9)",
+                    "1px solid rgba(255,255,255,0.22)",
                     "1px solid rgba(255,255,255,0.16)",
                 ),
             },
