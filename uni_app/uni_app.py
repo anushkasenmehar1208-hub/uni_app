@@ -4803,65 +4803,27 @@ def upgrade_button() -> rx.Component:
 # INPUT BOX — thumbnail preview + drag-and-drop
 # ═══════════════════════════════════════════════════════
 
-# JS: drag-and-drop visual feedback on the composer shell.
-# Toggles a CSS class so the border highlights on dragover.
-# Also handles the actual file drop → feeds it into the
-# hidden rx.upload input so Reflex's on_drop fires normally.
-DRAG_DROP_JS = """
-(function() {
-  if (window.__dragDropInit) return;
-  window.__dragDropInit = true;
-
-  function setup() {
-    var shell = document.getElementById('composer_shell');
-    if (!shell) { setTimeout(setup, 200); return; }
-
-    var counter = 0;  // track nested dragenter/dragleave
-
-    shell.addEventListener('dragenter', function(e) {
-      e.preventDefault();
-      counter++;
-      shell.classList.add('drag-over');
-    });
-    shell.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-    });
-    shell.addEventListener('dragleave', function(e) {
-      e.preventDefault();
-      counter--;
-      if (counter <= 0) { counter = 0; shell.classList.remove('drag-over'); }
-    });
-    shell.addEventListener('drop', function(e) {
-      e.preventDefault();
-      counter = 0;
-      shell.classList.remove('drag-over');
-      
-      var files = e.dataTransfer.files;
-      if (!files || !files.length) return;
-      
-      var dropzone = document.getElementById('image_upload_zone');
-      if (!dropzone) return;
-      
-      var dropEvent = new DragEvent('drop', {
-          bubbles: true,
-          cancelable: true,
-          dataTransfer: e.dataTransfer
-      });
-      dropzone.dispatchEvent(dropEvent);
-    });
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setup);
-  } else {
-    setup();
-  }
-})();
-"""
-
-
 def chat_input_field() -> rx.Component:
-    return rx.box(
+    composer_shell_style = {
+        "--composer-drop-overlay-opacity": "0",
+        "--composer-drop-overlay-visibility": "hidden",
+        "--composer-drop-overlay-transform": "translateY(8px) scale(0.985)",
+        "transition": "border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease",
+        "&:focus-within": {
+            "border": "1px solid rgba(255,255,255,0.14)",
+            "box_shadow": "0 0 0 1px rgba(255,255,255,0.03)",
+        },
+    }
+    composer_drag_active_style = {
+        "--composer-drop-overlay-opacity": "1",
+        "--composer-drop-overlay-visibility": "visible",
+        "--composer-drop-overlay-transform": "translateY(0) scale(1)",
+        "border_color": "rgba(255,255,255,0.18)",
+        "background": "rgba(255,255,255,0.06)",
+        "box_shadow": "0 0 0 1px rgba(255,255,255,0.04), 0 22px 60px rgba(0,0,0,0.38)",
+    }
+
+    return rx.upload(
         rx.html("""
         <style>
           #chat_input,
@@ -4873,6 +4835,9 @@ def chat_input_field() -> rx.Component:
             box-shadow: none !important;
             -webkit-appearance: none !important;
             resize: none !important;
+          }
+          #composer_shell > input[type="file"] {
+            display: none !important;
           }
           #image_upload_zone {
             display: flex !important;
@@ -4886,14 +4851,6 @@ def chat_input_field() -> rx.Component:
           }
           #image_upload_zone input[type="file"] {
             display: none !important;
-          }
-          /* Drag-over highlight */
-          #composer_shell.drag-over {
-            border-color: rgba(255,255,255,0.3) !important;
-            background: rgba(255,255,255,0.04) !important;
-          }
-          #composer_shell.drag-over #drag_drop_hint {
-            display: flex !important;
           }
         </style>
         """),
@@ -4915,6 +4872,7 @@ def chat_input_field() -> rx.Component:
                                 color="white", line_height="1"),
                         on_click=[
                             AppState.clear_image,
+                            rx.clear_selected_files("composer_shell"),
                             rx.clear_selected_files("image_upload_zone"),
                         ],
                         width="20px",
@@ -4974,39 +4932,42 @@ def chat_input_field() -> rx.Component:
                 font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             ),
         ),
-        # ── Drag-and-drop hint overlay (hidden by default, shown via CSS) ──
+        # ── Drag-and-drop hint overlay ──
         rx.box(
-            rx.vstack(
-                rx.icon(tag="upload", size=24, color="rgba(255,255,255,0.9)"),
+            rx.box(
                 rx.text(
                     "Drop image here",
                     color="rgba(255,255,255,0.9)",
-                    font_size="0.95rem",
-                    font_weight="500",
+                    font_size="1rem",
+                    font_weight="600",
+                    letter_spacing="-0.01em",
                     font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 ),
-                spacing="3",
-                align="center",
-                justify="center",
-                padding="24px 32px",
-                border_radius="16px",
-                background="rgba(40,40,40,0.8)",
-                box_shadow="0 8px 32px rgba(0,0,0,0.3)",
-                border="1px solid rgba(255,255,255,0.1)",
+                padding="22px 30px",
+                border_radius="18px",
+                background="linear-gradient(180deg, rgba(41,47,56,0.94) 0%, rgba(18,22,28,0.98) 100%)",
+                box_shadow="0 20px 50px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.05)",
+                border="1px solid rgba(255,255,255,0.16)",
             ),
             id="drag_drop_hint",
-            display="none",
             position="absolute",
             top="0",
             left="0",
             right="0",
             bottom="0",
             z_index="10",
+            display="flex",
             align_items="center",
             justify_content="center",
             border_radius="24px",
-            background="rgba(0,0,0,0.4)",
-            style={"backdrop_filter": "blur(4px)"},
+            background="rgba(6,10,15,0.48)",
+            style={
+                "opacity": "var(--composer-drop-overlay-opacity)",
+                "visibility": "var(--composer-drop-overlay-visibility)",
+                "transform": "var(--composer-drop-overlay-transform)",
+                "transition": "opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease",
+                "backdrop_filter": "blur(8px)",
+            },
             pointer_events="none",
         ),
         rx.hstack(
@@ -5046,8 +5007,7 @@ def chat_input_field() -> rx.Component:
                             "_active": {"transform": "scale(0.93)"},
                         },
                     ),
-                    # When image is selected, keep the upload zone alive but invisible
-                    # so drag-drop JS can still find the input element
+                    # Keep the click-upload control mounted even while the preview is shown.
                     rx.box(width="0px", height="0px", overflow="hidden"),
                 ),
                 id="image_upload_zone",
@@ -5058,6 +5018,7 @@ def chat_input_field() -> rx.Component:
                 },
                 max_files=1,
                 multiple=False,
+                no_drag=False,
                 on_drop=[
                     AppState.handle_image_upload,  # type: ignore
                     rx.clear_selected_files("image_upload_zone"),
@@ -5141,20 +5102,28 @@ def chat_input_field() -> rx.Component:
             width="100%",
         ),
         rx.script(ENTER_TO_SEND_JS),
-        rx.script(DRAG_DROP_JS),
         id="composer_shell",
+        accept={
+            "image/png": [".png"],
+            "image/jpeg": [".jpg", ".jpeg"],
+            "image/webp": [".webp"],
+        },
+        max_files=1,
+        multiple=False,
+        no_click=True,
+        no_drag=False,
+        no_keyboard=True,
+        on_drop=[
+            AppState.handle_image_upload,  # type: ignore
+            rx.clear_selected_files("composer_shell"),
+        ],
+        drag_active_style=composer_drag_active_style,
         width="100%",
         border_radius="24px",
         background="rgba(255,255,255,0.04)",
         border="1px solid rgba(255,255,255,0.08)",
         position="relative",
-        style={
-            "transition": "border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
-            "&:focus-within": {
-                "border": "1px solid rgba(255,255,255,0.14)",
-                "box_shadow": "0 0 0 1px rgba(255,255,255,0.03)",
-            },
-        },
+        style=composer_shell_style,
     )
 # NEW: Empty chat state — centered like ChatGPT home
 # ──────────────────────────────────────────────────────────────
