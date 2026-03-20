@@ -3267,6 +3267,7 @@ Critical operating rules:
             self._image_loading = False
             self.image_preview_url = ""
             self.image_error = "Unsupported file type. Please upload a PNG, JPG, or WebP image."
+            yield rx.call_script(CLEAR_IMAGE_PREVIEW_JS)
             return
 
         # 4. Read file bytes (the slow part)
@@ -3280,6 +3281,7 @@ Critical operating rules:
             self._image_loading = False
             self.image_preview_url = ""
             self.image_error = "Image is too large (max 20 MB). Please choose a smaller file."
+            yield rx.call_script(CLEAR_IMAGE_PREVIEW_JS)
             return
 
         # 6. All good — store image
@@ -3298,6 +3300,7 @@ Critical operating rules:
         self.image_error = ""
         self._image_loading = False
         self.image_preview_url = ""
+        return rx.call_script(CLEAR_IMAGE_PREVIEW_JS)
 
     @rx.event
     def next_step(self):
@@ -3827,6 +3830,7 @@ Subjects:\n{courses_text}"""
                 self.image_error = ""
                 self._image_loading = False
                 self.image_preview_url = ""
+                yield rx.call_script(CLEAR_IMAGE_PREVIEW_JS)
                 
             yield
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -4803,6 +4807,103 @@ def upgrade_button() -> rx.Component:
 # INPUT BOX — thumbnail preview + drag-and-drop
 # ═══════════════════════════════════════════════════════
 
+INSTANT_IMAGE_PREVIEW_JS = f"""
+(function() {{
+  if (window.__instantComposerPreviewInit) return;
+  window.__instantComposerPreviewInit = true;
+
+  const allowedTypes = new Set({json.dumps(sorted(ALLOWED_IMAGE_TYPES))});
+  const maxBytes = {MAX_IMAGE_BYTES};
+
+  function previewShell() {{
+    return document.getElementById('composer_preview_shell');
+  }}
+
+  function previewImage() {{
+    return document.getElementById('composer_preview_img');
+  }}
+
+  function cleanupObjectUrl() {{
+    if (window.__composerPreviewObjectUrl) {{
+      URL.revokeObjectURL(window.__composerPreviewObjectUrl);
+      window.__composerPreviewObjectUrl = null;
+    }}
+  }}
+
+  function hidePreview() {{
+    const shell = previewShell();
+    const image = previewImage();
+    cleanupObjectUrl();
+    if (image) image.removeAttribute('src');
+    if (shell) shell.style.display = 'none';
+  }}
+
+  function showPreview(file) {{
+    if (!file) return;
+    if (!allowedTypes.has(file.type || '') || file.size > maxBytes) {{
+      hidePreview();
+      return;
+    }}
+
+    const shell = previewShell();
+    const image = previewImage();
+    if (!shell || !image) return;
+
+    cleanupObjectUrl();
+    window.__composerPreviewObjectUrl = URL.createObjectURL(file);
+    image.src = window.__composerPreviewObjectUrl;
+    shell.style.display = 'block';
+  }}
+
+  function bindInput(containerId) {{
+    const container = document.getElementById(containerId);
+    if (!container) return false;
+    const input = container.querySelector('input[type="file"]');
+    if (!input) return false;
+    if (input.dataset.instantPreviewBound === '1') return true;
+
+    input.dataset.instantPreviewBound = '1';
+    input.addEventListener('change', function(event) {{
+      const file = event.target && event.target.files && event.target.files[0];
+      if (file) showPreview(file);
+    }});
+    return true;
+  }}
+
+  function bindDropPreview() {{
+    const shell = document.getElementById('composer_shell');
+    if (!shell) return false;
+    if (shell.dataset.instantDropPreviewBound === '1') return true;
+
+    shell.dataset.instantDropPreviewBound = '1';
+    shell.addEventListener('drop', function(event) {{
+      const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+      if (file) showPreview(file);
+    }});
+    return true;
+  }}
+
+  function init() {{
+    const clickReady = bindInput('image_upload_zone');
+    const dropReady = bindDropPreview();
+    bindInput('composer_shell');
+    if (!clickReady || !dropReady) {{
+      window.setTimeout(init, 200);
+    }}
+  }}
+
+  window.__clearComposerImagePreview = hidePreview;
+
+  if (document.readyState === 'loading') {{
+    document.addEventListener('DOMContentLoaded', init, {{ once: true }});
+  }} else {{
+    init();
+  }}
+}})();
+"""
+
+CLEAR_IMAGE_PREVIEW_JS = "window.__clearComposerImagePreview && window.__clearComposerImagePreview();"
+
 def chat_input_field() -> rx.Component:
     composer_shell_style = {
         "--composer-drop-overlay-opacity": "0",
@@ -4854,55 +4955,56 @@ def chat_input_field() -> rx.Component:
           }
         </style>
         """),
-        # ── Thumbnail preview (ChatGPT-style) ──
-        rx.cond(
-            AppState.image_preview_url != "",
+        # ── Thumbnail preview (client shows instantly, backend preview replaces it) ──
+        rx.box(
             rx.box(
-                rx.box(
-                    rx.image(
-                        src=AppState.image_preview_url,
-                        width="100%",
-                        height="100%",
-                        object_fit="cover",
-                        border_radius="8px",
-                    ),
-                    # ── Remove X on thumbnail ──
-                    rx.button(
-                        rx.text("✕", font_size="10px", font_weight="700",
-                                color="white", line_height="1"),
-                        on_click=[
-                            AppState.clear_image,
-                            rx.clear_selected_files("composer_shell"),
-                            rx.clear_selected_files("image_upload_zone"),
-                        ],
-                        width="20px",
-                        height="20px",
-                        min_width="20px",
-                        padding="0",
-                        display="inline-flex",
-                        align_items="center",
-                        justify_content="center",
-                        border_radius="50%",
-                        position="absolute",
-                        top="-6px",
-                        right="-6px",
-                        z_index="2",
-                        style={
-                            "background": "rgba(0,0,0,0.65)",
-                            "border": "1.5px solid rgba(255,255,255,0.2)",
-                            "cursor": "pointer",
-                            "backdrop_filter": "blur(4px)",
-                            "transition": "all 0.12s ease",
-                            "_hover": {"background": "rgba(255,60,60,0.7)"},
-                        },
-                    ),
-                    position="relative",
-                    width="56px",
-                    height="56px",
-                    flex_shrink="0",
+                rx.image(
+                    id="composer_preview_img",
+                    src=AppState.image_preview_url,
+                    width="100%",
+                    height="100%",
+                    object_fit="cover",
+                    border_radius="8px",
                 ),
-                padding="10px 16px 0 16px",
+                # ── Remove X on thumbnail ──
+                rx.button(
+                    rx.text("✕", font_size="10px", font_weight="700",
+                            color="white", line_height="1"),
+                    on_click=[
+                        rx.call_script(CLEAR_IMAGE_PREVIEW_JS),
+                        AppState.clear_image,
+                        rx.clear_selected_files("composer_shell"),
+                        rx.clear_selected_files("image_upload_zone"),
+                    ],
+                    width="20px",
+                    height="20px",
+                    min_width="20px",
+                    padding="0",
+                    display="inline-flex",
+                    align_items="center",
+                    justify_content="center",
+                    border_radius="50%",
+                    position="absolute",
+                    top="-6px",
+                    right="-6px",
+                    z_index="2",
+                    style={
+                        "background": "rgba(0,0,0,0.65)",
+                        "border": "1.5px solid rgba(255,255,255,0.2)",
+                        "cursor": "pointer",
+                        "backdrop_filter": "blur(4px)",
+                        "transition": "all 0.12s ease",
+                        "_hover": {"background": "rgba(255,60,60,0.7)"},
+                    },
+                ),
+                position="relative",
+                width="56px",
+                height="56px",
+                flex_shrink="0",
             ),
+            id="composer_preview_shell",
+            display=rx.cond(AppState.has_image, "block", "none"),
+            padding="10px 16px 0 16px",
         ),
         # ── Image loading indicator ──
         rx.cond(
@@ -5102,6 +5204,7 @@ def chat_input_field() -> rx.Component:
             width="100%",
         ),
         rx.script(ENTER_TO_SEND_JS),
+        rx.script(INSTANT_IMAGE_PREVIEW_JS),
         id="composer_shell",
         accept={
             "image/png": [".png"],
