@@ -8208,7 +8208,6 @@ app = rx.App(
         rx.el.link(rel="icon", type="image/png", sizes="32x32", href=FAVICON_32),
         rx.el.link(rel="icon", type="image/png", sizes="16x16", href=FAVICON_16),
         rx.el.link(rel="apple-touch-icon", sizes="180x180", href=APPLE_TOUCH_ICON),
-        rx.el.link(rel="mask-icon", href=SAFARI_PINNED_TAB, color="#d9dde3"),
         rx.el.link(rel="manifest", href=SITE_WEBMANIFEST),
         rx.el.meta(name="theme-color", content="#07090b"),
         rx.el.link(rel="preconnect", href="https://fonts.googleapis.com"),
