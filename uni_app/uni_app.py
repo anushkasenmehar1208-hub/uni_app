@@ -201,10 +201,13 @@ ONBOARDING_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s'-]*$")
 LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
-FAVICON_ICO = "/brand-favicon-20260306.ico"
-FAVICON_32 = "/brand-favicon-32-20260306.png"
-FAVICON_16 = "/brand-favicon-16-20260306.png"
-APPLE_TOUCH_ICON = "/brand-apple-touch-20260306.png"
+ICON_ASSET_VERSION = "20260320"
+FAVICON_ICO = f"/favicon.ico?v={ICON_ASSET_VERSION}"
+FAVICON_32 = f"/favicon-32x32.png?v={ICON_ASSET_VERSION}"
+FAVICON_16 = f"/favicon-16x16.png?v={ICON_ASSET_VERSION}"
+APPLE_TOUCH_ICON = f"/apple-touch-icon.png?v={ICON_ASSET_VERSION}"
+SITE_WEBMANIFEST = f"/site.webmanifest?v={ICON_ASSET_VERSION}"
+SAFARI_PINNED_TAB = f"/safari-pinned-tab.svg?v={ICON_ASSET_VERSION}"
 
 APP_ROOT_DIR = Path(__file__).resolve().parent.parent
 TRAINING_DATA_PATH = APP_ROOT_DIR / ".states" / "training_data.jsonl"
@@ -8205,7 +8208,9 @@ app = rx.App(
         rx.el.link(rel="icon", type="image/png", sizes="32x32", href=FAVICON_32),
         rx.el.link(rel="icon", type="image/png", sizes="16x16", href=FAVICON_16),
         rx.el.link(rel="apple-touch-icon", sizes="180x180", href=APPLE_TOUCH_ICON),
-        rx.el.link(rel="manifest", href="/site.webmanifest"),
+        rx.el.link(rel="mask-icon", href=SAFARI_PINNED_TAB, color="#d9dde3"),
+        rx.el.link(rel="manifest", href=SITE_WEBMANIFEST),
+        rx.el.meta(name="theme-color", content="#07090b"),
         rx.el.link(rel="preconnect", href="https://fonts.googleapis.com"),
         rx.el.link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin=""),
         rx.el.link(
