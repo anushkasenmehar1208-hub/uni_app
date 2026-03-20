@@ -4541,7 +4541,7 @@ def tier_status_bar() -> rx.Component:
         ),
         rx.spacer(),
         rx.text(AppState.active_model_name, color="rgba(140,150,160,0.25)", font_size="0.65rem", font_family="monospace"),
-        width="100%", max_width="700px", margin_x="auto", padding_x="1.5em", padding_top="4px", padding_bottom="10px", align="center",
+        width="100%", max_width="740px", margin_x="auto", padding_x="1.5em", padding_top="4px", padding_bottom="10px", align="center",
     )
 
 
@@ -4701,16 +4701,17 @@ def chat_input_field() -> rx.Component:
                 flex="1",
                 min_height="52px",
                 max_height="160px",
-                padding="12px 4px 12px 18px",
-                font_size="0.88rem",
+                padding="14px 4px 14px 20px",
+                font_size="0.92rem",
                 line_height="1.5",
+                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 style={
                     "background": "transparent",
                     "border": "none",
                     "outline": "none",
                     "box_shadow": "none",
                     "resize": "none",
-                    "_placeholder": {"color": "rgba(160,170,180,0.35)"},
+                    "_placeholder": {"color": "rgba(160,170,180,0.32)"},
                     "_focus": {
                         "background": "transparent",
                         "border": "none",
@@ -4730,9 +4731,9 @@ def chat_input_field() -> rx.Component:
                 id="chat_send_btn",
                 on_click=AppState.send_message,
                 is_disabled=AppState.is_processing,
-                width="32px",
-                height="32px",
-                border_radius="10px",
+                width="34px",
+                height="34px",
+                border_radius="12px",
                 flex_shrink="0",
                 align_self="flex-end",
                 margin_bottom="6px",
@@ -4762,9 +4763,9 @@ def chat_input_field() -> rx.Component:
         ),
         rx.script(ENTER_TO_SEND_JS),
         width="100%",
-        border_radius="20px",
-        background="rgba(255,255,255,0.035)",
-        border="1px solid rgba(255,255,255,0.07)",
+        border_radius="24px",
+        background="rgba(255,255,255,0.04)",
+        border="1px solid rgba(255,255,255,0.08)",
         style={
             "transition": "border-color 0.2s ease, box-shadow 0.2s ease",
             "&:focus-within": {
@@ -4797,6 +4798,7 @@ def empty_chat_panel() -> rx.Component:
                     font_weight="300",
                     letter_spacing="-0.01em",
                     line_height="1.2",
+                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 ),
                 spacing="4",
                 align="center",
@@ -4811,14 +4813,14 @@ def empty_chat_panel() -> rx.Component:
                     upgrade_button(),
                 ),
                 width="100%",
-                max_width="660px",
+                max_width="740px",
             ),
             # ── Tier status (below input) ──
             tier_status_bar(),
             spacing="0",
             align="center",
             width="100%",
-            max_width="660px",
+            max_width="740px",
         ),
         pricing_modal(),
         width="100%",
@@ -4830,12 +4832,122 @@ def empty_chat_panel() -> rx.Component:
         padding_bottom="8vh",
     )
 
-# ── FIX 2: active_chat_panel ─────────────────────────
-# Before: user bubble had `padding="10px 16px"` — a little tight
-#         assistant text had no horizontal padding — text touched the edges
-# After:  user bubble → `padding="12px 20px"`, max-width tightened to 62%
-#         assistant → `padding="4px 4px 4px 8px"` left indent so it reads like a reply
-#         overall message vstack gets `padding_x="2.5em"` — more generous side margins
+# ── active_chat_panel — Claude-like editorial styling ──────────
+
+# Claude-like markdown CSS injected once
+_CLAUDE_MD_CSS = """
+<style>
+/* ── Claude-like assistant markdown ─────────────────── */
+.claude-md {
+  font-family: 'Söhne', ui-serif, Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgba(228, 232, 238, 0.92);
+}
+.claude-md p {
+  margin: 0 0 1.1em 0;
+}
+.claude-md p:last-child { margin-bottom: 0; }
+.claude-md p:first-child { margin-top: 0; }
+
+/* Headings */
+.claude-md h1, .claude-md h2, .claude-md h3, .claude-md h4 {
+  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: rgba(240, 244, 248, 0.96);
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 0.55em;
+}
+.claude-md h1 { font-size: 1.45em; margin-top: 1.6em; }
+.claude-md h2 { font-size: 1.25em; margin-top: 1.5em; }
+.claude-md h3 { font-size: 1.1em; margin-top: 1.35em; font-weight: 650; }
+.claude-md h4 { font-size: 1.0em; margin-top: 1.2em; font-weight: 600; }
+.claude-md > h1:first-child,
+.claude-md > h2:first-child,
+.claude-md > h3:first-child,
+.claude-md > h4:first-child { margin-top: 0; }
+
+/* Bold & italic */
+.claude-md strong { color: rgba(242, 246, 250, 0.97); font-weight: 600; }
+.claude-md em { font-style: italic; color: rgba(228, 232, 238, 0.88); }
+
+/* Lists */
+.claude-md ul, .claude-md ol {
+  padding-left: 1.65em;
+  margin: 0 0 1.1em 0;
+}
+.claude-md p + ul, .claude-md p + ol { margin-top: -0.4em; }
+.claude-md li {
+  margin-bottom: 0.55em;
+  line-height: 1.7;
+  padding-left: 0.25em;
+}
+.claude-md li:last-child { margin-bottom: 0; }
+.claude-md li::marker { color: rgba(160, 172, 188, 0.5); }
+.claude-md li > ul, .claude-md li > ol { margin-top: 0.4em; margin-bottom: 0.3em; }
+
+/* Inline code pill — Claude warm reddish accent */
+.claude-md code {
+  font-family: 'Söhne Mono', 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 0.875em;
+  background: rgba(200, 120, 100, 0.1);
+  border: 1px solid rgba(200, 120, 100, 0.12);
+  border-radius: 5px;
+  padding: 1.5px 6px;
+  color: rgba(228, 170, 150, 0.92);
+  white-space: nowrap;
+}
+
+/* Code blocks */
+.claude-md pre {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 0.85em 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.claude-md pre code {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  color: rgba(210, 220, 235, 0.88);
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+/* Links */
+.claude-md a {
+  color: rgba(170, 200, 240, 0.85);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(170, 200, 240, 0.2);
+  transition: border-color 0.15s ease;
+}
+.claude-md a:hover { border-color: rgba(170, 200, 240, 0.5); }
+
+/* Blockquotes */
+.claude-md blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.08);
+  margin: 0.85em 0;
+  padding: 0.15em 0 0.15em 1.1em;
+  color: rgba(200, 208, 218, 0.78);
+}
+.claude-md blockquote p { margin-bottom: 0.55em; }
+.claude-md blockquote p:last-child { margin-bottom: 0; }
+
+/* Tables */
+.claude-md table { border-collapse: collapse; width: 100%; margin: 0.85em 0; font-size: 0.92em; }
+.claude-md th, .claude-md td { padding: 8px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.claude-md th { font-weight: 600; color: rgba(240,244,248,0.9); border-bottom: 1px solid rgba(255,255,255,0.12); }
+
+/* Horizontal rule */
+.claude-md hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 1.6em 0; }
+</style>
+"""
+
 
 def active_chat_panel() -> rx.Component:
     return rx.box(
@@ -4850,6 +4962,8 @@ def active_chat_panel() -> rx.Component:
             z_index="2",
             pointer_events="none",
         ),
+        # ── Injected Claude-like markdown CSS ──
+        rx.html(_CLAUDE_MD_CSS),
         # Scrollable messages
         rx.box(
             rx.vstack(
@@ -4858,80 +4972,33 @@ def active_chat_panel() -> rx.Component:
                     lambda msg: rx.box(
                         rx.cond(
                             msg["role"] == "user",
-                            # ── User message (right-aligned pill) ──
+                            # ── User message (compact right-aligned pill) ──
                             rx.box(
                                 rx.text(
                                     msg["content"],
                                     color="rgba(240,244,248,0.92)",
-                                    font_size="0.88rem",
-                                    line_height="1.6",
+                                    font_size="0.9rem",
+                                    line_height="1.55",
+                                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                                 ),
-                                background="rgba(255,255,255,0.08)",
+                                background="rgba(255,255,255,0.065)",
                                 border_radius="20px",
-                                padding="10px 16px",
-                                max_width="75%",
+                                padding="10px 18px",
+                                max_width="70%",
                                 margin_left="auto",
                                 margin_right="0",
                             ),
-                            # ── Assistant message (avatar + text) ──
-                            rx.hstack(
-                                rx.box(
-                                    rx.image(
-                                        src="/alex_logo.svg",
-                                        width="16px",
-                                        height="16px",
-                                        object_fit="contain",
-                                    ),
-                                    width="28px",
-                                    height="28px",
-                                    border_radius="50%",
-                                    background="rgba(255,255,255,0.08)",
-                                    display="flex",
-                                    align_items="center",
-                                    justify_content="center",
-                                    flex_shrink="0",
-                                    margin_top="2px",
+                            # ── Assistant message (no bubble, editorial column) ──
+                            rx.box(
+                                rx.markdown(
+                                    msg["content"],
+                                    class_name="claude-md",
                                 ),
-                                rx.box(
-                                    rx.markdown(msg["content"]),
-                                    color="rgba(220,228,236,0.88)",
-                                    font_size="0.88rem",
-                                    line_height="1.7",
-                                    flex="1",
-                                    min_width="0",
-                                    style={
-                                        "& p:first-of-type": {"margin_top": "0"},
-                                        "& p": {"margin_bottom": "0.55em"},
-                                        "& p + ul, & p + ol": {"margin_top": "0.15em"},
-                                        "& ul, & ol": {"padding_left": "1.5em", "margin_bottom": "0.5em"},
-                                        "& li": {"margin_bottom": "0.25em"},
-                                        "& li::marker": {"color": "rgba(160,180,200,0.5)"},
-                                        "& strong": {"color": "rgba(240,245,250,0.95)", "font_weight": "600"},
-                                        "& code": {
-                                            "background": "rgba(255,255,255,0.06)",
-                                            "border": "1px solid rgba(255,255,255,0.08)",
-                                            "border_radius": "4px",
-                                            "padding": "1px 6px",
-                                            "font_size": "0.84em",
-                                            "color": "rgba(200,220,240,0.9)",
-                                        },
-                                        "& pre": {
-                                            "background": "rgba(0,0,0,0.3)",
-                                            "border": "1px solid rgba(255,255,255,0.06)",
-                                            "border_radius": "8px",
-                                            "padding": "14px 16px",
-                                            "overflow_x": "auto",
-                                            "margin": "0.5em 0",
-                                        },
-                                    },
-                                ),
-                                spacing="3",
-                                align_items="flex-start",
                                 width="100%",
                             ),
                         ),
                         width="100%",
-                        margin_bottom="20px",
+                        margin_bottom="28px",
                         display="flex",
                         flex_direction="column",
                     ),
@@ -4939,35 +5006,20 @@ def active_chat_panel() -> rx.Component:
                 rx.cond(
                     AppState.is_processing,
                     rx.hstack(
-                        rx.box(
-                            rx.image(
-                                src="/alex_logo.svg",
-                                width="16px",
-                                height="16px",
-                                object_fit="contain",
-                            ),
-                            width="28px",
-                            height="28px",
-                            border_radius="50%",
-                            background="rgba(255,255,255,0.08)",
-                            display="flex",
-                            align_items="center",
-                            justify_content="center",
-                            flex_shrink="0",
-                        ),
                         rx.hstack(
                             rx.box(
                                 width="6px",
                                 height="6px",
                                 border_radius="50%",
-                                background="rgba(180,200,220,0.5)",
+                                background="rgba(180,200,220,0.45)",
                                 style={"animation": "pulse 1.2s ease-in-out infinite"},
                             ),
                             rx.text(
                                 "Alex is thinking...",
                                 color="rgba(180,190,200,0.35)",
-                                font_size="0.8rem",
+                                font_size="0.85rem",
                                 font_weight="400",
+                                font_family="'Söhne', -apple-system, sans-serif",
                             ),
                             spacing="2",
                             align="center",
@@ -4981,10 +5033,10 @@ def active_chat_panel() -> rx.Component:
                 width="100%",
                 align_items="stretch",
                 spacing="0",
-                max_width="660px",
+                max_width="740px",
                 margin_x="auto",
                 padding_x="1.5em",
-                padding_top="0.5em",
+                padding_top="1em",
                 padding_bottom="0.5em",
                 style={
                     "min_height": "100%",
@@ -5012,7 +5064,7 @@ def active_chat_panel() -> rx.Component:
             rx.box(
                 chat_input_field(),
                 width="100%",
-                max_width="700px",
+                max_width="740px",
                 margin_x="auto",
                 padding="0 1.5em 0 1.5em",
             ),
