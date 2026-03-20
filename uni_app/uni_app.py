@@ -847,6 +847,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     _image_mime: str = ""
     image_name: str = ""
     image_error: str = ""
+    _image_loading: bool = False
 
     is_generating_plan: bool = False
     scope_hydrating: bool = False
@@ -931,7 +932,11 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def has_image(self) -> bool:
-        return len(self._image_data) > 0
+        return bool(self.image_name)
+
+    @rx.var
+    def image_loading(self) -> bool:
+        return self._image_loading
 
     @rx.var
     def messages_left_today(self) -> int:
@@ -3247,19 +3252,23 @@ Critical operating rules:
         upload_file = files[0]
         content_type = upload_file.content_type or ""
         self.image_name = upload_file.filename or "image"
-        yield
-        
+        self._image_loading = True
+        yield  # show filename chip immediately
+
         if content_type not in ALLOWED_IMAGE_TYPES:
             self.image_error = f"Unsupported file type. Please upload a PNG, JPG, or WebP image."
             self.image_name = ""
+            self._image_loading = False
             return
         data = await upload_file.read()
         if len(data) > MAX_IMAGE_BYTES:
             self.image_error = f"Image is too large (max 20 MB). Please choose a smaller file."
             self.image_name = ""
+            self._image_loading = False
             return
         self._image_data = data
         self._image_mime = content_type
+        self._image_loading = False
 
     @rx.event
     def clear_image(self):
@@ -3268,6 +3277,7 @@ Critical operating rules:
         self._image_mime = ""
         self.image_name = ""
         self.image_error = ""
+        self._image_loading = False
 
     @rx.event
     def next_step(self):
@@ -3795,6 +3805,7 @@ Subjects:\n{courses_text}"""
                 self._image_mime = ""
                 self.image_name = ""
                 self.image_error = ""
+                self._image_loading = False
                 
             yield
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -4824,38 +4835,52 @@ def chat_input_field() -> rx.Component:
         rx.cond(
             AppState.has_image,
             rx.hstack(
-                rx.icon(tag="image", size=12, color="rgba(160,210,255,0.8)"),
-                rx.text(
-                    AppState.image_name,
-                    color="rgba(200,215,230,0.85)",
-                    font_size="0.75rem",
-                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                    max_width="180px",
-                    overflow="hidden",
-                    white_space="nowrap",
-                    text_overflow="ellipsis",
+                rx.icon(tag="image", size=14, color="rgba(160,210,255,0.8)"),
+                rx.cond(
+                    AppState.image_loading,
+                    rx.text(
+                        "Loading image...",
+                        color="rgba(180,195,210,0.6)",
+                        font_size="0.75rem",
+                        font_style="italic",
+                        font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    ),
+                    rx.text(
+                        AppState.image_name,
+                        color="rgba(200,215,230,0.85)",
+                        font_size="0.75rem",
+                        font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                        max_width="180px",
+                        overflow="hidden",
+                        white_space="nowrap",
+                        text_overflow="ellipsis",
+                    ),
                 ),
                 rx.button(
-                    rx.icon(tag="x", size=14, color="rgba(255,255,255,0.7)"),
+                    rx.text("✕", font_size="13px", font_weight="700", color="rgba(255,255,255,0.85)", line_height="1"),
                     on_click=[
                         AppState.clear_image,
                         rx.clear_selected_files("image_upload_zone"),
                     ],
-                    width="24px",
-                    height="24px",
-                    min_width="24px",
+                    width="28px",
+                    height="28px",
+                    min_width="28px",
                     padding="0",
+                    display="inline-flex",
+                    align_items="center",
+                    justify_content="center",
                     border_radius="50%",
                     style={
-                        "background": "rgba(255,255,255,0.08)",
+                        "background": "rgba(255,255,255,0.10)",
                         "border": "none",
                         "cursor": "pointer",
-                        "_hover": {"background": "rgba(255,255,255,0.16)"},
+                        "transition": "all 0.12s ease",
+                        "_hover": {"background": "rgba(255,80,80,0.25)"},
                     },
                 ),
                 spacing="2",
                 align="center",
-                padding="4px 12px 0 20px",
+                padding="6px 12px 0 20px",
             ),
         ),
         # ── Image error text ──
@@ -5208,18 +5233,23 @@ def active_chat_panel() -> rx.Component:
                                     msg.contains("has_image"),
                                     rx.image(
                                         src=msg["image_data"].to(str),  # type: ignore
-                                        width="100%",
                                         max_width="280px",
-                                        border_radius="10px",
-                                        margin_bottom="8px",
+                                        max_height="220px",
+                                        border_radius="12px",
+                                        object_fit="cover",
+                                        margin_bottom="6px",
                                     )
                                 ),
-                                rx.text(
-                                    msg["content"],
-                                    color="rgba(240,244,248,0.92)",
-                                    font_size="0.9rem",
-                                    line_height="1.55",
-                                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                rx.cond(
+                                    (msg.contains("has_image")) & (msg["content"].to(str) == "[Image uploaded]"),
+                                    rx.fragment(),
+                                    rx.text(
+                                        msg["content"],
+                                        color="rgba(240,244,248,0.92)",
+                                        font_size="0.9rem",
+                                        line_height="1.55",
+                                        font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                    ),
                                 ),
                                 background="rgba(255,255,255,0.065)",
                                 border_radius="20px",
