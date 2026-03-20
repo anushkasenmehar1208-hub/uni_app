@@ -201,7 +201,7 @@ ONBOARDING_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z\s'-]*$")
 LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
-ICON_ASSET_VERSION = "20260320"
+ICON_ASSET_VERSION = "20260320b"
 FAVICON_ICO = f"/favicon.ico?v={ICON_ASSET_VERSION}"
 FAVICON_32 = f"/favicon-32x32.png?v={ICON_ASSET_VERSION}"
 FAVICON_16 = f"/favicon-16x16.png?v={ICON_ASSET_VERSION}"

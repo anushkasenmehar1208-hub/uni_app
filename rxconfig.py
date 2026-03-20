@@ -18,7 +18,7 @@ config = rx.Config(
     deploy_url=_resolve_public_url(),
     
     api_url=_resolve_api_url(),
-    favicon="favicon.ico?v=20260320",
+    favicon="favicon.ico?v=20260320b",
     
     db_url=os.getenv("DATABASE_URL", "sqlite:///reflex.db"),
     show_built_with_reflex=False,
