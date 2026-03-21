@@ -27,7 +27,6 @@ from reflex_local_auth import routes as auth_routes
 from reflex_local_auth.local_auth import AUTH_TOKEN_LOCAL_STORAGE_KEY
 from reflex_local_auth.auth_session import LocalAuthSession
 from reflex_local_auth.user import LocalUser
-from starlette.routing import Route
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import RedirectResponse as StarletteRedirect
 
@@ -350,41 +349,20 @@ def _is_local_host(host: str) -> bool:
 
 def _google_callback_url(request: Request) -> str:
     configured = (GOOGLE_REDIRECT_URI or "").strip()
-    if configured:
-        configured_host = (urlparse(configured).hostname or "").lower()
-        request_host = (
-            (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc)
-            .split(",")[0]
-            .strip()
-            .lower()
-        )
-        # Ignore localhost callback URIs when request host is deployed.
-        if not (_is_local_host(configured_host) and request_host and not _is_local_host(request_host)):
-            return configured
-    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").split(",")[0].strip().lower()
-    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc).split(",")[0].strip()
-    return f"{proto}://{host}/auth/google/callback"
+    request_origin = _request_origin(request)
+    if configured and not _should_use_request_origin(request_origin, configured):
+        return configured
+    base = request_origin or _normalized_origin(configured) or "http://localhost:3000"
+    return f"{base.rstrip('/')}/auth/google/callback"
 
 
 def _frontend_base_url(request: Request) -> str:
     """Resolve frontend origin safely for local + deployed environments."""
     configured = (APP_BASE_URL or "").strip().rstrip("/")
-    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").split(",")[0].strip().lower()
-    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc).split(",")[0].strip()
-    host_only = (host.split(":")[0] if host else "").lower()
-    host_is_local = _is_local_host(host_only)
-
-    configured_host = (urlparse(configured).hostname or "").lower() if configured else ""
-    config_is_local = (not configured_host) or _is_local_host(configured_host)
-    if configured and not config_is_local:
-        # Keep browser on the same deployed host during auth flows to avoid cross-domain token storage.
-        if host and (not host_is_local) and host_only != configured_host:
-            return f"{proto}://{host}"
+    request_origin = _request_origin(request)
+    if configured and not _should_use_request_origin(request_origin, configured):
         return configured
-
-    if host and (not host_is_local):
-        return f"{proto}://{host}"
-    return configured or "http://localhost:3001"
+    return request_origin or configured or "http://localhost:3001"
 
 
 def _google_username_from_sub(sub: str) -> str:
@@ -413,6 +391,48 @@ def _normalized_origin(origin: str) -> str:
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return ""
     return f"{parsed.scheme}://{parsed.netloc}"
+
+
+def _request_origin(request: Request) -> str:
+    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").split(",")[0].strip().lower()
+    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc).split(",")[0].strip()
+    if not host:
+        return ""
+    return f"{proto}://{host}"
+
+
+def _should_use_request_origin(request_origin: str, configured_origin: str) -> bool:
+    normalized_request = _normalized_origin(request_origin)
+    normalized_configured = _normalized_origin(configured_origin)
+    if not normalized_request:
+        return False
+    if not normalized_configured or normalized_request == normalized_configured:
+        return False
+
+    api_origin = _normalized_origin(API_BASE_URL)
+    if api_origin and normalized_request == api_origin:
+        return False
+
+    request_host = (urlparse(normalized_request).hostname or "").lower()
+    configured_host = (urlparse(normalized_configured).hostname or "").lower()
+    if _is_local_host(configured_host):
+        return True
+    return not _is_local_host(request_host)
+
+
+def _with_query(path: str, params: dict[str, str]) -> str:
+    query = urlencode({key: value for key, value in params.items() if value})
+    if not query:
+        return path
+    return f"{path}?{query}"
+
+
+def _frontend_redirect_url(request: Request, path: str, params: Optional[dict[str, str]] = None) -> str:
+    base = _frontend_base_url(request).rstrip("/")
+    route = path if path.startswith("/") else f"/{path}"
+    if params:
+        route = _with_query(route, params)
+    return f"{base}{route}"
 
 
 def _decode_urlsafe_b64_text(value: str) -> str:
@@ -3022,8 +3042,8 @@ Critical operating rules:
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
     @rx.event
-    async def on_load_scope_page(self):
-        """Called when navigating to /s/[scope].
+    async def on_load_scope_page(self, scope: str = ""):
+        """Called when navigating to a workspace route.
         Minimum work for first paint: auth check, profile (1 DB call), scope routing.
         All scope hydration is deferred to post_render_hydrate_scope (background).
         """
@@ -3040,10 +3060,10 @@ Critical operating rules:
             print(f"[ROUTE] profile load error: {e}")
 
         # ── Scope routing (no DB) ──
-        raw_scope = str(self.router.page.params.get("scope", "home") or "home").strip()
+        raw_scope = str(scope or self.router.page.params.get("scope", "home") or "home").strip()
         scope_info = SCOPE_ROUTE_MAP.get(raw_scope)
         if scope_info is None:
-            yield _hard_navigate("/s/home")
+            yield _hard_navigate(scope_to_route("home"))
             return
 
         if not self.is_started:
@@ -3732,7 +3752,7 @@ Subjects:\n{courses_text}"""
         self.show_semester_sidebar = False
         self._save_memory(uid)
         self._switch_scope(uid, "home")
-        yield _hard_navigate("/s/home")
+        yield _hard_navigate(scope_to_route("home"))
 
     @rx.event
     async def switch_to_home_chat(self, session_id: str):
@@ -3754,7 +3774,7 @@ Subjects:\n{courses_text}"""
         self._switch_scope(uid, "home")
         # Store session to load after navigation
         self.current_session_id = session_id
-        yield _hard_navigate("/s/home")
+        yield _hard_navigate(scope_to_route("home"))
 
     @rx.event
     async def send_message(self):
@@ -4878,7 +4898,14 @@ INSTANT_IMAGE_PREVIEW_JS = f"""
     shell.dataset.instantDropPreviewBound = '1';
     shell.addEventListener('drop', function(event) {{
       const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-      if (file) showPreview(file);
+      if (file) {{
+        showPreview(file);
+        const input = document.querySelector('#image_upload_zone input[type="file"]');
+        if (input) {{
+            input.files = event.dataTransfer.files;
+            input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+        }}
+      }}
     }});
     return true;
   }}
@@ -5587,10 +5614,12 @@ def google_callback_bridge_page():
         }
         var origin = window.location.origin || "";
         var originB64 = btoa(origin).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
-        var target = "/auth/google/complete/"
-          + encodeURIComponent(code) + "/"
-          + encodeURIComponent(state) + "/"
-          + originB64;
+        var params = new URLSearchParams({
+          code: code,
+          state: state,
+          origin_b64: originB64
+        });
+        var target = "/auth/google/complete?" + params.toString();
         window.location.replace(target);
       } catch (e) {
         window.location.replace("/login?oauth_error=1");
@@ -5611,22 +5640,76 @@ def google_callback_bridge_page():
 
 
 @rx.page(
-    route="/auth/google/complete/[code]/[state]/[origin_b64]",
+    route="/auth/google/complete",
     image=FAVICON_32,
-    on_load=AppState.handle_google_oauth_callback,
 )
 def google_oauth_complete_page():
+    google_complete_bridge_js = f"""
+    (function() {{
+      try {{
+        var u = new URL(window.location.href);
+        var code = u.searchParams.get("code");
+        var state = u.searchParams.get("state");
+        if (!code || !state) {{
+          window.location.replace("/login?oauth_error=1");
+          return;
+        }}
+        var apiBase = {json.dumps(API_BASE_URL.rstrip("/"))};
+        var callbackBase = apiBase || window.location.origin || "";
+        var target = callbackBase.replace(/\\/$/, "") + "/auth/google/callback?" + new URLSearchParams({{
+          code: code,
+          state: state
+        }}).toString();
+        window.location.replace(target);
+      }} catch (e) {{
+        window.location.replace("/login?oauth_error=1");
+      }}
+    }})();
+    """
     return rx.center(
-        rx.text("Signing you in...", color="white"),
+        rx.vstack(
+            rx.spinner(size="2", color="white"),
+            rx.text("Signing you in...", color="white"),
+            spacing="3",
+            align="center",
+        ),
+        rx.script(google_complete_bridge_js),
         height="100vh",
         background="#050505",
     )
 
 
-@rx.page(route="/auth/complete/[token]", image=FAVICON_32, on_load=AppState.handle_google_complete)
+@rx.page(route="/auth/complete", image=FAVICON_32)
 def google_complete_page():
+    token_storage_js = f"""
+    (function() {{
+      try {{
+        var u = new URL(window.location.href);
+        var token = u.searchParams.get("token");
+        if (!token) {{
+          window.location.replace({json.dumps(auth_routes.LOGIN_ROUTE)});
+          return;
+        }}
+        localStorage.setItem(
+          {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)},
+          token
+        );
+        window.setTimeout(function() {{
+          window.location.replace("/");
+        }}, 60);
+      }} catch (e) {{
+        window.location.replace({json.dumps(auth_routes.LOGIN_ROUTE)});
+      }}
+    }})();
+    """
     return rx.center(
-        rx.text("Signing you in...", color="white"),
+        rx.vstack(
+            rx.spinner(size="2", color="white"),
+            rx.text("Signing you in...", color="white"),
+            spacing="3",
+            align="center",
+        ),
+        rx.script(token_storage_js),
         height="100vh",
         background="#050505",
     )
@@ -8192,20 +8275,28 @@ def index():
     return onboarding_page()
 
 
-@rx.page(
-    route="/s/[scope]",
-    title="Alex AI",
-    description="Alex AI study workspace",
-    image=FAVICON_32,
-    on_load=AppState.on_load_scope_page,
-)
-@require_app_login
-def scope_page():
+def scope_page() -> rx.Component:
     return rx.cond(
         AppState.view_mode == "home",
         home_page(),
         semester_page(),
     )
+
+
+def _register_scope_pages() -> None:
+    for scope_key, scope_info in SCOPE_ROUTE_MAP.items():
+        def _page(current_scope: str = scope_key) -> rx.Component:
+            return scope_page()
+
+        _page.__name__ = f"scope_page_{scope_key}"
+        app.add_page(
+            require_app_login(_page),
+            route=scope_info["route"],
+            title="Alex AI",
+            description="Alex AI study workspace",
+            image=FAVICON_32,
+            on_load=AppState.on_load_scope_page(scope_key),
+        )
 
 
 # ──────────────────────────────────────────────────────────────
@@ -8581,7 +8672,7 @@ def settings_learn_more_tab() -> rx.Component:
         _row("file_text", "Return Policy", "View our return and refund policy", "/return-policy"),
         _row("shield", "Privacy Policy", "How we handle your data", "/privacy-policy"),
         _row("scroll_text", "Terms of Service", "Terms and conditions of use", "/terms"),
-        _row("help_circle", "Support", "Get help or contact us", "/support"),
+        _row("circle_help", "Support", "Get help or contact us", "/support"),
         spacing="3",
         width="100%",
         max_width="600px",
@@ -8604,7 +8695,7 @@ def settings_page():
                 rx.hstack(
                     rx.icon_button(
                         rx.icon(tag="arrow_left", size=16),
-                        on_click=rx.redirect("/s/home"),
+                        on_click=rx.redirect(scope_to_route("home")),
                         variant="ghost",
                         size="1",
                         color="rgba(255,255,255,0.5)",
@@ -8693,6 +8784,7 @@ app = rx.App(
         }
     },
 )
+_register_scope_pages()
 api = app._api
 if api is None:
     raise RuntimeError("Reflex API not initialized; cannot register middleware and routes.")
@@ -8808,9 +8900,9 @@ async def google_callback(request: Request):
                 )
             )
             session.commit()
-            print("[Google CB] session created, redirecting to /auth/complete/...")
+            print("[Google CB] session created, redirecting to /auth/complete...")
 
-        complete_url = f"{_frontend_base_url(request).rstrip('/')}/auth/complete/{auth_token}"
+        complete_url = _frontend_redirect_url(request, "/auth/complete", {"token": auth_token})
         print(f"[Google CB] redirect to: {complete_url[:60]}...")
         return RedirectResponse(url=complete_url, status_code=302)
 
@@ -8823,6 +8915,40 @@ async def google_callback(request: Request):
 
 api.add_route("/auth/google/start", google_start, methods=["GET"])
 api.add_route("/auth/google/callback", google_callback, methods=["GET"])
+
+
+async def legacy_google_complete_redirect(request: Request):
+    return RedirectResponse(
+        url=_frontend_redirect_url(
+            request,
+            "/auth/google/complete",
+            {
+                "code": str(request.path_params.get("code", "") or ""),
+                "state": str(request.path_params.get("state", "") or ""),
+                "origin_b64": str(request.path_params.get("origin_b64", "") or ""),
+            },
+        ),
+        status_code=302,
+    )
+
+
+async def legacy_auth_complete_redirect(request: Request):
+    return RedirectResponse(
+        url=_frontend_redirect_url(
+            request,
+            "/auth/complete",
+            {"token": str(request.path_params.get("token", "") or "")},
+        ),
+        status_code=302,
+    )
+
+
+api.add_route(
+    "/auth/google/complete/{code}/{state}/{origin_b64}",
+    legacy_google_complete_redirect,
+    methods=["GET"],
+)
+api.add_route("/auth/complete/{token}", legacy_auth_complete_redirect, methods=["GET"])
 
 try:
     rx.Model.create_all()

@@ -5,10 +5,9 @@ def _resolve_public_url() -> str:
     return os.getenv("APP_BASE_URL", "https://alexstudies.com").rstrip("/")
 
 def _resolve_api_url() -> str:
-    # Support both the expected key and the currently-used typo in Railway vars.
+    # Prefer Reflex-specific config when present, otherwise fall back to the generic API host.
     return (
         os.getenv("REFLEX_API_URL")
-        or os.getenv("REFLEX_API_URL")
         or os.getenv("API_URL")
         or "https://alexstudies.com"
     ).rstrip("/")
