@@ -4080,11 +4080,6 @@ Subjects:\n{courses_text}"""
                 self._image_loading = False
                 self.image_preview_url = ""
                 yield rx.call_script(CLEAR_IMAGE_PREVIEW_JS)
-            if has_document_attached:
-                self._document_data = b""
-                self.document_name = ""
-                self.document_mime = ""
-                self.document_error = ""
 
             yield
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -4498,6 +4493,9 @@ Behavior rules:
             self._save_message(uid, "assistant", final_text)
             _append_training_example(uid, self.active_scope, user_msg, final_text)
             self.is_processing = False
+            self._document_data = b""
+            self.document_name = ""
+            self.document_mime = ""
             await self._maybe_auto_update_scope_summary(uid, self.active_scope)
             await self._maybe_auto_update_global_memory(uid)
             await self._maybe_auto_update_adaptive_profile(uid)
