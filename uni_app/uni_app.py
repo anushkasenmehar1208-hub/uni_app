@@ -152,26 +152,28 @@ def _extract_pdf_text(file_bytes: bytes) -> str:
         import fitz
 
         if not file_bytes:
+            print("[PDF] empty bytes")
             return ""
+
+        print("[PDF] bytes length:", len(file_bytes))
+        print("[PDF] first 8 bytes:", file_bytes[:8])
 
         doc = fitz.open(stream=file_bytes, filetype="pdf")
         try:
             parts = []
 
-            for page in doc:
+            for i, page in enumerate(doc):
                 txt = (page.get_text("text") or "").strip()
+                print(f"[PDF] page {i} text length:", len(txt))
                 if txt:
                     parts.append(txt)
         finally:
             doc.close()
 
         text = "\n\n".join(parts).strip()
-        if not text:
-            return ""
-
-        return _clean_document_text(text)
+        return text
     except Exception as e:
-        print(f"[PDF_EXTRACT_ERROR] {e}")
+        print("[PDF_EXTRACT_ERROR]", repr(e))
         return ""
 
 
