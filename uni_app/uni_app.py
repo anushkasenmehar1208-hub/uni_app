@@ -1104,6 +1104,8 @@ class AppState(reflex_local_auth.LocalAuthState):
     image_error: str = ""
     _image_loading: bool = False
     image_preview_url: str = ""
+    show_image_modal: bool = False
+    image_modal_url: str = ""
 
     # Document upload state
     _document_data: bytes = b""
@@ -1199,6 +1201,16 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def has_document(self) -> bool:
         return bool(self.document_name)
+
+    @rx.event
+    def open_image_modal(self, image_url: str):
+        self.image_modal_url = image_url or ""
+        self.show_image_modal = bool(self.image_modal_url)
+
+    @rx.event
+    def close_image_modal(self):
+        self.show_image_modal = False
+        self.image_modal_url = ""
 
     @rx.var
     def image_loading(self) -> bool:
@@ -5128,6 +5140,61 @@ def pricing_modal() -> rx.Component:
     )
 
 
+def image_preview_modal() -> rx.Component:
+    return rx.cond(
+        AppState.show_image_modal,
+        rx.box(
+            rx.box(
+                rx.button(
+                    "✕",
+                    on_click=AppState.close_image_modal,
+                    position="absolute",
+                    top="14px",
+                    right="14px",
+                    background="rgba(255,255,255,0.10)",
+                    border="none",
+                    color="white",
+                    font_size="1.1rem",
+                    border_radius="999px",
+                    width="38px",
+                    height="38px",
+                    cursor="pointer",
+                    z_index="2",
+                    style={"_hover": {"background": "rgba(255,255,255,0.18)"}},
+                ),
+                rx.image(
+                    src=AppState.image_modal_url,
+                    max_width="min(92vw, 1100px)",
+                    max_height="88vh",
+                    width="auto",
+                    height="auto",
+                    object_fit="contain",
+                    border_radius="18px",
+                    box_shadow="0 24px 80px rgba(0,0,0,0.5)",
+                ),
+                position="relative",
+                padding="22px",
+                max_width="96vw",
+                max_height="92vh",
+                display="flex",
+                align_items="center",
+                justify_content="center",
+            ),
+            on_click=AppState.close_image_modal,
+            position="fixed",
+            inset="0",
+            z_index="10001",
+            background="rgba(4,6,10,0.82)",
+            backdrop_filter="blur(8px)",
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            padding="20px",
+        ),
+        rx.fragment(),
+    )
+
+
 # ──────────────────────────────────────────────────────────────
 # Tier status bar & input components
 # ──────────────────────────────────────────────────────────────
@@ -5942,6 +6009,7 @@ def empty_chat_panel() -> rx.Component:
             max_width="740px",
         ),
         pricing_modal(),
+        image_preview_modal(),
         width="100%",
         height="100%",
         display="flex",
@@ -6095,7 +6163,7 @@ def active_chat_panel() -> rx.Component:
                             rx.box(
                                 rx.cond(
                                     msg.contains("has_image"),
-                                    rx.link(
+                                    rx.box(
                                         rx.image(
                                             src=rx.cond(
                                                 msg.contains("image_url"),
@@ -6107,14 +6175,15 @@ def active_chat_panel() -> rx.Component:
                                             border_radius="12px",
                                             object_fit="cover",
                                             margin_bottom="6px",
-                                            cursor="pointer",
+                                            cursor="zoom-in",
                                         ),
-                                        href=rx.cond(
-                                            msg.contains("image_url"),
-                                            msg["image_url"].to(str),  # type: ignore
-                                            msg["image_data"].to(str),  # type: ignore
+                                        on_click=AppState.open_image_modal(
+                                            rx.cond(
+                                                msg.contains("image_url"),
+                                                msg["image_url"].to(str),  # type: ignore
+                                                msg["image_data"].to(str),  # type: ignore
+                                            )
                                         ),
-                                        is_external=True,
                                     )
                                 ),
                                 rx.cond(
@@ -6279,6 +6348,7 @@ def active_chat_panel() -> rx.Component:
         # ── Tier status BELOW input ──
         tier_status_bar(),
         pricing_modal(),
+        image_preview_modal(),
         width="100%",
         height="100%",
         display="flex",
