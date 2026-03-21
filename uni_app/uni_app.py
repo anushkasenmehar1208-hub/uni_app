@@ -155,20 +155,19 @@ def _extract_pdf_text(file_bytes: bytes) -> str:
             print("[PDF] empty bytes")
             return ""
 
-        print("[PDF] bytes length:", len(file_bytes))
+        print("[PDF] byte length:", len(file_bytes))
         print("[PDF] first 8 bytes:", file_bytes[:8])
 
         doc = fitz.open(stream=file_bytes, filetype="pdf")
-        try:
-            parts = []
+        parts = []
 
-            for i, page in enumerate(doc):
-                txt = (page.get_text("text") or "").strip()
-                print(f"[PDF] page {i} text length:", len(txt))
-                if txt:
-                    parts.append(txt)
-        finally:
-            doc.close()
+        for i, page in enumerate(doc):
+            txt = (page.get_text("text") or "").strip()
+            print(f"[PDF] page {i} text length:", len(txt))
+            if txt:
+                parts.append(txt)
+
+        doc.close()
 
         text = "\n\n".join(parts).strip()
         return text
@@ -211,7 +210,9 @@ def _extract_txt_text(file_bytes: bytes) -> str:
 def _extract_document_text(file_bytes: bytes, filename: str, mime_type: str) -> str:
     suffix = Path(filename or "").suffix.lower()
     mime = (mime_type or "").lower().strip()
-    is_pdf = suffix == ".pdf" or mime in {"application/pdf", "application/x-pdf"}
+    
+    # Updated routing logic
+    is_pdf = mime == "application/pdf" or (filename or "").lower().endswith(".pdf")
     is_docx = suffix == ".docx" or mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     is_txt = suffix == ".txt" or mime.startswith("text/")
 
@@ -226,18 +227,11 @@ def _extract_document_text(file_bytes: bytes, filename: str, mime_type: str) -> 
 
     if extracted in DOCUMENT_FAILURE_MESSAGES:
         return extracted
+        
     cleaned = _clean_document_text(extracted)
     if not cleaned:
         return PDF_NO_TEXT_MESSAGE if is_pdf else DOCUMENT_EMPTY_TEXT_MESSAGE
     return _cap_document_text(cleaned)
-
-
-def _normalize_person_name(name: str) -> str:
-    cleaned = re.sub(r"\s+", " ", (name or "").strip().lower())
-    if not cleaned:
-        return ""
-    return re.sub(r"(^|[\s'-])([a-z])", lambda m: m.group(1) + m.group(2).upper(), cleaned)
-
 
 def _extract_person_name(*texts: str) -> str:
     patterns = (
