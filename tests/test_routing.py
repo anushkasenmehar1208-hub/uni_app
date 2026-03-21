@@ -1,5 +1,6 @@
 import asyncio
 import unittest
+from unittest import mock
 
 from starlette.requests import Request
 
@@ -82,6 +83,36 @@ class RoutingTests(unittest.TestCase):
             response.headers["location"],
             "http://127.0.0.1:8124/auth/google/complete?code=code&state=state&origin_b64=origin",
         )
+
+
+class DocumentExtractionTests(unittest.TestCase):
+    def test_extract_document_text_reads_text_pdf(self) -> None:
+        if app_module.fitz is None:
+            self.skipTest("PyMuPDF is not installed")
+
+        doc = app_module.fitz.open()
+        page = doc.new_page()
+        page.insert_text((72, 72), "Hello from PDF test")
+        pdf_bytes = doc.tobytes()
+        doc.close()
+
+        extracted = app_module._extract_document_text(
+            pdf_bytes,
+            "notes.pdf",
+            "application/pdf",
+        )
+
+        self.assertIn("Hello from PDF test", extracted)
+
+    def test_extract_document_text_reports_missing_pdf_runtime(self) -> None:
+        with mock.patch.object(app_module, "fitz", None):
+            extracted = app_module._extract_document_text(
+                b"fake-pdf-bytes",
+                "notes.pdf",
+                "application/pdf",
+            )
+
+        self.assertEqual(extracted, app_module.DOCUMENT_READ_ERROR_MESSAGE)
 
 
 if __name__ == "__main__":

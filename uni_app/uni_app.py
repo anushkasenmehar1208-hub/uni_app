@@ -68,11 +68,17 @@ ALLOWED_DOCUMENT_TYPES = {
 ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".txt", ".docx"}
 MAX_DOCUMENT_BYTES = 10 * 1024 * 1024  # 10 MB
 MAX_DOCUMENT_TEXT_CHARS = 16000
+PDF_OCR_MAX_PAGES = 5
 DOCUMENT_DEFAULT_PROMPT = "Read this document and explain it clearly"
 DOCUMENT_EMPTY_TEXT_MESSAGE = "This document has no extractable text yet"
 PDF_NO_TEXT_MESSAGE = "This PDF has no extractable text yet"
 DOCUMENT_UNSUPPORTED_MESSAGE = "Unsupported file type. Please upload a PDF, TXT, or DOCX document."
 DOCUMENT_READ_ERROR_MESSAGE = "I couldn't read that document yet. Please try another file."
+PDF_OCR_PROMPT = (
+    "Extract all readable text from this document page. Preserve headings, "
+    "paragraphs, numbers, and bullet points. Return only the extracted text. "
+    "If there is no readable text, return an empty string."
+)
 DOCUMENT_FAILURE_MESSAGES = {
     DOCUMENT_EMPTY_TEXT_MESSAGE,
     PDF_NO_TEXT_MESSAGE,
@@ -147,33 +153,78 @@ def _cap_document_text(text: str) -> str:
     return f"{truncated}\n\n[Document text truncated]"
 
 
-def _extract_pdf_text(file_bytes: bytes) -> str:
+def _extract_pdf_text_with_ocr(file_bytes: bytes) -> str:
+    if fitz is None or client is None or not file_bytes:
+        return ""
+
     try:
-        import fitz
+        doc = fitz.open(stream=file_bytes, filetype="pdf")
+    except Exception as e:
+        print("[PDF_OCR_OPEN_ERROR]", repr(e))
+        return ""
 
-        if not file_bytes:
-            print("[PDF] empty bytes")
-            return ""
+    parts: list[str] = []
+    total_chars = 0
 
+    try:
+        for page_index in range(min(doc.page_count, PDF_OCR_MAX_PAGES)):
+            page = doc.load_page(page_index)
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+            ocr_text = (_groq_read_image(pix.tobytes("png"), "image/png", PDF_OCR_PROMPT) or "").strip()
+            if not ocr_text or ocr_text in {RATE_LIMIT_UI_MESSAGE, GENERIC_ERROR_UI_MESSAGE, "API not ready"}:
+                continue
+            parts.append(ocr_text)
+            total_chars += len(ocr_text)
+            if total_chars >= MAX_DOCUMENT_TEXT_CHARS:
+                break
+    except Exception as e:
+        print("[PDF_OCR_ERROR]", repr(e))
+        return ""
+    finally:
+        doc.close()
+
+    return _clean_document_text("\n\n".join(parts))
+
+
+def _extract_pdf_text(file_bytes: bytes) -> str:
+    if fitz is None:
+        print("[PDF] PyMuPDF is not installed")
+        return DOCUMENT_READ_ERROR_MESSAGE
+
+    if not file_bytes:
+        print("[PDF] empty bytes")
+        return DOCUMENT_READ_ERROR_MESSAGE
+
+    try:
         print("[PDF] byte length:", len(file_bytes))
         print("[PDF] first 8 bytes:", file_bytes[:8])
 
         doc = fitz.open(stream=file_bytes, filetype="pdf")
         parts = []
 
-        for i, page in enumerate(doc):
-            txt = (page.get_text("text") or "").strip()
-            print(f"[PDF] page {i} text length:", len(txt))
-            if txt:
-                parts.append(txt)
+        try:
+            for page_index in range(doc.page_count):
+                page = doc.load_page(page_index)
+                txt = (page.get_text("text") or "").strip()
+                print(f"[PDF] page {page_index} text length:", len(txt))
+                if txt:
+                    parts.append(txt)
+        finally:
+            doc.close()
 
-        doc.close()
+        text = _clean_document_text("\n\n".join(parts))
+        if text:
+            return text
 
-        text = "\n\n".join(parts).strip()
-        return text
+        ocr_text = _extract_pdf_text_with_ocr(file_bytes)
+        if ocr_text:
+            print("[PDF] OCR fallback text length:", len(ocr_text))
+            return ocr_text
+
+        return PDF_NO_TEXT_MESSAGE
     except Exception as e:
         print("[PDF_EXTRACT_ERROR]", repr(e))
-        return ""
+        return DOCUMENT_READ_ERROR_MESSAGE
 
 
 def _extract_docx_text(file_bytes: bytes) -> str:

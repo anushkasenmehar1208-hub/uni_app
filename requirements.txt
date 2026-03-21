@@ -10,3 +10,5 @@ groq
 authlib
 httpx
 itsdangerous
+PyMuPDF
+python-docx
