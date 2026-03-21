@@ -148,15 +148,31 @@ def _cap_document_text(text: str) -> str:
 
 
 def _extract_pdf_text(file_bytes: bytes) -> str:
-    if fitz is None:
-        return DOCUMENT_READ_ERROR_MESSAGE
     try:
-        with fitz.open(stream=file_bytes, filetype="pdf") as pdf:
-            text = "\n\n".join((page.get_text("text") or "") for page in pdf)
-    except Exception:
-        return DOCUMENT_READ_ERROR_MESSAGE
-    cleaned = _clean_document_text(text)
-    return cleaned or PDF_NO_TEXT_MESSAGE
+        import fitz
+
+        if not file_bytes:
+            return ""
+
+        doc = fitz.open(stream=file_bytes, filetype="pdf")
+        try:
+            parts = []
+
+            for page in doc:
+                txt = (page.get_text("text") or "").strip()
+                if txt:
+                    parts.append(txt)
+        finally:
+            doc.close()
+
+        text = "\n\n".join(parts).strip()
+        if not text:
+            return ""
+
+        return _clean_document_text(text)
+    except Exception as e:
+        print(f"[PDF_EXTRACT_ERROR] {e}")
+        return ""
 
 
 def _extract_docx_text(file_bytes: bytes) -> str:
@@ -193,12 +209,15 @@ def _extract_txt_text(file_bytes: bytes) -> str:
 def _extract_document_text(file_bytes: bytes, filename: str, mime_type: str) -> str:
     suffix = Path(filename or "").suffix.lower()
     mime = (mime_type or "").lower().strip()
+    is_pdf = suffix == ".pdf" or mime in {"application/pdf", "application/x-pdf"}
+    is_docx = suffix == ".docx" or mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    is_txt = suffix == ".txt" or mime.startswith("text/")
 
-    if suffix == ".pdf" or mime in {"application/pdf", "application/x-pdf"}:
+    if is_pdf:
         extracted = _extract_pdf_text(file_bytes)
-    elif suffix == ".docx" or mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    elif is_docx:
         extracted = _extract_docx_text(file_bytes)
-    elif suffix == ".txt" or mime.startswith("text/"):
+    elif is_txt:
         extracted = _extract_txt_text(file_bytes)
     else:
         return DOCUMENT_UNSUPPORTED_MESSAGE
@@ -207,7 +226,7 @@ def _extract_document_text(file_bytes: bytes, filename: str, mime_type: str) -> 
         return extracted
     cleaned = _clean_document_text(extracted)
     if not cleaned:
-        return PDF_NO_TEXT_MESSAGE if suffix == ".pdf" else DOCUMENT_EMPTY_TEXT_MESSAGE
+        return PDF_NO_TEXT_MESSAGE if is_pdf else DOCUMENT_EMPTY_TEXT_MESSAGE
     return _cap_document_text(cleaned)
 
 
