@@ -4829,11 +4829,18 @@ def upgrade_button() -> rx.Component:
 
 INSTANT_IMAGE_PREVIEW_JS = f"""
 (function() {{
-  if (window.__instantComposerPreviewInit) return;
-  window.__instantComposerPreviewInit = true;
-
   const allowedTypes = new Set({json.dumps(sorted(ALLOWED_IMAGE_TYPES))});
   const maxBytes = {MAX_IMAGE_BYTES};
+  const hiddenOverlayStyles = {{
+    opacity: '0',
+    visibility: 'hidden',
+    transform: 'translateY(8px) scale(0.985)',
+  }};
+  const visibleOverlayStyles = {{
+    opacity: '1',
+    visibility: 'visible',
+    transform: 'translateY(0) scale(1)',
+  }};
 
   function previewShell() {{
     return document.getElementById('composer_preview_shell');
@@ -4841,6 +4848,28 @@ INSTANT_IMAGE_PREVIEW_JS = f"""
 
   function previewImage() {{
     return document.getElementById('composer_preview_img');
+  }}
+
+  function composerShell() {{
+    return document.getElementById('composer_shell');
+  }}
+
+  function setDropOverlay(active) {{
+    const shell = composerShell();
+    if (!shell) return;
+    const styles = active ? visibleOverlayStyles : hiddenOverlayStyles;
+    shell.style.setProperty('--composer-drop-overlay-opacity', styles.opacity);
+    shell.style.setProperty('--composer-drop-overlay-visibility', styles.visibility);
+    shell.style.setProperty('--composer-drop-overlay-transform', styles.transform);
+  }}
+
+  function isFileDrag(event) {{
+    const dataTransfer = event.dataTransfer;
+    if (!dataTransfer) return false;
+    const types = Array.from(dataTransfer.types || []);
+    if (types.includes('Files')) return true;
+    const items = Array.from(dataTransfer.items || []);
+    return items.some((item) => item.kind === 'file');
   }}
 
   function cleanupObjectUrl() {{
@@ -4856,6 +4885,7 @@ INSTANT_IMAGE_PREVIEW_JS = f"""
     cleanupObjectUrl();
     if (image) image.removeAttribute('src');
     if (shell) shell.style.display = 'none';
+    setDropOverlay(false);
   }}
 
   function showPreview(file) {{
@@ -4890,30 +4920,60 @@ INSTANT_IMAGE_PREVIEW_JS = f"""
     return true;
   }}
 
-  function bindDropPreview() {{
-    const shell = document.getElementById('composer_shell');
+  function bindComposerDropTarget() {{
+    const shell = composerShell();
     if (!shell) return false;
-    if (shell.dataset.instantDropPreviewBound === '1') return true;
+    if (shell.dataset.instantComposerDropBound === '1') return true;
 
-    shell.dataset.instantDropPreviewBound = '1';
+    shell.dataset.instantComposerDropBound = '1';
+    let dragDepth = 0;
+
+    shell.addEventListener('dragenter', function(event) {{
+      if (!isFileDrag(event)) return;
+      dragDepth += 1;
+      event.preventDefault();
+      setDropOverlay(true);
+    }});
+
+    shell.addEventListener('dragover', function(event) {{
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) {{
+        event.dataTransfer.dropEffect = 'copy';
+      }}
+      setDropOverlay(true);
+    }});
+
+    shell.addEventListener('dragleave', function(event) {{
+      if (!isFileDrag(event)) return;
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) {{
+        setDropOverlay(false);
+      }}
+    }});
+
     shell.addEventListener('drop', function(event) {{
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      dragDepth = 0;
+      setDropOverlay(false);
       const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
       if (file) {{
         showPreview(file);
-        const input = document.querySelector('#image_upload_zone input[type="file"]');
-        if (input) {{
-            input.files = event.dataTransfer.files;
-            input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-        }}
       }}
     }});
+
+    shell.addEventListener('dragend', function() {{
+      dragDepth = 0;
+      setDropOverlay(false);
+    }});
+
     return true;
   }}
 
   function init() {{
     const clickReady = bindInput('image_upload_zone');
-    const dropReady = bindDropPreview();
-    bindInput('composer_shell');
+    const dropReady = bindComposerDropTarget();
     if (!clickReady || !dropReady) {{
       window.setTimeout(init, 200);
     }}
@@ -5147,7 +5207,7 @@ def chat_input_field() -> rx.Component:
                 },
                 max_files=1,
                 multiple=False,
-                no_drag=False,
+                no_drag=True,
                 on_drop=[
                     AppState.handle_image_upload,  # type: ignore
                     rx.clear_selected_files("image_upload_zone"),
