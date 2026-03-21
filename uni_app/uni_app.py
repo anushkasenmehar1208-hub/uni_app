@@ -10,6 +10,7 @@ import json
 import base64
 import re
 import secrets
+from io import BytesIO
 from urllib.parse import unquote, urlencode, urlparse
 from fastapi import Request
 from pathlib import Path
@@ -30,6 +31,16 @@ from reflex_local_auth.user import LocalUser
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import RedirectResponse as StarletteRedirect
 
+try:
+    import fitz  # type: ignore
+except ImportError:
+    fitz = None
+
+try:
+    from docx import Document as DocxDocument  # type: ignore
+except ImportError:
+    DocxDocument = None
+
 
 # ----------------------------
 # Groq setup
@@ -49,6 +60,25 @@ GEMINI_MODEL      = GEMINI_FAST_MODEL
 VISION_MODEL      = "meta-llama/llama-4-scout-17b-16e-instruct"
 ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp"}
 MAX_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MB
+ALLOWED_DOCUMENT_TYPES = {
+    "application/pdf",
+    "text/plain",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".txt", ".docx"}
+MAX_DOCUMENT_BYTES = 10 * 1024 * 1024  # 10 MB
+MAX_DOCUMENT_TEXT_CHARS = 16000
+DOCUMENT_DEFAULT_PROMPT = "Read this document and explain it clearly"
+DOCUMENT_EMPTY_TEXT_MESSAGE = "This document has no extractable text yet"
+PDF_NO_TEXT_MESSAGE = "This PDF has no extractable text yet"
+DOCUMENT_UNSUPPORTED_MESSAGE = "Unsupported file type. Please upload a PDF, TXT, or DOCX document."
+DOCUMENT_READ_ERROR_MESSAGE = "I couldn't read that document yet. Please try another file."
+DOCUMENT_FAILURE_MESSAGES = {
+    DOCUMENT_EMPTY_TEXT_MESSAGE,
+    PDF_NO_TEXT_MESSAGE,
+    DOCUMENT_UNSUPPORTED_MESSAGE,
+    DOCUMENT_READ_ERROR_MESSAGE,
+}
 
 RATE_LIMIT_UI_MESSAGE = "I'm taking a short break. Please try again in a few minutes."
 GENERIC_ERROR_UI_MESSAGE = "Alex had a small error. Please try again."
@@ -77,6 +107,108 @@ def sanitize_for_ui(text: str) -> str:
     if _is_rate_limit_text(text):
         return RATE_LIMIT_UI_MESSAGE
     return text
+
+
+def _is_allowed_document_upload(filename: str, mime_type: str) -> bool:
+    suffix = Path(filename or "").suffix.lower()
+    mime = (mime_type or "").lower().strip()
+    if suffix not in ALLOWED_DOCUMENT_EXTENSIONS:
+        return False
+    if suffix == ".pdf":
+        return mime in {"", "application/pdf", "application/x-pdf", "application/octet-stream"}
+    if suffix == ".docx":
+        return mime in {
+            "",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/zip",
+            "application/octet-stream",
+        }
+    if suffix == ".txt":
+        return mime == "" or mime.startswith("text/") or mime == "application/octet-stream"
+    return mime in ALLOWED_DOCUMENT_TYPES
+
+
+def _clean_document_text(text: str) -> str:
+    cleaned = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    cleaned = "\n".join(
+        re.sub(r"[ \t]+", " ", line).strip()
+        for line in cleaned.split("\n")
+    )
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
+def _cap_document_text(text: str) -> str:
+    if len(text) <= MAX_DOCUMENT_TEXT_CHARS:
+        return text
+    truncated = text[:MAX_DOCUMENT_TEXT_CHARS].rsplit(" ", 1)[0].rstrip()
+    if not truncated:
+        truncated = text[:MAX_DOCUMENT_TEXT_CHARS].rstrip()
+    return f"{truncated}\n\n[Document text truncated]"
+
+
+def _extract_pdf_text(file_bytes: bytes) -> str:
+    if fitz is None:
+        return DOCUMENT_READ_ERROR_MESSAGE
+    try:
+        with fitz.open(stream=file_bytes, filetype="pdf") as pdf:
+            text = "\n\n".join((page.get_text("text") or "") for page in pdf)
+    except Exception:
+        return DOCUMENT_READ_ERROR_MESSAGE
+    cleaned = _clean_document_text(text)
+    return cleaned or PDF_NO_TEXT_MESSAGE
+
+
+def _extract_docx_text(file_bytes: bytes) -> str:
+    if DocxDocument is None:
+        return DOCUMENT_READ_ERROR_MESSAGE
+    try:
+        doc = DocxDocument(BytesIO(file_bytes))
+        parts = [paragraph.text for paragraph in doc.paragraphs if (paragraph.text or "").strip()]
+        for table in doc.tables:
+            for row in table.rows:
+                row_text = " | ".join((cell.text or "").strip() for cell in row.cells if (cell.text or "").strip())
+                if row_text:
+                    parts.append(row_text)
+        cleaned = _clean_document_text("\n".join(parts))
+        return cleaned or DOCUMENT_EMPTY_TEXT_MESSAGE
+    except Exception:
+        return DOCUMENT_READ_ERROR_MESSAGE
+
+
+def _extract_txt_text(file_bytes: bytes) -> str:
+    text = ""
+    for encoding in ("utf-8-sig", "utf-8", "utf-16", "latin-1"):
+        try:
+            text = file_bytes.decode(encoding)
+            break
+        except UnicodeDecodeError:
+            continue
+    if not text:
+        text = file_bytes.decode("utf-8", errors="ignore")
+    cleaned = _clean_document_text(text)
+    return cleaned or DOCUMENT_EMPTY_TEXT_MESSAGE
+
+
+def _extract_document_text(file_bytes: bytes, filename: str, mime_type: str) -> str:
+    suffix = Path(filename or "").suffix.lower()
+    mime = (mime_type or "").lower().strip()
+
+    if suffix == ".pdf" or mime in {"application/pdf", "application/x-pdf"}:
+        extracted = _extract_pdf_text(file_bytes)
+    elif suffix == ".docx" or mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        extracted = _extract_docx_text(file_bytes)
+    elif suffix == ".txt" or mime.startswith("text/"):
+        extracted = _extract_txt_text(file_bytes)
+    else:
+        return DOCUMENT_UNSUPPORTED_MESSAGE
+
+    if extracted in DOCUMENT_FAILURE_MESSAGES:
+        return extracted
+    cleaned = _clean_document_text(extracted)
+    if not cleaned:
+        return PDF_NO_TEXT_MESSAGE if suffix == ".pdf" else DOCUMENT_EMPTY_TEXT_MESSAGE
+    return _cap_document_text(cleaned)
 
 
 def _normalize_person_name(name: str) -> str:
@@ -870,6 +1002,12 @@ class AppState(reflex_local_auth.LocalAuthState):
     _image_loading: bool = False
     image_preview_url: str = ""
 
+    # Document upload state
+    _document_data: bytes = b""
+    document_name: str = ""
+    document_mime: str = ""
+    document_error: str = ""
+
     is_generating_plan: bool = False
     scope_hydrating: bool = False
     current_day: int = 1
@@ -954,6 +1092,10 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def has_image(self) -> bool:
         return bool(self.image_name)
+
+    @rx.var
+    def has_document(self) -> bool:
+        return bool(self.document_name)
 
     @rx.var
     def image_loading(self) -> bool:
@@ -3269,6 +3411,15 @@ Critical operating rules:
         """Handle image file selection for vision chat."""
         # 1. Clear previous error immediately
         self.image_error = ""
+        if self.has_document:
+            self._image_data = b""
+            self._image_mime = ""
+            self.image_name = ""
+            self._image_loading = False
+            self.image_preview_url = ""
+            self.image_error = "Remove the document before attaching an image."
+            yield rx.call_script(CLEAR_IMAGE_PREVIEW_JS)
+            return
         if not files:
             return
         upload_file = files[0]
@@ -3321,6 +3472,48 @@ Critical operating rules:
         self._image_loading = False
         self.image_preview_url = ""
         return rx.call_script(CLEAR_IMAGE_PREVIEW_JS)
+
+    @rx.event
+    async def handle_document_upload(self, files: list[rx.UploadFile]):
+        """Handle document selection for document-aware chat."""
+        self.document_error = ""
+        if self.has_image:
+            self.document_error = "Remove the image before attaching a document."
+            return
+        if not files:
+            return
+
+        upload_file = files[0]
+        self.document_name = upload_file.filename or "document"
+        yield
+
+        content_type = (upload_file.content_type or "").lower()
+        if not _is_allowed_document_upload(self.document_name, content_type):
+            self._document_data = b""
+            self.document_mime = ""
+            self.document_name = ""
+            self.document_error = DOCUMENT_UNSUPPORTED_MESSAGE
+            return
+
+        data = await upload_file.read()
+        if len(data) > MAX_DOCUMENT_BYTES:
+            self._document_data = b""
+            self.document_mime = ""
+            self.document_name = ""
+            self.document_error = "Document is too large (max 10 MB). Please choose a smaller file."
+            return
+
+        self._document_data = data
+        self.document_mime = content_type
+        self.document_error = ""
+
+    @rx.event
+    def clear_document(self):
+        """Remove the selected document before sending."""
+        self._document_data = b""
+        self.document_name = ""
+        self.document_mime = ""
+        self.document_error = ""
 
     @rx.event
     def next_step(self):
@@ -3779,7 +3972,10 @@ Subjects:\n{courses_text}"""
     @rx.event
     async def send_message(self):
         uid = self._uid()
-        if uid < 0 or (not self.chat_input.strip() and not self._image_data):
+        has_typed_message = bool(self.chat_input.strip())
+        has_image_attached = bool(self._image_data)
+        has_document_attached = bool(self._document_data)
+        if uid < 0 or (not has_typed_message and not has_image_attached and not has_document_attached):
             return
 
         # Scope safety: ensure current session belongs to active scope.
@@ -3807,10 +4003,14 @@ Subjects:\n{courses_text}"""
             self.chat_history.append({"role": "assistant", "content": "API key missing — set GROQ_API_KEY in env."})
             return
 
-        user_msg = self.chat_input.strip()
-        has_image_attached = bool(self._image_data)
+        typed_user_msg = self.chat_input.strip()
+        user_msg = typed_user_msg
         image_bytes = self._image_data
         image_mime = self._image_mime
+        document_bytes = self._document_data
+        document_name = self.document_name
+        document_mime = self.document_mime
+        stored_user_msg = typed_user_msg
         self.chat_input = ""
         self.is_processing = True
 
@@ -3831,18 +4031,24 @@ Subjects:\n{courses_text}"""
         student_name = _normalize_person_name(self.name) or "Student"
 
         try:
-            user_msg_dict: dict[str, Any] = {"role": "user", "content": user_msg}
+            user_msg_dict: dict[str, Any] = {"role": "user", "content": typed_user_msg}
             if has_image_attached:
                 b64 = base64.b64encode(image_bytes).decode("utf-8")
                 user_msg_dict["image_data"] = f"data:{image_mime};base64,{b64}"
                 user_msg_dict["has_image"] = True
-                if not user_msg:
+                if not typed_user_msg:
                     user_msg_dict["content"] = "[Image uploaded]"
-                    user_msg = "[Image uploaded]"
-                    
+                    stored_user_msg = "[Image uploaded]"
+            if has_document_attached:
+                user_msg_dict["document_name"] = document_name or "document"
+                user_msg_dict["has_document"] = True
+                if not typed_user_msg:
+                    user_msg_dict["content"] = "[Document uploaded]"
+                    stored_user_msg = "[Document uploaded]"
+
             self.chat_history.append(user_msg_dict)
-            self._save_message(uid, "user", user_msg)
-            
+            self._save_message(uid, "user", stored_user_msg)
+
             if has_image_attached:
                 self._image_data = b""
                 self._image_mime = ""
@@ -3851,7 +4057,12 @@ Subjects:\n{courses_text}"""
                 self._image_loading = False
                 self.image_preview_url = ""
                 yield rx.call_script(CLEAR_IMAGE_PREVIEW_JS)
-                
+            if has_document_attached:
+                self._document_data = b""
+                self.document_name = ""
+                self.document_mime = ""
+                self.document_error = ""
+
             yield
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             yield
@@ -3864,7 +4075,7 @@ Subjects:\n{courses_text}"""
                 if needs_title:
                     try:
                         # Build context from available chat history
-                        chat_context = user_msg
+                        chat_context = typed_user_msg or document_name or stored_user_msg or "New chat"
                         if len(self.chat_history) >= 3:
                             recent = self.chat_history[-4:]
                             chat_context = " | ".join([m.get("content", "")[:120] for m in recent])
@@ -3894,8 +4105,8 @@ Subjects:\n{courses_text}"""
 
         # ── IMAGE VISION PATH ──
         if has_image_attached:
-            vision_prompt = user_msg if user_msg and user_msg != "[Image uploaded]" else "Describe this image clearly"
-            display_msg = user_msg
+            vision_prompt = typed_user_msg if typed_user_msg else "Describe this image clearly"
+            display_msg = stored_user_msg
 
             self.chat_history.append({"role": "assistant", "content": ""})
             assistant_index = len(self.chat_history) - 1
@@ -3920,6 +4131,35 @@ Subjects:\n{courses_text}"""
             await self._maybe_auto_update_adaptive_profile(uid)
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             return
+
+        document_context_block = ""
+        if has_document_attached:
+            try:
+                extracted_document_text = await asyncio.to_thread(
+                    _extract_document_text,
+                    document_bytes,
+                    document_name or "document",
+                    document_mime,
+                )
+            except Exception as e:
+                print(f"ERROR document extract: {e}")
+                extracted_document_text = DOCUMENT_READ_ERROR_MESSAGE
+
+            if extracted_document_text in DOCUMENT_FAILURE_MESSAGES:
+                self.chat_history.append({"role": "assistant", "content": extracted_document_text})
+                self._save_message(uid, "assistant", extracted_document_text)
+                self.is_processing = False
+                await self._maybe_auto_update_scope_summary(uid, self.active_scope)
+                await self._maybe_auto_update_global_memory(uid)
+                await self._maybe_auto_update_adaptive_profile(uid)
+                yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                return
+
+            user_msg = typed_user_msg or DOCUMENT_DEFAULT_PROMPT
+            document_context_block = (
+                f"- Attached document: {document_name or 'document'}\n"
+                f"- Extracted document text:\n{extracted_document_text}\n"
+            )
 
         guardrail_reply = self._alex_guardrail_reply(user_msg, student_name)
         if guardrail_reply:
@@ -4027,7 +4267,8 @@ Current context:
 - Adaptive profile from previous chats: {adaptive_profile}
 - Recent conversation: {recent_text}
 - Past relevant chat (db search): {past_hits}
-- Student just said: {user_msg}
+- Use the attached document when it is present.
+{document_context_block}- Student just said: {user_msg}
 
 Your response style rules:
 1. Stay warm, patient, mentor-like, and encouraging without sounding cheesy.
@@ -4146,7 +4387,8 @@ Student context:
 - Upcoming courses: {chr(10).join(next_courses)}
 - Recent home chat: {recent_text}
 - Relevant past chat memory: {past_hits}
-- Student just said: {user_msg}
+- Use the attached document when it is present.
+{document_context_block}- Student just said: {user_msg}
 
 Behavior rules:
 1. In home mode, focus on overview, analysis, redirection, and academic guidance. Do not pretend to be the daily semester tutor.
@@ -5040,6 +5282,19 @@ def chat_input_field() -> rx.Component:
           #image_upload_zone input[type="file"] {
             display: none !important;
           }
+          #document_upload_zone {
+            display: flex !important;
+            align-items: flex-end !important;
+            width: auto !important;
+            min-width: auto !important;
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+            text-align: left !important;
+          }
+          #document_upload_zone input[type="file"] {
+            display: none !important;
+          }
         </style>
         """),
         # ── Thumbnail preview (client shows instantly, backend preview replaces it) ──
@@ -5093,6 +5348,74 @@ def chat_input_field() -> rx.Component:
             display=rx.cond(AppState.has_image, "block", "none"),
             padding="10px 16px 0 16px",
         ),
+        rx.box(
+            rx.hstack(
+                rx.hstack(
+                    rx.box(
+                        rx.icon(tag="file_text", size=15, color="rgba(232,236,241,0.82)"),
+                        width="30px",
+                        height="30px",
+                        border_radius="10px",
+                        display="flex",
+                        align_items="center",
+                        justify_content="center",
+                        background="rgba(255,255,255,0.06)",
+                        border="1px solid rgba(255,255,255,0.08)",
+                        flex_shrink="0",
+                    ),
+                    rx.text(
+                        AppState.document_name,
+                        color="rgba(235,240,244,0.88)",
+                        font_size="0.82rem",
+                        max_width="100%",
+                        overflow="hidden",
+                        text_overflow="ellipsis",
+                        white_space="nowrap",
+                        font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    ),
+                    spacing="3",
+                    align="center",
+                    min_width="0",
+                    flex="1",
+                ),
+                rx.button(
+                    rx.text(
+                        "✕",
+                        font_size="10px",
+                        font_weight="700",
+                        color="rgba(255,255,255,0.82)",
+                        line_height="1",
+                    ),
+                    on_click=[
+                        AppState.clear_document,
+                        rx.clear_selected_files("document_upload_zone"),
+                    ],
+                    width="22px",
+                    height="22px",
+                    min_width="22px",
+                    padding="0",
+                    display="inline-flex",
+                    align_items="center",
+                    justify_content="center",
+                    border_radius="999px",
+                    background="rgba(255,255,255,0.05)",
+                    border="1px solid rgba(255,255,255,0.08)",
+                    cursor="pointer",
+                    style={
+                        "_hover": {"background": "rgba(255,80,80,0.16)"},
+                    },
+                ),
+                width="100%",
+                align="center",
+                spacing="3",
+                padding="10px 12px",
+                border_radius="16px",
+                background="rgba(255,255,255,0.035)",
+                border="1px solid rgba(255,255,255,0.08)",
+            ),
+            display=rx.cond(AppState.has_document, "block", "none"),
+            padding="10px 16px 0 16px",
+        ),
         # ── Image loading indicator ──
         rx.cond(
             AppState.image_loading,
@@ -5115,6 +5438,16 @@ def chat_input_field() -> rx.Component:
             AppState.image_error != "",
             rx.text(
                 AppState.image_error,
+                color="rgba(255,120,120,0.85)",
+                font_size="0.72rem",
+                padding="2px 20px 0 20px",
+                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            ),
+        ),
+        rx.cond(
+            AppState.document_error != "",
+            rx.text(
+                AppState.document_error,
                 color="rgba(255,120,120,0.85)",
                 font_size="0.72rem",
                 padding="2px 20px 0 20px",
@@ -5160,65 +5493,120 @@ def chat_input_field() -> rx.Component:
             pointer_events="none",
         ),
         rx.hstack(
-            # ── Attach image button (+ icon) ──
-            rx.upload(
-                rx.cond(
-                    ~AppState.has_image,
-                    rx.button(
-                        rx.text(
-                            "+",
-                            font_size="22px",
-                            font_weight="400",
-                            color="rgba(255,255,255,0.50)",
-                            line_height="1",
-                            user_select="none",
-                        ),
-                        width="38px",
-                        height="38px",
-                        min_width="38px",
-                        border_radius="50%",
-                        display="inline-flex",
-                        align_items="center",
-                        justify_content="center",
-                        flex_shrink="0",
-                        align_self="flex-end",
-                        margin_bottom="5px",
-                        margin_left="6px",
-                        style={
-                            "background": "transparent",
-                            "border": "1px solid rgba(255,255,255,0.12)",
-                            "cursor": "pointer",
-                            "transition": "all 0.15s ease",
-                            "_hover": {
-                                "background": "rgba(255,255,255,0.08)",
-                                "border": "1px solid rgba(255,255,255,0.20)",
+            rx.hstack(
+                rx.upload(
+                    rx.cond(
+                        (~AppState.has_image) & (~AppState.has_document),
+                        rx.button(
+                            rx.text(
+                                "+",
+                                font_size="22px",
+                                font_weight="400",
+                                color="rgba(255,255,255,0.50)",
+                                line_height="1",
+                                user_select="none",
+                            ),
+                            width="38px",
+                            height="38px",
+                            min_width="38px",
+                            border_radius="50%",
+                            display="inline-flex",
+                            align_items="center",
+                            justify_content="center",
+                            flex_shrink="0",
+                            align_self="flex-end",
+                            margin_bottom="5px",
+                            margin_left="6px",
+                            style={
+                                "background": "transparent",
+                                "border": "1px solid rgba(255,255,255,0.12)",
+                                "cursor": "pointer",
+                                "transition": "all 0.15s ease",
+                                "_hover": {
+                                    "background": "rgba(255,255,255,0.08)",
+                                    "border": "1px solid rgba(255,255,255,0.20)",
+                                },
+                                "_active": {"transform": "scale(0.93)"},
                             },
-                            "_active": {"transform": "scale(0.93)"},
-                        },
+                        ),
+                        rx.box(width="0px", height="0px", overflow="hidden"),
                     ),
-                    # Keep the click-upload control mounted even while the preview is shown.
-                    rx.box(width="0px", height="0px", overflow="hidden"),
+                    id="image_upload_zone",
+                    accept={
+                        "image/png": [".png"],
+                        "image/jpeg": [".jpg", ".jpeg"],
+                        "image/webp": [".webp"],
+                    },
+                    max_files=1,
+                    multiple=False,
+                    no_drag=True,
+                    on_drop=[
+                        AppState.handle_image_upload,  # type: ignore
+                        rx.clear_selected_files("image_upload_zone"),
+                    ],
+                    no_keyboard=True,
+                    border="none",
+                    padding="0",
+                    width="auto",
+                    background="transparent",
+                    display="flex",
+                    align_items="flex-end",
+                    flex_shrink="0",
                 ),
-                id="image_upload_zone",
-                accept={
-                    "image/png": [".png"],
-                    "image/jpeg": [".jpg", ".jpeg"],
-                    "image/webp": [".webp"],
-                },
-                max_files=1,
-                multiple=False,
-                no_drag=True,
-                on_drop=[
-                    AppState.handle_image_upload,  # type: ignore
-                    rx.clear_selected_files("image_upload_zone"),
-                ],
-                no_keyboard=True,
-                border="none",
-                padding="0",
-                width="auto",
-                background="transparent",
-                display="flex",
-                align_items="flex-end",
+                rx.upload(
+                    rx.cond(
+                        (~AppState.has_image) & (~AppState.has_document),
+                        rx.button(
+                            rx.icon(tag="file_text", size=15, color="rgba(255,255,255,0.60)"),
+                            width="38px",
+                            height="38px",
+                            min_width="38px",
+                            border_radius="50%",
+                            display="inline-flex",
+                            align_items="center",
+                            justify_content="center",
+                            flex_shrink="0",
+                            align_self="flex-end",
+                            margin_bottom="5px",
+                            margin_left="8px",
+                            style={
+                                "background": "transparent",
+                                "border": "1px solid rgba(255,255,255,0.12)",
+                                "cursor": "pointer",
+                                "transition": "all 0.15s ease",
+                                "_hover": {
+                                    "background": "rgba(255,255,255,0.08)",
+                                    "border": "1px solid rgba(255,255,255,0.20)",
+                                },
+                                "_active": {"transform": "scale(0.93)"},
+                            },
+                        ),
+                        rx.box(width="0px", height="0px", overflow="hidden"),
+                    ),
+                    id="document_upload_zone",
+                    accept={
+                        "application/pdf": [".pdf"],
+                        "text/plain": [".txt"],
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+                    },
+                    max_files=1,
+                    multiple=False,
+                    no_drag=True,
+                    on_drop=[
+                        AppState.handle_document_upload,  # type: ignore
+                        rx.clear_selected_files("document_upload_zone"),
+                    ],
+                    no_keyboard=True,
+                    border="none",
+                    padding="0",
+                    width="auto",
+                    background="transparent",
+                    display="flex",
+                    align_items="flex-end",
+                    flex_shrink="0",
+                ),
+                align="end",
+                spacing="0",
                 flex_shrink="0",
             ),
             rx.text_area(
@@ -5301,7 +5689,7 @@ def chat_input_field() -> rx.Component:
         max_files=1,
         multiple=False,
         no_click=True,
-        no_drag=False,
+        no_drag=AppState.has_document,
         no_keyboard=True,
         on_drop=[
             AppState.handle_image_upload,  # type: ignore
@@ -5529,7 +5917,61 @@ def active_chat_panel() -> rx.Component:
                                     )
                                 ),
                                 rx.cond(
-                                    (msg.contains("has_image")) & (msg["content"].to(str) == "[Image uploaded]"),
+                                    msg.contains("has_document"),
+                                    rx.hstack(
+                                        rx.box(
+                                            rx.icon(tag="file_text", size=15, color="rgba(234,239,244,0.82)"),
+                                            width="30px",
+                                            height="30px",
+                                            border_radius="10px",
+                                            display="flex",
+                                            align_items="center",
+                                            justify_content="center",
+                                            background="rgba(255,255,255,0.06)",
+                                            border="1px solid rgba(255,255,255,0.08)",
+                                            flex_shrink="0",
+                                        ),
+                                        rx.vstack(
+                                            rx.text(
+                                                "Document",
+                                                color="rgba(255,255,255,0.56)",
+                                                font_size="0.68rem",
+                                                text_transform="uppercase",
+                                                letter_spacing="0.08em",
+                                                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                            ),
+                                            rx.text(
+                                                msg["document_name"].to(str),  # type: ignore
+                                                color="rgba(240,244,248,0.92)",
+                                                font_size="0.82rem",
+                                                line_height="1.35",
+                                                max_width="220px",
+                                                overflow="hidden",
+                                                text_overflow="ellipsis",
+                                                white_space="nowrap",
+                                                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                            ),
+                                            spacing="1",
+                                            align_items="start",
+                                            min_width="0",
+                                        ),
+                                        spacing="3",
+                                        align="center",
+                                        width="100%",
+                                        margin_bottom=rx.cond(
+                                            msg["content"].to(str) == "[Document uploaded]",
+                                            "0px",
+                                            "8px",
+                                        ),
+                                        padding="10px 12px",
+                                        border_radius="14px",
+                                        background="rgba(255,255,255,0.04)",
+                                        border="1px solid rgba(255,255,255,0.08)",
+                                    ),
+                                ),
+                                rx.cond(
+                                    ((msg.contains("has_image")) & (msg["content"].to(str) == "[Image uploaded]"))
+                                    | ((msg.contains("has_document")) & (msg["content"].to(str) == "[Document uploaded]")),
                                     rx.fragment(),
                                     rx.text(
                                         msg["content"],
