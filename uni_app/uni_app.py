@@ -811,6 +811,8 @@ class ChatMessage2(rx.Model, table=True):  # type: ignore
     session_id: int = Field(index=True, nullable=False)
     role: str = Field(nullable=False)
     content: str = Field(nullable=False)
+    has_document: bool = Field(default=False, nullable=False)
+    document_name: str = Field(default="", nullable=False)
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
@@ -2429,7 +2431,14 @@ class AppState(reflex_local_auth.LocalAuthState):
             session.commit()
             session.refresh(sess)
             for m in legacy:
-                session.add(ChatMessage2(user_id=uid, session_id=int(sess.id), role=self._safe_role(m.role), content=m.content))
+                session.add(
+                    ChatMessage2(
+                        user_id=uid,
+                        session_id=int(sess.id),
+                        role=self._safe_role(m.role),
+                        content=m.content,
+                    )
+                )
             session.commit()
 
     def _load_messages(self, uid: int, scope: str = "", *, _trusted: bool = False) -> None:
@@ -2449,14 +2458,33 @@ class AppState(reflex_local_auth.LocalAuthState):
             ).all()
 
         self.chat_history = [
-            {
-                "role": m.role,
-                "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
-            }
+            (
+                {
+                    "role": m.role,
+                    "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
+                    "has_document": True,
+                    "document_name": m.document_name or "document",
+                }
+                if m.has_document
+                else {
+                    "role": m.role,
+                    "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
+                }
+            )
             for m in msgs
         ]
 
-    def _save_message(self, uid: int, role: str, content: str, scope: str = "", trusted: bool = False) -> None:
+    def _save_message(
+        self,
+        uid: int,
+        role: str,
+        content: str,
+        scope: str = "",
+        trusted: bool = False,
+        *,
+        has_document: bool = False,
+        document_name: str = "",
+    ) -> None:
         effective_scope = scope or self.active_scope
         if uid < 0 or not self.current_session_id:
             return
@@ -2464,7 +2492,16 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
         safe_content = sanitize_for_ui(content) if role == "assistant" else content
         with rx.session() as session:
-            session.add(ChatMessage2(user_id=uid, session_id=int(self.current_session_id), role=role, content=safe_content))
+            session.add(
+                ChatMessage2(
+                    user_id=uid,
+                    session_id=int(self.current_session_id),
+                    role=role,
+                    content=safe_content,
+                    has_document=has_document,
+                    document_name=document_name or "",
+                )
+            )
             session.commit()
 
     def _save_memory(self, uid: int) -> None:
@@ -4121,7 +4158,13 @@ Subjects:\n{courses_text}"""
                     stored_user_msg = "[Document uploaded]"
 
             self.chat_history.append(user_msg_dict)
-            self._save_message(uid, "user", stored_user_msg)
+            self._save_message(
+                uid,
+                "user",
+                stored_user_msg,
+                has_document=has_document_attached,
+                document_name=document_name or "",
+            )
 
             if has_image_attached:
                 self._image_data = b""
@@ -9568,6 +9611,32 @@ def _ensure_userprofile_unique_id() -> None:
     except Exception as e:
         print(f"ERROR ensure_userprofile_unique_id: {e}")
 _ensure_userprofile_unique_id()
+
+
+def _ensure_chatmessage2_document_columns() -> None:
+    try:
+        with rx.session() as session:
+            conn = session.connection()
+            dialect = conn.dialect.name
+            if dialect == "sqlite":
+                cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('chatmessage2')").fetchall()}
+                if "has_document" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN has_document BOOLEAN NOT NULL DEFAULT 0")
+                if "document_name" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN document_name VARCHAR NOT NULL DEFAULT ''")
+            elif dialect == "postgresql":
+                rows = conn.exec_driver_sql(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name='chatmessage2'"
+                ).fetchall()
+                cols = {str(row[0]) for row in rows}
+                if "has_document" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN has_document BOOLEAN NOT NULL DEFAULT FALSE")
+                if "document_name" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN document_name VARCHAR NOT NULL DEFAULT ''")
+            session.commit()
+    except Exception as e:
+        print(f"ERROR ensure_chatmessage2_document_columns: {e}")
+_ensure_chatmessage2_document_columns()
 
 
 async def _payhere_notify_wrapper(request):
