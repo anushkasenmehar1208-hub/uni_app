@@ -4230,12 +4230,21 @@ Subjects:\n{courses_text}"""
     # ──────────────────────────────────────────────────────────
 
     @rx.event
-    def copy_message(self, index: int):
-        """Copy message content to clipboard via JS."""
+    async def copy_message(self, index: int):
+        """Copy message content to clipboard via JS and show 'Copied' toast."""
         if 0 <= index < len(self.chat_history):
             text = self.chat_history[index].get("content", "")
-            return rx.call_script(
-                f"navigator.clipboard.writeText({json.dumps(text)})"
+            yield rx.call_script(
+                f"""
+                navigator.clipboard.writeText({json.dumps(text)}).then(function() {{
+                    var t = document.createElement('div');
+                    t.textContent = 'Copied';
+                    t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.12);color:rgba(240,244,248,0.9);padding:6px 16px;border-radius:8px;font-size:13px;font-family:Söhne,sans-serif;z-index:9999;pointer-events:none;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);transition:opacity 0.3s';
+                    document.body.appendChild(t);
+                    setTimeout(function(){{ t.style.opacity='0'; }}, 1200);
+                    setTimeout(function(){{ t.remove(); }}, 1600);
+                }});
+                """
             )
 
     @rx.event
@@ -6434,10 +6443,8 @@ def active_chat_panel() -> rx.Component:
                         rx.cond(
                             msg["role"] == "user",
                             # ── User message ──
-                            rx.box(
-                                # Edit mode: inline textarea
-                                rx.cond(
-                                    idx == AppState.editing_msg_index,
+                            rx.cond(
+                                idx == AppState.editing_msg_index,
                                     rx.box(
                                         rx.el.textarea(
                                             value=AppState.editing_msg_text,
@@ -6490,102 +6497,109 @@ def active_chat_panel() -> rx.Component:
                                     ),
                                     # Normal display mode with hover actions
                                     rx.box(
-                                        rx.cond(
-                                            msg.contains("has_image"),
-                                            rx.box(
-                                                rx.image(
-                                                    src=rx.cond(
-                                                        msg.contains("image_url"),
-                                                        msg["image_url"].to(str),
-                                                        msg["image_data"].to(str),
+                                        rx.box(
+                                            rx.cond(
+                                                msg.contains("has_image"),
+                                                rx.box(
+                                                    rx.image(
+                                                        src=rx.cond(
+                                                            msg.contains("image_url"),
+                                                            msg["image_url"].to(str),
+                                                            msg["image_data"].to(str),
+                                                        ),
+                                                        max_width="280px",
+                                                        max_height="220px",
+                                                        border_radius="12px",
+                                                        object_fit="cover",
+                                                        margin_bottom="6px",
+                                                        cursor="zoom-in",
                                                     ),
-                                                    max_width="280px",
-                                                    max_height="220px",
-                                                    border_radius="12px",
-                                                    object_fit="cover",
-                                                    margin_bottom="6px",
-                                                    cursor="zoom-in",
-                                                ),
-                                                on_click=AppState.open_image_modal(
-                                                    rx.cond(
-                                                        msg.contains("image_url"),
-                                                        msg["image_url"].to(str),
-                                                        msg["image_data"].to(str),
-                                                    )
-                                                ),
-                                            )
-                                        ),
-                                        rx.cond(
-                                            msg.contains("has_document"),
-                                            rx.link(
-                                                rx.hstack(
-                                                    rx.box(
-                                                        rx.icon(tag="file_text", size=15, color="rgba(234,239,244,0.82)"),
-                                                        width="30px",
-                                                        height="30px",
-                                                        border_radius="10px",
-                                                        display="flex",
-                                                        align_items="center",
-                                                        justify_content="center",
-                                                        background="rgba(255,255,255,0.06)",
+                                                    on_click=AppState.open_image_modal(
+                                                        rx.cond(
+                                                            msg.contains("image_url"),
+                                                            msg["image_url"].to(str),
+                                                            msg["image_data"].to(str),
+                                                        )
+                                                    ),
+                                                )
+                                            ),
+                                            rx.cond(
+                                                msg.contains("has_document"),
+                                                rx.link(
+                                                    rx.hstack(
+                                                        rx.box(
+                                                            rx.icon(tag="file_text", size=15, color="rgba(234,239,244,0.82)"),
+                                                            width="30px",
+                                                            height="30px",
+                                                            border_radius="10px",
+                                                            display="flex",
+                                                            align_items="center",
+                                                            justify_content="center",
+                                                            background="rgba(255,255,255,0.06)",
+                                                            border="1px solid rgba(255,255,255,0.08)",
+                                                            flex_shrink="0",
+                                                        ),
+                                                        rx.vstack(
+                                                            rx.text(
+                                                                "Document",
+                                                                color="rgba(255,255,255,0.56)",
+                                                                font_size="0.68rem",
+                                                                text_transform="uppercase",
+                                                                letter_spacing="0.08em",
+                                                                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                                            ),
+                                                            rx.text(
+                                                                msg["document_name"].to(str),
+                                                                color="rgba(240,244,248,0.92)",
+                                                                font_size="0.82rem",
+                                                                line_height="1.35",
+                                                                max_width="220px",
+                                                                overflow="hidden",
+                                                                text_overflow="ellipsis",
+                                                                white_space="nowrap",
+                                                                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                                            ),
+                                                            spacing="1",
+                                                            align_items="start",
+                                                            min_width="0",
+                                                        ),
+                                                        spacing="3",
+                                                        align="center",
+                                                        width="100%",
+                                                        margin_bottom=rx.cond(
+                                                            msg["content"].to(str) == "[Document uploaded]",
+                                                            "0px",
+                                                            "8px",
+                                                        ),
+                                                        padding="10px 12px",
+                                                        border_radius="14px",
+                                                        background="rgba(255,255,255,0.04)",
                                                         border="1px solid rgba(255,255,255,0.08)",
-                                                        flex_shrink="0",
+                                                        cursor="pointer",
                                                     ),
-                                                    rx.vstack(
-                                                        rx.text(
-                                                            "Document",
-                                                            color="rgba(255,255,255,0.56)",
-                                                            font_size="0.68rem",
-                                                            text_transform="uppercase",
-                                                            letter_spacing="0.08em",
-                                                            font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                                                        ),
-                                                        rx.text(
-                                                            msg["document_name"].to(str),
-                                                            color="rgba(240,244,248,0.92)",
-                                                            font_size="0.82rem",
-                                                            line_height="1.35",
-                                                            max_width="220px",
-                                                            overflow="hidden",
-                                                            text_overflow="ellipsis",
-                                                            white_space="nowrap",
-                                                            font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                                                        ),
-                                                        spacing="1",
-                                                        align_items="start",
-                                                        min_width="0",
-                                                    ),
-                                                    spacing="3",
-                                                    align="center",
-                                                    width="100%",
-                                                    margin_bottom=rx.cond(
-                                                        msg["content"].to(str) == "[Document uploaded]",
-                                                        "0px",
-                                                        "8px",
-                                                    ),
-                                                    padding="10px 12px",
-                                                    border_radius="14px",
-                                                    background="rgba(255,255,255,0.04)",
-                                                    border="1px solid rgba(255,255,255,0.08)",
-                                                    cursor="pointer",
+                                                    href=msg["document_url"].to(str),
+                                                    is_external=True,
                                                 ),
-                                                href=msg["document_url"].to(str),
-                                                is_external=True,
                                             ),
-                                        ),
-                                        rx.cond(
-                                            ((msg.contains("has_image")) & (msg["content"].to(str) == "[Image uploaded]"))
-                                            | ((msg.contains("has_document")) & (msg["content"].to(str) == "[Document uploaded]")),
-                                            rx.fragment(),
-                                            rx.text(
-                                                msg["content"],
-                                                color="rgba(240,244,248,0.92)",
-                                                font_size="0.9rem",
-                                                line_height="1.55",
-                                                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                            rx.cond(
+                                                ((msg.contains("has_image")) & (msg["content"].to(str) == "[Image uploaded]"))
+                                                | ((msg.contains("has_document")) & (msg["content"].to(str) == "[Document uploaded]")),
+                                                rx.fragment(),
+                                                rx.text(
+                                                    msg["content"],
+                                                    color="rgba(240,244,248,0.92)",
+                                                    font_size="0.9rem",
+                                                    line_height="1.55",
+                                                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                                ),
                                             ),
+                                            background="rgba(255,255,255,0.065)",
+                                            border_radius="20px",
+                                            padding="10px 18px",
+                                            max_width="100%",
+                                            width="fit-content",
                                         ),
-                                        # ── User action buttons (hover reveal) ──
+                                        # ── User action buttons (below pill, hover reveal) ──
                                         rx.hstack(
                                             rx.box(
                                                 rx.icon(tag="pencil", size=13, color="rgba(255,255,255,0.45)"),
@@ -6607,23 +6621,18 @@ def active_chat_panel() -> rx.Component:
                                             ),
                                             spacing="1",
                                             class_name="msg-actions",
-                                            position="absolute",
-                                            bottom="-22px",
-                                            right="4px",
+                                            justify="end",
+                                            margin_top="4px",
                                             opacity="0",
                                             transition="opacity 0.15s ease",
+                                            min_height="24px",
                                         ),
-                                        background="rgba(255,255,255,0.065)",
-                                        border_radius="20px",
-                                        padding="10px 18px",
                                         max_width="70%",
                                         margin_left="auto",
                                         margin_right="0",
-                                        position="relative",
                                         class_name="msg-row",
                                     ),
                                 ),
-                            ),
                             # ── Assistant message (no bubble, editorial column) ──
                             rx.box(
                                 rx.markdown(
