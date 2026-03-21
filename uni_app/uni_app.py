@@ -10,6 +10,7 @@ import json
 import base64
 import re
 import secrets
+import mimetypes
 from io import BytesIO
 from urllib.parse import unquote, urlencode, urlparse
 from fastapi import Request
@@ -21,7 +22,7 @@ import reflex as rx
 import httpx
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
-from fastapi.responses import PlainTextResponse, RedirectResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse, FileResponse
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import reflex_local_auth
 from reflex_local_auth import routes as auth_routes
@@ -283,6 +284,29 @@ def _extract_document_text(file_bytes: bytes, filename: str, mime_type: str) -> 
     if not cleaned:
         return PDF_NO_TEXT_MESSAGE if is_pdf else DOCUMENT_EMPTY_TEXT_MESSAGE
     return _cap_document_text(cleaned)
+
+
+MEDIA_ROUTE_PREFIX = "/media/chat"
+CHAT_MEDIA_ROOT = Path(__file__).resolve().parent.parent / ".chat_media"
+
+
+def _safe_filename_fragment(name: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "-", (name or "").strip())
+    cleaned = cleaned.strip(".-")
+    return cleaned[:80] or "file"
+
+
+def _store_chat_media(uid: int, session_id: str, filename: str, file_bytes: bytes) -> str:
+    suffix = Path(filename or "").suffix.lower()[:12]
+    stem = _safe_filename_fragment(Path(filename or "file").stem)
+    token = secrets.token_hex(12)
+    rel_dir = Path(str(uid)) / str(session_id)
+    target_dir = CHAT_MEDIA_ROOT / rel_dir
+    target_dir.mkdir(parents=True, exist_ok=True)
+    stored_name = f"{stem}-{token}{suffix}"
+    target_path = target_dir / stored_name
+    target_path.write_bytes(file_bytes)
+    return f"{MEDIA_ROUTE_PREFIX}/{rel_dir.as_posix()}/{stored_name}"
 
 
 def _normalize_person_name(name: str) -> str:
@@ -811,8 +835,11 @@ class ChatMessage2(rx.Model, table=True):  # type: ignore
     session_id: int = Field(index=True, nullable=False)
     role: str = Field(nullable=False)
     content: str = Field(nullable=False)
+    has_image: bool = Field(default=False, nullable=False)
+    image_url: str = Field(default="", nullable=False)
     has_document: bool = Field(default=False, nullable=False)
     document_name: str = Field(default="", nullable=False)
+    document_url: str = Field(default="", nullable=False)
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
@@ -2462,14 +2489,33 @@ class AppState(reflex_local_auth.LocalAuthState):
                 {
                     "role": m.role,
                     "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
-                    "has_document": True,
-                    "document_name": m.document_name or "document",
+                    "has_image": True,
+                    "image_url": m.image_url,
+                    **(
+                        {
+                            "has_document": True,
+                            "document_name": m.document_name or "document",
+                            "document_url": m.document_url or "",
+                        }
+                        if m.has_document
+                        else {}
+                    ),
                 }
-                if m.has_document
-                else {
-                    "role": m.role,
-                    "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
-                }
+                if m.has_image
+                else (
+                    {
+                        "role": m.role,
+                        "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
+                        "has_document": True,
+                        "document_name": m.document_name or "document",
+                        "document_url": m.document_url or "",
+                    }
+                    if m.has_document
+                    else {
+                        "role": m.role,
+                        "content": sanitize_for_ui(m.content) if m.role == "assistant" else m.content,
+                    }
+                )
             )
             for m in msgs
         ]
@@ -2482,8 +2528,11 @@ class AppState(reflex_local_auth.LocalAuthState):
         scope: str = "",
         trusted: bool = False,
         *,
+        has_image: bool = False,
+        image_url: str = "",
         has_document: bool = False,
         document_name: str = "",
+        document_url: str = "",
     ) -> None:
         effective_scope = scope or self.active_scope
         if uid < 0 or not self.current_session_id:
@@ -2498,8 +2547,11 @@ class AppState(reflex_local_auth.LocalAuthState):
                     session_id=int(self.current_session_id),
                     role=role,
                     content=safe_content,
+                    has_image=has_image,
+                    image_url=image_url or "",
                     has_document=has_document,
                     document_name=document_name or "",
+                    document_url=document_url or "",
                 )
             )
             session.commit()
@@ -4140,19 +4192,37 @@ Subjects:\n{courses_text}"""
             if inferred_name:
                 self.name = inferred_name
         student_name = _normalize_person_name(self.name) or "Student"
+        image_url = ""
+        document_url = ""
+
+        if self.current_session_id:
+            if has_image_attached:
+                image_url = _store_chat_media(
+                    uid,
+                    self.current_session_id,
+                    self.image_name or "image",
+                    image_bytes,
+                )
+            if has_document_attached:
+                document_url = _store_chat_media(
+                    uid,
+                    self.current_session_id,
+                    document_name or "document",
+                    document_bytes,
+                )
 
         try:
             user_msg_dict: dict[str, Any] = {"role": "user", "content": typed_user_msg}
             if has_image_attached:
-                b64 = base64.b64encode(image_bytes).decode("utf-8")
-                user_msg_dict["image_data"] = f"data:{image_mime};base64,{b64}"
                 user_msg_dict["has_image"] = True
+                user_msg_dict["image_url"] = image_url
                 if not typed_user_msg:
                     user_msg_dict["content"] = "[Image uploaded]"
                     stored_user_msg = "[Image uploaded]"
             if has_document_attached:
                 user_msg_dict["document_name"] = document_name or "document"
                 user_msg_dict["has_document"] = True
+                user_msg_dict["document_url"] = document_url
                 if not typed_user_msg:
                     user_msg_dict["content"] = "[Document uploaded]"
                     stored_user_msg = "[Document uploaded]"
@@ -4162,8 +4232,11 @@ Subjects:\n{courses_text}"""
                 uid,
                 "user",
                 stored_user_msg,
+                has_image=has_image_attached,
+                image_url=image_url,
                 has_document=has_document_attached,
                 document_name=document_name or "",
+                document_url=document_url,
             )
 
             if has_image_attached:
@@ -6022,66 +6095,84 @@ def active_chat_panel() -> rx.Component:
                             rx.box(
                                 rx.cond(
                                     msg.contains("has_image"),
-                                    rx.image(
-                                        src=msg["image_data"].to(str),  # type: ignore
-                                        max_width="280px",
-                                        max_height="220px",
-                                        border_radius="12px",
-                                        object_fit="cover",
-                                        margin_bottom="6px",
+                                    rx.link(
+                                        rx.image(
+                                            src=rx.cond(
+                                                msg.contains("image_url"),
+                                                msg["image_url"].to(str),  # type: ignore
+                                                msg["image_data"].to(str),  # type: ignore
+                                            ),
+                                            max_width="280px",
+                                            max_height="220px",
+                                            border_radius="12px",
+                                            object_fit="cover",
+                                            margin_bottom="6px",
+                                            cursor="pointer",
+                                        ),
+                                        href=rx.cond(
+                                            msg.contains("image_url"),
+                                            msg["image_url"].to(str),  # type: ignore
+                                            msg["image_data"].to(str),  # type: ignore
+                                        ),
+                                        is_external=True,
                                     )
                                 ),
                                 rx.cond(
                                     msg.contains("has_document"),
-                                    rx.hstack(
-                                        rx.box(
-                                            rx.icon(tag="file_text", size=15, color="rgba(234,239,244,0.82)"),
-                                            width="30px",
-                                            height="30px",
-                                            border_radius="10px",
-                                            display="flex",
-                                            align_items="center",
-                                            justify_content="center",
-                                            background="rgba(255,255,255,0.06)",
+                                    rx.link(
+                                        rx.hstack(
+                                            rx.box(
+                                                rx.icon(tag="file_text", size=15, color="rgba(234,239,244,0.82)"),
+                                                width="30px",
+                                                height="30px",
+                                                border_radius="10px",
+                                                display="flex",
+                                                align_items="center",
+                                                justify_content="center",
+                                                background="rgba(255,255,255,0.06)",
+                                                border="1px solid rgba(255,255,255,0.08)",
+                                                flex_shrink="0",
+                                            ),
+                                            rx.vstack(
+                                                rx.text(
+                                                    "Document",
+                                                    color="rgba(255,255,255,0.56)",
+                                                    font_size="0.68rem",
+                                                    text_transform="uppercase",
+                                                    letter_spacing="0.08em",
+                                                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                                ),
+                                                rx.text(
+                                                    msg["document_name"].to(str),  # type: ignore
+                                                    color="rgba(240,244,248,0.92)",
+                                                    font_size="0.82rem",
+                                                    line_height="1.35",
+                                                    max_width="220px",
+                                                    overflow="hidden",
+                                                    text_overflow="ellipsis",
+                                                    white_space="nowrap",
+                                                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                                ),
+                                                spacing="1",
+                                                align_items="start",
+                                                min_width="0",
+                                            ),
+                                            spacing="3",
+                                            align="center",
+                                            width="100%",
+                                            margin_bottom=rx.cond(
+                                                msg["content"].to(str) == "[Document uploaded]",
+                                                "0px",
+                                                "8px",
+                                            ),
+                                            padding="10px 12px",
+                                            border_radius="14px",
+                                            background="rgba(255,255,255,0.04)",
                                             border="1px solid rgba(255,255,255,0.08)",
-                                            flex_shrink="0",
+                                            cursor="pointer",
                                         ),
-                                        rx.vstack(
-                                            rx.text(
-                                                "Document",
-                                                color="rgba(255,255,255,0.56)",
-                                                font_size="0.68rem",
-                                                text_transform="uppercase",
-                                                letter_spacing="0.08em",
-                                                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                                            ),
-                                            rx.text(
-                                                msg["document_name"].to(str),  # type: ignore
-                                                color="rgba(240,244,248,0.92)",
-                                                font_size="0.82rem",
-                                                line_height="1.35",
-                                                max_width="220px",
-                                                overflow="hidden",
-                                                text_overflow="ellipsis",
-                                                white_space="nowrap",
-                                                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                                            ),
-                                            spacing="1",
-                                            align_items="start",
-                                            min_width="0",
-                                        ),
-                                        spacing="3",
-                                        align="center",
-                                        width="100%",
-                                        margin_bottom=rx.cond(
-                                            msg["content"].to(str) == "[Document uploaded]",
-                                            "0px",
-                                            "8px",
-                                        ),
-                                        padding="10px 12px",
-                                        border_radius="14px",
-                                        background="rgba(255,255,255,0.04)",
-                                        border="1px solid rgba(255,255,255,0.08)",
+                                        href=msg["document_url"].to(str),  # type: ignore
+                                        is_external=True,
                                     ),
                                 ),
                                 rx.cond(
@@ -9560,12 +9651,24 @@ async def legacy_auth_complete_redirect(request: Request):
     )
 
 
+async def serve_chat_media(request: Request):
+    rel_path = str(request.path_params.get("path", "") or "").strip("/")
+    target = (CHAT_MEDIA_ROOT / rel_path).resolve()
+    root = CHAT_MEDIA_ROOT.resolve()
+    if not str(target).startswith(str(root)) or not target.is_file():
+        return PlainTextResponse("not found", status_code=404)
+
+    media_type, _ = mimetypes.guess_type(str(target))
+    return FileResponse(target, media_type=media_type or "application/octet-stream")
+
+
 api.add_route(
     "/auth/google/complete/{code}/{state}/{origin_b64}",
     legacy_google_complete_redirect,
     methods=["GET"],
 )
 api.add_route("/auth/complete/{token}", legacy_auth_complete_redirect, methods=["GET"])
+api.add_route("/media/chat/{path:path}", serve_chat_media, methods=["GET"])
 
 try:
     rx.Model.create_all()
@@ -9620,19 +9723,31 @@ def _ensure_chatmessage2_document_columns() -> None:
             dialect = conn.dialect.name
             if dialect == "sqlite":
                 cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('chatmessage2')").fetchall()}
+                if "has_image" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN has_image BOOLEAN NOT NULL DEFAULT 0")
+                if "image_url" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN image_url VARCHAR NOT NULL DEFAULT ''")
                 if "has_document" not in cols:
                     conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN has_document BOOLEAN NOT NULL DEFAULT 0")
                 if "document_name" not in cols:
                     conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN document_name VARCHAR NOT NULL DEFAULT ''")
+                if "document_url" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN document_url VARCHAR NOT NULL DEFAULT ''")
             elif dialect == "postgresql":
                 rows = conn.exec_driver_sql(
                     "SELECT column_name FROM information_schema.columns WHERE table_name='chatmessage2'"
                 ).fetchall()
                 cols = {str(row[0]) for row in rows}
+                if "has_image" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN has_image BOOLEAN NOT NULL DEFAULT FALSE")
+                if "image_url" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN image_url VARCHAR NOT NULL DEFAULT ''")
                 if "has_document" not in cols:
                     conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN has_document BOOLEAN NOT NULL DEFAULT FALSE")
                 if "document_name" not in cols:
                     conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN document_name VARCHAR NOT NULL DEFAULT ''")
+                if "document_url" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE chatmessage2 ADD COLUMN document_url VARCHAR NOT NULL DEFAULT ''")
             session.commit()
     except Exception as e:
         print(f"ERROR ensure_chatmessage2_document_columns: {e}")
