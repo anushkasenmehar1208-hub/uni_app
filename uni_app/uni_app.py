@@ -233,6 +233,14 @@ def _extract_document_text(file_bytes: bytes, filename: str, mime_type: str) -> 
         return PDF_NO_TEXT_MESSAGE if is_pdf else DOCUMENT_EMPTY_TEXT_MESSAGE
     return _cap_document_text(cleaned)
 
+
+def _normalize_person_name(name: str) -> str:
+    cleaned = re.sub(r"\s+", " ", (name or "").strip().lower())
+    if not cleaned:
+        return ""
+    return re.sub(r"(^|[\s'-])([a-z])", lambda m: m.group(1) + m.group(2).upper(), cleaned)
+
+
 def _extract_person_name(*texts: str) -> str:
     patterns = (
         r"\b(?:student name|name)\s*[:=-]\s*([A-Za-z][A-Za-z'-]*(?:\s+[A-Za-z][A-Za-z'-]*){0,2})\b",
