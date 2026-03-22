@@ -6991,29 +6991,8 @@ def google_oauth_complete_page():
     )
 
 
-@rx.page(route="/auth/complete", image=FAVICON_32)
+@rx.page(route="/auth/complete", image=FAVICON_32, on_load=AppState.handle_google_complete)
 def google_complete_page():
-    token_storage_js = f"""
-    (function() {{
-      try {{
-        var u = new URL(window.location.href);
-        var token = u.searchParams.get("token");
-        if (!token) {{
-          window.location.replace({json.dumps(auth_routes.LOGIN_ROUTE)});
-          return;
-        }}
-        localStorage.setItem(
-          {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)},
-          token
-        );
-        window.setTimeout(function() {{
-          window.location.replace("/");
-        }}, 60);
-      }} catch (e) {{
-        window.location.replace({json.dumps(auth_routes.LOGIN_ROUTE)});
-      }}
-    }})();
-    """
     return rx.center(
         rx.vstack(
             rx.spinner(size="2", color="white"),
@@ -7021,7 +7000,6 @@ def google_complete_page():
             spacing="3",
             align="center",
         ),
-        rx.script(token_storage_js),
         height="100vh",
         background="#050505",
     )
