@@ -1825,6 +1825,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         else:
             origin = self._router_origin().rstrip("/")
             callback_url = f"{origin}/auth/google/callback"
+        print(f"[Google Start] redirect_uri={callback_url}")
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": callback_url,
@@ -1838,10 +1839,6 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def handle_google_oauth_callback(self):
-        if not self.is_hydrated:
-            yield AppState.handle_google_oauth_callback()  # type: ignore
-            return
-
         code = unquote(str(self.router.page.params.get("code", "") or "")).strip()
         state = unquote(str(self.router.page.params.get("state", "") or "")).strip()
         origin_b64 = str(self.router.page.params.get("origin_b64", "") or "").strip()
@@ -1926,37 +1923,25 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
         new_token = self.auth_token
-        print(f"[Google OAuth Frontend] login OK uid={resolved_uid}, redirecting via auth_token bootstrap")
 
-        # Navigate to login page with token in URL — AUTH_TOKEN_BOOTSTRAP_JS
-        # will store it in localStorage (sync, no race) and redirect to /app
-        login_url = f"{auth_routes.LOGIN_ROUTE}?auth_token={new_token}"
-        yield rx.call_script(f"window.location.replace({json.dumps(login_url)});")
+        yield rx.call_script(
+            f"""
+        (function() {{
+            try {{
+                localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
+            }} catch(e) {{}}
+            setTimeout(function() {{ window.location.replace('/'); }}, 60);
+        }})();
+        """
+        )
     
     @rx.event
     async def handle_google_complete(self):
-        if not self.is_hydrated:
-            yield AppState.handle_google_complete()  # type: ignore
-            return
-
-        token = str(self.router.page.params.get("token", "") or "").strip()
-        if not token:
-            try:
-                raw = str(getattr(self.router.page, "raw_path", "") or "")
-                if "token=" in raw:
-                    from urllib.parse import parse_qs, urlparse
-                    parsed = urlparse(raw)
-                    token = str(parse_qs(parsed.query).get("token", [""])[0] or "").strip()
-                    if token:
-                        print("[Google Complete] token recovered from raw_path fallback")
-            except Exception as ex:
-                print(f"[Google Complete] raw_path fallback error: {ex}")
-
-        print(f"[Google Complete] token present: {bool(token)}, len={len(token)}")
+        token = self.router.page.params.get("token", "")
+        print(f"[Google Complete] token present: {bool(token)}")
 
         if not token:
-            print("[Google Complete] NO TOKEN found")
-            yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=missing_token")
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
             return
 
         resolved_uid: int | None = None
@@ -1972,15 +1957,15 @@ class AppState(reflex_local_auth.LocalAuthState):
                     resolved_uid = int(auth_sess.user_id)
         except Exception as e:
             print(f"[Google Complete] DB error: {e}")
-            yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=db_error")
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
             return
 
         if resolved_uid is None:
-            print(f"[Google Complete] session not found in DB (token len={len(token)})")
-            yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=session_not_found")
+            print("[Google Complete] session not found in DB")
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
             return
 
-        print(f"[Google Complete] found uid={resolved_uid}, logging in...")
+        print(f"[Google Complete] found session uid={resolved_uid}, logging in...")
         self._login(resolved_uid)
         self._cached_uid = resolved_uid
         self.app_auth_token = self.auth_token
@@ -2000,13 +1985,17 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"[Google Complete] token cleanup error: {e}")
 
-        print(f"[Google Complete] login OK, redirecting via auth_token bootstrap")
+        print("[Google Complete] login done, navigating home...")
 
-        # Navigate to login page with token in URL — AUTH_TOKEN_BOOTSTRAP_JS
-        # will store it in localStorage (sync, no race) and redirect to /app
-        login_url = f"{auth_routes.LOGIN_ROUTE}?auth_token={new_token}"
-        yield rx.call_script(f"window.location.replace({json.dumps(login_url)});")
-
+    # Set localStorage directly via JS THEN navigate — avoids async race condition
+        yield rx.call_script(f"""
+    (function() {{
+        try {{
+            localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
+        }} catch(e) {{}}
+        setTimeout(function() {{ window.location.replace('/'); }}, 150);
+    }})();
+    """)
     @rx.event
     def handle_registration(self, form_data: dict[str, Any]):
         self._ensure_auth_csrf()
@@ -10428,6 +10417,11 @@ async def google_callback(request: Request):
             return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
         print("[Google CB] got code, fetching token...")
+        used_redirect_uri = _google_callback_url(request)
+        print(f"[Google CB] redirect_uri={used_redirect_uri}")
+        print(f"[Google CB] client_id={GOOGLE_CLIENT_ID[:12]}...")
+        print(f"[Google CB] client_secret set: {bool(GOOGLE_CLIENT_SECRET)}, len={len(GOOGLE_CLIENT_SECRET)}")
+        print(f"[Google CB] GOOGLE_REDIRECT_URI env={GOOGLE_REDIRECT_URI!r}")
         async with httpx.AsyncClient(timeout=20.0) as client_http:
             token_resp = await client_http.post(
                 GOOGLE_TOKEN_URL,
@@ -10435,12 +10429,14 @@ async def google_callback(request: Request):
                     "code": code,
                     "client_id": GOOGLE_CLIENT_ID,
                     "client_secret": GOOGLE_CLIENT_SECRET,
-                    "redirect_uri": _google_callback_url(request),
+                    "redirect_uri": used_redirect_uri,
                     "grant_type": "authorization_code",
                 },
                 headers={"Accept": "application/json"},
             )
             print(f"[Google CB] token response status: {token_resp.status_code}")
+            if token_resp.status_code != 200:
+                print(f"[Google CB] token response BODY: {token_resp.text[:500]}")
             token_resp.raise_for_status()
             token = token_resp.json()
             access_token = str(token.get("access_token", "") or "")
