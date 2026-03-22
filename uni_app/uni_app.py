@@ -1922,16 +1922,12 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.auth_csrf_token = secrets.token_urlsafe(24)
         new_token = self.auth_token
 
+        # Persist token to localStorage for future full-page loads
         yield rx.call_script(
-            f"""
-        (function() {{
-            try {{
-                localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
-            }} catch(e) {{}}
-            setTimeout(function() {{ window.location.replace('/'); }}, 60);
-        }})();
-        """
+            f"""try {{ localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)}); }} catch(e) {{}}"""
         )
+        # Client-side redirect preserves Reflex state (including auth_token set by _login)
+        yield rx.redirect(APP_DASHBOARD_ROUTE)
     
     @rx.event
     async def handle_google_complete(self):
@@ -1989,15 +1985,13 @@ class AppState(reflex_local_auth.LocalAuthState):
 
         print("[Google Complete] login done, navigating home...")
 
-    # Set localStorage directly via JS THEN navigate — avoids async race condition
-        yield rx.call_script(f"""
-    (function() {{
-        try {{
-            localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
-        }} catch(e) {{}}
-        setTimeout(function() {{ window.location.replace('/'); }}, 150);
-    }})();
-    """)
+        # Persist token to localStorage for future full-page loads
+        yield rx.call_script(
+            f"""try {{ localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)}); }} catch(e) {{}}"""
+        )
+        # Client-side redirect preserves Reflex state (including auth_token set by _login)
+        yield rx.redirect(APP_DASHBOARD_ROUTE)
+
     @rx.event
     def handle_registration(self, form_data: dict[str, Any]):
         self._ensure_auth_csrf()
