@@ -3446,10 +3446,11 @@ Critical operating rules:
             return
 
         # Onboarding: user hasn't completed setup yet — stay on /app
-        if not self.selected_year:
-            self.step = max(self.step, 3)
-        elif not self.selected_semester:
-            self.step = max(self.step, 4)
+        # Only bump forward if the user actually completed prior steps
+        if self.step >= 3 and not self.selected_year:
+            self.step = 3
+        elif self.step >= 4 and not self.selected_semester:
+            self.step = 4
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
     @rx.event
@@ -5103,51 +5104,51 @@ AUTO_SCROLL_OBSERVER_JS = """
 # UI FIXES - Replace these functions in your alexai.py
 # ═══════════════════════════════════════════════════════
 
-# FIX 1: subject_button — crisper border, tighter look
+# FIX 1: subject_button — premium teal glass style
 def subject_button(label: str, on_click=None, is_active=False):
     return rx.button(
         label,
         width="100%",
         height="52px",
         variant="outline",
-        color_scheme="green",
         on_click=on_click,
         style={
             "border": rx.cond(
                 is_active,
-                "1px solid rgba(52,211,153,0.78)",
-                "1px solid rgba(52,211,153,0.35)",
+                "1px solid rgba(56,189,248,0.6)",
+                "1px solid rgba(56,189,248,0.2)",
             ),
             "background": rx.cond(
                 is_active,
-                "linear-gradient(135deg, rgba(7,34,22,0.98) 0%, rgba(12,82,50,0.94) 100%)",
-                "rgba(52,211,153,0.04)",
+                "linear-gradient(135deg, rgba(8,47,73,0.95) 0%, rgba(14,80,120,0.9) 100%)",
+                "rgba(56,189,248,0.04)",
             ),
             "text_transform": "uppercase",
             "font_weight": "600",
             "font_size": "0.82rem",
             "letter_spacing": "2px",
-            "color": rx.cond(is_active, "#ecfff6", "rgba(255,255,255,0.88)"),
-            "border_radius": "10px",
-            "transition": "all 0.2s ease",
+            "color": rx.cond(is_active, "#e0f2fe", "rgba(255,255,255,0.88)"),
+            "border_radius": "14px",
+            "transition": "all 0.25s cubic-bezier(0.4,0,0.2,1)",
             "box_shadow": rx.cond(
                 is_active,
-                "0 10px 24px rgba(0,0,0,0.28), 0 0 0 1px rgba(52,211,153,0.18)",
+                "0 10px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(56,189,248,0.15), inset 0 1px 0 rgba(255,255,255,0.06)",
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    "linear-gradient(135deg, rgba(9,40,26,0.98) 0%, rgba(14,90,56,0.96) 100%)",
-                    "rgba(52,211,153,0.1)",
+                    "linear-gradient(135deg, rgba(10,55,85,0.98) 0%, rgba(16,90,135,0.96) 100%)",
+                    "rgba(56,189,248,0.1)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    "1px solid rgba(110,231,183,0.9)",
-                    "1px solid rgba(52,211,153,0.7)",
+                    "1px solid rgba(56,189,248,0.8)",
+                    "1px solid rgba(56,189,248,0.45)",
                 ),
-                "color": rx.cond(is_active, "#f4fff9", "#34D399"),
-                "transform": "translateX(6px)",
+                "color": rx.cond(is_active, "#f0f9ff", "#38bdf8"),
+                "transform": "translateY(-1px)",
+                "box_shadow": "0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(56,189,248,0.12)",
             },
         },
     )
@@ -7722,91 +7723,186 @@ def support_page():
 # ──────────────────────────────────────────────────────────────
 # Onboarding
 # ──────────────────────────────────────────────────────────────
+
+# Premium onboarding button — teal glass CTA
+def _onboarding_cta_button(label: str, on_click=None, is_disabled=None, pulse: bool = False):
+    base_style = {
+        "cursor": "pointer",
+        "font_weight": "700",
+        "font_family": "'Plus Jakarta Sans', sans-serif",
+        "border_radius": "14px",
+        "letter_spacing": "0.04em",
+        "transition": "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+        "_hover": {"filter": "brightness(1.12)", "transform": "translateY(-1px)", "box_shadow": "0 12px 36px rgba(6,148,162,0.35)"},
+        "_active": {"transform": "translateY(0px)"},
+    }
+    if pulse:
+        base_style["animation"] = "pulse_glow 2.5s infinite"
+    return rx.button(
+        label,
+        background="linear-gradient(135deg, #0ea5e9 0%, #06b6d4 45%, #22d3ee 100%)",
+        color="#021a1e",
+        on_click=on_click,
+        size="3",
+        width="100%",
+        is_disabled=is_disabled,
+        style=base_style,
+    )
+
+# Secondary / ghost button for onboarding
+def _onboarding_ghost_button(label: str, on_click=None):
+    return rx.button(
+        label,
+        on_click=on_click,
+        variant="outline",
+        size="3",
+        width="100%",
+        style={
+            "border": "1px solid rgba(56,189,248,0.18)",
+            "color": "rgba(224,242,254,0.85)",
+            "background": "rgba(56,189,248,0.04)",
+            "border_radius": "14px",
+            "font_weight": "600",
+            "font_family": "'Plus Jakarta Sans', sans-serif",
+            "letter_spacing": "0.03em",
+            "transition": "all 0.25s cubic-bezier(0.4,0,0.2,1)",
+            "_hover": {
+                "background": "rgba(56,189,248,0.1)",
+                "border": "1px solid rgba(56,189,248,0.35)",
+                "color": "#e0f2fe",
+            },
+        },
+    )
+
+
 def onboarding_page():
     def onboarding_feedback() -> rx.Component:
         return rx.cond(
             AppState.onboarding_message != "",
-            rx.text(
-                AppState.onboarding_message,
-                color="rgba(255,236,204,0.86)",
-                font_size="0.83rem",
-                text_align="center",
-                line_height="1.55",
-                max_width="400px",
+            rx.box(
+                rx.text(
+                    AppState.onboarding_message,
+                    color="rgba(254,215,170,0.92)",
+                    font_size="0.82rem",
+                    text_align="center",
+                    line_height="1.55",
+                    font_family="'Plus Jakarta Sans', sans-serif",
+                ),
+                background="rgba(180,83,9,0.12)",
+                border="1px solid rgba(251,191,36,0.15)",
+                border_radius="12px",
+                padding="12px 16px",
+                width="100%",
             ),
             rx.fragment(),
         )
 
+    # Step indicator dots
+    def step_dots() -> rx.Component:
+        dots = []
+        for i in range(6):
+            dots.append(
+                rx.box(
+                    width=rx.cond(AppState.step == i, "28px", "8px"),
+                    height="8px",
+                    border_radius="999px",
+                    background=rx.cond(
+                        AppState.step == i,
+                        "linear-gradient(90deg, #0ea5e9, #22d3ee)",
+                        rx.cond(
+                            AppState.step > i,
+                            "rgba(56,189,248,0.5)",
+                            "rgba(255,255,255,0.12)",
+                        ),
+                    ),
+                    transition="all 0.4s cubic-bezier(0.4,0,0.2,1)",
+                )
+            )
+        return rx.hstack(*dots, spacing="2", justify="center", width="100%")
+
     def onboarding_shell(title: str, body: rx.Component, *, step_label: str = "Welcome") -> rx.Component:
         return rx.box(
+            # Background image layer
+            rx.box(
+                position="absolute",
+                inset="0",
+                background_image="url('/onboarding_bg.png')",
+                background_size="cover",
+                background_position="center",
+                background_repeat="no-repeat",
+            ),
+            # Dark overlay for readability
             rx.box(
                 position="absolute",
                 inset="0",
                 background=(
-                    "radial-gradient(circle at 78% 50%, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.32) 1.2%, "
-                    "rgba(140,210,255,0.12) 8%, rgba(12,28,44,0.08) 18%, rgba(3,10,18,0) 30%), "
-                    "radial-gradient(circle at 46% 52%, rgba(16,153,181,0.26) 0%, rgba(7,52,79,0.20) 22%, rgba(3,10,18,0) 56%), "
-                    "linear-gradient(180deg, #02060d 0%, #04101a 42%, #02060d 100%)"
+                    "linear-gradient(135deg, "
+                    "rgba(2,6,13,0.92) 0%, "
+                    "rgba(2,10,18,0.82) 30%, "
+                    "rgba(3,15,25,0.65) 55%, "
+                    "rgba(2,6,13,0.45) 100%)"
                 ),
             ),
+            # Ambient glow (matches the light beam in the image)
             rx.box(
                 position="absolute",
-                inset="0",
-                background="linear-gradient(90deg, rgba(2,6,13,0.96) 0%, rgba(2,6,13,0.78) 36%, rgba(2,6,13,0.20) 68%, rgba(2,6,13,0.06) 100%)",
-            ),
-            rx.box(
-                position="absolute",
-                top="50%",
-                right="5%",
-                width="34vw",
-                height="26vw",
-                min_width="260px",
-                min_height="180px",
-                max_width="620px",
-                max_height="420px",
+                top="40%",
+                right="0",
+                width="45vw",
+                height="50vh",
+                max_width="600px",
+                max_height="500px",
                 transform="translateY(-50%)",
                 border_radius="999px",
-                background="radial-gradient(circle, rgba(190,225,255,0.20) 0%, rgba(73,157,214,0.08) 38%, rgba(2,6,13,0) 72%)",
-                style={"filter": "blur(26px)"},
+                background="radial-gradient(circle, rgba(14,165,233,0.10) 0%, rgba(6,182,212,0.05) 40%, transparent 72%)",
+                style={"filter": "blur(60px)", "pointer_events": "none"},
             ),
+            # Card
             rx.center(
                 rx.box(
                     rx.vstack(
                         rx.text(
                             step_label,
-                            color="rgba(167,227,255,0.82)",
-                            font_size="0.72rem",
+                            color="rgba(56,189,248,0.8)",
+                            font_size="0.7rem",
                             font_weight="700",
-                            letter_spacing="0.22em",
+                            letter_spacing="0.25em",
                             text_transform="uppercase",
-                            font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+                            font_family="'Plus Jakarta Sans', sans-serif",
                         ),
                         rx.heading(
                             title,
-                            size="8",
+                            size="7",
                             color="white",
-                            line_height="1.05",
-                            font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-                            letter_spacing="-0.03em",
+                            line_height="1.1",
+                            font_family="'Plus Jakarta Sans', sans-serif",
+                            letter_spacing="-0.025em",
+                            font_weight="800",
                         ),
+                        step_dots(),
                         body,
                         spacing="5",
                         align_items="stretch",
                         width="100%",
                     ),
-                    width="min(92vw, 540px)",
-                    padding=rx.breakpoints(initial="1.35rem", sm="1.7rem", md="2rem"),
-                    border_radius="28px",
-                    background="linear-gradient(180deg, rgba(8,16,26,0.80) 0%, rgba(7,14,24,0.68) 100%)",
-                    border="1px solid rgba(185,225,255,0.14)",
+                    width="min(90vw, 480px)",
+                    padding=rx.breakpoints(initial="1.5rem", sm="2rem", md="2.5rem"),
+                    border_radius="24px",
+                    background="linear-gradient(165deg, rgba(8,20,34,0.88) 0%, rgba(6,15,28,0.82) 50%, rgba(4,12,22,0.78) 100%)",
+                    border="1px solid rgba(56,189,248,0.12)",
                     style={
-                        "backdrop_filter": "blur(18px)",
-                        "box_shadow": "0 28px 80px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.05)",
+                        "backdrop_filter": "blur(24px) saturate(1.3)",
+                        "-webkit-backdrop-filter": "blur(24px) saturate(1.3)",
+                        "box_shadow": (
+                            "0 32px 80px rgba(0,0,0,0.5), "
+                            "0 0 0 1px rgba(56,189,248,0.06), "
+                            "inset 0 1px 0 rgba(255,255,255,0.04)"
+                        ),
                     },
                 ),
                 width="100%",
                 height="100%",
-                padding="24px",
+                padding="20px",
             ),
             width="100vw",
             height="100vh",
@@ -7814,50 +7910,38 @@ def onboarding_page():
             overflow="hidden",
         )
 
+    def desc_text(text: str) -> rx.Component:
+        return rx.text(
+            text,
+            color="rgba(203,213,225,0.78)",
+            font_size="0.92rem",
+            line_height="1.65",
+            font_family="'Plus Jakarta Sans', sans-serif",
+        )
+
     return rx.box(
         rx.vstack(
+            # Step 0: Welcome
             rx.cond(
                 AppState.step == 0,
                 onboarding_shell(
                     "Shall we begin?",
                     rx.vstack(
-                        rx.text(
-                            "A focused workspace is a few quick answers away.",
-                            color="rgba(225,236,246,0.76)",
-                            font_size="0.98rem",
-                            line_height="1.65",
-                        ),
-                        rx.button(
-                            "Start",
-                            background="linear-gradient(135deg, #dbf4ff 0%, #8ce7ff 40%, #59d1f6 100%)",
-                            color="#03111a",
-                            on_click=AppState.next_step,
-                            size="3",
-                            width="100%",
-                            style={
-                                "animation": "pulse_glow 2s infinite",
-                                "cursor": "pointer",
-                                "font_weight": "700",
-                                "_hover": {"filter": "brightness(1.06)"},
-                            },
-                        ),
+                        desc_text("A focused workspace is a few quick answers away."),
+                        _onboarding_cta_button("Start", on_click=AppState.next_step, pulse=True),
                         spacing="4",
                         align_items="stretch",
                     ),
                     step_label="Welcome",
                 ),
             ),
+            # Step 1: Degree
             rx.cond(
                 AppState.step == 1,
                 onboarding_shell(
-                    "What’s your degree?",
+                    "What\'s your degree?",
                     rx.vstack(
-                        rx.text(
-                            "We’ll tailor the study flow to the program you’re actually following.",
-                            color="rgba(225,236,246,0.76)",
-                            font_size="0.95rem",
-                            line_height="1.6",
-                        ),
+                        desc_text("We\'ll tailor the study flow to the program you\'re actually following."),
                         rx.select(
                             AppState.options,
                             placeholder="Choose your degree",
@@ -7865,68 +7949,46 @@ def onboarding_page():
                             on_change=AppState.set_degree,
                             width="100%",
                             size="3",
+                            style={"border_radius": "14px"},
                         ),
-                        rx.button(
-                            "Continue",
-                            on_click=AppState.advance_from_degree,
-                            background="linear-gradient(135deg, #dbf4ff 0%, #8ce7ff 40%, #59d1f6 100%)",
-                            color="#03111a",
-                            width="100%",
-                            style={"cursor": "pointer", "font_weight": "700", "_hover": {"filter": "brightness(1.06)"}},
-                            size="3",
-                        ),
+                        _onboarding_cta_button("Continue", on_click=AppState.advance_from_degree),
                         onboarding_feedback(),
                         spacing="4",
                         align_items="stretch",
                     ),
-                    step_label="Step 1",
+                    step_label="Step 1 of 5",
                 ),
             ),
+            # Step 2: Name
             rx.cond(
                 AppState.step == 2,
                 onboarding_shell(
                     "What should Alex call you?",
                     rx.vstack(
-                        rx.text(
-                            "A name makes the workspace feel like yours from the first reply.",
-                            color="rgba(225,236,246,0.76)",
-                            font_size="0.95rem",
-                            line_height="1.6",
-                        ),
+                        desc_text("A name makes the workspace feel like yours from the first reply."),
                         rx.input(
                             placeholder="Enter your name",
                             value=AppState.name,
                             on_change=AppState.set_name,
                             width="100%",
                             size="3",
+                            style={"border_radius": "14px"},
                         ),
-                        rx.button(
-                            "Continue",
-                            on_click=AppState.advance_from_name,
-                            background="linear-gradient(135deg, #dbf4ff 0%, #8ce7ff 40%, #59d1f6 100%)",
-                            color="#03111a",
-                            width="100%",
-                            style={"cursor": "pointer", "font_weight": "700", "_hover": {"filter": "brightness(1.06)"}},
-                            size="3",
-                        ),
+                        _onboarding_cta_button("Continue", on_click=AppState.advance_from_name),
                         onboarding_feedback(),
                         spacing="4",
                         align_items="stretch",
                     ),
-                    step_label="Step 2",
+                    step_label="Step 2 of 5",
                 ),
             ),
+            # Step 3: Year
             rx.cond(
                 AppState.step == 3,
                 onboarding_shell(
                     "Which year are you in?",
                     rx.vstack(
-                        rx.text(
-                            "This keeps the guidance aligned with your current academic level.",
-                            color="rgba(225,236,246,0.76)",
-                            font_size="0.95rem",
-                            line_height="1.6",
-                        ),
+                        desc_text("This keeps the guidance aligned with your current academic level."),
                         subject_button("Year 1", on_click=AppState.choose_onboarding_year("Year 1")),
                         subject_button("Year 2", on_click=AppState.choose_onboarding_year("Year 2")),
                         subject_button("Year 3", on_click=AppState.choose_onboarding_year("Year 3")),
@@ -7935,9 +7997,10 @@ def onboarding_page():
                         spacing="3",
                         align_items="stretch",
                     ),
-                    step_label="Step 3",
+                    step_label="Step 3 of 5",
                 ),
             ),
+            # Step 4: Semester
             rx.cond(
                 AppState.step == 4,
                 onboarding_shell(
@@ -7945,65 +8008,60 @@ def onboarding_page():
                     rx.vstack(
                         rx.text(
                             AppState.selected_year,
-                            color="rgba(167,227,255,0.82)",
-                            font_size="0.85rem",
+                            color="rgba(56,189,248,0.8)",
+                            font_size="0.78rem",
                             text_transform="uppercase",
-                            letter_spacing="0.18em",
+                            letter_spacing="0.2em",
                             font_weight="700",
+                            font_family="'Plus Jakarta Sans', sans-serif",
                         ),
                         rx.foreach(
                             AppState.available_semesters,
                             lambda sem: subject_button(sem, on_click=AppState.choose_onboarding_semester(sem)),
                         ),
-                        rx.button(
-                            "Back",
-                            on_click=AppState.back_to_onboarding_year,
-                            variant="outline",
-                            size="3",
-                            width="100%",
-                            style={
-                                "border": "1px solid rgba(255,255,255,0.16)",
-                                "color": "rgba(235,243,250,0.9)",
-                                "background": "rgba(255,255,255,0.03)",
-                                "_hover": {"background": "rgba(255,255,255,0.06)"},
-                            },
-                        ),
+                        _onboarding_ghost_button("Back", on_click=AppState.back_to_onboarding_year),
                         onboarding_feedback(),
                         spacing="3",
                         align_items="stretch",
                     ),
-                    step_label="Step 4",
+                    step_label="Step 4 of 5",
                 ),
             ),
+            # Step 5: Confirmation
             rx.cond(
                 AppState.step == 5,
                 onboarding_shell(
-                    "Let’s crush this semester.",
+                    "Let\'s crush this semester.",
                     rx.vstack(
-                        rx.text(
-                            AppState.degree,
-                            color="white",
-                            font_size="1.02rem",
-                            font_weight="600",
+                        rx.box(
+                            rx.vstack(
+                                rx.text(
+                                    AppState.degree,
+                                    color="white",
+                                    font_size="1.02rem",
+                                    font_weight="700",
+                                    font_family="'Plus Jakarta Sans', sans-serif",
+                                ),
+                                rx.text(
+                                    AppState.selected_year + "  \u2022  " + AppState.selected_semester,
+                                    color="rgba(148,210,240,0.78)",
+                                    font_size="0.88rem",
+                                    font_family="'Plus Jakarta Sans', sans-serif",
+                                ),
+                                spacing="1",
+                                align_items="flex-start",
+                            ),
+                            background="rgba(56,189,248,0.06)",
+                            border="1px solid rgba(56,189,248,0.12)",
+                            border_radius="14px",
+                            padding="16px 20px",
+                            width="100%",
                         ),
-                        rx.text(
-                            AppState.selected_year + " • " + AppState.selected_semester,
-                            color="rgba(225,236,246,0.76)",
-                        ),
-                        rx.button(
+                        _onboarding_cta_button(
                             "Begin",
                             on_click=AppState.start_app,
-                            background="linear-gradient(135deg, #dbf4ff 0%, #8ce7ff 40%, #59d1f6 100%)",
-                            color="#03111a",
-                            size="3",
-                            width="100%",
-                            style={
-                                "animation": "pulse_glow 2s infinite",
-                                "cursor": "pointer",
-                                "font_weight": "700",
-                                "_hover": {"filter": "brightness(1.06)"},
-                            },
                             is_disabled=(AppState.selected_year == "") | (AppState.selected_semester == ""),
+                            pulse=True,
                         ),
                         onboarding_feedback(),
                         spacing="4",
@@ -8016,6 +8074,7 @@ def onboarding_page():
         ),
         height="100vh",
     )
+
 
 
 # ──────────────────────────────────────────────────────────────
@@ -10332,9 +10391,9 @@ app = rx.App(
     ],
     style={
         "@keyframes pulse_glow": {
-            "0%": {"box-shadow": "0 0 0px rgba(52,211,153,0)"},
-            "50%": {"box-shadow": "0 0 20px rgba(52,211,153,0.5)", "opacity": "0.8"},
-            "100%": {"box-shadow": "0 0 0px rgba(52,211,153,0)"},
+            "0%": {"box-shadow": "0 0 0px rgba(14,165,233,0)"},
+            "50%": {"box-shadow": "0 0 24px rgba(14,165,233,0.45)", "opacity": "0.85"},
+            "100%": {"box-shadow": "0 0 0px rgba(14,165,233,0)"},
         }
     },
 )
