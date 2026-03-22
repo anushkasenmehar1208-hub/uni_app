@@ -6976,30 +6976,9 @@ def google_callback_bridge_page():
 @rx.page(
     route="/auth/google/complete",
     image=FAVICON_32,
+    on_load=AppState.handle_google_oauth_callback,
 )
 def google_oauth_complete_page():
-    google_complete_bridge_js = f"""
-    (function() {{
-      try {{
-        var u = new URL(window.location.href);
-        var code = u.searchParams.get("code");
-        var state = u.searchParams.get("state");
-        if (!code || !state) {{
-          window.location.replace("/login?oauth_error=1");
-          return;
-        }}
-        var apiBase = {json.dumps(API_BASE_URL.rstrip("/"))};
-        var callbackBase = apiBase || window.location.origin || "";
-        var target = callbackBase.replace(/\\/$/, "") + "/auth/google/callback?" + new URLSearchParams({{
-          code: code,
-          state: state
-        }}).toString();
-        window.location.replace(target);
-      }} catch (e) {{
-        window.location.replace("/login?oauth_error=1");
-      }}
-    }})();
-    """
     return rx.center(
         rx.vstack(
             rx.spinner(size="2", color="white"),
@@ -7007,7 +6986,6 @@ def google_oauth_complete_page():
             spacing="3",
             align="center",
         ),
-        rx.script(google_complete_bridge_js),
         height="100vh",
         background="#050505",
     )
