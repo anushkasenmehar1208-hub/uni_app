@@ -1660,9 +1660,14 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     def init_auth_forms(self):
         self._ensure_auth_csrf()
-        self.login_error = ""
         self.register_error = ""
         self.reset_error = ""
+        oauth_err = str(self.router.page.params.get("oauth_error", "") or "").strip()
+        if oauth_err:
+            self.login_error = "Google sign-in failed. Please try again."
+            print(f"[AUTH] OAuth error on login page: oauth_error={oauth_err}")
+        else:
+            self.login_error = ""
 
     @rx.event
     def auth_redir(self):
@@ -1921,13 +1926,12 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
         new_token = self.auth_token
+        print(f"[Google OAuth Frontend] login OK uid={resolved_uid}, redirecting via auth_token bootstrap")
 
-        # Persist token to localStorage for future full-page loads
-        yield rx.call_script(
-            f"""try {{ localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)}); }} catch(e) {{}}"""
-        )
-        # Client-side redirect preserves Reflex state (including auth_token set by _login)
-        yield rx.redirect(APP_DASHBOARD_ROUTE)
+        # Navigate to login page with token in URL — AUTH_TOKEN_BOOTSTRAP_JS
+        # will store it in localStorage (sync, no race) and redirect to /app
+        login_url = f"{auth_routes.LOGIN_ROUTE}?auth_token={new_token}"
+        yield rx.call_script(f"window.location.replace({json.dumps(login_url)});")
     
     @rx.event
     async def handle_google_complete(self):
@@ -1935,11 +1939,24 @@ class AppState(reflex_local_auth.LocalAuthState):
             yield AppState.handle_google_complete()  # type: ignore
             return
 
-        token = self.router.page.params.get("token", "")
-        print(f"[Google Complete] token present: {bool(token)}")
+        token = str(self.router.page.params.get("token", "") or "").strip()
+        if not token:
+            try:
+                raw = str(getattr(self.router.page, "raw_path", "") or "")
+                if "token=" in raw:
+                    from urllib.parse import parse_qs, urlparse
+                    parsed = urlparse(raw)
+                    token = str(parse_qs(parsed.query).get("token", [""])[0] or "").strip()
+                    if token:
+                        print("[Google Complete] token recovered from raw_path fallback")
+            except Exception as ex:
+                print(f"[Google Complete] raw_path fallback error: {ex}")
+
+        print(f"[Google Complete] token present: {bool(token)}, len={len(token)}")
 
         if not token:
-            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            print("[Google Complete] NO TOKEN found")
+            yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=missing_token")
             return
 
         resolved_uid: int | None = None
@@ -1955,15 +1972,15 @@ class AppState(reflex_local_auth.LocalAuthState):
                     resolved_uid = int(auth_sess.user_id)
         except Exception as e:
             print(f"[Google Complete] DB error: {e}")
-            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=db_error")
             return
 
         if resolved_uid is None:
-            print("[Google Complete] session not found in DB")
-            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            print(f"[Google Complete] session not found in DB (token len={len(token)})")
+            yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=session_not_found")
             return
 
-        print(f"[Google Complete] found session uid={resolved_uid}, logging in...")
+        print(f"[Google Complete] found uid={resolved_uid}, logging in...")
         self._login(resolved_uid)
         self._cached_uid = resolved_uid
         self.app_auth_token = self.auth_token
@@ -1983,14 +2000,12 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"[Google Complete] token cleanup error: {e}")
 
-        print("[Google Complete] login done, navigating home...")
+        print(f"[Google Complete] login OK, redirecting via auth_token bootstrap")
 
-        # Persist token to localStorage for future full-page loads
-        yield rx.call_script(
-            f"""try {{ localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)}); }} catch(e) {{}}"""
-        )
-        # Client-side redirect preserves Reflex state (including auth_token set by _login)
-        yield rx.redirect(APP_DASHBOARD_ROUTE)
+        # Navigate to login page with token in URL — AUTH_TOKEN_BOOTSTRAP_JS
+        # will store it in localStorage (sync, no race) and redirect to /app
+        login_url = f"{auth_routes.LOGIN_ROUTE}?auth_token={new_token}"
+        yield rx.call_script(f"window.location.replace({json.dumps(login_url)});")
 
     @rx.event
     def handle_registration(self, form_data: dict[str, Any]):
