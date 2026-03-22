@@ -1815,8 +1815,11 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._ensure_auth_csrf()
         if not GOOGLE_OAUTH_ENABLED:
             return rx.redirect(auth_routes.LOGIN_ROUTE)
-        origin = self._router_origin().rstrip("/")
-        callback_url = f"{origin}/auth/google/callback"
+        if GOOGLE_REDIRECT_URI:
+            callback_url = GOOGLE_REDIRECT_URI
+        else:
+            origin = self._router_origin().rstrip("/")
+            callback_url = f"{origin}/auth/google/callback"
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": callback_url,
@@ -1839,7 +1842,10 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
 
         origin = _normalized_origin(_decode_urlsafe_b64_text(origin_b64)) or self._router_origin()
-        redirect_uri = f"{origin.rstrip('/')}/auth/google/callback"
+        if GOOGLE_REDIRECT_URI:
+            redirect_uri = GOOGLE_REDIRECT_URI
+        else:
+            redirect_uri = f"{origin.rstrip('/')}/auth/google/callback"
 
         try:
             async with httpx.AsyncClient(timeout=20.0) as client_http:
