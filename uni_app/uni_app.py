@@ -5080,7 +5080,7 @@ CODE_BLOCK_ENHANCER_JS = """
   }
 
   function enhancePre(pre){
-    if (!pre || pre.dataset.enhancedCodeBlock === '1') return;
+    if (!pre) return;
     var code = pre.querySelector('code');
     if (!code) return;
 
@@ -5091,53 +5091,28 @@ CODE_BLOCK_ENHANCER_JS = """
     var copyLabel = label === 'Output' ? 'Copy Output' : 'Copy Code';
     var rawText = code.innerText || code.textContent || '';
 
-    var card = document.createElement('div');
-    card.className = 'alex-code-card alex-code-card-' + label.toLowerCase();
-
-    var header = document.createElement('div');
-    header.className = 'alex-code-card-header';
-
-    var title = document.createElement('div');
-    title.className = 'alex-code-card-title';
-    title.textContent = label;
-
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'alex-code-copy-btn';
-    button.textContent = copyLabel;
-    button.addEventListener('click', function(){
-      copyText(rawText);
-    });
-
-    header.appendChild(title);
-    header.appendChild(button);
-    card.appendChild(header);
-
-    pre.parentNode.insertBefore(card, pre);
-    card.appendChild(pre);
     pre.dataset.enhancedCodeBlock = '1';
-  }
+    pre.dataset.blockKind = label.toLowerCase();
+    pre.dataset.blockLabel = label;
 
-  function removeStandaloneOutputLabels(root){
-    var paragraphs = root.querySelectorAll('p');
-    paragraphs.forEach(function(p){
-      if (p.dataset.outputLabelPruned === '1') return;
-      var text = (p.textContent || '').trim().toLowerCase();
-      var next = p.nextElementSibling;
-      if ((text === 'output:' || text === 'output') && next && next.tagName === 'DIV') {
-        var nextTitle = next.querySelector('.alex-code-card-title');
-        if (nextTitle && (nextTitle.textContent || '').trim().toLowerCase() === 'output') {
-          p.dataset.outputLabelPruned = '1';
-          p.remove();
-        }
-      }
-    });
+    var button = pre.querySelector('.alex-code-copy-btn');
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'alex-code-copy-btn';
+      pre.appendChild(button);
+    }
+    button.textContent = copyLabel;
+    button.onclick = function(event){
+      event.preventDefault();
+      event.stopPropagation();
+      copyText(rawText);
+    };
   }
 
   function enhanceRoot(root){
     if (!root) return;
     root.querySelectorAll('pre').forEach(enhancePre);
-    removeStandaloneOutputLabels(root);
   }
 
   function attach(){
@@ -6516,24 +6491,20 @@ _CLAUDE_MD_CSS = """
   white-space: pre;
 }
 
-.claude-md .alex-code-card {
+.claude-md pre[data-enhanced-code-block="1"] {
+  position: relative;
   background: rgba(11, 15, 22, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  overflow: hidden;
+  padding: 46px 18px 16px 18px;
   margin: 0.95em 0;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
 }
-.claude-md .alex-code-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-.claude-md .alex-code-card-title {
+.claude-md pre[data-enhanced-code-block="1"]::before {
+  content: attr(data-block-label);
+  position: absolute;
+  top: 12px;
+  left: 14px;
   font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 0.76rem;
   font-weight: 600;
@@ -6541,8 +6512,17 @@ _CLAUDE_MD_CSS = """
   text-transform: uppercase;
   color: rgba(228, 232, 238, 0.7);
 }
-.claude-md .alex-code-copy-btn {
+.claude-md pre[data-block-kind="output"] {
+  background: rgba(15, 18, 24, 0.95);
+}
+.claude-md pre[data-enhanced-code-block="1"] code {
+  display: block;
+}
+.claude-md pre[data-enhanced-code-block="1"] .alex-code-copy-btn {
   appearance: none;
+  position: absolute;
+  top: 10px;
+  right: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
   color: rgba(240, 244, 248, 0.88);
@@ -6553,23 +6533,14 @@ _CLAUDE_MD_CSS = """
   line-height: 1;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  z-index: 1;
 }
-.claude-md .alex-code-copy-btn:hover {
+.claude-md pre[data-enhanced-code-block="1"] .alex-code-copy-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.18);
 }
-.claude-md .alex-code-copy-btn:active {
+.claude-md pre[data-enhanced-code-block="1"] .alex-code-copy-btn:active {
   transform: translateY(1px);
-}
-.claude-md .alex-code-card pre {
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.claude-md .alex-code-card-output {
-  background: rgba(15, 18, 24, 0.95);
 }
 
 /* Links */
