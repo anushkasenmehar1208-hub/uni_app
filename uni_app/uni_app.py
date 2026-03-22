@@ -3309,8 +3309,8 @@ Critical operating rules:
 3. Never describe yourself as an AI, chatbot, large language model, or mention Groq, Meta, or Llama.
 4. If the student asks who you are, your answer must stay aligned with: "{self._alex_identity_reply()}"
 5. Use {student_name} naturally throughout the conversation so the support feels personal and consistent.
-6. When you share code, always wrap it in fenced markdown code blocks with the correct language. After a code example, always include the expected output in a separate fenced code block labeled ```output so the student can verify their understanding.
-7. For diagrams (flowcharts, trees, timelines, architecture), use ```mermaid fenced code blocks with valid Mermaid syntax — these will be rendered visually for the student.
+6. When you share code, always wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate fenced code block labeled ```output so the student can verify their understanding.
+7. For diagrams (flowcharts, trees, timelines, architecture), use ```mermaid fenced code blocks with valid Mermaid syntax.
 8. For complex technical questions, give a numbered step-by-step breakdown before the final answer or code.
 9. For career advice or analogies, prefer grounded Sri Lankan Software Engineering context when helpful, such as WSO2, Sysco LABS, IFS, internships, or local graduate expectations.
 10. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
@@ -4791,7 +4791,7 @@ Your response style rules:
 16. If the student makes a mistake, correct gently with wording like "Almost. Try thinking of it this way..."
 17. Use {student_name} naturally so the tutoring feels personal.
 18. Acknowledge progress occasionally by connecting the explanation to Day {day}/110.
-19. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, always include the expected output in a separate fenced code block labeled ```output so the student can verify their understanding.
+19. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
 20. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
 21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
 22. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally."""
@@ -4916,7 +4916,7 @@ Behavior rules:
 13. Use bullets first when they improve clarity. Avoid walls of text.
 14. Use {student_name} naturally so the support feels personal.
 15. Adapt to the adaptive profile for brevity, formatting, pace, and tone.
-16. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, always include the expected output in a separate fenced code block labeled ```output so the student can verify their understanding.
+16. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
 17. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
 18. If the question is technically complex, give a short numbered breakdown before the final answer.
 19. Stay honest about what the stored memory does and does not show."""
@@ -6392,99 +6392,117 @@ _CLAUDE_MD_CSS = """
   white-space: nowrap;
 }
 
-/* Code blocks — enhanced with header + copy */
+/* Code blocks — enhanced with language header + copy button */
 .claude-md pre {
+  position: relative;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 0 0 10px 10px;
+  border-radius: 10px;
   padding: 16px 18px;
-  margin: 0;
+  margin: 0.85em 0;
   overflow-x: auto;
   scrollbar-width: thin;
 }
-/* When pre has no wrapper yet (fallback) */
-.claude-md > pre {
-  border-radius: 10px;
-  margin: 0.85em 0;
+/* When pre has a language label, add top padding for the header */
+.claude-md pre[data-lang] {
+  padding-top: 40px;
 }
-.code-block-wrapper {
-  margin: 0.85em 0;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-.code-block-wrapper > pre {
-  border: none;
-  border-radius: 0;
-}
-.code-block-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* Language label — CSS-only via data attribute */
+.claude-md pre[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px 10px 0 0;
   font-family: 'Söhne Mono', 'SF Mono', 'Menlo', monospace;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.50);
-  user-select: none;
-}
-.code-lang-label {
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 11.5px;
   font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.40);
+  pointer-events: none;
 }
+/* Copy button — appended by JS, never moves DOM nodes */
 .code-copy-btn {
+  position: absolute;
+  top: 4px;
+  right: 8px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: none;
-  border: none;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 6px;
-  font-size: 12px;
-  font-family: inherit;
+  font-size: 11.5px;
+  font-family: 'Söhne Mono', 'SF Mono', 'Menlo', monospace;
   transition: background 0.15s, color 0.15s;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
+.claude-md pre:hover .code-copy-btn { opacity: 1; }
 .code-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.75);
 }
 .code-copy-btn.copied {
-  color: rgba(120, 200, 160, 0.85);
+  color: rgba(120, 200, 160, 0.9);
+  opacity: 1;
 }
-/* Output / preview panel */
-.code-output-wrapper {
-  margin: 0.5em 0 0.85em 0;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-.code-output-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 14px;
-  background: rgba(52, 211, 153, 0.08);
-  font-family: 'Söhne Mono', 'SF Mono', 'Menlo', monospace;
-  font-size: 12px;
-  color: rgba(120, 200, 160, 0.7);
-  user-select: none;
-}
-.code-output-body {
-  padding: 16px 18px;
+/* Output blocks — green accent */
+.claude-md pre[data-lang="output"] {
   background: rgba(0, 0, 0, 0.2);
-  overflow-x: auto;
+  border-color: rgba(52, 211, 153, 0.1);
 }
-.code-output-body svg {
-  max-width: 100%;
-  height: auto;
+.claude-md pre[data-lang="output"]::before {
+  color: rgba(120, 200, 160, 0.6);
+  background: rgba(52, 211, 153, 0.06);
+  border-bottom-color: rgba(52, 211, 153, 0.08);
 }
-/* Mermaid overrides for dark theme */
-.code-output-body .mermaid-rendered {
-  display: flex;
-  justify-content: center;
+/* Long user messages — collapsible */
+.user-msg-long {
+  max-height: 160px;
+  overflow: hidden;
+  position: relative;
+  transition: max-height 0.3s ease;
+}
+.user-msg-long.expanded {
+  max-height: none;
+}
+.user-msg-long:not(.expanded)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.065));
+  pointer-events: none;
+  border-radius: 0 0 20px 20px;
+}
+.user-msg-expand-btn {
+  display: block;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 4px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: 'Söhne', sans-serif;
+  margin-top: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.user-msg-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
 }
 .claude-md pre code {
   background: none;
@@ -6536,173 +6554,67 @@ _CLAUDE_MD_CSS = """
 """
 
 
-_CODE_BLOCK_ENHANCE_JS = """
+_CODE_ENHANCE_JS = """
 (function() {
-  var COPY_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-  var CHECK_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-  var RENDERABLE = { mermaid: true };
-  var mermaidReady = false;
-  var mermaidQueue = [];
-
-  function loadMermaid() {
-    if (window.mermaid) { mermaidReady = true; return; }
-    var s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js';
-    s.onload = function() {
-      window.mermaid.initialize({
-        startOnLoad: false,
-        theme: 'dark',
-        themeVariables: {
-          darkMode: true,
-          background: 'transparent',
-          primaryColor: '#1a3a4a',
-          primaryTextColor: '#e0e8f0',
-          primaryBorderColor: '#2a5a6a',
-          lineColor: '#4a8a9a',
-          secondaryColor: '#1a2a3a',
-          tertiaryColor: '#0a1a2a',
-          fontFamily: "'Söhne', sans-serif",
-          fontSize: '14px'
-        }
-      });
-      mermaidReady = true;
-      mermaidQueue.forEach(function(fn) { fn(); });
-      mermaidQueue = [];
-    };
-    document.head.appendChild(s);
-  }
-
-  function copyText(text, btn) {
-    navigator.clipboard.writeText(text).then(function() {
-      btn.innerHTML = CHECK_ICON + ' Copied!';
-      btn.classList.add('copied');
-      setTimeout(function() {
-        btn.innerHTML = COPY_ICON + ' Copy';
-        btn.classList.remove('copied');
-      }, 1800);
-    }).catch(function() {});
-  }
-
-  function makeHeader(lang, codeText) {
-    var header = document.createElement('div');
-    header.className = 'code-block-header';
-    var label = document.createElement('span');
-    label.className = 'code-lang-label';
-    label.textContent = lang || 'code';
-    var btn = document.createElement('button');
-    btn.className = 'code-copy-btn';
-    btn.innerHTML = COPY_ICON + ' Copy';
-    btn.onclick = function() { copyText(codeText, btn); };
-    header.appendChild(label);
-    header.appendChild(btn);
-    return header;
-  }
-
-  function makeOutputPanel(html, lang) {
-    var wrapper = document.createElement('div');
-    wrapper.className = 'code-output-wrapper';
-    var header = document.createElement('div');
-    header.className = 'code-output-header';
-    var label = document.createElement('span');
-    label.className = 'code-lang-label';
-    label.textContent = 'output';
-    var btn = document.createElement('button');
-    btn.className = 'code-copy-btn';
-    btn.innerHTML = COPY_ICON + ' Copy';
-    header.appendChild(label);
-    header.appendChild(btn);
-    var body = document.createElement('div');
-    body.className = 'code-output-body';
-    body.innerHTML = html;
-    btn.onclick = function() {
-      var text = body.textContent || body.innerText || '';
-      copyText(text.trim(), btn);
-    };
-    wrapper.appendChild(header);
-    wrapper.appendChild(body);
-    return wrapper;
-  }
-
-  function renderMermaid(code, container) {
-    var id = 'mmd-' + Math.random().toString(36).substr(2, 9);
-    var div = document.createElement('div');
-    div.className = 'mermaid-rendered';
-    container.querySelector('.code-output-body').appendChild(div);
-    try {
-      window.mermaid.render(id, code).then(function(result) {
-        div.innerHTML = result.svg;
-      }).catch(function(err) {
-        div.textContent = 'Diagram error: ' + (err.message || err);
-        div.style.color = 'rgba(220,140,130,0.85)';
-      });
-    } catch(e) {
-      div.textContent = 'Diagram error: ' + (e.message || e);
-      div.style.color = 'rgba(220,140,130,0.85)';
-    }
-  }
+  var COPY_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  var CHECK_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
   function enhance() {
-    var blocks = document.querySelectorAll('.claude-md pre');
-    blocks.forEach(function(pre) {
+    /* ── Code blocks: set data-lang + append copy button ── */
+    document.querySelectorAll('.claude-md pre').forEach(function(pre) {
       if (pre.dataset.enhanced) return;
       pre.dataset.enhanced = '1';
       var code = pre.querySelector('code');
       if (!code) return;
-
       var lang = '';
-      (code.className || '').split(/\\s+/).forEach(function(cls) {
-        if (cls.indexOf('language-') === 0) lang = cls.substring(9);
+      (code.className || '').split(/\\s+/).forEach(function(c) {
+        if (c.indexOf('language-') === 0) lang = c.substring(9);
       });
-
-      var codeText = code.textContent || '';
-
-      // Style 'output' blocks as output panels instead of code blocks
-      if (lang === 'output') {
-        var output = makeOutputPanel('', 'output');
-        var body = output.querySelector('.code-output-body');
-        var outPre = document.createElement('pre');
-        outPre.style.cssText = 'margin:0;background:none;border:none;padding:0;';
-        var outCode = document.createElement('code');
-        outCode.style.cssText = 'font-family:inherit;font-size:13.5px;line-height:1.55;color:rgba(210,220,235,0.88);white-space:pre;';
-        outCode.textContent = codeText;
-        outPre.appendChild(outCode);
-        body.appendChild(outPre);
-        // Update the copy button to copy this output
-        var copyBtn = output.querySelector('.code-copy-btn');
-        if (copyBtn) {
-          copyBtn.onclick = function() { copyText(codeText, copyBtn); };
-        }
-        pre.parentNode.insertBefore(output, pre);
-        pre.style.display = 'none';
-        return;
-      }
-
-      var wrapper = document.createElement('div');
-      wrapper.className = 'code-block-wrapper';
-      pre.parentNode.insertBefore(wrapper, pre);
-      wrapper.appendChild(makeHeader(lang, codeText));
-      wrapper.appendChild(pre);
-
-      if (RENDERABLE[lang] && codeText.trim()) {
-        var output = makeOutputPanel('', lang);
-        wrapper.parentNode.insertBefore(output, wrapper.nextSibling);
-        if (lang === 'mermaid') {
-          if (mermaidReady) {
-            renderMermaid(codeText, output);
-          } else {
-            loadMermaid();
-            mermaidQueue.push(function() { renderMermaid(codeText, output); });
-          }
-        }
+      if (lang) pre.setAttribute('data-lang', lang);
+      var btn = document.createElement('button');
+      btn.className = 'code-copy-btn';
+      btn.innerHTML = COPY_SVG + ' Copy';
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        var txt = code.textContent || '';
+        navigator.clipboard.writeText(txt).then(function() {
+          btn.innerHTML = CHECK_SVG + ' Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = COPY_SVG + ' Copy';
+            btn.classList.remove('copied');
+          }, 1800);
+        }).catch(function() {});
+      };
+      pre.appendChild(btn);
+    });
+    /* ── Long user messages: collapse 40+ lines ── */
+    document.querySelectorAll('.user-msg-content').forEach(function(el) {
+      if (el.dataset.longChecked) return;
+      el.dataset.longChecked = '1';
+      var text = el.textContent || '';
+      var lines = text.split('\\n').length;
+      if (lines < 40) return;
+      el.classList.add('user-msg-long');
+      var btn = document.createElement('button');
+      btn.className = 'user-msg-expand-btn';
+      btn.textContent = 'Show ' + lines + ' lines';
+      btn.onclick = function() {
+        var expanded = el.classList.toggle('expanded');
+        btn.textContent = expanded ? 'Show less' : 'Show ' + lines + ' lines';
+      };
+      if (el.nextSibling) {
+        el.parentNode.insertBefore(btn, el.nextSibling);
+      } else {
+        el.parentNode.appendChild(btn);
       }
     });
   }
-
   enhance();
   var _t = 0;
   var _iv = setInterval(function() { enhance(); if (++_t > 120) clearInterval(_iv); }, 800);
   try {
-    new MutationObserver(function() { enhance(); }).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(function() { setTimeout(enhance, 50); }).observe(document.body, {childList:true, subtree:true});
   } catch(e) {}
 })();
 """
@@ -6723,8 +6635,7 @@ def active_chat_panel() -> rx.Component:
         ),
         # ── Injected Claude-like markdown CSS ──
         rx.html(_CLAUDE_MD_CSS),
-        # ── Code block enhancement (copy buttons, Mermaid rendering) ──
-        rx.script(_CODE_BLOCK_ENHANCE_JS),
+        rx.script(_CODE_ENHANCE_JS),
         # Scrollable messages
         rx.box(
             rx.vstack(
@@ -6882,6 +6793,8 @@ def active_chat_panel() -> rx.Component:
                                                     font_size="0.9rem",
                                                     line_height="1.55",
                                                     font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                                    white_space="pre-wrap",
+                                                    class_name="user-msg-content",
                                                 ),
                                             ),
                                             background="rgba(255,255,255,0.065)",
