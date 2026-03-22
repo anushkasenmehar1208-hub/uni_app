@@ -1660,14 +1660,9 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     def init_auth_forms(self):
         self._ensure_auth_csrf()
+        self.login_error = ""
         self.register_error = ""
         self.reset_error = ""
-        oauth_err = str(self.router.page.params.get("oauth_error", "") or "").strip()
-        if oauth_err:
-            self.login_error = "Google sign-in failed. Please try again."
-            print(f"[AUTH] OAuth error on login page: oauth_error={oauth_err}")
-        else:
-            self.login_error = ""
 
     @rx.event
     def auth_redir(self):
@@ -1825,7 +1820,6 @@ class AppState(reflex_local_auth.LocalAuthState):
         else:
             origin = self._router_origin().rstrip("/")
             callback_url = f"{origin}/auth/google/callback"
-        print(f"[Google Start] redirect_uri={callback_url}")
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": callback_url,
@@ -3315,10 +3309,11 @@ Critical operating rules:
 3. Never describe yourself as an AI, chatbot, large language model, or mention Groq, Meta, or Llama.
 4. If the student asks who you are, your answer must stay aligned with: "{self._alex_identity_reply()}"
 5. Use {student_name} naturally throughout the conversation so the support feels personal and consistent.
-6. When you share code, always include two separate fenced blocks in this order: first the code block with the correct language, then an `output` fenced block showing the expected result. If the exact result depends on runtime input, state that clearly and show a realistic example output.
-7. For complex technical questions, give a numbered step-by-step breakdown before the final answer or code.
-8. For career advice or analogies, prefer grounded Sri Lankan Software Engineering context when helpful, such as WSO2, Sysco LABS, IFS, internships, or local graduate expectations.
-9. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
+6. When you share code, always wrap it in fenced markdown code blocks with the correct language. After a code example, always include the expected output in a separate fenced code block labeled ```output so the student can verify their understanding.
+7. For diagrams (flowcharts, trees, timelines, architecture), use ```mermaid fenced code blocks with valid Mermaid syntax — these will be rendered visually for the student.
+8. For complex technical questions, give a numbered step-by-step breakdown before the final answer or code.
+9. For career advice or analogies, prefer grounded Sri Lankan Software Engineering context when helpful, such as WSO2, Sysco LABS, IFS, internships, or local graduate expectations.
+10. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
 """
 
     def _reset_plan_only(self, uid: int, scope: str) -> None:
@@ -4796,9 +4791,10 @@ Your response style rules:
 16. If the student makes a mistake, correct gently with wording like "Almost. Try thinking of it this way..."
 17. Use {student_name} naturally so the tutoring feels personal.
 18. Acknowledge progress occasionally by connecting the explanation to Day {day}/110.
-19. If code is needed, always include a fenced code block with the correct language followed immediately by a separate fenced `output` block showing the expected output.
-20. If the question is technically complex, give a numbered breakdown before the final explanation or code.
-21. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally."""
+19. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, always include the expected output in a separate fenced code block labeled ```output so the student can verify their understanding.
+20. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
+21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
+22. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
@@ -4920,9 +4916,10 @@ Behavior rules:
 13. Use bullets first when they improve clarity. Avoid walls of text.
 14. Use {student_name} naturally so the support feels personal.
 15. Adapt to the adaptive profile for brevity, formatting, pace, and tone.
-16. If code is needed, always include a fenced code block with the correct language followed immediately by a separate fenced `output` block showing the expected output.
-17. If the question is technically complex, give a short numbered breakdown before the final answer.
-18. Stay honest about what the stored memory does and does not show."""
+16. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, always include the expected output in a separate fenced code block labeled ```output so the student can verify their understanding.
+17. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
+18. If the question is technically complex, give a short numbered breakdown before the final answer.
+19. Stay honest about what the stored memory does and does not show."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
@@ -5055,81 +5052,6 @@ SCROLL_TO_BOTTOM_JS = """
     if (tries < 180) requestAnimationFrame(tick);
   }
   tick();
-})();
-"""
-
-CODE_BLOCK_ENHANCER_JS = """
-(function(){
-  function copyText(text){
-    if (!navigator.clipboard || !navigator.clipboard.writeText) return;
-    navigator.clipboard.writeText(text).then(function(){
-      var t = document.createElement('div');
-      t.textContent = 'Copied';
-      t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.12);color:rgba(240,244,248,0.9);padding:6px 16px;border-radius:8px;font-size:13px;font-family:Söhne,sans-serif;z-index:9999;pointer-events:none;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);transition:opacity 0.3s';
-      document.body.appendChild(t);
-      setTimeout(function(){ t.style.opacity='0'; }, 1200);
-      setTimeout(function(){ t.remove(); }, 1600);
-    }).catch(function(){});
-  }
-
-  function normalizeLabel(lang, fallback){
-    var value = (lang || '').trim().toLowerCase();
-    if (!value) return fallback;
-    if (value === 'output' || value === 'result' || value === 'console' || value === 'stdout') return 'Output';
-    return 'Code';
-  }
-
-  function enhancePre(pre){
-    if (!pre) return;
-    var code = pre.querySelector('code');
-    if (!code) return;
-
-    var classes = Array.from(code.classList || []);
-    var langClass = classes.find(function(name){ return name.indexOf('language-') === 0; }) || '';
-    var lang = langClass ? langClass.replace('language-', '') : '';
-    var label = normalizeLabel(lang, 'Code');
-    var copyLabel = label === 'Output' ? 'Copy Output' : 'Copy Code';
-    var rawText = code.innerText || code.textContent || '';
-
-    pre.dataset.enhancedCodeBlock = '1';
-    pre.dataset.blockKind = label.toLowerCase();
-    pre.dataset.blockLabel = label;
-
-    var button = pre.querySelector('.alex-code-copy-btn');
-    if (!button) {
-      button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'alex-code-copy-btn';
-      pre.appendChild(button);
-    }
-    button.textContent = copyLabel;
-    button.onclick = function(event){
-      event.preventDefault();
-      event.stopPropagation();
-      copyText(rawText);
-    };
-  }
-
-  function enhanceRoot(root){
-    if (!root) return;
-    root.querySelectorAll('pre').forEach(enhancePre);
-  }
-
-  function attach(){
-    document.querySelectorAll('.claude-md').forEach(enhanceRoot);
-  }
-
-  attach();
-  var ticks = 0;
-  var iv = setInterval(function(){
-    attach();
-    ticks += 1;
-    if (ticks > 60) clearInterval(iv);
-  }, 400);
-
-  try {
-    new MutationObserver(attach).observe(document.body, { childList: true, subtree: true, characterData: true });
-  } catch (e) {}
 })();
 """
 ENTER_TO_SEND_JS = """
@@ -6470,15 +6392,99 @@ _CLAUDE_MD_CSS = """
   white-space: nowrap;
 }
 
-/* Code blocks */
+/* Code blocks — enhanced with header + copy */
 .claude-md pre {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  border-radius: 0 0 10px 10px;
   padding: 16px 18px;
-  margin: 0.85em 0;
+  margin: 0;
   overflow-x: auto;
   scrollbar-width: thin;
+}
+/* When pre has no wrapper yet (fallback) */
+.claude-md > pre {
+  border-radius: 10px;
+  margin: 0.85em 0;
+}
+.code-block-wrapper {
+  margin: 0.85em 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.code-block-wrapper > pre {
+  border: none;
+  border-radius: 0;
+}
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  font-family: 'Söhne Mono', 'SF Mono', 'Menlo', monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.50);
+  user-select: none;
+}
+.code-lang-label {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.code-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.75);
+}
+.code-copy-btn.copied {
+  color: rgba(120, 200, 160, 0.85);
+}
+/* Output / preview panel */
+.code-output-wrapper {
+  margin: 0.5em 0 0.85em 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.code-output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: rgba(52, 211, 153, 0.08);
+  font-family: 'Söhne Mono', 'SF Mono', 'Menlo', monospace;
+  font-size: 12px;
+  color: rgba(120, 200, 160, 0.7);
+  user-select: none;
+}
+.code-output-body {
+  padding: 16px 18px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow-x: auto;
+}
+.code-output-body svg {
+  max-width: 100%;
+  height: auto;
+}
+/* Mermaid overrides for dark theme */
+.code-output-body .mermaid-rendered {
+  display: flex;
+  justify-content: center;
 }
 .claude-md pre code {
   background: none;
@@ -6489,58 +6495,6 @@ _CLAUDE_MD_CSS = """
   font-size: 13.5px;
   line-height: 1.55;
   white-space: pre;
-}
-
-.claude-md pre[data-enhanced-code-block="1"] {
-  position: relative;
-  background: rgba(11, 15, 22, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 46px 18px 16px 18px;
-  margin: 0.95em 0;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
-}
-.claude-md pre[data-enhanced-code-block="1"]::before {
-  content: attr(data-block-label);
-  position: absolute;
-  top: 12px;
-  left: 14px;
-  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(228, 232, 238, 0.7);
-}
-.claude-md pre[data-block-kind="output"] {
-  background: rgba(15, 18, 24, 0.95);
-}
-.claude-md pre[data-enhanced-code-block="1"] code {
-  display: block;
-}
-.claude-md pre[data-enhanced-code-block="1"] .alex-code-copy-btn {
-  appearance: none;
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(240, 244, 248, 0.88);
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 0.74rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
-  z-index: 1;
-}
-.claude-md pre[data-enhanced-code-block="1"] .alex-code-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-.claude-md pre[data-enhanced-code-block="1"] .alex-code-copy-btn:active {
-  transform: translateY(1px);
 }
 
 /* Links */
@@ -6582,6 +6536,178 @@ _CLAUDE_MD_CSS = """
 """
 
 
+_CODE_BLOCK_ENHANCE_JS = """
+(function() {
+  var COPY_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  var CHECK_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  var RENDERABLE = { mermaid: true };
+  var mermaidReady = false;
+  var mermaidQueue = [];
+
+  function loadMermaid() {
+    if (window.mermaid) { mermaidReady = true; return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js';
+    s.onload = function() {
+      window.mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        themeVariables: {
+          darkMode: true,
+          background: 'transparent',
+          primaryColor: '#1a3a4a',
+          primaryTextColor: '#e0e8f0',
+          primaryBorderColor: '#2a5a6a',
+          lineColor: '#4a8a9a',
+          secondaryColor: '#1a2a3a',
+          tertiaryColor: '#0a1a2a',
+          fontFamily: "'Söhne', sans-serif",
+          fontSize: '14px'
+        }
+      });
+      mermaidReady = true;
+      mermaidQueue.forEach(function(fn) { fn(); });
+      mermaidQueue = [];
+    };
+    document.head.appendChild(s);
+  }
+
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(function() {
+      btn.innerHTML = CHECK_ICON + ' Copied!';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.innerHTML = COPY_ICON + ' Copy';
+        btn.classList.remove('copied');
+      }, 1800);
+    }).catch(function() {});
+  }
+
+  function makeHeader(lang, codeText) {
+    var header = document.createElement('div');
+    header.className = 'code-block-header';
+    var label = document.createElement('span');
+    label.className = 'code-lang-label';
+    label.textContent = lang || 'code';
+    var btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.innerHTML = COPY_ICON + ' Copy';
+    btn.onclick = function() { copyText(codeText, btn); };
+    header.appendChild(label);
+    header.appendChild(btn);
+    return header;
+  }
+
+  function makeOutputPanel(html, lang) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'code-output-wrapper';
+    var header = document.createElement('div');
+    header.className = 'code-output-header';
+    var label = document.createElement('span');
+    label.className = 'code-lang-label';
+    label.textContent = 'output';
+    var btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.innerHTML = COPY_ICON + ' Copy';
+    header.appendChild(label);
+    header.appendChild(btn);
+    var body = document.createElement('div');
+    body.className = 'code-output-body';
+    body.innerHTML = html;
+    btn.onclick = function() {
+      var text = body.textContent || body.innerText || '';
+      copyText(text.trim(), btn);
+    };
+    wrapper.appendChild(header);
+    wrapper.appendChild(body);
+    return wrapper;
+  }
+
+  function renderMermaid(code, container) {
+    var id = 'mmd-' + Math.random().toString(36).substr(2, 9);
+    var div = document.createElement('div');
+    div.className = 'mermaid-rendered';
+    container.querySelector('.code-output-body').appendChild(div);
+    try {
+      window.mermaid.render(id, code).then(function(result) {
+        div.innerHTML = result.svg;
+      }).catch(function(err) {
+        div.textContent = 'Diagram error: ' + (err.message || err);
+        div.style.color = 'rgba(220,140,130,0.85)';
+      });
+    } catch(e) {
+      div.textContent = 'Diagram error: ' + (e.message || e);
+      div.style.color = 'rgba(220,140,130,0.85)';
+    }
+  }
+
+  function enhance() {
+    var blocks = document.querySelectorAll('.claude-md pre');
+    blocks.forEach(function(pre) {
+      if (pre.dataset.enhanced) return;
+      pre.dataset.enhanced = '1';
+      var code = pre.querySelector('code');
+      if (!code) return;
+
+      var lang = '';
+      (code.className || '').split(/\\s+/).forEach(function(cls) {
+        if (cls.indexOf('language-') === 0) lang = cls.substring(9);
+      });
+
+      var codeText = code.textContent || '';
+
+      // Style 'output' blocks as output panels instead of code blocks
+      if (lang === 'output') {
+        var output = makeOutputPanel('', 'output');
+        var body = output.querySelector('.code-output-body');
+        var outPre = document.createElement('pre');
+        outPre.style.cssText = 'margin:0;background:none;border:none;padding:0;';
+        var outCode = document.createElement('code');
+        outCode.style.cssText = 'font-family:inherit;font-size:13.5px;line-height:1.55;color:rgba(210,220,235,0.88);white-space:pre;';
+        outCode.textContent = codeText;
+        outPre.appendChild(outCode);
+        body.appendChild(outPre);
+        // Update the copy button to copy this output
+        var copyBtn = output.querySelector('.code-copy-btn');
+        if (copyBtn) {
+          copyBtn.onclick = function() { copyText(codeText, copyBtn); };
+        }
+        pre.parentNode.insertBefore(output, pre);
+        pre.style.display = 'none';
+        return;
+      }
+
+      var wrapper = document.createElement('div');
+      wrapper.className = 'code-block-wrapper';
+      pre.parentNode.insertBefore(wrapper, pre);
+      wrapper.appendChild(makeHeader(lang, codeText));
+      wrapper.appendChild(pre);
+
+      if (RENDERABLE[lang] && codeText.trim()) {
+        var output = makeOutputPanel('', lang);
+        wrapper.parentNode.insertBefore(output, wrapper.nextSibling);
+        if (lang === 'mermaid') {
+          if (mermaidReady) {
+            renderMermaid(codeText, output);
+          } else {
+            loadMermaid();
+            mermaidQueue.push(function() { renderMermaid(codeText, output); });
+          }
+        }
+      }
+    });
+  }
+
+  enhance();
+  var _t = 0;
+  var _iv = setInterval(function() { enhance(); if (++_t > 120) clearInterval(_iv); }, 800);
+  try {
+    new MutationObserver(function() { enhance(); }).observe(document.body, { childList: true, subtree: true });
+  } catch(e) {}
+})();
+"""
+
+
 def active_chat_panel() -> rx.Component:
     return rx.box(
         # ── Top fade overlay ──
@@ -6597,6 +6723,8 @@ def active_chat_panel() -> rx.Component:
         ),
         # ── Injected Claude-like markdown CSS ──
         rx.html(_CLAUDE_MD_CSS),
+        # ── Code block enhancement (copy buttons, Mermaid rendering) ──
+        rx.script(_CODE_BLOCK_ENHANCE_JS),
         # Scrollable messages
         rx.box(
             rx.vstack(
@@ -6922,7 +7050,6 @@ def active_chat_panel() -> rx.Component:
             },
         ),
         rx.script(AUTO_SCROLL_OBSERVER_JS),
-        rx.script(CODE_BLOCK_ENHANCER_JS),
         rx.html("<style>@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:0.7;transform:scale(1.2)}}</style>"),
         rx.cond(
             AppState.can_send_message,
@@ -10545,11 +10672,6 @@ async def google_callback(request: Request):
             return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
         print("[Google CB] got code, fetching token...")
-        used_redirect_uri = _google_callback_url(request)
-        print(f"[Google CB] redirect_uri={used_redirect_uri}")
-        print(f"[Google CB] client_id={GOOGLE_CLIENT_ID[:12]}...")
-        print(f"[Google CB] client_secret set: {bool(GOOGLE_CLIENT_SECRET)}, len={len(GOOGLE_CLIENT_SECRET)}")
-        print(f"[Google CB] GOOGLE_REDIRECT_URI env={GOOGLE_REDIRECT_URI!r}")
         async with httpx.AsyncClient(timeout=20.0) as client_http:
             token_resp = await client_http.post(
                 GOOGLE_TOKEN_URL,
@@ -10557,14 +10679,12 @@ async def google_callback(request: Request):
                     "code": code,
                     "client_id": GOOGLE_CLIENT_ID,
                     "client_secret": GOOGLE_CLIENT_SECRET,
-                    "redirect_uri": used_redirect_uri,
+                    "redirect_uri": _google_callback_url(request),
                     "grant_type": "authorization_code",
                 },
                 headers={"Accept": "application/json"},
             )
             print(f"[Google CB] token response status: {token_resp.status_code}")
-            if token_resp.status_code != 200:
-                print(f"[Google CB] token response BODY: {token_resp.text[:500]}")
             token_resp.raise_for_status()
             token = token_resp.json()
             access_token = str(token.get("access_token", "") or "")
