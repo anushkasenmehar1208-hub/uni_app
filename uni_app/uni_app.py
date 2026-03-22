@@ -7724,45 +7724,282 @@ def onboarding_page():
             rx.fragment(),
         )
 
+    def onboarding_shell(title: str, body: rx.Component, *, step_label: str = "Welcome") -> rx.Component:
+        return rx.box(
+            rx.box(
+                position="absolute",
+                inset="0",
+                background=(
+                    "radial-gradient(circle at 78% 50%, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.32) 1.2%, "
+                    "rgba(140,210,255,0.12) 8%, rgba(12,28,44,0.08) 18%, rgba(3,10,18,0) 30%), "
+                    "radial-gradient(circle at 46% 52%, rgba(16,153,181,0.26) 0%, rgba(7,52,79,0.20) 22%, rgba(3,10,18,0) 56%), "
+                    "linear-gradient(180deg, #02060d 0%, #04101a 42%, #02060d 100%)"
+                ),
+            ),
+            rx.box(
+                position="absolute",
+                inset="0",
+                background="linear-gradient(90deg, rgba(2,6,13,0.96) 0%, rgba(2,6,13,0.78) 36%, rgba(2,6,13,0.20) 68%, rgba(2,6,13,0.06) 100%)",
+            ),
+            rx.box(
+                position="absolute",
+                top="50%",
+                right="5%",
+                width="34vw",
+                height="26vw",
+                min_width="260px",
+                min_height="180px",
+                max_width="620px",
+                max_height="420px",
+                transform="translateY(-50%)",
+                border_radius="999px",
+                background="radial-gradient(circle, rgba(190,225,255,0.20) 0%, rgba(73,157,214,0.08) 38%, rgba(2,6,13,0) 72%)",
+                style={"filter": "blur(26px)"},
+            ),
+            rx.center(
+                rx.box(
+                    rx.vstack(
+                        rx.text(
+                            step_label,
+                            color="rgba(167,227,255,0.82)",
+                            font_size="0.72rem",
+                            font_weight="700",
+                            letter_spacing="0.22em",
+                            text_transform="uppercase",
+                            font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+                        ),
+                        rx.heading(
+                            title,
+                            size="8",
+                            color="white",
+                            line_height="1.05",
+                            font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+                            letter_spacing="-0.03em",
+                        ),
+                        body,
+                        spacing="5",
+                        align_items="stretch",
+                        width="100%",
+                    ),
+                    width="min(92vw, 540px)",
+                    padding=rx.breakpoints(initial="1.35rem", sm="1.7rem", md="2rem"),
+                    border_radius="28px",
+                    background="linear-gradient(180deg, rgba(8,16,26,0.80) 0%, rgba(7,14,24,0.68) 100%)",
+                    border="1px solid rgba(185,225,255,0.14)",
+                    style={
+                        "backdrop_filter": "blur(18px)",
+                        "box_shadow": "0 28px 80px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    },
+                ),
+                width="100%",
+                height="100%",
+                padding="24px",
+            ),
+            width="100vw",
+            height="100vh",
+            position="relative",
+            overflow="hidden",
+        )
+
     return rx.box(
-        rx.center(
-            rx.vstack(
-                rx.cond(AppState.step == 0,
-                    rx.box(rx.vstack(rx.heading("Shall we begin",size="8"),rx.button("YES",background="#34D399",color="#064E3B",on_click=AppState.next_step,size="3",style={"animation":"pulse_glow 2s infinite","cursor":"pointer","_hover":{"filter":"brightness(1.1)"}})),
-                        background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
-                rx.cond(AppState.step == 1,
-                    rx.box(rx.vstack(rx.heading("Whats your degree",size="7"),rx.select(AppState.options,placeholder="Choose your degree",value=AppState.degree,on_change=AppState.set_degree,width="100%"),rx.button("next",on_click=AppState.advance_from_degree,background="#34D399",color="#064E3B",style={"cursor":"pointer","_hover":{"filter":"brightness(1.1)"}},size="3"),onboarding_feedback()),
-                        background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
-                rx.cond(AppState.step == 2,
-                    rx.box(rx.vstack(rx.heading("What's your name?",size="7",color="white"),rx.input(placeholder="Enter your nick name",value=AppState.name,on_change=AppState.set_name,width="100%",size="3"),rx.button("Next",on_click=AppState.advance_from_name,background="#34D399",color="#064E3B",style={"cursor":"pointer","_hover":{"filter":"brightness(1.1)"}},size="3"),onboarding_feedback(),spacing="4",width="400px"),
-                        background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
-                rx.cond(AppState.step == 3,
-                    rx.box(rx.vstack(
-                        rx.heading("Which year are you in?",size="7",color="white"),
+        rx.vstack(
+            rx.cond(
+                AppState.step == 0,
+                onboarding_shell(
+                    "Shall we begin?",
+                    rx.vstack(
+                        rx.text(
+                            "A focused workspace is a few quick answers away.",
+                            color="rgba(225,236,246,0.76)",
+                            font_size="0.98rem",
+                            line_height="1.65",
+                        ),
+                        rx.button(
+                            "Start",
+                            background="linear-gradient(135deg, #dbf4ff 0%, #8ce7ff 40%, #59d1f6 100%)",
+                            color="#03111a",
+                            on_click=AppState.next_step,
+                            size="3",
+                            width="100%",
+                            style={
+                                "animation": "pulse_glow 2s infinite",
+                                "cursor": "pointer",
+                                "font_weight": "700",
+                                "_hover": {"filter": "brightness(1.06)"},
+                            },
+                        ),
+                        spacing="4",
+                        align_items="stretch",
+                    ),
+                    step_label="Welcome",
+                ),
+            ),
+            rx.cond(
+                AppState.step == 1,
+                onboarding_shell(
+                    "What’s your degree?",
+                    rx.vstack(
+                        rx.text(
+                            "We’ll tailor the study flow to the program you’re actually following.",
+                            color="rgba(225,236,246,0.76)",
+                            font_size="0.95rem",
+                            line_height="1.6",
+                        ),
+                        rx.select(
+                            AppState.options,
+                            placeholder="Choose your degree",
+                            value=AppState.degree,
+                            on_change=AppState.set_degree,
+                            width="100%",
+                            size="3",
+                        ),
+                        rx.button(
+                            "Continue",
+                            on_click=AppState.advance_from_degree,
+                            background="linear-gradient(135deg, #dbf4ff 0%, #8ce7ff 40%, #59d1f6 100%)",
+                            color="#03111a",
+                            width="100%",
+                            style={"cursor": "pointer", "font_weight": "700", "_hover": {"filter": "brightness(1.06)"}},
+                            size="3",
+                        ),
+                        onboarding_feedback(),
+                        spacing="4",
+                        align_items="stretch",
+                    ),
+                    step_label="Step 1",
+                ),
+            ),
+            rx.cond(
+                AppState.step == 2,
+                onboarding_shell(
+                    "What should Alex call you?",
+                    rx.vstack(
+                        rx.text(
+                            "A name makes the workspace feel like yours from the first reply.",
+                            color="rgba(225,236,246,0.76)",
+                            font_size="0.95rem",
+                            line_height="1.6",
+                        ),
+                        rx.input(
+                            placeholder="Enter your name",
+                            value=AppState.name,
+                            on_change=AppState.set_name,
+                            width="100%",
+                            size="3",
+                        ),
+                        rx.button(
+                            "Continue",
+                            on_click=AppState.advance_from_name,
+                            background="linear-gradient(135deg, #dbf4ff 0%, #8ce7ff 40%, #59d1f6 100%)",
+                            color="#03111a",
+                            width="100%",
+                            style={"cursor": "pointer", "font_weight": "700", "_hover": {"filter": "brightness(1.06)"}},
+                            size="3",
+                        ),
+                        onboarding_feedback(),
+                        spacing="4",
+                        align_items="stretch",
+                    ),
+                    step_label="Step 2",
+                ),
+            ),
+            rx.cond(
+                AppState.step == 3,
+                onboarding_shell(
+                    "Which year are you in?",
+                    rx.vstack(
+                        rx.text(
+                            "This keeps the guidance aligned with your current academic level.",
+                            color="rgba(225,236,246,0.76)",
+                            font_size="0.95rem",
+                            line_height="1.6",
+                        ),
                         subject_button("Year 1", on_click=AppState.choose_onboarding_year("Year 1")),
                         subject_button("Year 2", on_click=AppState.choose_onboarding_year("Year 2")),
                         subject_button("Year 3", on_click=AppState.choose_onboarding_year("Year 3")),
                         subject_button("Year 4", on_click=AppState.choose_onboarding_year("Year 4")),
                         onboarding_feedback(),
-                        spacing="4",width="400px"),
-                        background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
-                rx.cond(AppState.step == 4,
-                    rx.box(rx.vstack(
-                        rx.heading("Which semester should Alex open?",size="7",color="white"),
-                        rx.text(AppState.selected_year,color="rgba(255,255,255,0.72)"),
+                        spacing="3",
+                        align_items="stretch",
+                    ),
+                    step_label="Step 3",
+                ),
+            ),
+            rx.cond(
+                AppState.step == 4,
+                onboarding_shell(
+                    "Which semester should Alex open?",
+                    rx.vstack(
+                        rx.text(
+                            AppState.selected_year,
+                            color="rgba(167,227,255,0.82)",
+                            font_size="0.85rem",
+                            text_transform="uppercase",
+                            letter_spacing="0.18em",
+                            font_weight="700",
+                        ),
                         rx.foreach(
                             AppState.available_semesters,
                             lambda sem: subject_button(sem, on_click=AppState.choose_onboarding_semester(sem)),
                         ),
-                        rx.button("Back",on_click=AppState.back_to_onboarding_year,variant="outline",color_scheme="gray",size="3"),
+                        rx.button(
+                            "Back",
+                            on_click=AppState.back_to_onboarding_year,
+                            variant="outline",
+                            size="3",
+                            width="100%",
+                            style={
+                                "border": "1px solid rgba(255,255,255,0.16)",
+                                "color": "rgba(235,243,250,0.9)",
+                                "background": "rgba(255,255,255,0.03)",
+                                "_hover": {"background": "rgba(255,255,255,0.06)"},
+                            },
+                        ),
                         onboarding_feedback(),
-                        spacing="4",width="400px"),
-                        background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
-                rx.cond(AppState.step == 5,
-                    rx.box(rx.vstack(rx.heading(rx.text("Lets crush "),rx.text(AppState.degree),size="7"),rx.text(AppState.selected_year + " • " + AppState.selected_semester,color="rgba(255,255,255,0.72)"),rx.button("begin",on_click=AppState.start_app,background="#34D399",color="#064E3B",size="3",style={"animation":"pulse_glow 2s infinite","cursor":"pointer","_hover":{"filter":"brightness(1.1)"}},is_disabled=(AppState.selected_year == "") | (AppState.selected_semester == "")),onboarding_feedback()),
-                        background_image="url('/bg_image.png')",background_size="cover",width="100vw",height="100vh",display="flex",align_items="center",justify_content="center")),
-                spacing="4",
+                        spacing="3",
+                        align_items="stretch",
+                    ),
+                    step_label="Step 4",
+                ),
             ),
+            rx.cond(
+                AppState.step == 5,
+                onboarding_shell(
+                    "Let’s crush this semester.",
+                    rx.vstack(
+                        rx.text(
+                            AppState.degree,
+                            color="white",
+                            font_size="1.02rem",
+                            font_weight="600",
+                        ),
+                        rx.text(
+                            AppState.selected_year + " • " + AppState.selected_semester,
+                            color="rgba(225,236,246,0.76)",
+                        ),
+                        rx.button(
+                            "Begin",
+                            on_click=AppState.start_app,
+                            background="linear-gradient(135deg, #dbf4ff 0%, #8ce7ff 40%, #59d1f6 100%)",
+                            color="#03111a",
+                            size="3",
+                            width="100%",
+                            style={
+                                "animation": "pulse_glow 2s infinite",
+                                "cursor": "pointer",
+                                "font_weight": "700",
+                                "_hover": {"filter": "brightness(1.06)"},
+                            },
+                            is_disabled=(AppState.selected_year == "") | (AppState.selected_semester == ""),
+                        ),
+                        onboarding_feedback(),
+                        spacing="4",
+                        align_items="stretch",
+                    ),
+                    step_label="Ready",
+                ),
+            ),
+            spacing="0",
         ),
         height="100vh",
     )
