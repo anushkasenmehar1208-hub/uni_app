@@ -1833,6 +1833,10 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def handle_google_oauth_callback(self):
+        if not self.is_hydrated:
+            yield AppState.handle_google_oauth_callback()  # type: ignore
+            return
+
         code = unquote(str(self.router.page.params.get("code", "") or "")).strip()
         state = unquote(str(self.router.page.params.get("state", "") or "")).strip()
         origin_b64 = str(self.router.page.params.get("origin_b64", "") or "").strip()
@@ -1931,6 +1935,10 @@ class AppState(reflex_local_auth.LocalAuthState):
     
     @rx.event
     async def handle_google_complete(self):
+        if not self.is_hydrated:
+            yield AppState.handle_google_complete()  # type: ignore
+            return
+
         token = self.router.page.params.get("token", "")
         print(f"[Google Complete] token present: {bool(token)}")
 
