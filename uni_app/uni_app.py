@@ -3315,7 +3315,7 @@ Critical operating rules:
 3. Never describe yourself as an AI, chatbot, large language model, or mention Groq, Meta, or Llama.
 4. If the student asks who you are, your answer must stay aligned with: "{self._alex_identity_reply()}"
 5. Use {student_name} naturally throughout the conversation so the support feels personal and consistent.
-6. When you share code, always wrap it in fenced markdown code blocks with the correct language.
+6. When you share code, always include two separate fenced blocks in this order: first the code block with the correct language, then an `output` fenced block showing the expected result. If the exact result depends on runtime input, state that clearly and show a realistic example output.
 7. For complex technical questions, give a numbered step-by-step breakdown before the final answer or code.
 8. For career advice or analogies, prefer grounded Sri Lankan Software Engineering context when helpful, such as WSO2, Sysco LABS, IFS, internships, or local graduate expectations.
 9. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
@@ -4796,7 +4796,7 @@ Your response style rules:
 16. If the student makes a mistake, correct gently with wording like "Almost. Try thinking of it this way..."
 17. Use {student_name} naturally so the tutoring feels personal.
 18. Acknowledge progress occasionally by connecting the explanation to Day {day}/110.
-19. If code is needed, wrap it in fenced markdown code blocks with the correct language.
+19. If code is needed, always include a fenced code block with the correct language followed immediately by a separate fenced `output` block showing the expected output.
 20. If the question is technically complex, give a numbered breakdown before the final explanation or code.
 21. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally."""
 
@@ -4920,7 +4920,7 @@ Behavior rules:
 13. Use bullets first when they improve clarity. Avoid walls of text.
 14. Use {student_name} naturally so the support feels personal.
 15. Adapt to the adaptive profile for brevity, formatting, pace, and tone.
-16. If code is needed, wrap it in fenced markdown code blocks with the correct language.
+16. If code is needed, always include a fenced code block with the correct language followed immediately by a separate fenced `output` block showing the expected output.
 17. If the question is technically complex, give a short numbered breakdown before the final answer.
 18. Stay honest about what the stored memory does and does not show."""
 
@@ -5055,6 +5055,106 @@ SCROLL_TO_BOTTOM_JS = """
     if (tries < 180) requestAnimationFrame(tick);
   }
   tick();
+})();
+"""
+
+CODE_BLOCK_ENHANCER_JS = """
+(function(){
+  function copyText(text){
+    if (!navigator.clipboard || !navigator.clipboard.writeText) return;
+    navigator.clipboard.writeText(text).then(function(){
+      var t = document.createElement('div');
+      t.textContent = 'Copied';
+      t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.12);color:rgba(240,244,248,0.9);padding:6px 16px;border-radius:8px;font-size:13px;font-family:Söhne,sans-serif;z-index:9999;pointer-events:none;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);transition:opacity 0.3s';
+      document.body.appendChild(t);
+      setTimeout(function(){ t.style.opacity='0'; }, 1200);
+      setTimeout(function(){ t.remove(); }, 1600);
+    }).catch(function(){});
+  }
+
+  function normalizeLabel(lang, fallback){
+    var value = (lang || '').trim().toLowerCase();
+    if (!value) return fallback;
+    if (value === 'output' || value === 'result' || value === 'console' || value === 'stdout') return 'Output';
+    return 'Code';
+  }
+
+  function enhancePre(pre){
+    if (!pre || pre.dataset.enhancedCodeBlock === '1') return;
+    var code = pre.querySelector('code');
+    if (!code) return;
+
+    var classes = Array.from(code.classList || []);
+    var langClass = classes.find(function(name){ return name.indexOf('language-') === 0; }) || '';
+    var lang = langClass ? langClass.replace('language-', '') : '';
+    var label = normalizeLabel(lang, 'Code');
+    var copyLabel = label === 'Output' ? 'Copy Output' : 'Copy Code';
+    var rawText = code.innerText || code.textContent || '';
+
+    var card = document.createElement('div');
+    card.className = 'alex-code-card alex-code-card-' + label.toLowerCase();
+
+    var header = document.createElement('div');
+    header.className = 'alex-code-card-header';
+
+    var title = document.createElement('div');
+    title.className = 'alex-code-card-title';
+    title.textContent = label;
+
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'alex-code-copy-btn';
+    button.textContent = copyLabel;
+    button.addEventListener('click', function(){
+      copyText(rawText);
+    });
+
+    header.appendChild(title);
+    header.appendChild(button);
+    card.appendChild(header);
+
+    pre.parentNode.insertBefore(card, pre);
+    card.appendChild(pre);
+    pre.dataset.enhancedCodeBlock = '1';
+  }
+
+  function removeStandaloneOutputLabels(root){
+    var paragraphs = root.querySelectorAll('p');
+    paragraphs.forEach(function(p){
+      if (p.dataset.outputLabelPruned === '1') return;
+      var text = (p.textContent || '').trim().toLowerCase();
+      var next = p.nextElementSibling;
+      if ((text === 'output:' || text === 'output') && next && next.tagName === 'DIV') {
+        var nextTitle = next.querySelector('.alex-code-card-title');
+        if (nextTitle && (nextTitle.textContent || '').trim().toLowerCase() === 'output') {
+          p.dataset.outputLabelPruned = '1';
+          p.remove();
+        }
+      }
+    });
+  }
+
+  function enhanceRoot(root){
+    if (!root) return;
+    root.querySelectorAll('pre').forEach(enhancePre);
+    removeStandaloneOutputLabels(root);
+  }
+
+  function attach(){
+    document.querySelectorAll('.claude-md').forEach(enhanceRoot);
+  }
+
+  attach();
+  var ticks = 0;
+  var iv = setInterval(function(){
+    attach();
+    ticks += 1;
+    if (ticks > 60) clearInterval(iv);
+  }, 400);
+
+  try {
+    new MutationObserver(attach).observe(document.body, { childList: true, subtree: true, characterData: true });
+  } catch (e) {}
 })();
 """
 ENTER_TO_SEND_JS = """
@@ -6416,6 +6516,62 @@ _CLAUDE_MD_CSS = """
   white-space: pre;
 }
 
+.claude-md .alex-code-card {
+  background: rgba(11, 15, 22, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0.95em 0;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+}
+.claude-md .alex-code-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.claude-md .alex-code-card-title {
+  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(228, 232, 238, 0.7);
+}
+.claude-md .alex-code-copy-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(240, 244, 248, 0.88);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.74rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.claude-md .alex-code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.claude-md .alex-code-copy-btn:active {
+  transform: translateY(1px);
+}
+.claude-md .alex-code-card pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.claude-md .alex-code-card-output {
+  background: rgba(15, 18, 24, 0.95);
+}
+
 /* Links */
 .claude-md a {
   color: rgba(170, 200, 240, 0.85);
@@ -6795,6 +6951,7 @@ def active_chat_panel() -> rx.Component:
             },
         ),
         rx.script(AUTO_SCROLL_OBSERVER_JS),
+        rx.script(CODE_BLOCK_ENHANCER_JS),
         rx.html("<style>@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:0.7;transform:scale(1.2)}}</style>"),
         rx.cond(
             AppState.can_send_message,
