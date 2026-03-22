@@ -1525,6 +1525,13 @@ class AppState(reflex_local_auth.LocalAuthState):
                 self.selected_year = memory.selected_year or ""
                 self.selected_semester = memory.selected_semester or ""
                 self.memory_summary = memory.summary or ""
+            else:
+                self.step = 0
+                self.degree = ""
+                self.is_started = False
+                self.selected_year = ""
+                self.selected_semester = ""
+                self.memory_summary = ""
             if not (self.name or "").strip():
                 account = session.exec(
                     select(LocalUser).where(LocalUser.id == uid)
@@ -1674,11 +1681,11 @@ class AppState(reflex_local_auth.LocalAuthState):
             return rx.redirect(self.post_login_redirect or APP_DASHBOARD_ROUTE)
 
     def _authenticated_landing_route(self) -> str:
-        if self.selected_year and self.selected_semester:
-            target_scope = self._scope_key(self.selected_year, self.selected_semester)
-            if target_scope in SCOPE_ROUTE_MAP:
-                return scope_to_route(target_scope)
         if self.is_started:
+            if self.selected_year and self.selected_semester:
+                target_scope = self._scope_key(self.selected_year, self.selected_semester)
+                if target_scope in SCOPE_ROUTE_MAP:
+                    return scope_to_route(target_scope)
             return scope_to_route("home")
         return APP_DASHBOARD_ROUTE
 
@@ -1700,6 +1707,12 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.is_started = bool(memory.is_started)
             self.selected_year = memory.selected_year or ""
             self.selected_semester = memory.selected_semester or ""
+        else:
+            self.step = 0
+            self.degree = ""
+            self.is_started = False
+            self.selected_year = ""
+            self.selected_semester = ""
 
         target_route = self._authenticated_landing_route()
         if target_route == scope_to_route("home"):
