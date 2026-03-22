@@ -3440,6 +3440,11 @@ Critical operating rules:
         self.view_mode = target_view_mode
         self.active_scope = target_scope
 
+        # Auto-promote existing users who completed onboarding but is_started was never set
+        if not self.is_started and self.degree and self.selected_year and self.selected_semester:
+            self.is_started = True
+            self._save_memory(uid)
+
         if self.is_started:
             self._switch_scope(uid, target_scope)
             yield _hard_navigate(scope_to_route(target_scope))
@@ -3479,8 +3484,13 @@ Critical operating rules:
             return
 
         if not self.is_started:
-            yield rx.redirect(APP_DASHBOARD_ROUTE)
-            return
+            # Auto-promote existing users who completed onboarding but is_started was never set
+            if self.degree and self.selected_year and self.selected_semester:
+                self.is_started = True
+                self._save_memory(uid)
+            else:
+                yield rx.redirect(APP_DASHBOARD_ROUTE)
+                return
 
         year = scope_info["year"]
         semester = scope_info["semester"]
