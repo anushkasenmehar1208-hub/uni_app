@@ -58,6 +58,15 @@ else:
 GEMINI_FAST_MODEL = "llama-3.3-70b-versatile"
 GEMINI_PRO_MODEL  = "llama-3.3-70b-versatile"
 GEMINI_MODEL      = GEMINI_FAST_MODEL
+
+# ----------------------------
+# DuckDuckGo web search setup
+# ----------------------------
+try:
+    from duckduckgo_search import DDGS
+    DDG_SEARCH_ENABLED = True
+except ImportError:
+    DDG_SEARCH_ENABLED = False
 VISION_MODEL      = "meta-llama/llama-4-scout-17b-16e-instruct"
 ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp"}
 MAX_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MB
@@ -396,6 +405,157 @@ def _groq_read_image(image_bytes: bytes, mime_type: str, prompt: str) -> str:
         return resp.choices[0].message.content or ""
     except Exception as e:
         return friendly_groq_error(e)
+
+async def _fetch_page_text(url: str, max_chars: int = 4000) -> str:
+    """Fetch a web page and extract readable text content."""
+    try:
+        async with httpx.AsyncClient(timeout=6.0, follow_redirects=True) as http:
+            resp = await http.get(url, headers={
+                "User-Agent": "Mozilla/5.0 (compatible; AlexAI/1.0)",
+                "Accept": "text/html,application/xhtml+xml",
+            })
+            resp.raise_for_status()
+            html = resp.text
+        # Strip HTML tags and extract text
+        text = re.sub(r'<script[^>]*>[\s\S]*?</script>', ' ', html, flags=re.IGNORECASE)
+        text = re.sub(r'<style[^>]*>[\s\S]*?</style>', ' ', text, flags=re.IGNORECASE)
+        text = re.sub(r'<nav[^>]*>[\s\S]*?</nav>', ' ', text, flags=re.IGNORECASE)
+        text = re.sub(r'<header[^>]*>[\s\S]*?</header>', ' ', text, flags=re.IGNORECASE)
+        text = re.sub(r'<footer[^>]*>[\s\S]*?</footer>', ' ', text, flags=re.IGNORECASE)
+        text = re.sub(r'<[^>]+>', ' ', text)
+        text = re.sub(r'&[a-zA-Z]+;', ' ', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text[:max_chars]
+    except Exception as e:
+        print(f"[fetch_page] error fetching {url}: {e}")
+        return ""
+
+
+async def _web_search(query: str) -> tuple:
+    """Search the web via DuckDuckGo. Returns (snippets_text, results_list)."""
+    if not DDG_SEARCH_ENABLED:
+        return "", []
+    try:
+        def _do_search():
+            with DDGS() as ddgs:
+                return list(ddgs.text(query, max_results=6))
+
+        results = await asyncio.to_thread(_do_search)
+        if not results:
+            return "", []
+        parts = []
+        for r in results:
+            title = r.get("title", "")
+            body = r.get("body", "")
+            url = r.get("href", "")
+            parts.append(f"- {title}: {body} (Source: {url})")
+        return "\n".join(parts), results
+    except Exception as e:
+        print(f"[web_search] error: {e}")
+        return "", []
+
+
+async def _read_top_pages(results: list, max_pages: int = 3) -> str:
+    """Fetch and read full content from the top search result pages."""
+    urls = [r.get("href", "") for r in results if r.get("href")][:max_pages]
+    if not urls:
+        return ""
+    tasks = [_fetch_page_text(url) for url in urls]
+    pages = await asyncio.gather(*tasks, return_exceptions=True)
+    parts = []
+    for i, page in enumerate(pages):
+        if isinstance(page, str) and page.strip():
+            title = results[i].get("title", f"Page {i+1}")
+            url = urls[i]
+            parts.append(f"[Source: {title}]({url})\n{page}\n")
+    return "\n---\n".join(parts)
+
+
+_SEARCH_SIGNAL_PATTERNS = [
+    "latest", "newest", "recent", "current", "2024", "2025", "2026",
+    "what is the best", "compare", "vs", "versus",
+    "released", "update", "deprecated", "new version",
+    "how do i install", "setup guide",
+    "industry", "job market", "salary",
+    "framework", "library", "tool",
+    "best practice", "standard", "convention",
+    "search", "web search", "look up", "find out",
+    "who is", "what happened", "news", "announce",
+    "price", "cost", "free", "alternative",
+    "documentation", "docs", "official",
+    "download", "repo", "github",
+]
+
+
+def _might_need_search(text: str) -> bool:
+    if not DDG_SEARCH_ENABLED:
+        return False
+    lower = text.lower()
+    return any(signal in lower for signal in _SEARCH_SIGNAL_PATTERNS)
+
+
+async def _should_search_smart(user_msg: str, recent_context: str, topic_context: str = "", user_triggered: bool = False) -> tuple:
+    """Smart search classifier — considers both the user message AND the current teaching topic.
+    The AI independently decides if it needs web info to teach better."""
+    try:
+        classify_prompt = f"""You are an AI teaching assistant deciding whether a web search would improve your response.
+
+Consider TWO reasons to search:
+A) The STUDENT explicitly asks about something that needs current web data (versions, latest tools, comparisons, news, installation, etc.)
+B) The TOPIC being taught would benefit from current information (e.g., modern frameworks, current best practices, latest API docs, real-world examples with current tools, industry standards that change over time).
+
+Student's message: {user_msg}
+Current teaching topic: {topic_context}
+Recent conversation: {recent_context[:400]}
+Student message contains search signals: {user_triggered}
+
+Answer YES if EITHER reason A or B applies. Answer NO only if the topic is purely theoretical/fundamental (e.g., sorting algorithms, binary trees, Big-O notation) AND the student isn't asking for current info.
+
+Reply in EXACTLY this format (nothing else):
+DECISION: YES or NO
+QUERY: <optimized search query if YES, empty if NO>"""
+
+        resp = await asyncio.to_thread(
+            _groq_generate, GEMINI_FAST_MODEL, classify_prompt, max_tokens=100
+        )
+        text = (getattr(resp, "text", "") or "").strip()
+        if "YES" in text.upper():
+            query_match = re.search(r"QUERY:\s*(.+)", text, re.IGNORECASE)
+            search_query = query_match.group(1).strip() if query_match else f"{topic_context} {user_msg}"
+            return True, search_query
+        return False, ""
+    except Exception as e:
+        print(f"[_should_search_smart] error: {e}")
+        return False, ""
+
+
+async def _should_search(user_msg: str, recent_context: str) -> tuple:
+    """Ask the LLM whether this message needs a web search. Returns (should_search, search_query)."""
+    try:
+        classify_prompt = f"""Decide if this student question needs a web search to get current/external information.
+Answer YES only if the question asks about: current versions, latest updates, real-time data, recent industry trends, specific tool comparisons with version-sensitive answers, installation steps that change over time, the student explicitly asks to search the web, documentation links, pricing, downloads, news, announcements, or anything that requires up-to-date factual data beyond 2024.
+Answer NO if the question is about core CS concepts, algorithms, data structures, programming fundamentals, or anything you can confidently answer from training data alone.
+
+Recent context: {recent_context[:500]}
+Student question: {user_msg}
+
+Reply in EXACTLY this format (nothing else):
+DECISION: YES or NO
+QUERY: <optimized search query if YES, empty if NO>"""
+
+        resp = await asyncio.to_thread(
+            _groq_generate, GEMINI_FAST_MODEL, classify_prompt, max_tokens=100
+        )
+        text = (getattr(resp, "text", "") or "").strip()
+        if "YES" in text.upper():
+            query_match = re.search(r"QUERY:\s*(.+)", text, re.IGNORECASE)
+            search_query = query_match.group(1).strip() if query_match else user_msg
+            return True, search_query
+        return False, ""
+    except Exception as e:
+        print(f"[_should_search] error: {e}")
+        return False, ""
+
 
 async def _groq_stream_async(model: str, messages: list[dict], max_tokens: int = 2048):
     try:
@@ -1036,6 +1196,8 @@ class AppState(reflex_local_auth.LocalAuthState):
     chat_history: list[dict] = []
     chat_input: str = ""
     is_processing: bool = False
+    is_searching: bool = False
+    search_status: str = ""
 
     # Message action state (edit / feedback / copy)
     editing_msg_index: int = -1
@@ -3174,6 +3336,8 @@ Critical operating rules:
 8. For complex technical questions, give a numbered step-by-step breakdown before the final answer or code.
 9. For career advice or analogies, prefer grounded Sri Lankan Software Engineering context when helpful, such as WSO2, Sysco LABS, IFS, internships, or local graduate expectations.
 10. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
+11. When web search results are provided in the context, use them to give accurate, up-to-date answers. Synthesize search results in your own mentor voice rather than copying them verbatim. Prefer search results over your training data for version numbers, release dates, and current best practices.
+12. When citing web sources, include clickable markdown links like [Source Title](url) at the end of your response under a "Sources" section. Only include the most relevant 2-4 sources, not all of them.
 """
 
     def _reset_plan_only(self, uid: int, scope: str) -> None:
@@ -3943,13 +4107,42 @@ Critical operating rules:
                     self.plan_generation_error = "This semester is not ready for study plan generation yet."
                 return
 
+        # ── Web search for latest syllabus/curriculum info ──
+        search_context = ""
+        if DDG_SEARCH_ENABLED:
+            try:
+                print(f"[PLAN-GEN] Searching web for latest curriculum info...", flush=True)
+                search_queries = [
+                    f"{degree} {target_year} {target_semester} syllabus curriculum topics 2025 2026",
+                    f"{courses_text.splitlines()[0] if courses_text.strip() else degree} university course outline units topics",
+                ]
+                all_snippets = []
+                all_results = []
+                for sq in search_queries:
+                    snippets, results = await _web_search(sq)
+                    if snippets:
+                        all_snippets.append(snippets)
+                        all_results.extend(results)
+                if all_results:
+                    full_pages = await _read_top_pages(all_results[:4], max_pages=4)
+                    if full_pages:
+                        search_context = f"\n\nLatest web research on these subjects (use this to ensure topics, units, and flow are current and industry-relevant):\n{chr(10).join(all_snippets)}\n\nDetailed source content:\n{full_pages}\n"
+                    elif all_snippets:
+                        search_context = f"\n\nLatest web research on these subjects:\n{chr(10).join(all_snippets)}\n"
+                print(f"[PLAN-GEN] Search context len={len(search_context)}", flush=True)
+            except Exception as e:
+                print(f"[PLAN-GEN] Search error (non-fatal): {e}", flush=True)
+
         # ── AI call outside lock — page stays fully interactive ──
         print(f"[PLAN-GEN] Calling Groq for {target_scope}...", flush=True)
         try:
-            prompt = f"""You are a university curriculum expert for {degree} students
+            prompt = f"""You are a university curriculum expert for {degree} students.
 Generate a realistic detailed 110 day study plan for {target_year} {target_semester}.
 Use only the following semester subjects and do not include modules from any other semester.
-Return ONLY a valid JSON array with exactly 110 items
+{search_context}
+Use the web research above (if present) to ensure your plan follows the latest syllabus structure, covers current industry-relevant topics, uses modern frameworks/tools where applicable, and follows a logical learning progression from fundamentals to advanced topics.
+
+Return ONLY a valid JSON array with exactly 110 items.
 Each item: {{"day":<1-110>,"subject":"<n>","unit":"<unit>","topics":["<t1>","<t2>"]}}
 Subjects:\n{courses_text}"""
             resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt, 8192)
@@ -4613,6 +4806,40 @@ Subjects:\n{courses_text}"""
                 recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in self.chat_history[-14:]])
                 past_hits = self._past_hits_text(uid, scope, user_msg)
 
+                # --- Web search augmentation (AI can independently search) ---
+                search_context_block = ""
+                user_triggered = _might_need_search(user_msg)
+                topic_context = f"{entry.get('subject','')} {entry.get('unit','')} {current_topic}"
+                if DDG_SEARCH_ENABLED:
+                    self.is_searching = True
+                    self.search_status = "Deciding if search is needed..."
+                    yield
+                    try:
+                        should_search, search_query = await _should_search_smart(
+                            user_msg, recent_text, topic_context, user_triggered
+                        )
+                        if should_search and search_query:
+                            self.search_status = f"Searching: {search_query}"
+                            yield
+                            snippets, results = await _web_search(search_query)
+                            if snippets:
+                                self.search_status = f"Reading {min(3, len(results))} sources..."
+                                yield
+                                full_pages = await _read_top_pages(results, max_pages=3)
+                                sources_list = "\n".join(
+                                    f"  [{r.get('title','')}]({r.get('href','')})"
+                                    for r in results[:6] if r.get("href")
+                                )
+                                search_context_block = (
+                                    f"\n- Web search results for '{search_query}':\n{snippets}\n"
+                                    f"\n- Full page content from top sources:\n{full_pages}\n"
+                                    f"\n- Sources (cite these in your response with markdown links):\n{sources_list}\n"
+                                )
+                    finally:
+                        self.is_searching = False
+                        self.search_status = ""
+                        yield
+
                 teach_prompt = f"""You are Alex, a friendly and patient Software Engineering mentor helping a {self.degree} student.
 
 Current context:
@@ -4630,7 +4857,7 @@ Current context:
 - Recent conversation: {recent_text}
 - Past relevant chat (db search): {past_hits}
 - Use the attached document when it is present.
-{document_context_block}- Student just said: {user_msg}
+{document_context_block}{search_context_block}- Student just said: {user_msg}
 
 Your response style rules:
 1. Stay warm, patient, mentor-like, and encouraging without sounding cheesy.
@@ -4654,7 +4881,8 @@ Your response style rules:
 19. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
 20. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
 21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
-22. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally."""
+22. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally.
+23. If web search results are present, cite the most relevant 2-4 sources at the end with markdown links under a "**Sources**" heading."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
@@ -4731,6 +4959,36 @@ Your response style rules:
         next_courses = self._get_next_courses(uid, self.selected_year, 3) if self.selected_year else []
         past_hits = self._past_hits_text(uid, self.active_scope, user_msg)
 
+        # --- Web search augmentation ---
+        search_context_block_home = ""
+        if _might_need_search(user_msg):
+            self.is_searching = True
+            self.search_status = "Deciding if search is needed..."
+            yield
+            try:
+                should_search, search_query = await _should_search(user_msg, recent_text)
+                if should_search and search_query:
+                    self.search_status = f"Searching: {search_query}"
+                    yield
+                    snippets, results = await _web_search(search_query)
+                    if snippets:
+                        self.search_status = f"Reading {min(3, len(results))} sources..."
+                        yield
+                        full_pages = await _read_top_pages(results, max_pages=3)
+                        sources_list = "\n".join(
+                            f"  [{r.get('title','')}]({r.get('href','')})"
+                            for r in results[:6] if r.get("href")
+                        )
+                        search_context_block_home = (
+                            f"\n- Web search results for '{search_query}':\n{snippets}\n"
+                            f"\n- Full page content from top sources:\n{full_pages}\n"
+                            f"\n- Sources (cite these in your response with markdown links):\n{sources_list}\n"
+                        )
+            finally:
+                self.is_searching = False
+                self.search_status = ""
+                yield
+
         prompt = f"""You are Alex AI, the central academic growth assistant inside the platform.
 Your main job is to analyze the student's learning journey across semesters,
 summarize progress,
@@ -4751,7 +5009,7 @@ Student context:
 - Recent home chat: {recent_text}
 - Relevant past chat memory: {past_hits}
 - Use the attached document when it is present.
-{document_context_block}- Student just said: {user_msg}
+{document_context_block}{search_context_block_home}- Student just said: {user_msg}
 
 Behavior rules:
 1. In home mode, focus on overview, analysis, redirection, and academic guidance. Do not pretend to be the daily semester tutor.
@@ -4779,7 +5037,8 @@ Behavior rules:
 16. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
 17. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
 18. If the question is technically complex, give a short numbered breakdown before the final answer.
-19. Stay honest about what the stored memory does and does not show."""
+19. Stay honest about what the stored memory does and does not show.
+20. If web search results are present, cite the most relevant 2-4 sources at the end with markdown links under a "**Sources**" heading."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
@@ -5836,6 +6095,24 @@ def chat_input_field() -> rx.Component:
                     font_style="italic",
                     font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 ),
+                spacing="2",
+                align="center",
+                padding="8px 16px 0 16px",
+            ),
+        ),
+        # ── Web search indicator ──
+        rx.cond(
+            AppState.is_searching,
+            rx.hstack(
+                rx.icon(tag="globe", size=14, color="rgba(130,200,255,0.8)"),
+                rx.text(
+                    AppState.search_status,
+                    color="rgba(180,195,210,0.75)",
+                    font_size="0.75rem",
+                    font_style="italic",
+                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                ),
+                rx.spinner(size="1", color="rgba(130,200,255,0.6)"),
                 spacing="2",
                 align="center",
                 padding="8px 16px 0 16px",
