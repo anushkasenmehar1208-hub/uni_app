@@ -6434,15 +6434,15 @@ def empty_chat_panel() -> rx.Component:
             rx.hstack(
                 rx.image(
                     src="/alex_logo.svg",
-                    width={"initial": "32px", "md": "40px"},
-                    height={"initial": "32px", "md": "40px"},
+                    width=rx.breakpoints(initial="32px", md="40px"),
+                    height=rx.breakpoints(initial="32px", md="40px"),
                     object_fit="contain",
                     opacity="0.8",
                 ),
                 rx.text(
                     AppState.greeting_text,
                     color="rgba(220,225,232,0.7)",
-                    font_size={"initial": "1.35rem", "md": "1.85rem"},
+                    font_size=rx.breakpoints(initial="1.35rem", md="1.85rem"),
                     font_weight="300",
                     letter_spacing="-0.01em",
                     line_height="1.2",
@@ -6477,8 +6477,8 @@ def empty_chat_panel() -> rx.Component:
         display="flex",
         align_items="center",
         justify_content="center",
-        padding={"initial": "1em", "md": "2em"},
-        padding_bottom={"initial": "4vh", "md": "8vh"},
+        padding=rx.breakpoints(initial="1em", md="2em"),
+        padding_bottom=rx.breakpoints(initial="4vh", md="8vh"),
     )
 
 # ── active_chat_panel — Claude-like editorial styling ──────────
@@ -6914,7 +6914,7 @@ def active_chat_panel() -> rx.Component:
                                             justify="end",
                                             margin_top="6px",
                                         ),
-                                        max_width={"initial": "88%", "md": "70%"},
+                                        max_width=rx.breakpoints(initial="88%", md="70%"),
                                         margin_left="auto",
                                         margin_right="0",
                                     ),
@@ -7052,7 +7052,7 @@ def active_chat_panel() -> rx.Component:
                                             transition="opacity 0.15s ease",
                                             min_height="24px",
                                         ),
-                                        max_width={"initial": "88%", "md": "70%"},
+                                        max_width=rx.breakpoints(initial="88%", md="70%"),
                                         margin_left="auto",
                                         margin_right="0",
                                         class_name="msg-row",
@@ -7161,7 +7161,7 @@ def active_chat_panel() -> rx.Component:
                 spacing="0",
                 max_width="740px",
                 margin_x="auto",
-                padding_x={"initial": "0.75em", "md": "1.5em"},
+                padding_x=rx.breakpoints(initial="0.75em", md="1.5em"),
                 padding_top="1em",
                 padding_bottom="0.5em",
                 style={
@@ -7192,7 +7192,7 @@ def active_chat_panel() -> rx.Component:
                 width="100%",
                 max_width="740px",
                 margin_x="auto",
-                padding={"initial": "0 0.75em", "md": "0 1.5em"},
+                padding=rx.breakpoints(initial="0 0.75em", md="0 1.5em"),
             ),
             upgrade_button(),
         ),
@@ -8665,7 +8665,7 @@ def home_page():
                     on_click=AppState.toggle_semester_sidebar,
                     variant="ghost",
                     size="2",
-                    display={"initial": "flex", "md": "none"},
+                    display=rx.breakpoints(initial="flex", md="none"),
                     style={
                         "color": "rgba(200,210,220,0.6)",
                         "background": "transparent",
@@ -8697,7 +8697,7 @@ def home_page():
                 ),
                 width="100%",
                 align="center",
-                padding={"initial": "0.9em 1em", "md": "0.9em 2em 0.9em 1.4em"},
+                padding=rx.breakpoints(initial="0.9em 1em", md="0.9em 2em 0.9em 1.4em"),
             ),
             flex_shrink="0",
         ),
@@ -8713,7 +8713,7 @@ def home_page():
                 border_right="1px solid rgba(255,255,255,0.04)",
                 background="rgba(255,255,255,0.01)",
                 padding="1.2em 1em",
-                display={"initial": "none", "md": "block"},
+                display=rx.breakpoints(initial="none", md="block"),
             ),
             rx.box(
                 chat_panel(),
@@ -9152,7 +9152,7 @@ def semester_sidebar_drawer() -> rx.Component:
                 position="fixed",
                 top="0",
                 left="0",
-                width={"initial": "min(300px, 85vw)", "md": "300px"},
+                width=rx.breakpoints(initial="min(300px, 85vw)", md="300px"),
                 height="100vh",
                 padding="1.2em 1em",
                 background="rgba(10,10,14,0.98)",
@@ -9233,7 +9233,7 @@ def nav_rail() -> rx.Component:
         spacing="1",
         border_right="1px solid rgba(255,255,255,0.06)",
         background="#0a0a0c",
-        display={"initial": "none", "md": "flex"},
+        display=rx.breakpoints(initial="none", md="flex"),
     )
 
 
@@ -9252,7 +9252,7 @@ def semester_page():
                     on_click=AppState.toggle_semester_sidebar,
                     variant="ghost",
                     size="2",
-                    display={"initial": "flex", "md": "none"},
+                    display=rx.breakpoints(initial="flex", md="none"),
                     flex_shrink="0",
                     style={
                         "color": "rgba(200,210,220,0.6)",
@@ -9316,14 +9316,14 @@ def semester_page():
                         rx.text(
                             AppState.current_topic_name,
                             color="rgba(240,244,248,0.85)",
-                            font_size={"initial": "0.78rem", "md": "0.92rem"},
+                            font_size=rx.breakpoints(initial="0.78rem", md="0.92rem"),
                             font_weight="500",
                             letter_spacing="-0.01em",
                             text_align="right",
                             overflow="hidden",
                             text_overflow="ellipsis",
                             white_space="nowrap",
-                            max_width={"initial": "140px", "sm": "200px", "md": "none"},
+                            max_width=rx.breakpoints(initial="140px", sm="200px", md="none"),
                         ),
                         rx.text(
                             "current topic",
@@ -9339,10 +9339,10 @@ def semester_page():
                     rx.fragment(),
                 ),
                 width="100%",
-                padding={"initial": "10px 1em 6px", "md": "10px 1.5em 6px"},
+                padding=rx.breakpoints(initial="10px 1em 6px", md="10px 1.5em 6px"),
                 flex_shrink="0",
                 align="center",
-                gap={"initial": "2", "md": "4"},
+                gap=rx.breakpoints(initial="2", md="4"),
             ),
             rx.cond(
                 AppState.is_generating_plan,
