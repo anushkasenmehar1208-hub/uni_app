@@ -194,3 +194,4 @@ __pycache__/
 .env
 s
 .web/
+.claude/worktrees/cool-matsumoto/
