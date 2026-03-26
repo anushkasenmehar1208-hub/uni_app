@@ -40,11 +40,23 @@ tavily = TavilyClient(api_key="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
 def search_web(query: str) -> str:
     """Search the web using Tavily and return formatted results."""
     try:
-        res = tavily.search(query=query, search_depth="advanced")
-        results = []
+        res = tavily.search(
+            query=query,
+            search_depth="advanced",
+            include_answer=True,
+            include_raw_content=True,
+        )
+        parts = []
+        answer = res.get("answer", "")
+        if answer:
+            parts.append(f"Answer: {answer}")
         for r in res.get("results", []):
-            results.append(f"{r['title']} - {r['url']}")
-        return "\n".join(results)
+            entry = f"{r['title']} - {r['url']}"
+            raw = (r.get("raw_content") or "")[:500]
+            if raw:
+                entry += f"\n{raw}"
+            parts.append(entry)
+        return "\n\n".join(parts)
     except Exception as e:
         print(f"[Tavily] search error: {e}")
         return ""
