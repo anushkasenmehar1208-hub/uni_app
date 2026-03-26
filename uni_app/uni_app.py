@@ -899,6 +899,10 @@ class UserProfile(rx.Model, table=True):  # type: ignore
     )
     is_premium_1: bool = Field(default=False, nullable=False)
     is_premium_2: bool = Field(default=False, nullable=False)
+    premium_activated_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
     daily_message_count: int = Field(default=0, nullable=False)
     last_message_date: Optional[date] = Field(
         default=None,
@@ -954,9 +958,10 @@ async def gumroad_ping(request: Request) -> PlainTextResponse:
 
             profile.is_premium_1 = True
             profile.is_premium_2 = False
+            profile.premium_activated_at = datetime.now(timezone.utc)
             session.add(profile)
             session.commit()
-            print(f"[Gumroad] ✅ Activated Premium for user_id={profile.user_id} unique_id={unique_id}")
+            print(f"[Gumroad] ✅ Activated Premium (30 days) for user_id={profile.user_id} unique_id={unique_id}")
 
         return PlainTextResponse("OK", status_code=200)
 
@@ -1065,6 +1070,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     profile_created_at: str = ""
     is_premium_1: bool = False
     is_premium_2: bool = False
+    premium_activated_at: str = ""
     daily_message_count: int = 0
     last_message_date: str = ""
 
@@ -1117,7 +1123,31 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def has_premium_access(self) -> bool:
-        return self.is_premium_1 or self.is_premium_2
+        if not (self.is_premium_1 or self.is_premium_2):
+            return False
+        if not self.premium_activated_at:
+            return self.is_premium_1 or self.is_premium_2
+        try:
+            activated = datetime.fromisoformat(self.premium_activated_at)
+            now = datetime.now(timezone.utc)
+            if activated.tzinfo is None:
+                activated = activated.replace(tzinfo=timezone.utc)
+            return (now - activated).days < 30
+        except Exception:
+            return False
+
+    @rx.var
+    def premium_days_left(self) -> int:
+        if not self.premium_activated_at:
+            return 0
+        try:
+            activated = datetime.fromisoformat(self.premium_activated_at)
+            if activated.tzinfo is None:
+                activated = activated.replace(tzinfo=timezone.utc)
+            remaining = 30 - (datetime.now(timezone.utc) - activated).days
+            return max(0, remaining)
+        except Exception:
+            return 0
 
     @rx.var
     def is_in_trial(self) -> bool:
@@ -1424,6 +1454,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.profile_created_at  = profile.created_at.isoformat()
             self.is_premium_1         = bool(profile.is_premium_1)
             self.is_premium_2         = bool(profile.is_premium_2)
+            self.premium_activated_at = profile.premium_activated_at.isoformat() if profile.premium_activated_at else ""
             self.daily_message_count  = profile.daily_message_count or 0
             self.last_message_date    = (
                 profile.last_message_date.isoformat()
@@ -10582,6 +10613,27 @@ def _ensure_userprofile_unique_id() -> None:
     except Exception as e:
         print(f"ERROR ensure_userprofile_unique_id: {e}")
 _ensure_userprofile_unique_id()
+
+
+def _ensure_userprofile_premium_activated_at() -> None:
+    try:
+        with rx.session() as session:
+            conn = session.connection()
+            dialect = conn.dialect.name
+            if dialect == "sqlite":
+                cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('userprofile')").fetchall()}
+                if "premium_activated_at" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN premium_activated_at TIMESTAMP NULL")
+            elif dialect == "postgresql":
+                result = conn.exec_driver_sql(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name='userprofile' AND column_name='premium_activated_at'"
+                ).fetchone()
+                if result is None:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN premium_activated_at TIMESTAMPTZ NULL")
+            session.commit()
+    except Exception as e:
+        print(f"ERROR ensure_userprofile_premium_activated_at: {e}")
+_ensure_userprofile_premium_activated_at()
 
 
 def _ensure_chatmessage2_document_columns() -> None:
