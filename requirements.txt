@@ -12,3 +12,4 @@ httpx
 itsdangerous
 PyMuPDF
 python-docx
+tavily-python

@@ -32,6 +32,24 @@ from reflex_local_auth.user import LocalUser
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import RedirectResponse as StarletteRedirect
 
+from tavily import TavilyClient
+
+tavily = TavilyClient(api_key="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")
+
+
+def search_web(query: str) -> str:
+    """Search the web using Tavily and return formatted results."""
+    try:
+        res = tavily.search(query=query, search_depth="advanced")
+        results = []
+        for r in res.get("results", []):
+            results.append(f"{r['title']} - {r['url']}")
+        return "\n".join(results)
+    except Exception as e:
+        print(f"[Tavily] search error: {e}")
+        return ""
+
+
 try:
     import fitz  # type: ignore
 except ImportError:
@@ -4345,6 +4363,12 @@ Subjects:\n{courses_text}"""
 
         typed_user_msg = self.chat_input.strip()
         user_msg = typed_user_msg
+
+        # Enrich with web search results
+        web_data = await asyncio.to_thread(search_web, typed_user_msg)
+        if web_data:
+            user_msg += "\n\nWeb Results:\n" + web_data
+
         image_bytes = self._image_data
         image_mime = self._image_mime
         document_bytes = self._document_data
