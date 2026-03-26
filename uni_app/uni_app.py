@@ -18,6 +18,7 @@ from pathlib import Path
 from datetime import datetime, date, timedelta, timezone
 from typing import Any, Optional
 
+import traceback
 import reflex as rx
 import httpx
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
@@ -55,9 +56,9 @@ if GROQ_API_KEY:
 else:
     client = None
 
-GEMINI_FAST_MODEL = "llama-3.3-70b-versatile"
-GEMINI_PRO_MODEL  = "llama-3.3-70b-versatile"
-GEMINI_MODEL      = GEMINI_FAST_MODEL
+GROQ_FAST_MODEL = "llama-3.3-70b-versatile"
+GROQ_PRO_MODEL  = "llama-3.3-70b-versatile"
+GROQ_MODEL      = GROQ_FAST_MODEL
 
 # ----------------------------
 # DuckDuckGo web search setup
@@ -516,7 +517,7 @@ DECISION: YES or NO
 QUERY: <optimized search query if YES, empty if NO>"""
 
         resp = await asyncio.to_thread(
-            _groq_generate, GEMINI_FAST_MODEL, classify_prompt, max_tokens=100
+            _groq_generate, GROQ_FAST_MODEL, classify_prompt, max_tokens=100
         )
         text = (getattr(resp, "text", "") or "").strip()
         if "YES" in text.upper():
@@ -544,7 +545,7 @@ DECISION: YES or NO
 QUERY: <optimized search query if YES, empty if NO>"""
 
         resp = await asyncio.to_thread(
-            _groq_generate, GEMINI_FAST_MODEL, classify_prompt, max_tokens=100
+            _groq_generate, GROQ_FAST_MODEL, classify_prompt, max_tokens=100
         )
         text = (getattr(resp, "text", "") or "").strip()
         if "YES" in text.upper():
@@ -640,7 +641,12 @@ def _redact_training_text(text: str) -> str:
     return t
 
 
-import fcntl
+try:
+    import fcntl as _fcntl
+    _HAS_FCNTL = True
+except ImportError:
+    _fcntl = None  # type: ignore
+    _HAS_FCNTL = False
 
 def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg: str) -> None:
     """Store anonymized chat examples for optional offline model tuning later."""
@@ -667,11 +673,13 @@ def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg:
             "assistant": _redact_training_text(assistant_text)[:2800],
         }
         with TRAINING_DATA_PATH.open("a", encoding="utf-8") as f:
-            fcntl.flock(f, fcntl.LOCK_EX)
+            if _HAS_FCNTL:
+                _fcntl.flock(f, _fcntl.LOCK_EX)  # type: ignore
             try:
                 f.write(json.dumps(row, ensure_ascii=True) + "\n")
             finally:
-                fcntl.flock(f, fcntl.LOCK_UN)
+                if _HAS_FCNTL:
+                    _fcntl.flock(f, _fcntl.LOCK_UN)  # type: ignore
     except Exception as e:
         print(f"ERROR training log append: {e}")
 
@@ -711,7 +719,7 @@ PLANS = {
         "name":   "Alex AI — Premium",
         "amount": 3.17,
         "label":  "⚡ Premium",
-        "model":  GEMINI_FAST_MODEL,
+        "model":  GROQ_FAST_MODEL,
     },
 }
 
@@ -1357,7 +1365,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def active_model_name(self) -> str:
-        return GEMINI_FAST_MODEL
+        return GROQ_FAST_MODEL
 
     @rx.var
     def tier_label(self) -> str:
@@ -1570,7 +1578,8 @@ class AppState(reflex_local_auth.LocalAuthState):
         if uid < 0:
             return
         with rx.session() as session:
-            for model_cls in [ChatSession, UserMemory, ScopeMemory, SemesterStudyPlan,
+            for model_cls in [ChatMessage, ChatMessage2, MessageFeedback, StudyProgress,
+                              ChatSession, UserMemory, ScopeMemory, SemesterStudyPlan,
                               SemesterPlanGenerationState, DayProgress, UserProfile]:
                 rows = session.exec(select(model_cls).where(model_cls.user_id == uid)).all()
                 for row in rows:
@@ -1580,6 +1589,11 @@ class AppState(reflex_local_auth.LocalAuthState):
             ).all()
             for s in auth_sessions:
                 session.delete(s)
+            throttle_rows = session.exec(
+                select(AuthThrottle).where(AuthThrottle.key.startswith(str(uid) + ":"))
+            ).all()
+            for t in throttle_rows:
+                session.delete(t)
             user = session.exec(select(LocalUser).where(LocalUser.id == uid)).one_or_none()
             if user is not None:
                 session.delete(user)
@@ -2972,7 +2986,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         try:
             resp = await asyncio.to_thread(
                 _groq_generate,
-                GEMINI_FAST_MODEL,
+                GROQ_FAST_MODEL,
                 f"Update scope memory. Keep short facts only.\nScope: {scope}\nCurrent: {current}\nNew: {recent_text}\nReturn only updated summary."
             )
             new_sum = (getattr(resp, "text", "") or "").strip()
@@ -2996,7 +3010,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         try:
             resp = await asyncio.to_thread(
                 _groq_generate,
-                GEMINI_FAST_MODEL,
+                GROQ_FAST_MODEL,
                 f"Update long term memory summary. Keep short stable facts only.\nCurrent: {self.memory_summary}\nNew: {recent_text}\nReturn only updated memory text."
             )
             new_sum = (getattr(resp, "text", "") or "").strip()
@@ -3082,7 +3096,7 @@ IMPORTANT SAFETY RULES — you MUST follow these:
 Update the saved profile instead of overwriting randomly. Keep only durable tutoring insights."""
 
         try:
-            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt)
+            resp = await asyncio.to_thread(_groq_generate, GROQ_FAST_MODEL, prompt)
             new_profile = (getattr(resp, "text", "") or "").strip()
             if new_profile:
                 self._set_adaptive_profile(uid, new_profile)
@@ -4145,7 +4159,7 @@ Use the web research above (if present) to ensure your plan follows the latest s
 Return ONLY a valid JSON array with exactly 110 items.
 Each item: {{"day":<1-110>,"subject":"<n>","unit":"<unit>","topics":["<t1>","<t2>"]}}
 Subjects:\n{courses_text}"""
-            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL, prompt, 8192)
+            resp = await asyncio.to_thread(_groq_generate, GROQ_FAST_MODEL, prompt, 8192)
             raw_text = (getattr(resp, "text", "") or "").strip()
             print(f"[PLAN-GEN] Groq response len={len(raw_text)} first100='{raw_text[:100]}'", flush=True)
         except Exception as e:
@@ -4320,14 +4334,32 @@ Subjects:\n{courses_text}"""
             text = self.chat_history[index].get("content", "")
             yield rx.call_script(
                 f"""
-                navigator.clipboard.writeText({json.dumps(text)}).then(function() {{
-                    var t = document.createElement('div');
-                    t.textContent = 'Copied';
-                    t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.12);color:rgba(240,244,248,0.9);padding:6px 16px;border-radius:8px;font-size:13px;font-family:Söhne,sans-serif;z-index:9999;pointer-events:none;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);transition:opacity 0.3s';
-                    document.body.appendChild(t);
-                    setTimeout(function(){{ t.style.opacity='0'; }}, 1200);
-                    setTimeout(function(){{ t.remove(); }}, 1600);
-                }});
+                (function() {{
+                    var text = {json.dumps(text)};
+                    function showToast() {{
+                        var t = document.createElement('div');
+                        t.textContent = 'Copied';
+                        t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.12);color:rgba(240,244,248,0.9);padding:6px 16px;border-radius:8px;font-size:13px;font-family:Söhne,sans-serif;z-index:9999;pointer-events:none;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);transition:opacity 0.3s';
+                        document.body.appendChild(t);
+                        setTimeout(function(){{ t.style.opacity='0'; }}, 1200);
+                        setTimeout(function(){{ t.remove(); }}, 1600);
+                    }}
+                    function fallbackCopy(txt) {{
+                        var ta = document.createElement('textarea');
+                        ta.value = txt;
+                        ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+                        document.body.appendChild(ta);
+                        ta.focus();
+                        ta.select();
+                        try {{ document.execCommand('copy'); showToast(); }} catch(e) {{}}
+                        document.body.removeChild(ta);
+                    }}
+                    if (navigator.clipboard && window.isSecureContext) {{
+                        navigator.clipboard.writeText(text).then(showToast).catch(function() {{ fallbackCopy(text); }});
+                    }} else {{
+                        fallbackCopy(text);
+                    }}
+                }})();
                 """
             )
 
@@ -4636,7 +4668,7 @@ Subjects:\n{courses_text}"""
                             chat_context = " | ".join([m.get("content", "")[:120] for m in recent])
                         title_resp = await asyncio.to_thread(
                             _groq_generate,
-                            GEMINI_FAST_MODEL,
+                            GROQ_FAST_MODEL,
                             f'Give a short 3-6 word chat title summarizing this conversation. Reply with ONLY the title, no quotes.\n\nConversation: "{chat_context}"',
                         )
                         new_title = (getattr(title_resp, "text", "") or "").strip().strip('"').strip("'")[:60]
@@ -5118,7 +5150,7 @@ Behavior rules:
             scope = self.active_scope; self._ensure_scope_memory(uid, scope)
             recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in self.chat_history[-20:]])
             current = self._get_scope_summary(uid, scope)
-            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL,
+            resp = await asyncio.to_thread(_groq_generate, GROQ_FAST_MODEL,
                 contents=f"Update scope memory. Keep short facts only.\nScope: {scope}\nCurrent: {current}\nNew: {recent_text}\nReturn only updated summary.")
             new_sum = (getattr(resp,"text","") or "").strip()
             if new_sum: self._set_scope_summary(uid, scope, new_sum)
@@ -5130,7 +5162,7 @@ Behavior rules:
         if uid < 0 or client is None: return
         try:
             recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in self.chat_history[-20:]])
-            resp = await asyncio.to_thread(_groq_generate, GEMINI_FAST_MODEL,
+            resp = await asyncio.to_thread(_groq_generate, GROQ_FAST_MODEL,
                 contents=f"Update long term memory summary. Keep short stable facts only.\nCurrent: {self.memory_summary}\nNew: {recent_text}\nReturn only updated memory text.")
             new_sum = (getattr(resp,"text","") or "").strip()
             if new_sum: self.memory_summary = new_sum[:4000]; self._save_memory(uid)
@@ -9742,7 +9774,7 @@ def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
 @rx.page(
     route="/",
     title="Alex AI | AI Study Assistant for University Students",
-    description="Alex AI analyzes your degree, organizes each semester, and guides you day by day with a structured 105-day learning plan.",
+    description="Alex AI analyzes your degree, organizes each semester, and guides you day by day with a structured 110-day learning plan.",
     image=FAVICON_32,
     on_load=AppState.on_load_public_landing,
     meta=[
@@ -9795,8 +9827,8 @@ def landing_page():
                 "03",
             ),
             _marketing_card(
-                "Students get daily guided teaching for 105 days per semester",
-                "Each semester is turned into a guided 105-day plan so students know what to learn each day.",
+                "Students get daily guided teaching for 110 days per semester",
+                "Each semester is turned into a guided 110-day plan so students know what to learn each day.",
                 "04",
             ),
             _marketing_card(
@@ -9824,7 +9856,7 @@ def landing_page():
             ),
             _marketing_step_card(
                 "3",
-                "Receive a 105-day guided plan",
+                "Receive a 110-day guided plan",
                 "Each semester is organized into a structured study path with a daily schedule.",
             ),
             _marketing_step_card(
@@ -9880,7 +9912,7 @@ def landing_page():
                 ),
                 rx.hstack(
                     rx.text(
-                        "USD 3.20",
+                        "USD 3.17",
                         color="white",
                         font_size="clamp(2.2rem, 4.4vw, 3.4rem)",
                         font_weight="800",
@@ -10007,7 +10039,7 @@ def landing_page():
                     max_width="760px",
                 ),
                 rx.text(
-                    "Alex AI analyzes your degree organizes each semester and guides you day by day with a structured 105-day learning plan",
+                    "Alex AI analyzes your degree organizes each semester and guides you day by day with a structured 110-day learning plan",
                     color="rgba(226,232,240,0.8)",
                     font_size="clamp(1rem, 2vw, 1.18rem)",
                     line_height="1.8",
@@ -10026,7 +10058,7 @@ def landing_page():
                         "Students get a clearer path through each semester before they begin the daily plan.",
                     ),
                     _marketing_card(
-                        "105-day guided teaching",
+                        "110-day guided teaching",
                         "Each semester is taught through a structured day-by-day learning sequence.",
                     ),
                     _marketing_card(
@@ -10060,7 +10092,7 @@ def landing_page():
                         "Subjects are analyzed semester by semester to build a realistic study sequence.",
                     ),
                     hero_detail_row(
-                        "A 105-day semester plan is generated",
+                        "A 110-day semester plan is generated",
                         "Each semester becomes a guided daily plan instead of an unstructured list of topics.",
                     ),
                     hero_detail_row(
@@ -10567,6 +10599,7 @@ def settings_learn_more_tab() -> rx.Component:
 @rx.page(
     route="/settings",
     title="Settings — Alex AI",
+    description="Manage your Alex AI account settings",
     image=FAVICON_32,
     on_load=AppState.on_load_settings,
 )
@@ -10693,15 +10726,12 @@ async def google_callback(request: Request):
     if not GOOGLE_OAUTH_ENABLED:
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
     try:
-        print(f"[Google CB] started, params: {dict(request.query_params)}")
-        
-        if request.query_params.get("error"):
-            print(f"[Google CB] error param: {request.query_params.get('error')}")
-            return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
-        
-        # ADD THIS near the top of google_callback():
         state = str(request.query_params.get("state", "") or "")
         if not _google_state_is_valid(state):
+            return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
+
+        if request.query_params.get("error"):
+            print(f"[Google CB] error param: {request.query_params.get('error')}")
             return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
         code = str(request.query_params.get("code", "") or "")
@@ -10709,7 +10739,6 @@ async def google_callback(request: Request):
             print("[Google CB] no code")
             return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}", status_code=302)
 
-        print("[Google CB] got code, fetching token...")
         async with httpx.AsyncClient(timeout=20.0) as client_http:
             token_resp = await client_http.post(
                 GOOGLE_TOKEN_URL,
@@ -10722,7 +10751,6 @@ async def google_callback(request: Request):
                 },
                 headers={"Accept": "application/json"},
             )
-            print(f"[Google CB] token response status: {token_resp.status_code}")
             token_resp.raise_for_status()
             token = token_resp.json()
             access_token = str(token.get("access_token", "") or "")
@@ -10739,7 +10767,6 @@ async def google_callback(request: Request):
                     payload = userinfo_resp.json() or {}
                     if isinstance(payload, dict):
                         userinfo = payload
-                    print(f"[Google CB] userinfo ok, sub: {userinfo.get('sub','')[:8]}")
                 except Exception as ue:
                     print(f"[Google CB] userinfo failed: {ue}")
                     userinfo = _id_token_payload(id_token_val)
@@ -10752,7 +10779,6 @@ async def google_callback(request: Request):
             raise ValueError("Google userinfo missing subject.")
 
         username = _google_username_from_sub(subject)
-        print(f"[Google CB] username: {username}")
 
         with rx.session() as session:
             user = session.exec(
@@ -10768,9 +10794,6 @@ async def google_callback(request: Request):
                 session.add(user)
                 session.commit()
                 session.refresh(user)
-                print(f"[Google CB] new user created id={user.id}")
-            else:
-                print(f"[Google CB] existing user id={user.id}")
 
             if user.id is None:
                 raise ValueError("Unable to create a valid local user for Google login.")
@@ -10784,15 +10807,12 @@ async def google_callback(request: Request):
                 )
             )
             session.commit()
-            print("[Google CB] session created, redirecting to /auth/complete...")
 
         complete_url = _frontend_redirect_url(request, "/auth/complete", {"token": auth_token})
-        print(f"[Google CB] redirect to: {complete_url[:60]}...")
         return RedirectResponse(url=complete_url, status_code=302)
 
     except Exception as e:
         print(f"[Google CB] ERROR: {e}")
-        import traceback
         traceback.print_exc()
         return RedirectResponse(url=f"{_frontend_base_url(request)}{auth_routes.LOGIN_ROUTE}?oauth_error=1", status_code=302)
     
@@ -10849,7 +10869,8 @@ api.add_route("/media/chat/{path:path}", serve_chat_media, methods=["GET"])
 try:
     rx.Model.create_all()
 except Exception as e:
-    print(f"ERROR create_all: {e}")
+    print(f"CRITICAL ERROR create_all — database tables could not be created: {e}")
+    raise
 
 
 def _ensure_usermemory_columns() -> None:
