@@ -6402,15 +6402,15 @@ def empty_chat_panel() -> rx.Component:
             rx.hstack(
                 rx.image(
                     src="/alex_logo.svg",
-                    width="40px",
-                    height="40px",
+                    width={"initial": "32px", "md": "40px"},
+                    height={"initial": "32px", "md": "40px"},
                     object_fit="contain",
                     opacity="0.8",
                 ),
                 rx.text(
                     AppState.greeting_text,
                     color="rgba(220,225,232,0.7)",
-                    font_size="1.85rem",
+                    font_size={"initial": "1.35rem", "md": "1.85rem"},
                     font_weight="300",
                     letter_spacing="-0.01em",
                     line_height="1.2",
@@ -6445,8 +6445,8 @@ def empty_chat_panel() -> rx.Component:
         display="flex",
         align_items="center",
         justify_content="center",
-        padding="2em",
-        padding_bottom="8vh",
+        padding={"initial": "1em", "md": "2em"},
+        padding_bottom={"initial": "4vh", "md": "8vh"},
     )
 
 # ── active_chat_panel — Claude-like editorial styling ──────────
@@ -6673,6 +6673,30 @@ _CLAUDE_MD_CSS = """
 @media (hover: none) {
   .msg-actions { opacity: 0.7 !important; }
 }
+
+/* ── Mobile responsive adjustments ── */
+@media (max-width: 768px) {
+  .claude-md {
+    font-size: 14.5px;
+    line-height: 1.65;
+  }
+  .claude-md h1 { font-size: 1.3em; }
+  .claude-md h2 { font-size: 1.15em; }
+  .claude-md h3 { font-size: 1.05em; }
+  .claude-md pre {
+    font-size: 0.82em;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .claude-md table {
+    font-size: 0.82em;
+    display: block;
+    overflow-x: auto;
+  }
+  .claude-md th, .claude-md td {
+    padding: 6px 8px;
+  }
+}
 </style>
 """
 
@@ -6816,7 +6840,7 @@ def active_chat_panel() -> rx.Component:
                                             justify="end",
                                             margin_top="6px",
                                         ),
-                                        max_width="70%",
+                                        max_width={"initial": "88%", "md": "70%"},
                                         margin_left="auto",
                                         margin_right="0",
                                     ),
@@ -6954,7 +6978,7 @@ def active_chat_panel() -> rx.Component:
                                             transition="opacity 0.15s ease",
                                             min_height="24px",
                                         ),
-                                        max_width="70%",
+                                        max_width={"initial": "88%", "md": "70%"},
                                         margin_left="auto",
                                         margin_right="0",
                                         class_name="msg-row",
@@ -7063,7 +7087,7 @@ def active_chat_panel() -> rx.Component:
                 spacing="0",
                 max_width="740px",
                 margin_x="auto",
-                padding_x="1.5em",
+                padding_x={"initial": "0.75em", "md": "1.5em"},
                 padding_top="1em",
                 padding_bottom="0.5em",
                 style={
@@ -7094,7 +7118,7 @@ def active_chat_panel() -> rx.Component:
                 width="100%",
                 max_width="740px",
                 margin_x="auto",
-                padding="0 1.5em 0 1.5em",
+                padding={"initial": "0 0.75em", "md": "0 1.5em"},
             ),
             upgrade_button(),
         ),
@@ -8561,6 +8585,24 @@ def home_page():
         # ── Slim header ──
         rx.box(
             rx.hstack(
+                # Mobile-only hamburger button
+                rx.icon_button(
+                    rx.icon(tag="menu", size=18),
+                    on_click=AppState.toggle_semester_sidebar,
+                    variant="ghost",
+                    size="2",
+                    display={"initial": "flex", "md": "none"},
+                    style={
+                        "color": "rgba(200,210,220,0.6)",
+                        "background": "transparent",
+                        "border": "none",
+                        "cursor": "pointer",
+                        "_hover": {
+                            "color": "rgba(220,230,240,0.85)",
+                            "background": "rgba(255,255,255,0.06)",
+                        },
+                    },
+                ),
                 rx.vstack(
                     rx.text(
                         AppState.greeting_text,
@@ -8581,10 +8623,12 @@ def home_page():
                 ),
                 width="100%",
                 align="center",
-                padding="0.9em 2em 0.9em 1.4em",
+                padding={"initial": "0.9em 1em", "md": "0.9em 2em 0.9em 1.4em"},
             ),
             flex_shrink="0",
         ),
+        # ── Mobile sidebar drawer (reuse semester_sidebar_drawer) ──
+        semester_sidebar_drawer(),
         # ── Main area ──
         rx.flex(
             rx.box(
@@ -8595,6 +8639,7 @@ def home_page():
                 border_right="1px solid rgba(255,255,255,0.04)",
                 background="rgba(255,255,255,0.01)",
                 padding="1.2em 1em",
+                display={"initial": "none", "md": "block"},
             ),
             rx.box(
                 chat_panel(),
@@ -9033,7 +9078,7 @@ def semester_sidebar_drawer() -> rx.Component:
                 position="fixed",
                 top="0",
                 left="0",
-                width="300px",
+                width={"initial": "min(300px, 85vw)", "md": "300px"},
                 height="100vh",
                 padding="1.2em 1em",
                 background="rgba(10,10,14,0.98)",
@@ -9114,6 +9159,7 @@ def nav_rail() -> rx.Component:
         spacing="1",
         border_right="1px solid rgba(255,255,255,0.06)",
         background="#0a0a0c",
+        display={"initial": "none", "md": "flex"},
     )
 
 
@@ -9126,6 +9172,25 @@ def semester_page():
             semester_sidebar_drawer(),
             # ── Top info (no bar, no border — just text) ──
             rx.hstack(
+                # Mobile-only hamburger button
+                rx.icon_button(
+                    rx.icon(tag="menu", size=18),
+                    on_click=AppState.toggle_semester_sidebar,
+                    variant="ghost",
+                    size="2",
+                    display={"initial": "flex", "md": "none"},
+                    flex_shrink="0",
+                    style={
+                        "color": "rgba(200,210,220,0.6)",
+                        "background": "transparent",
+                        "border": "none",
+                        "cursor": "pointer",
+                        "_hover": {
+                            "color": "rgba(220,230,240,0.85)",
+                            "background": "rgba(255,255,255,0.06)",
+                        },
+                    },
+                ),
                 # Left: degree + semester/day + progress pip
                 rx.vstack(
                     rx.text(
@@ -9177,10 +9242,14 @@ def semester_page():
                         rx.text(
                             AppState.current_topic_name,
                             color="rgba(240,244,248,0.85)",
-                            font_size="0.92rem",
+                            font_size={"initial": "0.78rem", "md": "0.92rem"},
                             font_weight="500",
                             letter_spacing="-0.01em",
                             text_align="right",
+                            overflow="hidden",
+                            text_overflow="ellipsis",
+                            white_space="nowrap",
+                            max_width={"initial": "140px", "sm": "200px", "md": "none"},
                         ),
                         rx.text(
                             "current topic",
@@ -9190,13 +9259,16 @@ def semester_page():
                         ),
                         spacing="0",
                         align_items="flex-end",
+                        flex_shrink="1",
+                        min_width="0",
                     ),
                     rx.fragment(),
                 ),
                 width="100%",
-                padding="10px 1.5em 6px",
+                padding={"initial": "10px 1em 6px", "md": "10px 1.5em 6px"},
                 flex_shrink="0",
                 align="center",
+                gap={"initial": "2", "md": "4"},
             ),
             rx.cond(
                 AppState.is_generating_plan,
