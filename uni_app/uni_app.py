@@ -549,7 +549,7 @@ _google_state_serializer = URLSafeTimedSerializer(SESSION_SECRET, salt="google-o
 PLANS = {
     1: {
         "name":   "Alex AI — Premium",
-        "amount": 200.00,
+        "amount": 3.17,
         "label":  "⚡ Premium",
         "model":  GEMINI_FAST_MODEL,
     },
@@ -5138,7 +5138,7 @@ def pricing_modal() -> rx.Component:
                 rx.hstack(
                     rx.vstack(
                         rx.text("Alex AI Premium", font_size="1.1rem", font_weight="700", color="white"),
-                        rx.text("USD 3.20", font_size="2.1rem", font_weight="800", color="white"),
+                        rx.text("USD 3.17", font_size="2.1rem", font_weight="800", color="white"),
                         rx.text("per month", color="rgba(255,255,255,0.55)", font_size="0.85rem"),
                         rx.box(height="8px"),
                         rx.text("• Unlimited daily messages", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
