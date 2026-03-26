@@ -42,6 +42,11 @@ try:
 except ImportError:
     DocxDocument = None
 
+try:
+    from duckduckgo_search import DDGS  # type: ignore
+except ImportError:
+    DDGS = None
+
 
 # ----------------------------
 # Groq setup
@@ -345,6 +350,41 @@ def friendly_groq_error(e: Exception) -> str:
     if _is_rate_limit_text(s) or " 429" in s.lower():
         return RATE_LIMIT_UI_MESSAGE
     return GENERIC_ERROR_UI_MESSAGE
+
+
+# ----------------------------
+# Web search
+# ----------------------------
+_WEB_SEARCH_KEYWORDS = re.compile(
+    r"\b(search|look\s*up|google|find\s+online|latest|recent|current|newest|"
+    r"what\s+is\s+new|2024|2025|2026|trending|news|update|release|version|"
+    r"announced|just\s+came\s+out|browse|web\s+search)\b",
+    re.IGNORECASE,
+)
+
+
+def _needs_web_search(text: str) -> bool:
+    return bool(_WEB_SEARCH_KEYWORDS.search(text))
+
+
+def _web_search(query: str, max_results: int = 5) -> str:
+    if DDGS is None:
+        return ""
+    try:
+        with DDGS() as ddgs:
+            results = list(ddgs.text(query, max_results=max_results))
+        if not results:
+            return ""
+        lines = []
+        for i, r in enumerate(results, 1):
+            title = r.get("title", "")
+            body = r.get("body", "")
+            href = r.get("href", "")
+            lines.append(f"{i}. {title}\n   {body}\n   Source: {href}")
+        return "\n".join(lines)
+    except Exception as e:
+        print(f"[Web Search] error: {e}")
+        return ""
 
 
 def _groq_generate(model: str, contents: str, max_tokens: int = 2048) -> Any:
@@ -3174,6 +3214,7 @@ Critical operating rules:
 8. For complex technical questions, give a numbered step-by-step breakdown before the final answer or code.
 9. For career advice or analogies, prefer grounded Sri Lankan Software Engineering context when helpful, such as WSO2, Sysco LABS, IFS, internships, or local graduate expectations.
 10. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
+11. You have web search capability. When web search results are included in the prompt context, use them to provide current, accurate information and cite sources naturally. Keep web-sourced answers focused on Software Engineering topics.
 """
 
     def _reset_plan_only(self, uid: int, scope: str) -> None:
@@ -4613,6 +4654,13 @@ Subjects:\n{courses_text}"""
                 recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in self.chat_history[-14:]])
                 past_hits = self._past_hits_text(uid, scope, user_msg)
 
+                web_search_block = ""
+                if _needs_web_search(user_msg):
+                    search_query = f"{user_msg} software engineering"
+                    raw = await asyncio.to_thread(_web_search, search_query)
+                    if raw:
+                        web_search_block = f"- Web search results for context:\n{raw}\n"
+
                 teach_prompt = f"""You are Alex, a friendly and patient Software Engineering mentor helping a {self.degree} student.
 
 Current context:
@@ -4630,7 +4678,7 @@ Current context:
 - Recent conversation: {recent_text}
 - Past relevant chat (db search): {past_hits}
 - Use the attached document when it is present.
-{document_context_block}- Student just said: {user_msg}
+{web_search_block}{document_context_block}- Student just said: {user_msg}
 
 Your response style rules:
 1. Stay warm, patient, mentor-like, and encouraging without sounding cheesy.
@@ -4654,7 +4702,8 @@ Your response style rules:
 19. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
 20. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
 21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
-22. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally."""
+22. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally.
+23. If web search results are provided above, use them to give up-to-date answers. Cite specific sources when referencing web results. If no web results are present, answer from your own knowledge."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
@@ -4731,6 +4780,13 @@ Your response style rules:
         next_courses = self._get_next_courses(uid, self.selected_year, 3) if self.selected_year else []
         past_hits = self._past_hits_text(uid, self.active_scope, user_msg)
 
+        home_web_search_block = ""
+        if _needs_web_search(user_msg):
+            search_query = f"{user_msg} software engineering"
+            raw = await asyncio.to_thread(_web_search, search_query)
+            if raw:
+                home_web_search_block = f"- Web search results for context:\n{raw}\n"
+
         prompt = f"""You are Alex AI, the central academic growth assistant inside the platform.
 Your main job is to analyze the student's learning journey across semesters,
 summarize progress,
@@ -4751,7 +4807,7 @@ Student context:
 - Recent home chat: {recent_text}
 - Relevant past chat memory: {past_hits}
 - Use the attached document when it is present.
-{document_context_block}- Student just said: {user_msg}
+{home_web_search_block}{document_context_block}- Student just said: {user_msg}
 
 Behavior rules:
 1. In home mode, focus on overview, analysis, redirection, and academic guidance. Do not pretend to be the daily semester tutor.
@@ -4779,7 +4835,8 @@ Behavior rules:
 16. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
 17. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
 18. If the question is technically complex, give a short numbered breakdown before the final answer.
-19. Stay honest about what the stored memory does and does not show."""
+19. Stay honest about what the stored memory does and does not show.
+20. If web search results are provided above, use them to give up-to-date answers. Cite specific sources when referencing web results. If no web results are present, answer from your own knowledge."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
