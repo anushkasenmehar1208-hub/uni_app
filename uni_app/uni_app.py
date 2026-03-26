@@ -515,13 +515,8 @@ def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg:
     except Exception as e:
         print(f"ERROR training log append: {e}")
 
-# ----------------------------
-# PayHere configuration
-# ----------------------------
-PAYHERE_MERCHANT_ID     = os.getenv("PAYHERE_MERCHANT_ID", "").strip()
-PAYHERE_MERCHANT_SECRET = os.getenv("PAYHERE_MERCHANT_SECRET", "").strip()
-PAYHERE_SANDBOX         = os.getenv("PAYHERE_SANDBOX", "true").lower() == "true"
 APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3000").rstrip("/")
+GUMROAD_PRODUCT_URL     = "https://anushka1208.gumroad.com/l/ghrbl"
 API_BASE_URL            = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
 GOOGLE_CLIENT_ID        = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET    = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
@@ -550,12 +545,6 @@ GOOGLE_USERINFO_URL     = "https://openidconnect.googleapis.com/v1/userinfo"
 GOOGLE_STATE_MAX_AGE_SECONDS = 600
 GOOGLE_STRICT_STATE     = os.getenv("GOOGLE_STRICT_STATE", "false").lower() == "true"
 _google_state_serializer = URLSafeTimedSerializer(SESSION_SECRET, salt="google-oauth-state")
-
-PAYHERE_CHECKOUT_URL = (
-    "https://sandbox.payhere.lk/pay/checkout"
-    if PAYHERE_SANDBOX
-    else "https://www.payhere.lk/pay/checkout"
-)
 
 PLANS = {
     1: {
@@ -688,30 +677,6 @@ def _id_token_payload(id_token: str) -> dict[str, Any]:
         return parsed if isinstance(parsed, dict) else {}
     except Exception:
         return {}
-
-
-# ----------------------------
-# PayHere hash helpers
-# ----------------------------
-def _ph_secret_hash() -> str:
-    return hashlib.md5(PAYHERE_MERCHANT_SECRET.encode()).hexdigest().upper()
-
-
-def _generate_ph_hash(order_id: str, amount: float, currency: str = "LKR") -> str:
-    secret_hash = _ph_secret_hash()
-    amount_str  = f"{amount:.2f}"
-    raw         = f"{PAYHERE_MERCHANT_ID}{order_id}{amount_str}{currency}{secret_hash}"
-    return hashlib.md5(raw.encode()).hexdigest().upper()
-
-
-def _verify_ph_notify(
-    merchant_id: str, order_id: str, amount: str,
-    currency: str, status_code: str, md5sig: str
-) -> bool:
-    secret_hash = _ph_secret_hash()
-    raw = f"{merchant_id}{order_id}{amount}{currency}{status_code}{secret_hash}"
-    expected = hashlib.md5(raw.encode()).hexdigest().upper()
-    return hmac.compare_digest(expected, md5sig.upper())
 
 
 # ----------------------------
@@ -962,85 +927,44 @@ class AuthThrottle(rx.Model, table=True):  # type: ignore
     )
 
 
-class PaymentOrder(rx.Model, table=True):  # type: ignore
-    user_id: int = Field(index=True, nullable=False)
-    order_id: str = Field(unique=True, nullable=False, index=True)
-    plan: int = Field(nullable=False)
-    amount: float = Field(nullable=False)
-    currency: str = Field(default="LKR", nullable=False)
-    status: str = Field(default="pending", nullable=False)
-    payhere_payment_id: str = Field(default="", nullable=False)
-    created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    )
-    updated_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    )
-
-
 # ----------------------------
-# PayHere notify webhook
+# Gumroad ping webhook
 # ----------------------------
-async def payhere_notify(request: Request) -> PlainTextResponse:
+async def gumroad_ping(request: Request) -> PlainTextResponse:
     try:
         form = await request.form()
 
-        merchant_id    = str(form.get("merchant_id", ""))
-        order_id       = str(form.get("order_id", ""))
-        payhere_amount = str(form.get("payhere_amount", ""))
-        currency       = str(form.get("payhere_currency", "LKR"))
-        status_code    = str(form.get("status_code", ""))
-        md5sig         = str(form.get("md5sig", ""))
+        seller_id   = str(form.get("seller_id", ""))
+        product_id  = str(form.get("product_id", ""))
+        email       = str(form.get("email", ""))
+        unique_id   = str(form.get("custom_fields[unique_id]", "") or form.get("url_params[unique_id]", "")).strip()
 
-        if not _verify_ph_notify(merchant_id, order_id, payhere_amount, currency, status_code, md5sig):
-            print(f"[PayHere] ❌ Invalid signature for order {order_id}")
-            return PlainTextResponse("invalid signature", status_code=400)
+        if not unique_id:
+            print(f"[Gumroad] ❌ No unique_id in ping (email={email})")
+            return PlainTextResponse("missing unique_id", status_code=400)
 
         with rx.session() as session:
-            order = session.exec(
-                select(PaymentOrder).where(PaymentOrder.order_id == order_id)
+            profile = session.exec(
+                select(UserProfile).where(UserProfile.unique_id == unique_id)
             ).one_or_none()
 
-            if order is None:
-                print(f"[PayHere] ❌ Unknown order_id: {order_id}")
-                return PlainTextResponse("order not found", status_code=404)
+            if profile is None:
+                print(f"[Gumroad] ❌ Unknown unique_id: {unique_id} (email={email})")
+                return PlainTextResponse("user not found", status_code=404)
 
-            payment_id = str(form.get("payment_id", ""))
-
-            if status_code == "2":
-                order.status = "completed"
-                order.payhere_payment_id = payment_id
-                session.add(order)
-
-                profile = session.exec(
-                    select(UserProfile).where(UserProfile.user_id == order.user_id)
-                ).one_or_none()
-
-                if profile:
-                    if order.plan in PLANS or order.plan == 2:
-                        profile.is_premium_1 = True
-                        profile.is_premium_2 = False
-                        print(f"[PayHere] ✅ Activated Premium for user {order.user_id}")
-                    session.add(profile)
-
-                session.commit()
-
-            elif status_code in ("-1", "-2", "-3"):
-                order.status = "failed"
-                order.payhere_payment_id = payment_id
-                session.add(order)
-                session.commit()
-                print(f"[PayHere] ❌ Payment failed/cancelled for order {order_id} (code {status_code})")
-
-            else:
-                print(f"[PayHere] ℹ️ Status {status_code} for order {order_id}")
+            profile.is_premium_1 = True
+            profile.is_premium_2 = False
+            session.add(profile)
+            session.commit()
+            print(f"[Gumroad] ✅ Activated Premium for user_id={profile.user_id} unique_id={unique_id}")
 
         return PlainTextResponse("OK", status_code=200)
 
     except Exception as e:
-        print(f"[PayHere] 🔥 notify error: {e}")
+        print(f"[Gumroad] 🔥 ping error: {e}")
         return PlainTextResponse("server error", status_code=500)
-    
+
+
 async def health_check(request):
     try:
         with rx.session() as session:
@@ -1145,8 +1069,6 @@ class AppState(reflex_local_auth.LocalAuthState):
     last_message_date: str = ""
 
     show_pricing_modal: bool = False
-    payment_processing: bool = False
-    payment_error: str = ""
 
     _cached_uid: int = -1
 
@@ -1457,7 +1379,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
         with rx.session() as session:
             for model_cls in [ChatSession, UserMemory, ScopeMemory, SemesterStudyPlan,
-                              SemesterPlanGenerationState, DayProgress, UserProfile, PaymentOrder]:
+                              SemesterPlanGenerationState, DayProgress, UserProfile]:
                 rows = session.exec(select(model_cls).where(model_cls.user_id == uid)).all()
                 for row in rows:
                     session.delete(row)
@@ -2089,103 +2011,10 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     def open_pricing_modal(self):
         self.show_pricing_modal = True
-        self.payment_error = ""
 
     @rx.event
     def close_pricing_modal(self):
         self.show_pricing_modal = False
-        self.payment_error = ""
-
-    @rx.event
-    async def initiate_payment(self, plan: int):
-        uid = self._uid()
-        if uid < 0:
-            self.payment_error = "Not authenticated. Please log in."
-            return
-
-        if plan not in PLANS:
-            self.payment_error = "Invalid plan selected."
-            return
-
-        if not PAYHERE_MERCHANT_ID or not PAYHERE_MERCHANT_SECRET:
-            self.payment_error = "Payment gateway not configured. Contact support."
-            return
-
-        self.payment_processing = True
-        self.payment_error = ""
-        yield
-
-        try:
-            plan_cfg   = PLANS[plan]
-            amount     = plan_cfg["amount"]
-            currency   = "LKR"
-            ts         = int(datetime.now(timezone.utc).timestamp() * 1000)
-            order_id   = f"ALEXAI-{uid}-P{plan}-{ts}"
-
-            with rx.session() as session:
-                order = PaymentOrder(  # type: ignore
-                    user_id  = uid,
-                    order_id = order_id,
-                    plan     = plan,
-                    amount   = amount,
-                    currency = currency,
-                    status   = "pending",
-                )
-                session.add(order)
-                session.commit()
-
-            ph_hash = _generate_ph_hash(order_id, amount, currency)
-
-            normalized_name = _normalize_person_name(self.name) or "Student User"
-            first_name = normalized_name.split()[0]
-            last_name  = " ".join(normalized_name.split()[1:]) or "User"
-
-            return_url = f"{APP_BASE_URL}/payment/success"
-            cancel_url = f"{APP_BASE_URL}/payment/cancel"
-            notify_url = f"{API_BASE_URL}/api/payhere/notify"
-
-            js = f"""
-(function() {{
-  var fields = {{
-    merchant_id: {json.dumps(PAYHERE_MERCHANT_ID)},
-    return_url:  {json.dumps(return_url)},
-    cancel_url:  {json.dumps(cancel_url)},
-    notify_url:  {json.dumps(notify_url)},
-    order_id:    {json.dumps(order_id)},
-    items:       {json.dumps(plan_cfg['name'])},
-    currency:    {json.dumps(currency)},
-    amount:      {json.dumps(f"{amount:.2f}")},
-    first_name:  {json.dumps(first_name)},
-    last_name:   {json.dumps(last_name)},
-    email:       {json.dumps(f"user{uid}@alexai.lk")},
-    phone:       "0771234567",
-    address:     "Colombo",
-    city:        "Colombo",
-    country:     "Sri Lanka",
-    hash:        {json.dumps(ph_hash)}
-  }};
-  var f = document.createElement('form');
-  f.method = 'POST';
-  f.action = {json.dumps(PAYHERE_CHECKOUT_URL)};
-  for (var k in fields) {{
-    var inp = document.createElement('input');
-    inp.type  = 'hidden';
-    inp.name  = k;
-    inp.value = fields[k];
-    f.appendChild(inp);
-  }}
-  document.body.appendChild(f);
-  f.submit();
-}})();
-"""
-            self.payment_processing = False
-            self.show_pricing_modal = False
-            yield rx.call_script(js)
-
-        except Exception as e:
-            print(f"[Payment] initiate error: {e}")
-            self.payment_error = "Something went wrong. Please try again."
-            self.payment_processing = False
 
     @rx.event
     def set_name(self, value: str):
@@ -5268,14 +5097,9 @@ def plan_card(
                     style={"background": "rgba(16,185,129,0.12)", "border": "1px solid rgba(16,185,129,0.35)"},
                 ),
                 rx.button(
-                    rx.cond(
-                        AppState.payment_processing,
-                        rx.hstack(rx.spinner(size="1", color="white"), rx.text("Redirecting..."), spacing="2"),
-                        rx.text(f"Get {title}  →"),
-                    ),
-                    on_click=AppState.initiate_payment(plan_num),
+                    rx.text(f"Get {title}  →"),
+                    on_click=AppState.open_pricing_modal,
                     width="100%", height="48px", border_radius="12px",
-                    is_disabled=AppState.payment_processing,
                     style={
                         "background": gradient, "border": "none", "color": "white",
                         "font_weight": "700", "font_size": "0.9rem", "cursor": "pointer",
@@ -5395,7 +5219,7 @@ def pricing_modal() -> rx.Component:
                             ),
                             rx.button(
                                 "Continue to Secure Checkout",
-                                on_click=rx.redirect("https://alexstudies.lemonsqueezy.com/checkout/buy/54b3aa5e-c5f8-4a71-8fff-7efd75983e31", is_external=True),
+                                on_click=rx.redirect(GUMROAD_PRODUCT_URL + "?unique_id=" + AppState.user_unique_id, is_external=True),
                                 width="100%",
                                 height="52px",
                                 border_radius="12px",
@@ -5410,7 +5234,7 @@ def pricing_modal() -> rx.Component:
                             ),
                         ),
                         rx.text(
-                            "Secure checkout via Lemon Squeezy",
+                            "Secure checkout via Gumroad",
                             color="rgba(255,255,255,0.35)",
                             font_size="0.75rem",
                         ),
@@ -5424,15 +5248,6 @@ def pricing_modal() -> rx.Component:
                     spacing="4",
                     justify="between",
                     flex_wrap="wrap",
-                ),
-                rx.cond(
-                    AppState.payment_error != "",
-                    rx.box(
-                        rx.text("⚠️  " + AppState.payment_error, color="#fca5a5", font_size="0.82rem", text_align="center"),
-                        background="rgba(239,68,68,0.1)", border="1px solid rgba(239,68,68,0.3)",
-                        border_radius="10px", padding="10px 20px", margin_top="1em", width="100%",
-                    ),
-                    rx.fragment(),
                 ),
                 position="relative", background="rgba(10,10,14,0.97)",
                 border="1px solid rgba(255,255,255,0.08)", border_radius="24px", padding="2.5em 2em",
@@ -7648,6 +7463,8 @@ def _marketing_section(
     )
 
 
+
+
 @rx.page(route="/payment/success", title="Payment Successful", image=FAVICON_32)
 def payment_success_page():
     return rx.box(
@@ -7661,7 +7478,7 @@ def payment_success_page():
                     background="rgba(255,215,0,0.08)", border="1px solid rgba(255,215,0,0.2)", border_radius="12px", padding="12px 20px", max_width="420px",
                 ),
                 rx.button("Go to Dashboard →", on_click=rx.redirect(APP_DASHBOARD_ROUTE), color_scheme="green", size="3",
-                    style={"background":"linear-gradient(90deg,#065f46,#10b981)","border":"none","color":"white","font_weight":"700","cursor":"pointer"}),
+                    style={"background": "linear-gradient(90deg,#065f46,#10b981)", "border": "none", "color": "white", "font_weight": "700", "cursor": "pointer"}),
                 spacing="5", align="center",
             ),
             height="100vh",
@@ -10805,11 +10622,7 @@ def _ensure_chatmessage2_document_columns() -> None:
 _ensure_chatmessage2_document_columns()
 
 
-async def _payhere_notify_wrapper(request):
-    return await payhere_notify(request)
-
-
-api.add_route("/api/payhere/notify", _payhere_notify_wrapper, methods=["POST"])
+api.add_route("/api/gumroad/ping", gumroad_ping, methods=["POST"])
 api.add_route("/health", health_check, methods=["GET"])
 
 
