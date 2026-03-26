@@ -6771,6 +6771,48 @@ _CODE_ENHANCE_JS = """
   try {
     new MutationObserver(function() { setTimeout(enhance, 50); }).observe(document.body, {childList:true, subtree:true});
   } catch(e) {}
+
+  /* ── Message copy buttons: event delegation so clipboard runs in user gesture ── */
+  var TOAST_CSS = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.12);color:rgba(240,244,248,0.9);padding:6px 16px;border-radius:8px;font-size:13px;font-family:Söhne,sans-serif;z-index:9999;pointer-events:none;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);transition:opacity 0.3s';
+  function _showCopiedToast() {
+    var t = document.createElement('div');
+    t.textContent = 'Copied';
+    t.style.cssText = TOAST_CSS;
+    document.body.appendChild(t);
+    setTimeout(function() { t.style.opacity = '0'; }, 1200);
+    setTimeout(function() { t.remove(); }, 1600);
+  }
+  function _doCopy(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(_showCopiedToast).catch(function() {
+        _fallbackCopy(text);
+      });
+    } else {
+      _fallbackCopy(text);
+    }
+  }
+  function _fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); _showCopiedToast(); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.msg-copy-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    var actions = btn.closest('.msg-actions');
+    if (!actions) return;
+    var container = actions.parentElement;
+    if (!container) return;
+    var textEl = container.querySelector('.claude-md') || container.querySelector('.user-msg-content');
+    if (!textEl) return;
+    _doCopy(textEl.textContent || '');
+  });
 })();
 """
 
@@ -6971,12 +7013,12 @@ def active_chat_panel() -> rx.Component:
                                             ),
                                             rx.box(
                                                 rx.icon(tag="copy", size=13, color="rgba(255,255,255,0.45)"),
-                                                on_click=AppState.copy_message(idx),
                                                 cursor="pointer",
                                                 padding="5px",
                                                 border_radius="6px",
                                                 style={"&:hover": {"background": "rgba(255,255,255,0.08)"}},
                                                 title="Copy",
+                                                class_name="msg-copy-btn",
                                             ),
                                             spacing="1",
                                             class_name="msg-actions",
@@ -7028,12 +7070,12 @@ def active_chat_panel() -> rx.Component:
                                     ),
                                     rx.box(
                                         rx.icon(tag="copy", size=14, color="rgba(255,255,255,0.35)"),
-                                        on_click=AppState.copy_message(idx),
                                         cursor="pointer",
                                         padding="5px",
                                         border_radius="6px",
                                         style={"&:hover": {"background": "rgba(255,255,255,0.06)"}},
                                         title="Copy",
+                                        class_name="msg-copy-btn",
                                     ),
                                     rx.cond(
                                         idx == AppState.chat_history.length() - 1,
