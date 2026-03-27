@@ -9338,7 +9338,7 @@ def semester_page():
         # ── Main content (right) ──
         rx.box(
             semester_sidebar_drawer(),
-            # ── Mobile header for semester page ──
+            # ── Mobile header (Claude-style: topic + scope + progress bar) ──
             rx.box(
                 rx.hstack(
                     rx.button(
@@ -9360,24 +9360,20 @@ def semester_page():
                     ),
                     rx.vstack(
                         rx.text(
-                            AppState.compact_scope_label,
+                            AppState.mobile_header_topic,
                             color="rgba(240,244,248,0.92)",
-                            font_size="0.88rem",
+                            font_size="0.95rem",
                             font_weight="600",
+                            max_width="240px",
+                            overflow="hidden",
+                            text_overflow="ellipsis",
+                            white_space="nowrap",
                         ),
-                        rx.cond(
-                            AppState.current_topic_name != "",
-                            rx.text(
-                                AppState.current_topic_name,
-                                color="rgba(160,170,180,0.5)",
-                                font_size="0.72rem",
-                                font_weight="400",
-                                max_width="200px",
-                                overflow="hidden",
-                                text_overflow="ellipsis",
-                                white_space="nowrap",
-                            ),
-                            rx.fragment(),
+                        rx.text(
+                            AppState.mobile_header_scope,
+                            color="rgba(160,170,180,0.45)",
+                            font_size="0.72rem",
+                            font_weight="500",
                         ),
                         spacing="0",
                         align_items="flex-start",
@@ -9385,26 +9381,26 @@ def semester_page():
                         min_width="0",
                     ),
                     rx.spacer(),
-                    rx.button(
-                        rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
-                        on_click=AppState.new_chat,
-                        width="40px",
-                        height="40px",
-                        min_width="40px",
-                        border_radius="12px",
-                        display="inline-flex",
-                        align_items="center",
-                        justify_content="center",
-                        style={
-                            "background": "transparent",
-                            "border": "none",
-                            "cursor": "pointer",
-                            "_hover": {"background": "rgba(255,255,255,0.06)"},
-                        },
-                    ),
                     width="100%",
                     align="center",
-                    padding="8px 12px",
+                    padding="10px 14px 6px 14px",
+                ),
+                # ── Thin progress bar ──
+                rx.box(
+                    rx.box(
+                        width=AppState.semester_progress_width_css,
+                        height="100%",
+                        background="linear-gradient(90deg, #34D399, #10B981)",
+                        border_radius="2px",
+                        transition="width 0.5s ease",
+                    ),
+                    width="100%",
+                    height="3px",
+                    background="rgba(255,255,255,0.06)",
+                    border_radius="2px",
+                    margin_x="14px",
+                    margin_bottom="6px",
+                    max_width="calc(100% - 28px)",
                 ),
                 display=rx.breakpoints(initial="block", md="none"),
                 flex_shrink="0",
