@@ -2578,7 +2578,14 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.is_pro = False
 
         if self.is_pro:
-            return rx.redirect(APP_DASHBOARD_ROUTE)
+            if uid >= 0 and self.selected_year and self.selected_semester:
+                if not self.is_started:
+                    self.is_started = True
+                    self._save_memory(uid)
+                return _hard_navigate(
+                    scope_to_route(self._scope_key(self.selected_year, self.selected_semester))
+                )
+            return _hard_navigate(scope_to_route("home"))
 
         if not self.is_pro:
             return rx.call_script(
