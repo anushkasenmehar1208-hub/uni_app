@@ -10863,16 +10863,107 @@ def _auth_legal_footer() -> rx.Component:
 
 def _auth_page_shell(content: rx.Component) -> rx.Component:
     return rx.box(
-        rx.image(src="/bg_image.png", position="fixed", top="0", left="0", width="100vw", height="100vh", object_fit="cover", z_index="-1"),
+        # ── Deep black base ──
+        rx.box(
+            position="fixed", top="0", left="0", width="100vw", height="100vh",
+            background="#000000",
+            z_index="0",
+        ),
+        # ── BLOB 1: Electric blue (top-right) ──
+        rx.box(
+            position="fixed", top="-20%", right="-15%",
+            width="70vmax", height="70vmax",
+            border_radius="40% 60% 65% 35% / 55% 40% 60% 45%",
+            background="radial-gradient(ellipse at 30% 40%, rgba(56,189,248,0.4) 0%, rgba(14,165,233,0.15) 40%, transparent 70%)",
+            filter="blur(60px)",
+            animation="authBlob1 12s ease-in-out infinite",
+            z_index="0", pointer_events="none",
+        ),
+        # ── BLOB 2: Deep navy blue (bottom-left) ──
+        rx.box(
+            position="fixed", bottom="-25%", left="-20%",
+            width="65vmax", height="65vmax",
+            border_radius="55% 45% 35% 65% / 40% 60% 40% 60%",
+            background="radial-gradient(ellipse at 60% 50%, rgba(37,99,235,0.38) 0%, rgba(29,78,216,0.14) 45%, transparent 70%)",
+            filter="blur(50px)",
+            animation="authBlob2 15s ease-in-out infinite",
+            z_index="0", pointer_events="none",
+        ),
+        # ── BLOB 3: Icy cyan-blue (center-left) ──
+        rx.box(
+            position="fixed", top="30%", left="-5%",
+            width="45vmax", height="45vmax",
+            border_radius="60% 40% 50% 50% / 45% 55% 45% 55%",
+            background="radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.28) 0%, rgba(8,145,178,0.1) 50%, transparent 70%)",
+            filter="blur(55px)",
+            animation="authBlob3 18s ease-in-out infinite",
+            z_index="0", pointer_events="none",
+        ),
+        # ── BLOB 4: Soft sky blue (top-left) ──
+        rx.box(
+            position="fixed", top="5%", left="20%",
+            width="35vmax", height="35vmax",
+            border_radius="45% 55% 60% 40% / 50% 45% 55% 50%",
+            background="radial-gradient(ellipse at 50% 50%, rgba(96,165,250,0.22) 0%, transparent 60%)",
+            filter="blur(70px)",
+            animation="authBlob4 20s ease-in-out infinite",
+            z_index="0", pointer_events="none",
+        ),
+        # ── Sweeping light beam 1 ──
+        rx.box(
+            position="fixed", top="50%", left="50%",
+            width="200vw", height="2px",
+            background="linear-gradient(90deg, transparent 0%, rgba(56,189,248,0.0) 20%, rgba(56,189,248,0.35) 50%, rgba(56,189,248,0.0) 80%, transparent 100%)",
+            transform_origin="center center",
+            animation="authBeam1 8s linear infinite",
+            z_index="1", pointer_events="none",
+        ),
+        # ── Sweeping light beam 2 ──
+        rx.box(
+            position="fixed", top="50%", left="50%",
+            width="200vw", height="1.5px",
+            background="linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.0) 25%, rgba(37,99,235,0.25) 50%, rgba(37,99,235,0.0) 75%, transparent 100%)",
+            transform_origin="center center",
+            animation="authBeam2 11s linear infinite",
+            z_index="1", pointer_events="none",
+        ),
+        # ── Sweeping light beam 3 ──
+        rx.box(
+            position="fixed", top="50%", left="50%",
+            width="180vw", height="1px",
+            background="linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.0) 30%, rgba(6,182,212,0.2) 50%, rgba(6,182,212,0.0) 70%, transparent 100%)",
+            transform_origin="center center",
+            animation="authBeam3 14s linear infinite",
+            z_index="1", pointer_events="none",
+        ),
+        # ── Canvas for interactive particles ──
+        rx.el.canvas(
+            id="authParticles",
+            position="fixed", top="0", left="0",
+            width="100vw", height="100vh",
+            z_index="1", pointer_events="none",
+        ),
+        # ── Noise/grain overlay for texture ──
+        rx.box(
+            position="fixed", top="0", left="0", width="100vw", height="100vh",
+            opacity="0.03",
+            background_image="url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")",
+            background_size="128px 128px",
+            z_index="2", pointer_events="none",
+        ),
+        # ── Main content ──
         rx.box(
             rx.center(
                 rx.card(
                     content,
                     width=AUTH_CARD_WIDTH,
                     padding="22px 14px",
-                    border="1px solid rgba(34,197,94,0.20)",
-                    border_radius="12px",
-                    background="linear-gradient(120deg,rgba(2,16,22,0.88),rgba(17,74,72,0.52))",
+                    border="1px solid rgba(99,102,241,0.15)",
+                    border_radius="20px",
+                    background="rgba(0,0,0,0.45)",
+                    box_shadow="0 40px 120px rgba(0,0,0,0.6), 0 0 60px rgba(79,70,229,0.06), 0 0 40px rgba(245,158,11,0.03), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    backdrop_filter="blur(40px) saturate(1.4)",
+                    animation="authCardIn 1.4s cubic-bezier(0.16,1,0.3,1) 0.2s both",
                 ),
                 width="100%",
                 padding_top="0",
@@ -10884,11 +10975,167 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             align_items="center",
             min_height="100vh",
             padding="20px 16px",
-            z_index="1",
+            z_index="3",
+            position="relative",
         ),
+        # ── CSS animations ──
+        rx.el.style("""
+            @keyframes authBlob1 {
+                0%,100% {
+                    border-radius: 40% 60% 65% 35% / 55% 40% 60% 45%;
+                    transform: translate(0, 0) rotate(0deg) scale(1);
+                }
+                25% {
+                    border-radius: 55% 45% 40% 60% / 45% 60% 40% 55%;
+                    transform: translate(-8%, 12%) rotate(45deg) scale(1.1);
+                }
+                50% {
+                    border-radius: 45% 55% 55% 45% / 60% 35% 65% 40%;
+                    transform: translate(5%, -8%) rotate(90deg) scale(0.95);
+                }
+                75% {
+                    border-radius: 60% 40% 50% 50% / 40% 55% 45% 60%;
+                    transform: translate(-12%, -5%) rotate(135deg) scale(1.05);
+                }
+            }
+            @keyframes authBlob2 {
+                0%,100% {
+                    border-radius: 55% 45% 35% 65% / 40% 60% 40% 60%;
+                    transform: translate(0, 0) rotate(0deg) scale(1);
+                }
+                25% {
+                    border-radius: 40% 60% 60% 40% / 55% 45% 55% 45%;
+                    transform: translate(10%, -8%) rotate(-60deg) scale(1.08);
+                }
+                50% {
+                    border-radius: 65% 35% 45% 55% / 45% 55% 45% 55%;
+                    transform: translate(-6%, 10%) rotate(-120deg) scale(0.92);
+                }
+                75% {
+                    border-radius: 50% 50% 55% 45% / 60% 40% 60% 40%;
+                    transform: translate(8%, 6%) rotate(-180deg) scale(1.04);
+                }
+            }
+            @keyframes authBlob3 {
+                0%,100% {
+                    border-radius: 60% 40% 50% 50% / 45% 55% 45% 55%;
+                    transform: translate(0, 0) rotate(0deg) scale(1);
+                }
+                33% {
+                    border-radius: 45% 55% 60% 40% / 55% 45% 55% 45%;
+                    transform: translate(15%, -10%) rotate(40deg) scale(1.12);
+                }
+                66% {
+                    border-radius: 50% 50% 40% 60% / 40% 60% 40% 60%;
+                    transform: translate(-10%, 15%) rotate(-30deg) scale(0.9);
+                }
+            }
+            @keyframes authBlob4 {
+                0%,100% {
+                    border-radius: 45% 55% 60% 40% / 50% 45% 55% 50%;
+                    transform: translate(0, 0) scale(1);
+                }
+                50% {
+                    border-radius: 55% 45% 40% 60% / 45% 55% 45% 55%;
+                    transform: translate(20%, 15%) scale(1.15);
+                }
+            }
+            @keyframes authBeam1 {
+                0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 0; }
+                5% { opacity: 1; }
+                45% { opacity: 1; }
+                50% { opacity: 0; transform: translate(-50%, -50%) rotate(180deg); }
+                100% { opacity: 0; transform: translate(-50%, -50%) rotate(360deg); }
+            }
+            @keyframes authBeam2 {
+                0% { transform: translate(-50%, -50%) rotate(60deg); opacity: 0; }
+                10% { opacity: 1; }
+                40% { opacity: 1; }
+                50% { opacity: 0; transform: translate(-50%, -50%) rotate(240deg); }
+                100% { opacity: 0; transform: translate(-50%, -50%) rotate(420deg); }
+            }
+            @keyframes authBeam3 {
+                0% { transform: translate(-50%, -50%) rotate(120deg); opacity: 0; }
+                8% { opacity: 1; }
+                42% { opacity: 1; }
+                50% { opacity: 0; transform: translate(-50%, -50%) rotate(300deg); }
+                100% { opacity: 0; transform: translate(-50%, -50%) rotate(480deg); }
+            }
+            @keyframes authCardIn {
+                0% { opacity: 0; transform: translateY(60px) scale(0.88); filter: blur(20px); }
+                50% { filter: blur(2px); }
+                75% { transform: translateY(-6px) scale(1.02); }
+                100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+            }
+        """),
+        # ── Particle system via img onerror trick ──
+        rx.html('''<img src="data:," onerror="
+            (function(){
+                var c=document.getElementById('authParticles');
+                if(!c||c.dataset.init)return;
+                c.dataset.init='1';
+                var ctx=c.getContext('2d');
+                var w,h;
+                function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;}
+                resize();
+                window.addEventListener('resize',resize);
+                var mx=w/2,my=h/2;
+                document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+                var ps=[];
+                var n=80;
+                for(var i=0;i<n;i++){
+                    var angle=Math.random()*Math.PI*2;
+                    var speed=Math.random()*0.8+0.2;
+                    ps.push({
+                        x:Math.random()*w,y:Math.random()*h,
+                        vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+                        r:Math.random()*2+0.5,
+                        baseO:Math.random()*0.5+0.1,
+                        color:i%3===0?[99,102,241]:i%3===1?[139,92,246]:[245,158,11],
+                        pulse:Math.random()*Math.PI*2,
+                        pulseSpeed:Math.random()*0.02+0.01
+                    });
+                }
+                function draw(){
+                    ctx.clearRect(0,0,w,h);
+                    for(var i=0;i<ps.length;i++){
+                        var p=ps[i];
+                        p.pulse+=p.pulseSpeed;
+                        var o=p.baseO+Math.sin(p.pulse)*0.15;
+                        var dx=mx-p.x,dy=my-p.y;
+                        var dist=Math.sqrt(dx*dx+dy*dy);
+                        if(dist<200){
+                            var force=(1-dist/200)*0.02;
+                            p.vx+=dx*force;
+                            p.vy+=dy*force;
+                            o+=0.2*(1-dist/200);
+                        }
+                        p.vx*=0.99;p.vy*=0.99;
+                        p.x+=p.vx;p.y+=p.vy;
+                        if(p.x<0)p.x=w;if(p.x>w)p.x=0;
+                        if(p.y<0)p.y=h;if(p.y>h)p.y=0;
+                        ctx.beginPath();ctx.arc(p.x,p.y,p.r*(1+Math.sin(p.pulse)*0.3),0,6.28);
+                        ctx.fillStyle='rgba('+p.color[0]+','+p.color[1]+','+p.color[2]+','+o+')';
+                        ctx.fill();
+                        for(var j=i+1;j<ps.length;j++){
+                            var q=ps[j];
+                            var lx=p.x-q.x,ly=p.y-q.y;
+                            var ld=Math.sqrt(lx*lx+ly*ly);
+                            if(ld<120){
+                                ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);
+                                ctx.strokeStyle='rgba('+p.color[0]+','+p.color[1]+','+p.color[2]+','+(0.08*(1-ld/120))+')';
+                                ctx.lineWidth=0.5;ctx.stroke();
+                            }
+                        }
+                    }
+                    requestAnimationFrame(draw);
+                }
+                draw();
+            })();
+        " style="display:none">'''),
         password_eye_script(),
         auth_token_bootstrap_script(),
-        width="100vw", min_height="100vh", position="relative", overflow_x="hidden",
+        width="100vw", min_height="100vh", position="relative", overflow="hidden",
         on_mount=AppState.init_auth_forms,
     )
 
