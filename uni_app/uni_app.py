@@ -1202,6 +1202,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     # Settings page
     settings_tab: str = "general"
     settings_edit_name: str = ""
+    settings_name_saved: bool = False
     settings_pw_current: str = ""
     settings_pw_new: str = ""
     settings_pw_confirm: str = ""
@@ -1566,6 +1567,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def set_settings_edit_name(self, value: str):
         self.settings_edit_name = value
+        self.settings_name_saved = False
 
     def set_settings_pw_current(self, value: str):
         self.settings_pw_current = value
@@ -1590,6 +1592,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     def go_to_settings(self):
         self.settings_tab = "general"
         self.settings_edit_name = self.name or ""
+        self.settings_name_saved = False
         self.settings_pw_current = ""
         self.settings_pw_new = ""
         self.settings_pw_confirm = ""
@@ -1604,6 +1607,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def set_settings_tab(self, tab: str):
         self.settings_tab = tab
+        self.settings_name_saved = False
         self.settings_pw_error = ""
         self.settings_pw_success = False
         self.settings_delete_confirm = ""
@@ -1621,10 +1625,13 @@ class AppState(reflex_local_auth.LocalAuthState):
             memory = session.exec(
                 select(UserMemory).where(UserMemory.user_id == uid)
             ).one_or_none()
-            if memory is not None:
+            if memory is None:
+                memory = UserMemory(user_id=uid, name=self.name)  # type: ignore
+            else:
                 memory.name = self.name
-                session.add(memory)
-                session.commit()
+            session.add(memory)
+            session.commit()
+        self.settings_name_saved = True
 
     def settings_change_password(self):
         self.settings_pw_error = ""
@@ -1703,6 +1710,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._load_profile(uid)
         self.settings_tab = "general"
         self.settings_edit_name = self.name or ""
+        self.settings_name_saved = False
         self.settings_pw_error = ""
         self.settings_pw_success = False
         self.settings_delete_confirm = ""
@@ -11289,7 +11297,7 @@ def settings_general_tab() -> rx.Component:
                         style=_SETTINGS_INPUT_STYLE,
                     ),
                     rx.button(
-                        "Save",
+                        rx.cond(AppState.settings_name_saved, "Saved", "Save"),
                         on_click=AppState.settings_save_name,
                         size="2",
                         style={
