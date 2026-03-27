@@ -1186,6 +1186,19 @@ class AppState(reflex_local_auth.LocalAuthState):
     chat_search_query: str = ""
     selected_language: str = "English"
 
+    # Rename session state
+    renaming_session_id: str = ""
+    renaming_is_home: bool = False
+    renaming_title_input: str = ""
+
+    # Chat search — content match IDs (populated by set_chat_search DB query)
+    _chat_search_content_ids: list[str] = []
+
+    # Global search panel
+    show_global_search: bool = False
+    global_search_query: str = ""
+    global_search_results: list[dict] = []
+
     # Settings page
     settings_tab: str = "general"
     settings_edit_name: str = ""
@@ -1453,6 +1466,18 @@ class AppState(reflex_local_auth.LocalAuthState):
         return f"{y}:{s}"
 
     @rx.var
+    def mobile_header_subtitle(self) -> str:
+        """Show current topic name on mobile header; fallback to scope label."""
+        topic = self.current_topic_name or ""
+        if topic:
+            return topic
+        y = self.selected_year.replace("Year ", "").strip()
+        s = self.selected_semester.replace("Semester ", "").strip()
+        if y and s:
+            return f"{y}:{s}"
+        return ""
+
+    @rx.var
     def mobile_progress_day_label(self) -> str:
         """e.g. 'Day 1 of 110'."""
         day = max(1, min(self.current_day, STUDY_PLAN_TOTAL_DAYS))
@@ -1499,14 +1524,16 @@ class AppState(reflex_local_auth.LocalAuthState):
         q = (self.chat_search_query or "").strip().lower()
         if not q:
             return self.sessions
-        return [s for s in self.sessions if q in (s.get("title", "") or "").lower()]
+        content_ids = set(self._chat_search_content_ids)
+        return [s for s in self.sessions if q in (s.get("title", "") or "").lower() or s.get("id", "") in content_ids]
 
     @rx.var
     def filtered_home_sessions(self) -> list[dict]:
         q = (self.chat_search_query or "").strip().lower()
         if not q:
             return self.home_sessions
-        return [s for s in self.home_sessions if q in (s.get("title", "") or "").lower()]
+        content_ids = set(self._chat_search_content_ids)
+        return [s for s in self.home_sessions if q in (s.get("title", "") or "").lower() or s.get("id", "") in content_ids]
 
     @rx.var
     def username_initial(self) -> str:
@@ -1515,6 +1542,27 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def set_chat_search(self, value: str):
         self.chat_search_query = value
+        uid = self._uid()
+        if uid < 0 or not value.strip():
+            self._chat_search_content_ids = []
+            return
+        q = value.strip().lower()
+        try:
+            home_sid_ints = [int(s["id"]) for s in self.home_sessions if s.get("id")]
+            sem_sid_ints  = [int(s["id"]) for s in self.sessions if s.get("id")]
+            all_sids = list(set(home_sid_ints + sem_sid_ints))
+            if not all_sids:
+                return
+            with rx.session() as session:
+                rows = session.exec(
+                    select(ChatMessage2.session_id)
+                    .where(ChatMessage2.user_id == uid)
+                    .where(ChatMessage2.session_id.in_(all_sids))
+                    .where(func.lower(ChatMessage2.content).contains(q))
+                ).all()
+            self._chat_search_content_ids = list({str(r) for r in rows})
+        except Exception as e:
+            print(f"ERROR set_chat_search content lookup: {e}")
 
     def set_settings_edit_name(self, value: str):
         self.settings_edit_name = value
@@ -2482,7 +2530,148 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"ERROR delete_home_session: {e}")
 
-    def _ensure_session(self, uid: int, scope: str) -> None:
+    @rx.event
+    def start_rename_session(self, session_id: str, is_home: bool):
+        """Open inline rename for a chat session."""
+        self.renaming_session_id = session_id
+        self.renaming_is_home = is_home
+        # Pre-fill with current title
+        session_list = self.home_sessions if is_home else self.sessions
+        for s in session_list:
+            if s.get("id") == session_id:
+                self.renaming_title_input = s.get("title", "")
+                break
+
+    @rx.event
+    def set_rename_title_input(self, value: str):
+        self.renaming_title_input = value
+
+    @rx.event
+    def cancel_rename_session(self):
+        self.renaming_session_id = ""
+        self.renaming_is_home = False
+        self.renaming_title_input = ""
+
+    @rx.event
+    def confirm_rename_session(self):
+        """Save the new title to DB."""
+        uid = self._uid()
+        sid_str = self.renaming_session_id
+        new_title = (self.renaming_title_input or "").strip()
+        if uid < 0 or not sid_str or not new_title:
+            self.renaming_session_id = ""
+            self.renaming_is_home = False
+            self.renaming_title_input = ""
+            return
+        try:
+            sid = int(sid_str)
+            with rx.session() as session:
+                sess = session.exec(
+                    select(ChatSession).where(ChatSession.id == sid).where(ChatSession.user_id == uid)
+                ).one_or_none()
+                if sess:
+                    sess.title = new_title[:80]
+                    session.add(sess)
+                    session.commit()
+            if self.renaming_is_home:
+                self._load_home_sessions(uid)
+            else:
+                self._load_sessions(uid, self.active_scope)
+        except Exception as e:
+            print(f"ERROR confirm_rename_session: {e}")
+        finally:
+            self.renaming_session_id = ""
+            self.renaming_is_home = False
+            self.renaming_title_input = ""
+
+    @rx.event
+    def toggle_global_search(self):
+        self.show_global_search = not self.show_global_search
+        if not self.show_global_search:
+            self.global_search_query = ""
+            self.global_search_results = []
+
+    @rx.event
+    def set_global_search_query(self, value: str):
+        self.global_search_query = value
+        if not value.strip():
+            self.global_search_results = []
+            return
+        uid = self._uid()
+        if uid < 0:
+            return
+        q = value.strip().lower()
+        try:
+            with rx.session() as session:
+                # Search all sessions this user has
+                all_sessions = session.exec(
+                    select(ChatSession).where(ChatSession.user_id == uid)
+                ).all()
+                sess_map = {int(s.id): s for s in all_sessions}
+                # Search messages that match the query
+                rows = session.exec(
+                    select(ChatMessage2)
+                    .where(ChatMessage2.user_id == uid)
+                    .where(func.lower(ChatMessage2.content).contains(q))
+                    .order_by(ChatMessage2.id.desc())
+                    .limit(40)
+                ).all()
+            seen_sessions: set[int] = set()
+            results: list[dict] = []
+            for msg in rows:
+                sid = msg.session_id
+                if sid in seen_sessions:
+                    continue
+                seen_sessions.add(sid)
+                sess = sess_map.get(sid)
+                if sess is None:
+                    continue
+                snippet = (msg.content or "").replace("\n", " ").strip()[:120]
+                scope_info = SCOPE_ROUTE_MAP.get(sess.scope or "home", {})
+                scope_label = (
+                    f"{scope_info.get('year','')} {scope_info.get('semester','')}".strip()
+                    or ("Alex AI" if sess.scope == "home" else sess.scope)
+                )
+                results.append({
+                    "session_id": str(sid),
+                    "scope": sess.scope or "home",
+                    "session_title": sess.title or "Chat",
+                    "scope_label": scope_label,
+                    "snippet": snippet,
+                })
+                if len(results) >= 12:
+                    break
+            self.global_search_results = results
+        except Exception as e:
+            print(f"ERROR global_search: {e}")
+            self.global_search_results = []
+
+    @rx.event
+    async def open_search_result(self, session_id: str, scope: str):
+        """Navigate to the session containing the search result."""
+        uid = self._uid()
+        if uid < 0:
+            return
+        self.show_global_search = False
+        self.global_search_query = ""
+        self.global_search_results = []
+        highlight_q = self.global_search_query
+        if scope == "home":
+            if self.active_scope == "home" and self.view_mode == "home":
+                if self._session_in_scope(uid, int(session_id), "home"):
+                    self.current_session_id = session_id
+                    self._load_messages(uid)
+                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                return
+            self.active_scope = "home"
+            self.view_mode = "home"
+            self.current_session_id = session_id
+            yield _hard_navigate(scope_to_route("home"))
+        else:
+            scope_info = SCOPE_ROUTE_MAP.get(scope, {})
+            if scope_info:
+                self.current_session_id = session_id
+                yield _hard_navigate(scope_to_route(scope))
         with rx.session() as session:
             sess = session.exec(
                 select(ChatSession)
@@ -4705,30 +4894,33 @@ Subjects:\n{courses_text}"""
                     sess_row = db_sess.exec(select(ChatSession).where(ChatSession.id == sid)).one_or_none()
                     needs_title = sess_row is not None and sess_row.title == "New chat"
                 if needs_title:
-                    try:
-                        # Build context from available chat history
-                        chat_context = typed_user_msg or document_name or stored_user_msg or "New chat"
-                        if len(self.chat_history) >= 3:
-                            recent = self.chat_history[-4:]
-                            chat_context = " | ".join([m.get("content", "")[:120] for m in recent])
-                        title_resp = await asyncio.to_thread(
-                            _groq_generate,
-                            GROQ_FAST_MODEL,
-                            f'Give a short 3-6 word chat title summarizing this conversation. Reply with ONLY the title, no quotes.\n\nConversation: "{chat_context}"',
-                        )
-                        new_title = (getattr(title_resp, "text", "") or "").strip().strip('"').strip("'")[:60]
-                        if new_title:
-                            with rx.session() as db_sess:
-                                sr = db_sess.exec(select(ChatSession).where(ChatSession.id == sid)).one_or_none()
-                                if sr:
-                                    sr.title = new_title
-                                    db_sess.add(sr)
-                                    db_sess.commit()
-                            self._load_sessions(uid, self.active_scope)
-                            if self.active_scope == "home":
-                                self._load_home_sessions(uid)
-                    except Exception as te:
-                        print(f"ERROR auto_title: {te}")
+                    # Only auto-name after 3rd user reply so AI has enough context
+                    user_msg_count = sum(1 for m in self.chat_history if m.get("role") == "user")
+                    if user_msg_count >= 3:
+                        try:
+                            # Build context from available chat history
+                            chat_context = typed_user_msg or document_name or stored_user_msg or "New chat"
+                            if len(self.chat_history) >= 3:
+                                recent = self.chat_history[-4:]
+                                chat_context = " | ".join([m.get("content", "")[:120] for m in recent])
+                            title_resp = await asyncio.to_thread(
+                                _groq_generate,
+                                GROQ_FAST_MODEL,
+                                f'Give a short 3-6 word chat title summarizing this conversation. Reply with ONLY the title, no quotes.\n\nConversation: "{chat_context}"',
+                            )
+                            new_title = (getattr(title_resp, "text", "") or "").strip().strip('"').strip("'")[:60]
+                            if new_title:
+                                with rx.session() as db_sess:
+                                    sr = db_sess.exec(select(ChatSession).where(ChatSession.id == sid)).one_or_none()
+                                    if sr:
+                                        sr.title = new_title
+                                        db_sess.add(sr)
+                                        db_sess.commit()
+                                self._load_sessions(uid, self.active_scope)
+                                if self.active_scope == "home":
+                                    self._load_home_sessions(uid)
+                        except Exception as te:
+                            print(f"ERROR auto_title: {te}")
 
         except Exception as e:
             print(f"ERROR save user msg: {e}")
@@ -6723,8 +6915,11 @@ _CLAUDE_MD_CSS = """
   padding: 0;
   color: rgba(210, 220, 235, 0.88);
   font-size: 13.5px;
-  line-height: 1.55;
+  line-height: 1.6;
   white-space: pre;
+  display: block;
+  font-style: normal;
+  vertical-align: baseline;
 }
 
 /* Links */
@@ -6765,6 +6960,12 @@ _CLAUDE_MD_CSS = """
 
 /* ── Mobile responsive adjustments ── */
 @media (max-width: 768px) {
+  /* Fix Chrome address bar pushing layout on mobile */
+  body, #root {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden;
+  }
   .claude-md {
     font-size: 14.5px;
     line-height: 1.65;
@@ -8712,7 +8913,8 @@ def profile_menu_button() -> rx.Component:
 # ═══════════════════════════════════════════════════════
 # FIX 2: home_page — clean header, aligned sidebar, no yellow blur
 def home_page():
-    return rx.box(
+    return rx.fragment(
+        rx.box(
         # ── Mobile header (Claude-style: hamburger + new-chat) ──
         rx.box(
             rx.hstack(
@@ -8793,6 +8995,7 @@ def home_page():
         ),
         # ── Mobile sidebar drawer ──
         semester_sidebar_drawer(),
+        global_search_panel(),
         # ── Main area ──
         rx.flex(
             # Desktop sidebar (hidden on mobile)
@@ -8824,6 +9027,8 @@ def home_page():
         display="flex",
         flex_direction="column",
         background="#0a0a0c",
+        ),
+        global_search_overlay(),
     )
 
 
@@ -8896,41 +9101,90 @@ def semester_chat_history_list() -> rx.Component:
     return rx.vstack(
         rx.foreach(
             AppState.filtered_sessions,
-            lambda s: rx.hstack(
-                rx.button(
-                    s["title"],
-                    on_click=AppState.switch_chat(s["id"]),
-                    variant="ghost",
-                    color=rx.cond(
-                        AppState.current_session_id == s["id"],
-                        "#34D399",
-                        "rgba(255,255,255,0.55)",
+            lambda s: rx.cond(
+                AppState.renaming_session_id == s["id"],
+                # ── Inline rename mode ──
+                rx.hstack(
+                    rx.input(
+                        value=AppState.renaming_title_input,
+                        on_change=AppState.set_rename_title_input,
+                        on_blur=AppState.confirm_rename_session,
+                        auto_focus=True,
+                        size="1",
+                        flex="1",
+                        style={
+                            "background": "rgba(255,255,255,0.07)",
+                            "border": "1px solid rgba(52,211,153,0.35)",
+                            "border_radius": "6px",
+                            "color": "rgba(240,244,248,0.92)",
+                            "font_size": "0.78rem",
+                            "padding": "4px 8px",
+                            "outline": "none",
+                        },
                     ),
-                    font_weight=rx.cond(
-                        AppState.current_session_id == s["id"],
-                        "600",
-                        "400",
+                    rx.icon_button(
+                        rx.icon(tag="check", size=11),
+                        on_click=AppState.confirm_rename_session,
+                        variant="ghost",
+                        size="1",
+                        style={"color": "rgba(52,211,153,0.8)", "background": "transparent", "border": "none", "cursor": "pointer"},
                     ),
-                    text_align="left",
-                    justify_content="flex-start",
-                    flex="1",
-                    overflow="hidden",
-                    text_overflow="ellipsis",
-                    white_space="nowrap",
-                    size="1",
-                    font_size="0.8rem",
+                    rx.icon_button(
+                        rx.icon(tag="x", size=11),
+                        on_click=AppState.cancel_rename_session,
+                        variant="ghost",
+                        size="1",
+                        style={"color": "rgba(255,100,100,0.7)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    ),
+                    width="100%",
+                    align="center",
+                    spacing="1",
+                    padding="2px 4px",
                 ),
-                rx.icon_button(
-                    rx.icon(tag="trash_2", size=11),
-                    on_click=AppState.delete_session(s["id"]),
-                    variant="ghost",
-                    color_scheme="red",
-                    size="1",
-                    style={"opacity": "0.4", "_hover": {"opacity": "0.9"}},
+                # ── Normal mode ──
+                rx.hstack(
+                    rx.button(
+                        s["title"],
+                        on_click=AppState.switch_chat(s["id"]),
+                        variant="ghost",
+                        color=rx.cond(
+                            AppState.current_session_id == s["id"],
+                            "#34D399",
+                            "rgba(255,255,255,0.55)",
+                        ),
+                        font_weight=rx.cond(
+                            AppState.current_session_id == s["id"],
+                            "600",
+                            "400",
+                        ),
+                        text_align="left",
+                        justify_content="flex-start",
+                        flex="1",
+                        overflow="hidden",
+                        text_overflow="ellipsis",
+                        white_space="nowrap",
+                        size="1",
+                        font_size="0.8rem",
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="pencil", size=11),
+                        on_click=AppState.start_rename_session(s["id"], False),
+                        variant="ghost",
+                        size="1",
+                        style={"opacity": "0.4", "_hover": {"opacity": "0.9"}, "color": "rgba(255,255,255,0.5)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="trash_2", size=11),
+                        on_click=AppState.delete_session(s["id"]),
+                        variant="ghost",
+                        color_scheme="red",
+                        size="1",
+                        style={"opacity": "0.4", "_hover": {"opacity": "0.9"}},
+                    ),
+                    width="100%",
+                    align="center",
+                    spacing="1",
                 ),
-                width="100%",
-                align="center",
-                spacing="1",
             ),
         ),
         width="100%",
@@ -8947,64 +9201,113 @@ def alex_chat_history_list() -> rx.Component:
     return rx.vstack(
         rx.foreach(
             AppState.filtered_home_sessions,
-            lambda s: rx.hstack(
-                rx.button(
-                    rx.hstack(
-                        rx.icon(tag="message_square", size=12, color="rgba(255,255,255,0.25)"),
-                        rx.text(
-                            s["title"],
-                            overflow="hidden",
-                            text_overflow="ellipsis",
-                            white_space="nowrap",
-                            font_size="0.78rem",
+            lambda s: rx.cond(
+                AppState.renaming_session_id == s["id"],
+                # ── Inline rename mode ──
+                rx.hstack(
+                    rx.input(
+                        value=AppState.renaming_title_input,
+                        on_change=AppState.set_rename_title_input,
+                        on_blur=AppState.confirm_rename_session,
+                        auto_focus=True,
+                        size="1",
+                        flex="1",
+                        style={
+                            "background": "rgba(255,255,255,0.07)",
+                            "border": "1px solid rgba(52,211,153,0.35)",
+                            "border_radius": "6px",
+                            "color": "rgba(240,244,248,0.92)",
+                            "font_size": "0.78rem",
+                            "padding": "4px 8px",
+                            "outline": "none",
+                        },
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="check", size=11),
+                        on_click=AppState.confirm_rename_session,
+                        variant="ghost",
+                        size="1",
+                        style={"color": "rgba(52,211,153,0.8)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="x", size=11),
+                        on_click=AppState.cancel_rename_session,
+                        variant="ghost",
+                        size="1",
+                        style={"color": "rgba(255,100,100,0.7)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    ),
+                    width="100%",
+                    align="center",
+                    spacing="1",
+                    padding="2px 4px",
+                ),
+                # ── Normal mode ──
+                rx.hstack(
+                    rx.button(
+                        rx.hstack(
+                            rx.icon(tag="message_square", size=12, color="rgba(255,255,255,0.25)"),
+                            rx.text(
+                                s["title"],
+                                overflow="hidden",
+                                text_overflow="ellipsis",
+                                white_space="nowrap",
+                                font_size="0.78rem",
+                            ),
+                            spacing="2",
+                            align="center",
+                            width="100%",
                         ),
-                        spacing="2",
-                        align="center",
-                        width="100%",
-                    ),
-                    on_click=AppState.switch_to_home_chat(s["id"]),
-                    variant="ghost",
-                    color=rx.cond(
-                        (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"]),
-                        "rgba(255,255,255,0.9)",
-                        "rgba(255,255,255,0.5)",
-                    ),
-                    font_weight=rx.cond(
-                        (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"]),
-                        "600",
-                        "400",
-                    ),
-                    text_align="left",
-                    justify_content="flex-start",
-                    flex="1",
-                    overflow="hidden",
-                    size="1",
-                    style={
-                        "border_radius": "8px",
-                        "padding": "6px 8px",
-                        "background": rx.cond(
+                        on_click=AppState.switch_to_home_chat(s["id"]),
+                        variant="ghost",
+                        color=rx.cond(
                             (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"]),
-                            "rgba(255,255,255,0.06)",
-                            "transparent",
+                            "rgba(255,255,255,0.9)",
+                            "rgba(255,255,255,0.5)",
                         ),
-                        "_hover": {"background": "rgba(255,255,255,0.06)"},
+                        font_weight=rx.cond(
+                            (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"]),
+                            "600",
+                            "400",
+                        ),
+                        text_align="left",
+                        justify_content="flex-start",
+                        flex="1",
+                        overflow="hidden",
+                        size="1",
+                        style={
+                            "border_radius": "8px",
+                            "padding": "6px 8px",
+                            "background": rx.cond(
+                                (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"]),
+                                "rgba(255,255,255,0.06)",
+                                "transparent",
+                            ),
+                            "_hover": {"background": "rgba(255,255,255,0.06)"},
+                        },
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="pencil", size=11),
+                        on_click=AppState.start_rename_session(s["id"], True),
+                        variant="ghost",
+                        size="1",
+                        style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0", "color": "rgba(255,255,255,0.5)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="trash_2", size=11),
+                        on_click=AppState.delete_home_session(s["id"]),
+                        variant="ghost",
+                        color_scheme="red",
+                        size="1",
+                        style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0"},
+                    ),
+                    width="100%",
+                    align="center",
+                    spacing="1",
+                    style={
+                        "& .rt-IconButton": {"opacity": "0", "transition": "opacity 0.15s"},
+                        "_hover": {"& .rt-IconButton": {"opacity": "0.4"}},
                     },
                 ),
-                rx.icon_button(
-                    rx.icon(tag="trash_2", size=11),
-                    on_click=AppState.delete_home_session(s["id"]),
-                    variant="ghost",
-                    color_scheme="red",
-                    size="1",
-                    style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0"},
-                ),
-                width="100%",
-                align="center",
-                spacing="1",
-                style={
-                    "& .rt-IconButton": {"opacity": "0", "transition": "opacity 0.15s"},
-                    "_hover": {"& .rt-IconButton": {"opacity": "0.4"}},
-                },
             ),
         ),
         width="100%",
@@ -9227,6 +9530,184 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
     )
 
 
+def global_search_panel() -> rx.Component:
+    """Full-screen search overlay — searches across all semesters + Alex AI chats."""
+    return rx.cond(
+        AppState.show_global_search,
+        rx.box(
+            # ── Backdrop ──
+            rx.box(
+                position="fixed",
+                inset="0",
+                background="rgba(0,0,0,0.65)",
+                z_index="200",
+                on_click=AppState.toggle_global_search,
+                backdrop_filter="blur(4px)",
+            ),
+            # ── Panel ──
+            rx.box(
+                rx.vstack(
+                    # Header row
+                    rx.hstack(
+                        rx.icon(tag="search", size=16, color="rgba(255,255,255,0.4)"),
+                        rx.input(
+                            placeholder="Search across all chats...",
+                            value=AppState.global_search_query,
+                            on_change=AppState.set_global_search_query,
+                            auto_focus=True,
+                            variant="soft",
+                            style={
+                                "background": "transparent",
+                                "border": "none",
+                                "outline": "none",
+                                "color": "rgba(240,244,248,0.92)",
+                                "font_size": "0.95rem",
+                                "flex": "1",
+                                "box_shadow": "none",
+                                "&::placeholder": {"color": "rgba(255,255,255,0.22)"},
+                            },
+                        ),
+                        rx.icon_button(
+                            rx.icon(tag="x", size=14),
+                            on_click=AppState.toggle_global_search,
+                            variant="ghost",
+                            style={
+                                "color": "rgba(255,255,255,0.35)",
+                                "background": "transparent",
+                                "border": "none",
+                                "cursor": "pointer",
+                                "flex_shrink": "0",
+                                "_hover": {"color": "rgba(255,255,255,0.7)"},
+                            },
+                        ),
+                        width="100%",
+                        align="center",
+                        spacing="2",
+                        padding="12px 16px",
+                        border_bottom="1px solid rgba(255,255,255,0.06)",
+                    ),
+                    # Results area
+                    rx.box(
+                        rx.cond(
+                            AppState.global_search_query != "",
+                            rx.cond(
+                                AppState.global_search_results.length() > 0,
+                                rx.vstack(
+                                    rx.foreach(
+                                        AppState.global_search_results,
+                                        lambda r: rx.box(
+                                            rx.vstack(
+                                                rx.hstack(
+                                                    rx.icon(tag="message_square", size=12, color="rgba(255,255,255,0.3)"),
+                                                    rx.text(
+                                                        r["session_title"],
+                                                        font_size="0.82rem",
+                                                        font_weight="600",
+                                                        color="rgba(240,244,248,0.9)",
+                                                        overflow="hidden",
+                                                        text_overflow="ellipsis",
+                                                        white_space="nowrap",
+                                                        flex="1",
+                                                    ),
+                                                    rx.text(
+                                                        r["scope_label"],
+                                                        font_size="0.68rem",
+                                                        color="rgba(52,211,153,0.65)",
+                                                        font_weight="500",
+                                                        flex_shrink="0",
+                                                    ),
+                                                    spacing="2",
+                                                    align="center",
+                                                    width="100%",
+                                                ),
+                                                rx.text(
+                                                    r["snippet"],
+                                                    font_size="0.76rem",
+                                                    color="rgba(180,190,200,0.55)",
+                                                    line_height="1.5",
+                                                    overflow="hidden",
+                                                    display="-webkit-box",
+                                                    style={
+                                                        "-webkit-line-clamp": "2",
+                                                        "-webkit-box-orient": "vertical",
+                                                    },
+                                                ),
+                                                spacing="1",
+                                                align_items="flex-start",
+                                                width="100%",
+                                            ),
+                                            on_click=AppState.open_search_result(r["session_id"], r["scope"]),
+                                            padding="10px 16px",
+                                            cursor="pointer",
+                                            border_bottom="1px solid rgba(255,255,255,0.04)",
+                                            style={
+                                                "_hover": {"background": "rgba(255,255,255,0.04)"},
+                                            },
+                                        ),
+                                    ),
+                                    spacing="0",
+                                    width="100%",
+                                    align_items="stretch",
+                                ),
+                                rx.box(
+                                    rx.text(
+                                        "No results found",
+                                        color="rgba(180,190,200,0.4)",
+                                        font_size="0.85rem",
+                                        text_align="center",
+                                    ),
+                                    padding="32px 16px",
+                                    width="100%",
+                                ),
+                            ),
+                            rx.box(
+                                rx.text(
+                                    "Type to search across all your chats",
+                                    color="rgba(180,190,200,0.3)",
+                                    font_size="0.82rem",
+                                    text_align="center",
+                                ),
+                                padding="32px 16px",
+                                width="100%",
+                            ),
+                        ),
+                        flex="1",
+                        overflow_y="auto",
+                        width="100%",
+                        style={
+                            "&::-webkit-scrollbar": {"width": "3px"},
+                            "&::-webkit-scrollbar-thumb": {"background": "rgba(255,255,255,0.08)", "border_radius": "4px"},
+                        },
+                    ),
+                    spacing="0",
+                    width="100%",
+                    height="100%",
+                    align_items="stretch",
+                ),
+                position="fixed",
+                top="10vh",
+                left="50%",
+                transform="translateX(-50%)",
+                width="min(600px, 92vw)",
+                max_height="70vh",
+                background="rgba(14,14,18,0.98)",
+                border="1px solid rgba(255,255,255,0.08)",
+                border_radius="18px",
+                box_shadow="0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
+                z_index="201",
+                overflow="hidden",
+                display="flex",
+                flex_direction="column",
+            ),
+            position="fixed",
+            inset="0",
+            z_index="200",
+            pointer_events="auto",
+        ),
+        rx.fragment(),
+    )
+
+
 def semester_sidebar_drawer() -> rx.Component:
     return rx.cond(
         AppState.show_semester_sidebar,
@@ -9290,7 +9771,7 @@ def nav_rail() -> rx.Component:
             _nav_rail_btn("square_pen", AppState.new_chat),
             rx.fragment(),
         ),
-        _nav_rail_btn("search", AppState.toggle_semester_sidebar),
+        _nav_rail_btn("search", AppState.toggle_global_search),
         rx.spacer(),
         # ── Bottom group ──
         _nav_rail_btn("settings", rx.redirect("/settings")),
@@ -9328,6 +9809,191 @@ def nav_rail() -> rx.Component:
     )
 
 
+def global_search_overlay() -> rx.Component:
+    """Full-screen search panel — triggered from nav rail search icon."""
+    return rx.cond(
+        AppState.show_global_search,
+        rx.box(
+            # Backdrop
+            rx.box(
+                position="fixed", inset="0",
+                background="rgba(0,0,0,0.6)",
+                z_index="200",
+                on_click=AppState.toggle_global_search,
+                backdrop_filter="blur(4px)",
+            ),
+            # Panel
+            rx.box(
+                rx.vstack(
+                    # Header
+                    rx.hstack(
+                        rx.icon(tag="search", size=16, color="rgba(255,255,255,0.4)"),
+                        rx.input(
+                            placeholder="Search all chats and semesters...",
+                            value=AppState.global_search_query,
+                            on_change=AppState.set_global_search_query,
+                            auto_focus=True,
+                            style={
+                                "flex": "1",
+                                "background": "transparent",
+                                "border": "none",
+                                "outline": "none",
+                                "color": "rgba(240,244,248,0.92)",
+                                "font_size": "1rem",
+                                "font_family": "'Söhne', -apple-system, sans-serif",
+                                "padding": "0",
+                                "box_shadow": "none",
+                                "&::placeholder": {"color": "rgba(255,255,255,0.2)"},
+                            },
+                        ),
+                        rx.icon_button(
+                            rx.icon(tag="x", size=16),
+                            on_click=AppState.toggle_global_search,
+                            variant="ghost",
+                            style={
+                                "color": "rgba(255,255,255,0.35)",
+                                "background": "transparent",
+                                "border": "none",
+                                "cursor": "pointer",
+                                "_hover": {"color": "rgba(255,255,255,0.7)"},
+                            },
+                        ),
+                        width="100%",
+                        align="center",
+                        spacing="3",
+                        padding="16px 20px",
+                        border_bottom="1px solid rgba(255,255,255,0.07)",
+                    ),
+                    # Results
+                    rx.box(
+                        rx.cond(
+                            AppState.global_search_query != "",
+                            rx.cond(
+                                AppState.global_search_results.length() > 0,
+                                rx.vstack(
+                                    rx.foreach(
+                                        AppState.global_search_results,
+                                        lambda r: rx.box(
+                                            rx.hstack(
+                                                rx.vstack(
+                                                    rx.hstack(
+                                                        rx.text(
+                                                            r["session_title"],
+                                                            color="rgba(240,244,248,0.9)",
+                                                            font_size="0.85rem",
+                                                            font_weight="600",
+                                                            overflow="hidden",
+                                                            text_overflow="ellipsis",
+                                                            white_space="nowrap",
+                                                            flex="1",
+                                                        ),
+                                                        rx.text(
+                                                            r["scope_label"],
+                                                            color="rgba(52,211,153,0.7)",
+                                                            font_size="0.7rem",
+                                                            font_weight="500",
+                                                            flex_shrink="0",
+                                                            padding="2px 8px",
+                                                            border_radius="4px",
+                                                            background="rgba(52,211,153,0.08)",
+                                                            border="1px solid rgba(52,211,153,0.15)",
+                                                        ),
+                                                        width="100%",
+                                                        align="center",
+                                                        spacing="2",
+                                                    ),
+                                                    rx.text(
+                                                        r["snippet"],
+                                                        color="rgba(180,190,200,0.55)",
+                                                        font_size="0.76rem",
+                                                        overflow="hidden",
+                                                        text_overflow="ellipsis",
+                                                        white_space="nowrap",
+                                                        max_width="100%",
+                                                    ),
+                                                    spacing="1",
+                                                    align_items="flex-start",
+                                                    flex="1",
+                                                    min_width="0",
+                                                ),
+                                                rx.icon(tag="arrow_right", size=14, color="rgba(255,255,255,0.2)", flex_shrink="0"),
+                                                width="100%",
+                                                align="center",
+                                                spacing="2",
+                                            ),
+                                            on_click=AppState.open_search_result(r["session_id"], r["scope"]),
+                                            width="100%",
+                                            padding="12px 20px",
+                                            cursor="pointer",
+                                            style={
+                                                "border_bottom": "1px solid rgba(255,255,255,0.04)",
+                                                "_hover": {"background": "rgba(255,255,255,0.04)"},
+                                            },
+                                        ),
+                                    ),
+                                    width="100%",
+                                    spacing="0",
+                                    align_items="stretch",
+                                ),
+                                rx.box(
+                                    rx.text(
+                                        "No results found",
+                                        color="rgba(160,170,180,0.4)",
+                                        font_size="0.85rem",
+                                        text_align="center",
+                                    ),
+                                    padding="32px 20px",
+                                    width="100%",
+                                    display="flex",
+                                    justify_content="center",
+                                ),
+                            ),
+                            rx.box(
+                                rx.text(
+                                    "Type to search across all your chats",
+                                    color="rgba(160,170,180,0.3)",
+                                    font_size="0.85rem",
+                                    text_align="center",
+                                ),
+                                padding="32px 20px",
+                                width="100%",
+                                display="flex",
+                                justify_content="center",
+                            ),
+                        ),
+                        width="100%",
+                        flex="1",
+                        overflow_y="auto",
+                        style={
+                            "&::-webkit-scrollbar": {"width": "3px"},
+                            "&::-webkit-scrollbar-thumb": {"background": "rgba(255,255,255,0.06)", "border_radius": "4px"},
+                        },
+                    ),
+                    spacing="0",
+                    width="100%",
+                    height="100%",
+                    align_items="stretch",
+                ),
+                position="fixed",
+                top="10vh",
+                left="50%",
+                transform="translateX(-50%)",
+                width="min(640px, 92vw)",
+                max_height="70vh",
+                background="rgba(12,12,16,0.98)",
+                border="1px solid rgba(255,255,255,0.1)",
+                border_radius="18px",
+                box_shadow="0 32px 80px rgba(0,0,0,0.7)",
+                z_index="201",
+                overflow="hidden",
+                display="flex",
+                flex_direction="column",
+            ),
+        ),
+        rx.fragment(),
+    )
+
+
 def semester_page():
     return rx.hstack(
         # ── Nav rail (left, desktop only) ──
@@ -9338,6 +10004,7 @@ def semester_page():
         # ── Main content (right) ──
         rx.box(
             semester_sidebar_drawer(),
+            global_search_panel(),
             # ── Mobile header (Claude-style: topic + scope + progress bar) ──
             rx.box(
                 rx.hstack(
@@ -9370,7 +10037,7 @@ def semester_page():
                             white_space="nowrap",
                         ),
                         rx.text(
-                            AppState.mobile_header_scope,
+                            AppState.mobile_header_subtitle,
                             color="rgba(160,170,180,0.45)",
                             font_size="0.72rem",
                             font_weight="500",
@@ -9569,6 +10236,14 @@ def semester_page():
         overflow="hidden",
         background="#0a0a0c",
     )
+
+
+def semester_page_with_search():
+    return rx.fragment(
+        semester_page(),
+        global_search_overlay(),
+    )
+
 
 def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallable:
     def protected_page():
@@ -10447,7 +11122,7 @@ def scope_page() -> rx.Component:
     return rx.cond(
         AppState.view_mode == "home",
         home_page(),
-        semester_page(),
+        semester_page_with_search(),
     )
 
 
