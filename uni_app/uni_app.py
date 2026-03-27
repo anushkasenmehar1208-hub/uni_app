@@ -8026,6 +8026,7 @@ def _marketing_badge(text: str) -> rx.Component:
         border="1px solid rgba(148,163,184,0.18)",
         background="rgba(8,15,30,0.58)",
         backdrop_filter="blur(16px)",
+        custom_attrs={"data-anim": "badge"},
     )
 
 
@@ -8072,6 +8073,7 @@ def _marketing_card(title: str, body: str, kicker: str = "") -> rx.Component:
         backdrop_filter="blur(16px)",
         width="100%",
         height="100%",
+        custom_attrs={"data-anim": "card"},
     )
 
 
@@ -8177,6 +8179,7 @@ def _marketing_step_card(step: str, title: str, body: str) -> rx.Component:
         box_shadow="0 20px 70px rgba(2,6,23,0.3)",
         width="100%",
         height="100%",
+        custom_attrs={"data-anim": "step"},
     )
 
 
@@ -8252,6 +8255,7 @@ def _public_nav() -> rx.Component:
         backdrop_filter="blur(18px)",
         box_shadow="0 20px 80px rgba(2,6,23,0.34)",
         width="100%",
+        custom_attrs={"data-anim": "nav"},
     )
 
 
@@ -8328,11 +8332,13 @@ def _public_footer() -> rx.Component:
         box_shadow="0 24px 80px rgba(2,6,23,0.36)",
         backdrop_filter="blur(18px)",
         width="100%",
+        custom_attrs={"data-anim": "footer"},
     )
 
 
 def _public_page_frame(main_content: rx.Component) -> rx.Component:
     return rx.box(
+        rx.html('<img src="data:," onerror="if(!document.getElementById(\'cinematic-loaded\')){var s=document.createElement(\'script\');s.src=\'/cinematic.js\';s.id=\'cinematic-loaded\';document.body.appendChild(s);}" style="display:none">'),
         rx.box(
             position="absolute",
             top="-120px",
@@ -8353,6 +8359,11 @@ def _public_page_frame(main_content: rx.Component) -> rx.Component:
             background="radial-gradient(circle, rgba(56,189,248,0.22) 0%, rgba(56,189,248,0) 70%)",
             filter="blur(18px)",
         ),
+        rx.html("""<canvas id="cineParticles"></canvas>"""),
+        rx.html("""<div id="mouseGlow"></div>"""),
+        rx.box(position="absolute", top="10%", right="10%", width="200px", height="200px", border_radius="50%", background="radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)", animation="orbFloat1 15s ease-in-out infinite", pointer_events="none", z_index="0"),
+        rx.box(position="absolute", top="40%", left="5%", width="250px", height="250px", border_radius="50%", background="radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)", animation="orbFloat2 18s ease-in-out infinite", pointer_events="none", z_index="0"),
+        rx.box(position="absolute", top="70%", right="20%", width="180px", height="180px", border_radius="50%", background="radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)", animation="orbFloat3 12s ease-in-out infinite", pointer_events="none", z_index="0"),
         rx.box(
             _public_nav(),
             main_content,
@@ -8367,6 +8378,48 @@ def _public_page_frame(main_content: rx.Component) -> rx.Component:
             position="relative",
             z_index="1",
         ),
+        rx.el.style("""
+            #cineParticles{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0;animation:cpFade 2s ease-out .3s both}
+            @keyframes cpFade{from{opacity:0}to{opacity:1}}
+            #mouseGlow{position:fixed;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,.07) 0%,transparent 70%);pointer-events:none;z-index:0;transform:translate(-50%,-50%);transition:left .15s ease-out,top .15s ease-out;left:-500px;top:-500px}
+            @keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1);opacity:.3}33%{transform:translate(30px,-40px) scale(1.1);opacity:.5}66%{transform:translate(-20px,20px) scale(.95);opacity:.35}}
+            @keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1);opacity:.25}33%{transform:translate(-40px,30px) scale(1.15);opacity:.45}66%{transform:translate(25px,-15px) scale(.9);opacity:.3}}
+            @keyframes orbFloat3{0%,100%{transform:translate(0,0) scale(1);opacity:.2}50%{transform:translate(20px,-50px) scale(1.2);opacity:.4}}
+            [data-anim="nav"]{animation:cNavIn 1s cubic-bezier(.16,1,.3,1) .2s both}
+            @keyframes cNavIn{from{opacity:0;transform:translateY(-60px) scale(.97);filter:blur(12px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+            [data-anim="badge"]{animation:cBadge .7s cubic-bezier(.16,1,.3,1) .6s both}
+            @keyframes cBadge{0%{opacity:0;transform:scale(.7);filter:blur(8px)}50%{box-shadow:0 0 30px rgba(56,189,248,.5)}100%{opacity:1;transform:scale(1);filter:blur(0);box-shadow:none}}
+            [data-anim="hero-title"]{animation:cTitle 1.4s cubic-bezier(.16,1,.3,1) .9s both}
+            @keyframes cTitle{0%{opacity:0;transform:translateY(60px) scale(.85);filter:blur(20px)}60%{filter:blur(0)}80%{transform:translateY(-3px) scale(1.01)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+            [data-anim="hero-desc"]{animation:cDesc .9s cubic-bezier(.16,1,.3,1) 1.5s both}
+            @keyframes cDesc{from{opacity:0;transform:translateY(30px);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+            [data-anim="hero-buttons"]{animation:cBtns .8s cubic-bezier(.16,1,.3,1) 1.9s both}
+            @keyframes cBtns{0%{opacity:0;transform:translateY(25px) scale(.95)}70%{transform:translateY(-2px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
+            [data-anim="hero-cards"]{animation:cHCards .9s cubic-bezier(.16,1,.3,1) 2.3s both}
+            @keyframes cHCards{from{opacity:0;transform:translateY(40px) scale(.92);filter:blur(10px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+            [data-anim="hero-detail"]{animation:cDetail 1s cubic-bezier(.16,1,.3,1) 2.5s both}
+            @keyframes cDetail{from{opacity:0;transform:translateY(40px) scale(.94);filter:blur(10px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+            [data-anim="section"]{opacity:0;transform:translateY(80px) scale(.96);filter:blur(10px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1),filter .9s cubic-bezier(.16,1,.3,1);position:relative}
+            [data-anim="section"].cine-visible{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+            [data-anim="section"]::after{content:'';position:absolute;left:0;right:0;height:2px;top:-2px;background:linear-gradient(90deg,transparent 10%,rgba(56,189,248,.25) 50%,transparent 90%);opacity:0;z-index:10;pointer-events:none}
+            [data-anim="section"].cine-visible::after{animation:cScan .8s linear forwards}
+            @keyframes cScan{from{top:0;opacity:1}to{top:100%;opacity:0}}
+            [data-anim="pricing"]{opacity:0;transform:translateY(60px) scale(.92);filter:blur(12px);transition:all 1.1s cubic-bezier(.16,1,.3,1)}
+            [data-anim="pricing"].cine-visible{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+            [data-anim="card"]{opacity:0;transform:translateY(50px) rotateX(8deg) scale(.9);filter:blur(6px);transition:all .7s cubic-bezier(.16,1,.3,1);will-change:transform,opacity}
+            [data-anim="card"].cine-visible{opacity:1;transform:translateY(0) rotateX(0) scale(1);filter:blur(0)}
+            [data-anim="card"]:nth-child(1){transition-delay:0s}[data-anim="card"]:nth-child(2){transition-delay:.08s}[data-anim="card"]:nth-child(3){transition-delay:.16s}[data-anim="card"]:nth-child(4){transition-delay:.24s}[data-anim="card"]:nth-child(5){transition-delay:.32s}
+            [data-anim="step"]{opacity:0;transform:translateY(50px) scale(.9);filter:blur(6px);transition:all .7s cubic-bezier(.16,1,.3,1)}
+            [data-anim="step"].cine-visible{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+            [data-anim="step"]:nth-child(1){transition-delay:0s}[data-anim="step"]:nth-child(2){transition-delay:.1s}[data-anim="step"]:nth-child(3){transition-delay:.2s}[data-anim="step"]:nth-child(4){transition-delay:.3s}
+            [data-anim="footer"]{opacity:0;transform:translateY(40px);filter:blur(6px);transition:all .8s cubic-bezier(.16,1,.3,1)}
+            [data-anim="footer"].cine-visible{opacity:1;transform:translateY(0);filter:blur(0)}
+            [data-anim="card"]:hover{transform:translateY(-6px) scale(1.03)!important;box-shadow:0 30px 90px rgba(56,189,248,.12),0 0 30px rgba(52,211,153,.08)!important;transition-duration:.3s!important}
+            [data-anim="step"]:hover{transform:translateY(-4px) scale(1.02)!important;box-shadow:0 20px 60px rgba(56,189,248,.1)!important;transition-duration:.3s!important}
+            [data-anim="section"]:hover{box-shadow:0 30px 100px rgba(56,189,248,.08),0 24px 80px rgba(2,6,23,.38)!important;transition-duration:.4s!important}
+            [data-anim="hero-buttons"] button:first-child{animation:btnGlow 3s ease-in-out 3.5s infinite}
+            @keyframes btnGlow{0%,100%{box-shadow:0 18px 44px rgba(16,185,129,.24)}50%{box-shadow:0 18px 44px rgba(16,185,129,.4),0 0 40px rgba(56,189,248,.15)}}
+        """),
         style={
             "--landing-accent": "#34d399",
             "--landing-accent-2": "#38bdf8",
@@ -8428,6 +8481,7 @@ def _marketing_section(
         box_shadow="0 24px 80px rgba(2,6,23,0.38)",
         backdrop_filter="blur(18px)",
         width="100%",
+        custom_attrs={"data-anim": "section"},
     )
 
 
@@ -11244,6 +11298,7 @@ def landing_page():
             background="linear-gradient(135deg,rgba(7,12,24,0.88) 0%, rgba(8,18,31,0.78) 55%, rgba(6,12,24,0.88) 100%)",
             box_shadow="0 28px 90px rgba(2,6,23,0.42)",
             width="100%",
+            custom_attrs={"data-anim": "pricing"},
         )
 
     def trust_grid() -> rx.Component:
@@ -11311,6 +11366,7 @@ def landing_page():
                     letter_spacing="-0.05em",
                     font_family="var(--landing-display-font)",
                     max_width="760px",
+                    custom_attrs={"data-anim": "hero-title"},
                 ),
                 rx.text(
                     "Alex AI analyzes your degree organizes each semester and guides you day by day with a structured 110-day learning plan",
@@ -11318,6 +11374,7 @@ def landing_page():
                     font_size="clamp(1rem, 2vw, 1.18rem)",
                     line_height="1.8",
                     max_width="720px",
+                    custom_attrs={"data-anim": "hero-desc"},
                 ),
                 rx.hstack(
                     _marketing_button("Start Learning", auth_routes.LOGIN_ROUTE),
@@ -11325,6 +11382,7 @@ def landing_page():
                     gap="14px",
                     flex_wrap="wrap",
                     width="100%",
+                    custom_attrs={"data-anim": "hero-buttons"},
                 ),
                 rx.box(
                     _marketing_card(
@@ -11343,6 +11401,7 @@ def landing_page():
                     grid_template_columns="repeat(auto-fit, minmax(210px, 1fr))",
                     gap="16px",
                     width="100%",
+                    custom_attrs={"data-anim": "hero-cards"},
                 ),
                 spacing="5",
                 align_items="flex-start",
@@ -11396,6 +11455,7 @@ def landing_page():
                 box_shadow="0 28px 90px rgba(2,6,23,0.42)",
                 backdrop_filter="blur(18px)",
                 width="100%",
+                custom_attrs={"data-anim": "hero-detail"},
             ),
             display="grid",
             grid_template_columns="repeat(auto-fit, minmax(320px, 1fr))",
