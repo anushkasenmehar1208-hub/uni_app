@@ -1786,7 +1786,8 @@ class AppState(reflex_local_auth.LocalAuthState):
             if not checkout_url:
                 raise ValueError("Missing checkout_url in Dodo Payments response.")
 
-            yield rx.redirect(checkout_url, is_external=True)
+            self.show_pricing_modal = False
+            yield rx.call_script(f"window.location.assign({json.dumps(checkout_url)});")
         except Exception as e:
             response_text = ""
             if "response" in locals():
