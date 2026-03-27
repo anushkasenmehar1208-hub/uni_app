@@ -6502,19 +6502,6 @@ def empty_chat_panel() -> rx.Component:
                 text_align="center",
                 font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             ),
-            # ── Scope pill (e.g. "2:4 · Network Fundamentals") ──
-            rx.cond(
-                AppState.is_semester_scope_active_any,
-                rx.text(
-                    AppState.compact_scope_label,
-                    color="rgba(160,170,180,0.4)",
-                    font_size=rx.breakpoints(initial="0.78rem", md="0.72rem"),
-                    font_weight="400",
-                    text_align="center",
-                    letter_spacing="0.5px",
-                ),
-                rx.fragment(),
-            ),
             # ── Gap ──
             rx.box(height=rx.breakpoints(initial="20px", md="24px")),
             # ── Input bar ──
