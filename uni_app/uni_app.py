@@ -338,7 +338,12 @@ def _extract_person_name(*texts: str) -> str:
         if not raw:
             continue
         normalized = _normalize_person_name(raw)
-        if normalized and " " not in normalized and normalized.lower() not in {"student", "user"}:
+        # Treat short alphabetic phrases as explicit names, including multi-word names like "Neo Alexs".
+        if (
+            normalized
+            and normalized.lower() not in {"student", "user"}
+            and re.fullmatch(r"[A-Za-z][A-Za-z'-]*(?:\s+[A-Za-z][A-Za-z'-]*){0,2}", raw)
+        ):
             return normalized
         for pattern in patterns:
             match = re.search(pattern, raw, re.IGNORECASE)
@@ -1486,10 +1491,16 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def account_display_name(self) -> str:
-        return _normalize_person_name(getattr(self.authenticated_user, "username", ""))
+        username = getattr(self.authenticated_user, "username", "") or ""
+        if username.lower().startswith("google_"):
+            return ""
+        return _normalize_person_name(username)
 
     @rx.var
     def inferred_name(self) -> str:
+        explicit_name = _normalize_person_name(self.name)
+        if explicit_name:
+            return explicit_name
         recent_messages = [
             str(msg.get("content", ""))
             for msg in list(self.chat_history or [])[-6:]
