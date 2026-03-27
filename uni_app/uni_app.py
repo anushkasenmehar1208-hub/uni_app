@@ -11749,6 +11749,15 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
 # ──────────────────────────────────────────────────────────────
 app = rx.App(
     head_components=[
+        rx.script(src="https://www.googletagmanager.com/gtag/js?id=G-H5G0QBSY2M"),
+        rx.script(
+            """
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-H5G0QBSY2M');
+"""
+        ),
         rx.el.link(rel="icon", type="image/x-icon", href=FAVICON_ICO),
         rx.el.link(rel="shortcut icon", type="image/x-icon", href=FAVICON_ICO),
         rx.el.link(rel="icon", type="image/png", sizes="32x32", href=FAVICON_32),
