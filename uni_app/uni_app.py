@@ -691,7 +691,12 @@ def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg:
 
 APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3000").rstrip("/")
 API_BASE_URL            = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
-DODO_PAYMENTS_API_URL   = "https://api.dodopayments.com/v1/checkouts"
+DODO_PAYMENTS_API_URL   = os.getenv(
+    "DODO_PAYMENTS_API_URL",
+    "https://test.dodopayments.com/checkouts",
+).strip()
+DODO_PAYMENTS_LIVE_API_URL = "https://live.dodopayments.com/checkouts"
+DODO_PAYMENTS_TEST_API_URL = "https://test.dodopayments.com/checkouts"
 DODO_PAYMENTS_API_KEY   = os.getenv(
     "DODO_PAYMENTS_API_KEY",
     "ylDjp2S5fj8PZFOK.8zKVjs9t_kCsOmAbe0zgLw0wl_ulroDa_aktRdemdf3i6zYF",
@@ -1731,25 +1736,51 @@ class AppState(reflex_local_auth.LocalAuthState):
     async def buy_pro_plan(self):
         try:
             async with httpx.AsyncClient(timeout=20.0) as client_http:
-                response = await client_http.post(
-                    DODO_PAYMENTS_API_URL,
-                    headers={
-                        "Authorization": f"Bearer {DODO_PAYMENTS_API_KEY}",
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                    },
-                    json={
-                        "product_cart": [
-                            {
-                                "product_id": DODO_PAYMENTS_PRODUCT_ID,
-                                "quantity": 1,
-                            }
-                        ],
-                        "return_url": DODO_PAYMENTS_RETURN_URL,
-                    },
-                )
-                response.raise_for_status()
-                payload = response.json() or {}
+                payload: dict[str, Any] = {}
+                response: httpx.Response | None = None
+                attempted_errors: list[str] = []
+                checkout_request = {
+                    "product_cart": [
+                        {
+                            "product_id": DODO_PAYMENTS_PRODUCT_ID,
+                            "quantity": 1,
+                        }
+                    ],
+                    "return_url": DODO_PAYMENTS_RETURN_URL,
+                }
+                checkout_headers = {
+                    "Authorization": f"Bearer {DODO_PAYMENTS_API_KEY}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                }
+
+                candidate_urls: list[str] = []
+                for url in [DODO_PAYMENTS_API_URL, DODO_PAYMENTS_LIVE_API_URL, DODO_PAYMENTS_TEST_API_URL]:
+                    normalized = (url or "").strip()
+                    if normalized and normalized not in candidate_urls:
+                        candidate_urls.append(normalized)
+
+                for api_url in candidate_urls:
+                    response = await client_http.post(
+                        api_url,
+                        headers=checkout_headers,
+                        json=checkout_request,
+                    )
+                    if response.is_success:
+                        payload = response.json() or {}
+                        break
+
+                    body_text = ""
+                    try:
+                        body_text = response.text[:500]
+                    except Exception:
+                        body_text = ""
+                    attempted_errors.append(f"{api_url} -> {response.status_code}: {body_text}")
+
+                    if response.status_code not in {401, 404}:
+                        response.raise_for_status()
+                else:
+                    raise RuntimeError(" | ".join(attempted_errors) or "No Dodo Payments endpoint accepted the request.")
 
             checkout_url = str(payload.get("checkout_url", "") or "").strip()
             if not checkout_url:
