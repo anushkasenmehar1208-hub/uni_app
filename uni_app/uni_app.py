@@ -689,8 +689,20 @@ def _append_training_example(uid: int, scope: str, user_msg: str, assistant_msg:
         print(f"ERROR training log append: {e}")
 
 APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3000").rstrip("/")
-GUMROAD_PRODUCT_URL     = "https://anushka1208.gumroad.com/l/ghrbl"
 API_BASE_URL            = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
+DODO_PAYMENTS_API_URL   = "https://api.dodopayments.com/v1/checkouts"
+DODO_PAYMENTS_API_KEY   = os.getenv(
+    "DODO_PAYMENTS_API_KEY",
+    "ylDjp2S5fj8PZFOK.8zKVjs9t_kCsOmAbe0zgLw0wl_ulroDa_aktRdemdf3i6zYF",
+).strip()
+DODO_PAYMENTS_PRODUCT_ID = os.getenv(
+    "DODO_PAYMENTS_PRODUCT_ID",
+    "pdt_0NbPrfFmmyxFqzaTmWGQX",
+).strip()
+DODO_PAYMENTS_RETURN_URL = os.getenv(
+    "DODO_PAYMENTS_RETURN_URL",
+    "https://alexstudies.com/dashboard",
+).strip()
 GOOGLE_CLIENT_ID        = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET    = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
 GOOGLE_REDIRECT_URI     = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
@@ -1615,6 +1627,34 @@ class AppState(reflex_local_auth.LocalAuthState):
     def copy_user_id(self):
         uid_val = self.user_unique_id or ""
         return rx.call_script(f"navigator.clipboard.writeText('{uid_val}')")
+
+    @rx.event
+    async def buy_pro_plan(self):
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client_http:
+                response = await client_http.post(
+                    DODO_PAYMENTS_API_URL,
+                    headers={
+                        "Authorization": f"Bearer {DODO_PAYMENTS_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "product_id": DODO_PAYMENTS_PRODUCT_ID,
+                        "quantity": 1,
+                        "return_url": DODO_PAYMENTS_RETURN_URL,
+                    },
+                )
+                response.raise_for_status()
+                payload = response.json() or {}
+
+            checkout_url = str(payload.get("checkout_url", "") or "").strip()
+            if not checkout_url:
+                raise ValueError("Missing checkout_url in Dodo Payments response.")
+
+            yield rx.redirect(checkout_url, is_external=True)
+        except Exception as e:
+            print(f"[Dodo Payments] checkout error: {e}")
+            yield rx.window_alert("Unable to start checkout right now. Please try again.")
 
     def set_settings_tab(self, tab: str):
         self.settings_tab = tab
@@ -5828,7 +5868,7 @@ def pricing_modal() -> rx.Component:
                             ),
                             rx.button(
                                 "Continue to Secure Checkout",
-                                on_click=rx.redirect(GUMROAD_PRODUCT_URL + "?unique_id=" + AppState.user_unique_id, is_external=True),
+                                on_click=AppState.buy_pro_plan,
                                 width="100%",
                                 height="52px",
                                 border_radius="12px",
@@ -5843,7 +5883,7 @@ def pricing_modal() -> rx.Component:
                             ),
                         ),
                         rx.text(
-                            "Secure checkout via Gumroad",
+                            "Secure checkout via Dodo Payments",
                             color="rgba(255,255,255,0.35)",
                             font_size="0.75rem",
                         ),
