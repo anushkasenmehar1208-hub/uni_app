@@ -6502,19 +6502,6 @@ def empty_chat_panel() -> rx.Component:
                 text_align="center",
                 font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             ),
-            # ── Scope pill (e.g. "2:4 · Network Fundamentals") ──
-            rx.cond(
-                AppState.is_semester_scope_active_any,
-                rx.text(
-                    AppState.compact_scope_label,
-                    color="rgba(160,170,180,0.4)",
-                    font_size=rx.breakpoints(initial="0.78rem", md="0.72rem"),
-                    font_weight="400",
-                    text_align="center",
-                    letter_spacing="0.5px",
-                ),
-                rx.fragment(),
-            ),
             # ── Gap ──
             rx.box(height=rx.breakpoints(initial="20px", md="24px")),
             # ── Input bar ──
@@ -7231,7 +7218,7 @@ def active_chat_panel() -> rx.Component:
                 spacing="0",
                 max_width="740px",
                 margin_x="auto",
-                padding_x=rx.breakpoints(initial="0.75em", md="1.5em"),
+                padding_x=rx.breakpoints(initial="0.8em", md="1.5em"),
                 padding_top="1em",
                 padding_bottom="0.5em",
                 style={
@@ -7262,7 +7249,7 @@ def active_chat_panel() -> rx.Component:
                 width="100%",
                 max_width="740px",
                 margin_x="auto",
-                padding=rx.breakpoints(initial="0 0.75em", md="0 1.5em"),
+                padding=rx.breakpoints(initial="0 0.6em", md="0 1.5em"),
             ),
             upgrade_button(),
         ),
@@ -8771,6 +8758,11 @@ def home_page():
             display=rx.breakpoints(initial="block", md="none"),
             flex_shrink="0",
         ),
+        # ── Mobile sidebar drawer ──
+        rx.box(
+            semester_sidebar_drawer(),
+            display=rx.breakpoints(initial="block", md="none"),
+        ),
         # ── Desktop header ──
         rx.box(
             rx.hstack(
@@ -8803,6 +8795,7 @@ def home_page():
         semester_sidebar_drawer(),
         # ── Main area ──
         rx.flex(
+            # Desktop sidebar (hidden on mobile)
             rx.box(
                 workspace_sidebar_content(),
                 width="270px",
@@ -9337,12 +9330,15 @@ def nav_rail() -> rx.Component:
 
 def semester_page():
     return rx.hstack(
-        # ── Nav rail (left) ──
-        nav_rail(),
+        # ── Nav rail (left, desktop only) ──
+        rx.box(
+            nav_rail(),
+            display=rx.breakpoints(initial="none", md="flex"),
+        ),
         # ── Main content (right) ──
         rx.box(
             semester_sidebar_drawer(),
-            # ── Mobile header (Claude-style: hamburger + topic + progress) ──
+            # ── Mobile header for semester page ──
             rx.box(
                 rx.hstack(
                     rx.button(
@@ -9364,20 +9360,24 @@ def semester_page():
                     ),
                     rx.vstack(
                         rx.text(
-                            AppState.mobile_header_topic,
+                            AppState.compact_scope_label,
                             color="rgba(240,244,248,0.92)",
-                            font_size="0.95rem",
+                            font_size="0.88rem",
                             font_weight="600",
-                            max_width="240px",
-                            overflow="hidden",
-                            text_overflow="ellipsis",
-                            white_space="nowrap",
                         ),
-                        rx.text(
-                            AppState.mobile_header_scope,
-                            color="rgba(160,170,180,0.45)",
-                            font_size="0.72rem",
-                            font_weight="500",
+                        rx.cond(
+                            AppState.current_topic_name != "",
+                            rx.text(
+                                AppState.current_topic_name,
+                                color="rgba(160,170,180,0.5)",
+                                font_size="0.72rem",
+                                font_weight="400",
+                                max_width="200px",
+                                overflow="hidden",
+                                text_overflow="ellipsis",
+                                white_space="nowrap",
+                            ),
+                            rx.fragment(),
                         ),
                         spacing="0",
                         align_items="flex-start",
@@ -9385,31 +9385,31 @@ def semester_page():
                         min_width="0",
                     ),
                     rx.spacer(),
-                    width="100%",
-                    align="center",
-                    padding="10px 14px 6px 14px",
-                ),
-                # ── Thin progress bar ──
-                rx.box(
-                    rx.box(
-                        width=AppState.semester_progress_width_css,
-                        height="100%",
-                        background="linear-gradient(90deg, #34D399, #10B981)",
-                        border_radius="2px",
-                        transition="width 0.5s ease",
+                    rx.button(
+                        rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
+                        on_click=AppState.new_chat,
+                        width="40px",
+                        height="40px",
+                        min_width="40px",
+                        border_radius="12px",
+                        display="inline-flex",
+                        align_items="center",
+                        justify_content="center",
+                        style={
+                            "background": "transparent",
+                            "border": "none",
+                            "cursor": "pointer",
+                            "_hover": {"background": "rgba(255,255,255,0.06)"},
+                        },
                     ),
                     width="100%",
-                    height="3px",
-                    background="rgba(255,255,255,0.06)",
-                    border_radius="2px",
-                    margin_x="14px",
-                    margin_bottom="6px",
-                    max_width="calc(100% - 28px)",
+                    align="center",
+                    padding="8px 12px",
                 ),
                 display=rx.breakpoints(initial="block", md="none"),
                 flex_shrink="0",
             ),
-            # ── Desktop header ──
+            # ── Desktop top info (no bar, no border — just text) ──
             rx.box(
                 rx.hstack(
                     # Left: degree + semester/day + progress pip
