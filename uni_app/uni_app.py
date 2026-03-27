@@ -1736,10 +1736,15 @@ class AppState(reflex_local_auth.LocalAuthState):
                     headers={
                         "Authorization": f"Bearer {DODO_PAYMENTS_API_KEY}",
                         "Content-Type": "application/json",
+                        "Accept": "application/json",
                     },
                     json={
-                        "product_id": DODO_PAYMENTS_PRODUCT_ID,
-                        "quantity": 1,
+                        "product_cart": [
+                            {
+                                "product_id": DODO_PAYMENTS_PRODUCT_ID,
+                                "quantity": 1,
+                            }
+                        ],
                         "return_url": DODO_PAYMENTS_RETURN_URL,
                     },
                 )
@@ -1752,7 +1757,13 @@ class AppState(reflex_local_auth.LocalAuthState):
 
             yield rx.redirect(checkout_url, is_external=True)
         except Exception as e:
-            print(f"[Dodo Payments] checkout error: {e}")
+            response_text = ""
+            if "response" in locals():
+                try:
+                    response_text = response.text[:1000]
+                except Exception:
+                    response_text = ""
+            print(f"[Dodo Payments] checkout error: {e} response={response_text}")
             yield rx.window_alert("Unable to start checkout right now. Please try again.")
 
     def set_settings_tab(self, tab: str):
