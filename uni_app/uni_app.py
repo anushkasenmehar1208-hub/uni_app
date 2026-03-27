@@ -1373,6 +1373,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     current_topic_name: str = ""
 
     profile_created_at: str = ""
+    is_pro: bool = False
     is_premium_1: bool = False
     is_premium_2: bool = False
     premium_activated_at: str = ""
@@ -1921,7 +1922,14 @@ class AppState(reflex_local_auth.LocalAuthState):
                 session.commit()
                 session.refresh(profile)
 
+            resolved_is_pro = bool(profile.is_pro or profile.is_premium_1 or profile.is_premium_2)
+            if bool(profile.is_pro) != resolved_is_pro:
+                profile.is_pro = resolved_is_pro
+                session.add(profile)
+                session.commit()
+
             self.profile_created_at  = profile.created_at.isoformat()
+            self.is_pro               = resolved_is_pro
             self.is_premium_1         = bool(profile.is_premium_1)
             self.is_premium_2         = bool(profile.is_premium_2)
             self.premium_activated_at = profile.premium_activated_at.isoformat() if profile.premium_activated_at else ""
@@ -2526,6 +2534,20 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     def close_pricing_modal(self):
         self.show_pricing_modal = False
+
+    @rx.event
+    def on_load_dashboard(self):
+        uid = self._uid()
+        if uid >= 0:
+            self._cached_uid = uid
+            self._load_profile(uid)
+        else:
+            self.is_pro = False
+
+        if not self.is_pro:
+            return rx.call_script(
+                "setTimeout(function() { window.location.reload(); }, 4000);"
+            )
 
     @rx.event
     def set_name(self, value: str):
@@ -8366,6 +8388,49 @@ def _marketing_section(
     )
 
 
+
+
+@rx.page(route="/dashboard", title="Dashboard", image=FAVICON_32, on_load=AppState.on_load_dashboard)
+def payment_dashboard_page():
+    return rx.box(
+        rx.center(
+            rx.vstack(
+                rx.heading("Welcome", size="8", color="white"),
+                rx.cond(
+                    AppState.is_pro,
+                    rx.vstack(
+                        rx.text("Your Pro features are now active!", color="#86efac", font_size="1.05rem", text_align="center"),
+                        rx.button(
+                            "Open Alex AI",
+                            on_click=rx.redirect(APP_DASHBOARD_ROUTE),
+                            color_scheme="green",
+                            size="3",
+                            style={
+                                "background": "linear-gradient(90deg,#065f46,#10b981)",
+                                "border": "none",
+                                "color": "white",
+                                "font_weight": "700",
+                                "cursor": "pointer",
+                            },
+                        ),
+                        spacing="4",
+                        align="center",
+                    ),
+                    rx.vstack(
+                        rx.text("Processing your payment...", color="rgba(255,255,255,0.82)", font_size="1.05rem", text_align="center"),
+                        rx.text("This page will refresh automatically in a few seconds.", color="rgba(255,255,255,0.58)", text_align="center"),
+                        spacing="3",
+                        align="center",
+                    ),
+                ),
+                spacing="5",
+                align="center",
+            ),
+            height="100vh",
+        ),
+        background="radial-gradient(circle at center, #001a0f 0%, #050505 100%)",
+        min_height="100vh",
+    )
 
 
 @rx.page(route="/payment/success", title="Payment Successful", image=FAVICON_32)
