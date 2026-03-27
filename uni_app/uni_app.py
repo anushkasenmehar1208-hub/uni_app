@@ -1382,6 +1382,23 @@ class AppState(reflex_local_auth.LocalAuthState):
         return f"{y}:{s}"
 
     @rx.var
+    def is_semester_scope_active_any(self) -> bool:
+        return self.view_mode == "semester" and bool(self.selected_year and self.selected_semester)
+
+    @rx.var
+    def compact_scope_label(self) -> str:
+        """Claude-style compact label e.g. '2:4 · Network Fundamentals'"""
+        y = self.selected_year.replace("Year ", "").strip()
+        s = self.selected_semester.replace("Semester ", "").strip()
+        if not y or not s:
+            return ""
+        base = f"{y}:{s}"
+        topic = getattr(self, "current_topic_name", "")
+        if topic:
+            return f"{base} · {topic}"
+        return base
+
+    @rx.var
     def semester_status_label(self) -> str:
         parts = [p for p in [self.selected_year, self.selected_semester] if p]
         return " • ".join(parts)
@@ -5646,19 +5663,27 @@ def tier_status_bar() -> rx.Component:
     return rx.hstack(
         rx.text(
             AppState.tier_label,
-            font_size="0.68rem",
+            font_size=rx.breakpoints(initial="0.72rem", md="0.68rem"),
             font_weight="500",
             color="rgba(160,170,180,0.5)",
         ),
         rx.cond(
             ~AppState.has_premium_access & ~AppState.is_in_trial,
             rx.text(AppState.messages_left_today.to_string() + f" / {FREE_DAILY_LIMIT} left",
-                    color="rgba(140,150,160,0.35)", font_size="0.68rem"),
+                    color="rgba(140,150,160,0.35)", font_size=rx.breakpoints(initial="0.72rem", md="0.68rem")),
             rx.fragment(),
         ),
         rx.spacer(),
-        rx.text(AppState.active_model_name, color="rgba(140,150,160,0.25)", font_size="0.65rem", font_family="monospace"),
-        width="100%", max_width="740px", margin_x="auto", padding_x="1.5em", padding_top="4px", padding_bottom="10px", align="center",
+        rx.text(
+            AppState.active_model_name,
+            color="rgba(140,150,160,0.25)",
+            font_size=rx.breakpoints(initial="0.68rem", md="0.65rem"),
+            font_family="monospace",
+            display=rx.breakpoints(initial="none", md="block"),
+        ),
+        width="100%", max_width="740px", margin_x="auto",
+        padding_x=rx.breakpoints(initial="1em", md="1.5em"),
+        padding_top="4px", padding_bottom="10px", align="center",
     )
 
 
@@ -6336,7 +6361,7 @@ def chat_input_field() -> rx.Component:
                 min_height="52px",
                 max_height="160px",
                 padding="14px 4px 14px 12px",
-                font_size="0.92rem",
+                font_size=rx.breakpoints(initial="1rem", md="0.92rem"),
                 line_height="1.5",
                 font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 style={
@@ -6430,29 +6455,40 @@ def empty_chat_panel() -> rx.Component:
     return rx.box(
         # Centered content group — greeting + input stay together
         rx.vstack(
-            # ── Logo + greeting inline ──
-            rx.hstack(
-                rx.image(
-                    src="/alex_logo.svg",
-                    width=rx.breakpoints(initial="32px", md="40px"),
-                    height=rx.breakpoints(initial="32px", md="40px"),
-                    object_fit="contain",
-                    opacity="0.8",
-                ),
+            # ── Logo ──
+            rx.image(
+                src="/alex_logo.svg",
+                width=rx.breakpoints(initial="36px", md="40px"),
+                height=rx.breakpoints(initial="36px", md="40px"),
+                object_fit="contain",
+                opacity="0.6",
+            ),
+            # ── Greeting — large Claude-style ──
+            rx.text(
+                AppState.greeting_text,
+                color="rgba(220,225,232,0.7)",
+                font_size=rx.breakpoints(initial="1.5rem", md="1.85rem"),
+                font_weight="300",
+                letter_spacing="-0.02em",
+                line_height="1.2",
+                text_align="center",
+                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            ),
+            # ── Scope pill (e.g. "2:4 · Network Fundamentals") ──
+            rx.cond(
+                AppState.is_semester_scope_active_any,
                 rx.text(
-                    AppState.greeting_text,
-                    color="rgba(220,225,232,0.7)",
-                    font_size=rx.breakpoints(initial="1.35rem", md="1.85rem"),
-                    font_weight="300",
-                    letter_spacing="-0.01em",
-                    line_height="1.2",
-                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    AppState.compact_scope_label,
+                    color="rgba(160,170,180,0.4)",
+                    font_size=rx.breakpoints(initial="0.78rem", md="0.72rem"),
+                    font_weight="400",
+                    text_align="center",
+                    letter_spacing="0.5px",
                 ),
-                spacing="4",
-                align="center",
+                rx.fragment(),
             ),
             # ── Gap ──
-            rx.box(height="24px"),
+            rx.box(height=rx.breakpoints(initial="20px", md="24px")),
             # ── Input bar ──
             rx.box(
                 rx.cond(
@@ -6477,8 +6513,8 @@ def empty_chat_panel() -> rx.Component:
         display="flex",
         align_items="center",
         justify_content="center",
-        padding=rx.breakpoints(initial="1em", md="2em"),
-        padding_bottom=rx.breakpoints(initial="4vh", md="8vh"),
+        padding=rx.breakpoints(initial="1.2em 1em", md="2em"),
+        padding_bottom=rx.breakpoints(initial="3vh", md="8vh"),
     )
 
 # ── active_chat_panel — Claude-like editorial styling ──────────
@@ -6492,6 +6528,12 @@ _CLAUDE_MD_CSS = """
   font-size: 16px;
   line-height: 1.75;
   color: rgba(228, 232, 238, 0.92);
+}
+@media (max-width: 768px) {
+  .claude-md {
+    font-size: 15px;
+    line-height: 1.65;
+  }
 }
 .claude-md p {
   margin: 0 0 1.1em 0;
@@ -8656,27 +8698,54 @@ def profile_menu_button() -> rx.Component:
 # FIX 2: home_page — clean header, aligned sidebar, no yellow blur
 def home_page():
     return rx.box(
-        # ── Slim header ──
+        # ── Mobile header (Claude-style: hamburger + new-chat) ──
         rx.box(
             rx.hstack(
-                # Mobile-only hamburger button
-                rx.icon_button(
-                    rx.icon(tag="menu", size=18),
+                rx.button(
+                    rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
                     on_click=AppState.toggle_semester_sidebar,
-                    variant="ghost",
-                    size="2",
-                    display=rx.breakpoints(initial="flex", md="none"),
+                    width="40px",
+                    height="40px",
+                    min_width="40px",
+                    border_radius="12px",
+                    display="inline-flex",
+                    align_items="center",
+                    justify_content="center",
                     style={
-                        "color": "rgba(200,210,220,0.6)",
                         "background": "transparent",
                         "border": "none",
                         "cursor": "pointer",
-                        "_hover": {
-                            "color": "rgba(220,230,240,0.85)",
-                            "background": "rgba(255,255,255,0.06)",
-                        },
+                        "_hover": {"background": "rgba(255,255,255,0.06)"},
                     },
                 ),
+                rx.spacer(),
+                rx.button(
+                    rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
+                    on_click=AppState.new_chat,
+                    width="40px",
+                    height="40px",
+                    min_width="40px",
+                    border_radius="12px",
+                    display="inline-flex",
+                    align_items="center",
+                    justify_content="center",
+                    style={
+                        "background": "transparent",
+                        "border": "none",
+                        "cursor": "pointer",
+                        "_hover": {"background": "rgba(255,255,255,0.06)"},
+                    },
+                ),
+                width="100%",
+                align="center",
+                padding="8px 12px",
+            ),
+            display=rx.breakpoints(initial="block", md="none"),
+            flex_shrink="0",
+        ),
+        # ── Desktop header ──
+        rx.box(
+            rx.hstack(
                 rx.vstack(
                     rx.text(
                         AppState.greeting_text,
@@ -8697,11 +8766,12 @@ def home_page():
                 ),
                 width="100%",
                 align="center",
-                padding=rx.breakpoints(initial="0.9em 1em", md="0.9em 2em 0.9em 1.4em"),
+                padding="0.9em 2em 0.9em 1.4em",
             ),
+            display=rx.breakpoints(initial="none", md="block"),
             flex_shrink="0",
         ),
-        # ── Mobile sidebar drawer (reuse semester_sidebar_drawer) ──
+        # ── Mobile sidebar drawer ──
         semester_sidebar_drawer(),
         # ── Main area ──
         rx.flex(
@@ -9244,105 +9314,153 @@ def semester_page():
         # ── Main content (right) ──
         rx.box(
             semester_sidebar_drawer(),
-            # ── Top info (no bar, no border — just text) ──
-            rx.hstack(
-                # Mobile-only hamburger button
-                rx.icon_button(
-                    rx.icon(tag="menu", size=18),
-                    on_click=AppState.toggle_semester_sidebar,
-                    variant="ghost",
-                    size="2",
-                    display=rx.breakpoints(initial="flex", md="none"),
-                    flex_shrink="0",
-                    style={
-                        "color": "rgba(200,210,220,0.6)",
-                        "background": "transparent",
-                        "border": "none",
-                        "cursor": "pointer",
-                        "_hover": {
-                            "color": "rgba(220,230,240,0.85)",
-                            "background": "rgba(255,255,255,0.06)",
+            # ── Mobile header (Claude-style: hamburger + scope + new-chat) ──
+            rx.box(
+                rx.hstack(
+                    rx.button(
+                        rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
+                        on_click=AppState.toggle_semester_sidebar,
+                        width="40px",
+                        height="40px",
+                        min_width="40px",
+                        border_radius="12px",
+                        display="inline-flex",
+                        align_items="center",
+                        justify_content="center",
+                        style={
+                            "background": "transparent",
+                            "border": "none",
+                            "cursor": "pointer",
+                            "_hover": {"background": "rgba(255,255,255,0.06)"},
                         },
-                    },
-                ),
-                # Left: degree + semester/day + progress pip
-                rx.vstack(
-                    rx.text(
-                        rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
-                        color="rgba(240,244,248,0.92)",
-                        font_size="0.88rem",
-                        font_weight="600",
                     ),
-                    rx.hstack(
-                        rx.text(
-                            AppState.semester_status_label,
-                            color="rgba(160,170,180,0.55)",
-                            font_size="0.72rem",
-                            font_weight="400",
-                        ),
-                        rx.text("·", color="rgba(160,170,180,0.3)", font_size="0.72rem"),
-                        rx.text(
-                            AppState.semester_progress_label,
-                            color="rgba(160,170,180,0.55)",
-                            font_size="0.72rem",
-                            font_weight="400",
-                        ),
-                        rx.box(
-                            rx.box(
-                                width=AppState.semester_progress_percent,
-                                height="100%",
-                                background="rgba(255,255,255,0.2)",
-                                border_radius="2px",
-                                style={"transition": "width 0.3s ease"},
-                            ),
-                            width="48px",
-                            height="3px",
-                            border_radius="2px",
-                            background="rgba(255,255,255,0.06)",
-                            flex_shrink="0",
-                            margin_left="6px",
-                        ),
-                        spacing="1",
-                        align="center",
-                    ),
-                    spacing="0",
-                    align_items="flex-start",
-                ),
-                rx.spacer(),
-                # Right: current topic heading
-                rx.cond(
-                    AppState.current_topic_name != "",
                     rx.vstack(
                         rx.text(
-                            AppState.current_topic_name,
-                            color="rgba(240,244,248,0.85)",
-                            font_size=rx.breakpoints(initial="0.78rem", md="0.92rem"),
-                            font_weight="500",
-                            letter_spacing="-0.01em",
-                            text_align="right",
-                            overflow="hidden",
-                            text_overflow="ellipsis",
-                            white_space="nowrap",
-                            max_width=rx.breakpoints(initial="140px", sm="200px", md="none"),
+                            AppState.compact_scope_label,
+                            color="rgba(240,244,248,0.92)",
+                            font_size="0.88rem",
+                            font_weight="600",
                         ),
-                        rx.text(
-                            "current topic",
-                            color="rgba(160,170,180,0.4)",
-                            font_size="0.68rem",
-                            text_align="right",
+                        rx.cond(
+                            AppState.current_topic_name != "",
+                            rx.text(
+                                AppState.current_topic_name,
+                                color="rgba(160,170,180,0.5)",
+                                font_size="0.72rem",
+                                font_weight="400",
+                                max_width="200px",
+                                overflow="hidden",
+                                text_overflow="ellipsis",
+                                white_space="nowrap",
+                            ),
+                            rx.fragment(),
                         ),
                         spacing="0",
-                        align_items="flex-end",
-                        flex_shrink="1",
+                        align_items="flex-start",
+                        flex="1",
                         min_width="0",
                     ),
-                    rx.fragment(),
+                    rx.spacer(),
+                    rx.button(
+                        rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
+                        on_click=AppState.new_chat,
+                        width="40px",
+                        height="40px",
+                        min_width="40px",
+                        border_radius="12px",
+                        display="inline-flex",
+                        align_items="center",
+                        justify_content="center",
+                        style={
+                            "background": "transparent",
+                            "border": "none",
+                            "cursor": "pointer",
+                            "_hover": {"background": "rgba(255,255,255,0.06)"},
+                        },
+                    ),
+                    width="100%",
+                    align="center",
+                    padding="8px 12px",
                 ),
-                width="100%",
-                padding=rx.breakpoints(initial="10px 1em 6px", md="10px 1.5em 6px"),
+                display=rx.breakpoints(initial="block", md="none"),
                 flex_shrink="0",
-                align="center",
-                gap=rx.breakpoints(initial="2", md="4"),
+            ),
+            # ── Desktop header ──
+            rx.box(
+                rx.hstack(
+                    # Left: degree + semester/day + progress pip
+                    rx.vstack(
+                        rx.text(
+                            rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
+                            color="rgba(240,244,248,0.92)",
+                            font_size="0.88rem",
+                            font_weight="600",
+                        ),
+                        rx.hstack(
+                            rx.text(
+                                AppState.semester_status_label,
+                                color="rgba(160,170,180,0.55)",
+                                font_size="0.72rem",
+                                font_weight="400",
+                            ),
+                            rx.text("·", color="rgba(160,170,180,0.3)", font_size="0.72rem"),
+                            rx.text(
+                                AppState.semester_progress_label,
+                                color="rgba(160,170,180,0.55)",
+                                font_size="0.72rem",
+                                font_weight="400",
+                            ),
+                            rx.box(
+                                rx.box(
+                                    width=AppState.semester_progress_percent,
+                                    height="100%",
+                                    background="rgba(255,255,255,0.2)",
+                                    border_radius="2px",
+                                    style={"transition": "width 0.3s ease"},
+                                ),
+                                width="48px",
+                                height="3px",
+                                border_radius="2px",
+                                background="rgba(255,255,255,0.06)",
+                                flex_shrink="0",
+                                margin_left="6px",
+                            ),
+                            spacing="1",
+                            align="center",
+                        ),
+                        spacing="0",
+                        align_items="flex-start",
+                    ),
+                    rx.spacer(),
+                    # Right: current topic heading
+                    rx.cond(
+                        AppState.current_topic_name != "",
+                        rx.vstack(
+                            rx.text(
+                                AppState.current_topic_name,
+                                color="rgba(240,244,248,0.85)",
+                                font_size="0.92rem",
+                                font_weight="500",
+                                letter_spacing="-0.01em",
+                                text_align="right",
+                            ),
+                            rx.text(
+                                "current topic",
+                                color="rgba(160,170,180,0.4)",
+                                font_size="0.68rem",
+                                text_align="right",
+                            ),
+                            spacing="0",
+                            align_items="flex-end",
+                        ),
+                        rx.fragment(),
+                    ),
+                    width="100%",
+                    padding="10px 1.5em 6px",
+                    flex_shrink="0",
+                    align="center",
+                ),
+                display=rx.breakpoints(initial="none", md="block"),
             ),
             rx.cond(
                 AppState.is_generating_plan,
