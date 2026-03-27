@@ -1220,6 +1220,27 @@ def _set_pro_status_by_email(email: str, is_pro: bool) -> bool:
         return True
 
 
+def _set_pro_status_by_unique_id(unique_id: str, is_pro: bool) -> bool:
+    normalized_unique_id = (unique_id or "").strip()
+    if not normalized_unique_id:
+        return False
+
+    with rx.session() as session:
+        profile = session.exec(
+            select(UserProfile).where(UserProfile.unique_id == normalized_unique_id)
+        ).one_or_none()
+        if profile is None:
+            return False
+
+        profile.is_pro = is_pro
+        profile.is_premium_1 = is_pro
+        profile.is_premium_2 = False
+        profile.premium_activated_at = datetime.now(timezone.utc) if is_pro else None
+        session.add(profile)
+        session.commit()
+        return True
+
+
 async def dodo_webhook(request: Request) -> PlainTextResponse:
     payload = (await request.body()).decode("utf-8")
 
@@ -1240,20 +1261,23 @@ async def dodo_webhook(request: Request) -> PlainTextResponse:
         return PlainTextResponse("server error", status_code=500)
 
     event_type = str(getattr(event, "type", "") or "").strip()
-    customer = getattr(getattr(event, "data", None), "customer", None)
+    event_data = getattr(event, "data", None)
+    customer = getattr(event_data, "customer", None)
     email = _normalize_email(str(getattr(customer, "email", "") or ""))
+    metadata = getattr(event_data, "metadata", {}) or {}
+    unique_id = str(metadata.get("unique_id", "") or "").strip()
 
     try:
         if event_type in {"payment.succeeded", "subscription.renewed"}:
-            if not _set_pro_status_by_email(email, True):
-                print(f"[Dodo Payments] no matching user for success event email={email}")
+            if not (_set_pro_status_by_unique_id(unique_id, True) or _set_pro_status_by_email(email, True)):
+                print(f"[Dodo Payments] no matching user for success event unique_id={unique_id} email={email}")
         elif event_type == "subscription.cancelled":
-            if not _set_pro_status_by_email(email, False):
-                print(f"[Dodo Payments] no matching user for cancelled event email={email}")
+            if not (_set_pro_status_by_unique_id(unique_id, False) or _set_pro_status_by_email(email, False)):
+                print(f"[Dodo Payments] no matching user for cancelled event unique_id={unique_id} email={email}")
         else:
             print(f"[Dodo Payments] ignored event type={event_type}")
     except Exception as e:
-        print(f"[Dodo Payments] processing error for type={event_type} email={email}: {e}")
+        print(f"[Dodo Payments] processing error for type={event_type} unique_id={unique_id} email={email}: {e}")
         return PlainTextResponse("processing error", status_code=500)
 
     return PlainTextResponse("OK", status_code=200)
@@ -1736,6 +1760,12 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     async def buy_pro_plan(self):
         try:
+            if not (self.user_unique_id or "").strip():
+                uid = self._uid()
+                if uid >= 0:
+                    self._cached_uid = uid
+                    self._load_profile(uid)
+
             async with httpx.AsyncClient(timeout=20.0) as client_http:
                 payload: dict[str, Any] = {}
                 response: httpx.Response | None = None
@@ -1747,6 +1777,9 @@ class AppState(reflex_local_auth.LocalAuthState):
                             "quantity": 1,
                         }
                     ],
+                    "metadata": {
+                        "unique_id": self.user_unique_id or "",
+                    },
                     "return_url": DODO_PAYMENTS_RETURN_URL,
                 }
                 checkout_headers = {
@@ -2543,6 +2576,9 @@ class AppState(reflex_local_auth.LocalAuthState):
             self._load_profile(uid)
         else:
             self.is_pro = False
+
+        if self.is_pro:
+            return rx.redirect(APP_DASHBOARD_ROUTE)
 
         if not self.is_pro:
             return rx.call_script(
