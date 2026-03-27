@@ -2005,6 +2005,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._login(int(user.id))
         self._cached_uid = int(user.id)
         self.app_auth_token = self.auth_token
+        self._load_profile(int(user.id))
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
         return AppState.auth_redir()  # type: ignore
@@ -2136,6 +2137,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._login(resolved_uid)
         self._cached_uid = resolved_uid
         self.app_auth_token = self.auth_token
+        self._load_profile(resolved_uid)
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
         new_token = self.auth_token
@@ -2185,6 +2187,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._login(resolved_uid)
         self._cached_uid = resolved_uid
         self.app_auth_token = self.auth_token
+        self._load_profile(resolved_uid)
         new_token = self.auth_token
 
         # One-time use token: consume AFTER successful login to allow retry on failure.
@@ -5410,7 +5413,35 @@ Behavior rules:
         self.app_auth_token = ""
         self._cached_uid = -1
         self.active_scope = ""
-        return [reflex_local_auth.LocalAuthState.do_logout, rx.redirect(reflex_local_auth.routes.LOGIN_ROUTE)]
+        # Reset all user-specific state to prevent data leaking across logins
+        self.name = ""
+        self.step = 0
+        self.degree = ""
+        self.is_started = False
+        self.selected_year = ""
+        self.selected_semester = ""
+        self.memory_summary = ""
+        self.adaptive_profile = ""
+        self.chat_history = []
+        self.sessions = []
+        self.home_sessions = []
+        self.current_session_id = ""
+        self.view_mode = ""
+        self.today_plan = ""
+        self.user_unique_id = ""
+        self.daily_message_count = 0
+        self.last_message_date = ""
+        self.profile_created_at = ""
+        self.is_premium_1 = False
+        self.is_premium_2 = False
+        self.premium_activated_at = ""
+        return [
+            reflex_local_auth.LocalAuthState.do_logout,
+            rx.call_script(
+                f"try {{ localStorage.removeItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}); }} catch(e) {{}}"
+            ),
+            rx.redirect(reflex_local_auth.routes.LOGIN_ROUTE),
+        ]
 
 
 SCROLL_TO_BOTTOM_JS = """
