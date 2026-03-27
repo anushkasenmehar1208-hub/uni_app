@@ -21,6 +21,7 @@ from typing import Any, Optional
 import traceback
 import reflex as rx
 import httpx
+from dodopayments import APIWebhookValidationError, DodoPayments, DodoPaymentsError
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
 from fastapi.responses import PlainTextResponse, RedirectResponse, FileResponse
@@ -699,6 +700,10 @@ DODO_PAYMENTS_PRODUCT_ID = os.getenv(
     "DODO_PAYMENTS_PRODUCT_ID",
     "pdt_0NbPrfFmmyxFqzaTmWGQX",
 ).strip()
+DODO_PAYMENTS_WEBHOOK_SECRET = os.getenv(
+    "DODO_PAYMENTS_WEBHOOK_SECRET",
+    "whsec_RHrisqg7SVnVxbOSNXnEp4k+s1a9kbE5",
+).strip()
 DODO_PAYMENTS_RETURN_URL = os.getenv(
     "DODO_PAYMENTS_RETURN_URL",
     "https://alexstudies.com/dashboard",
@@ -1078,10 +1083,12 @@ class DayProgress(rx.Model, table=True):  # type: ignore
 class UserProfile(rx.Model, table=True):  # type: ignore
     user_id: int = Field(index=True, unique=True, nullable=False)
     is_onboarded: bool = False
+    email: str = Field(default="", nullable=False)
     unique_id: str = Field(default="", nullable=False)
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
+    is_pro: bool = Field(default=False, nullable=False)
     is_premium_1: bool = Field(default=False, nullable=False)
     is_premium_2: bool = Field(default=False, nullable=False)
     premium_activated_at: Optional[datetime] = Field(
@@ -1117,7 +1124,7 @@ class AuthThrottle(rx.Model, table=True):  # type: ignore
 
 
 # ----------------------------
-# Gumroad ping webhook
+# Payment webhooks
 # ----------------------------
 async def gumroad_ping(request: Request) -> PlainTextResponse:
     try:
@@ -1153,6 +1160,98 @@ async def gumroad_ping(request: Request) -> PlainTextResponse:
     except Exception as e:
         print(f"[Gumroad] 🔥 ping error: {e}")
         return PlainTextResponse("server error", status_code=500)
+
+
+def _normalize_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+def _store_user_profile_email(uid: int, email: str) -> None:
+    normalized_email = _normalize_email(email)
+    if uid < 0 or not normalized_email:
+        return
+
+    with rx.session() as session:
+        profile = session.exec(
+            select(UserProfile).where(UserProfile.user_id == uid)
+        ).one_or_none()
+        if profile is None:
+            profile = UserProfile(user_id=uid)  # type: ignore
+        if profile.email != normalized_email:
+            profile.email = normalized_email
+            session.add(profile)
+            session.commit()
+
+
+def _set_pro_status_by_email(email: str, is_pro: bool) -> bool:
+    normalized_email = _normalize_email(email)
+    if not normalized_email:
+        return False
+
+    with rx.session() as session:
+        profile = session.exec(
+            select(UserProfile).where(func.lower(UserProfile.email) == normalized_email)
+        ).one_or_none()
+
+        if profile is None:
+            user = session.exec(
+                select(LocalUser).where(func.lower(LocalUser.username) == normalized_email)
+            ).one_or_none()
+            if user is not None and user.id is not None:
+                profile = session.exec(
+                    select(UserProfile).where(UserProfile.user_id == int(user.id))
+                ).one_or_none()
+
+        if profile is None:
+            return False
+
+        profile.email = normalized_email
+        profile.is_pro = is_pro
+        profile.is_premium_1 = is_pro
+        profile.is_premium_2 = False
+        profile.premium_activated_at = datetime.now(timezone.utc) if is_pro else None
+        session.add(profile)
+        session.commit()
+        return True
+
+
+async def dodo_webhook(request: Request) -> PlainTextResponse:
+    payload = (await request.body()).decode("utf-8")
+
+    try:
+        client = DodoPayments(
+            bearer_token=DODO_PAYMENTS_API_KEY,
+            webhook_key=DODO_PAYMENTS_WEBHOOK_SECRET,
+        )
+        event = client.webhooks.unwrap(payload, headers=dict(request.headers))
+    except APIWebhookValidationError as e:
+        print(f"[Dodo Payments] invalid webhook signature: {e}")
+        return PlainTextResponse("invalid signature", status_code=400)
+    except DodoPaymentsError as e:
+        print(f"[Dodo Payments] webhook validation unavailable: {e}")
+        return PlainTextResponse("webhook unavailable", status_code=500)
+    except Exception as e:
+        print(f"[Dodo Payments] unexpected webhook error: {e}")
+        return PlainTextResponse("server error", status_code=500)
+
+    event_type = str(getattr(event, "type", "") or "").strip()
+    customer = getattr(getattr(event, "data", None), "customer", None)
+    email = _normalize_email(str(getattr(customer, "email", "") or ""))
+
+    try:
+        if event_type in {"payment.succeeded", "subscription.renewed"}:
+            if not _set_pro_status_by_email(email, True):
+                print(f"[Dodo Payments] no matching user for success event email={email}")
+        elif event_type == "subscription.cancelled":
+            if not _set_pro_status_by_email(email, False):
+                print(f"[Dodo Payments] no matching user for cancelled event email={email}")
+        else:
+            print(f"[Dodo Payments] ignored event type={event_type}")
+    except Exception as e:
+        print(f"[Dodo Payments] processing error for type={event_type} email={email}: {e}")
+        return PlainTextResponse("processing error", status_code=500)
+
+    return PlainTextResponse("OK", status_code=200)
 
 
 async def health_check(request):
@@ -1793,6 +1892,13 @@ class AppState(reflex_local_auth.LocalAuthState):
                 session.add(profile)
                 session.commit()
                 session.refresh(profile)
+            account = session.exec(
+                select(LocalUser).where(LocalUser.id == uid)
+            ).one_or_none()
+            if account is not None and "@" in (account.username or "") and not (profile.email or "").strip():
+                profile.email = _normalize_email(account.username)
+                session.add(profile)
+                session.commit()
             self.user_unique_id = profile.unique_id or ""
 
             memory = session.exec(
@@ -1814,9 +1920,6 @@ class AppState(reflex_local_auth.LocalAuthState):
                 self.selected_semester = ""
                 self.memory_summary = ""
             if not (self.name or "").strip():
-                account = session.exec(
-                    select(LocalUser).where(LocalUser.id == uid)
-                ).one_or_none()
                 if account is not None:
                     self.name = _normalize_person_name(account.username)
 
@@ -2165,6 +2268,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                     userinfo = _id_token_payload(id_token_val)
 
             subject = str((userinfo or {}).get("sub", "")).strip()
+            google_email = _normalize_email(str((userinfo or {}).get("email", "") or ""))
             if not subject:
                 raise ValueError("Google userinfo missing subject.")
 
@@ -2188,6 +2292,8 @@ class AppState(reflex_local_auth.LocalAuthState):
                     raise ValueError("Unable to create a valid local user for Google login.")
 
                 resolved_uid = int(user.id)
+                if google_email:
+                    _store_user_profile_email(resolved_uid, google_email)
         except Exception as e:
             print(f"[Google OAuth Frontend] ERROR: {e}")
             yield rx.redirect(f"{auth_routes.LOGIN_ROUTE}?oauth_error=1")
@@ -11912,6 +12018,7 @@ async def google_callback(request: Request):
                 userinfo = _id_token_payload(id_token_val)
 
         subject = str((userinfo or {}).get("sub", "")).strip()
+        google_email = _normalize_email(str((userinfo or {}).get("email", "") or ""))
         if not subject:
             print("[Google CB] no subject in userinfo")
             raise ValueError("Google userinfo missing subject.")
@@ -11935,6 +12042,9 @@ async def google_callback(request: Request):
 
             if user.id is None:
                 raise ValueError("Unable to create a valid local user for Google login.")
+
+            if google_email:
+                _store_user_profile_email(int(user.id), google_email)
 
             auth_token = secrets.token_urlsafe(32)
             session.add(
@@ -12051,6 +12161,48 @@ def _ensure_userprofile_unique_id() -> None:
 _ensure_userprofile_unique_id()
 
 
+def _ensure_userprofile_email() -> None:
+    try:
+        with rx.session() as session:
+            conn = session.connection()
+            dialect = conn.dialect.name
+            if dialect == "sqlite":
+                cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('userprofile')").fetchall()}
+                if "email" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN email VARCHAR NOT NULL DEFAULT ''")
+            elif dialect == "postgresql":
+                result = conn.exec_driver_sql(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name='userprofile' AND column_name='email'"
+                ).fetchone()
+                if result is None:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN email VARCHAR NOT NULL DEFAULT ''")
+            session.commit()
+    except Exception as e:
+        print(f"ERROR ensure_userprofile_email: {e}")
+_ensure_userprofile_email()
+
+
+def _ensure_userprofile_is_pro() -> None:
+    try:
+        with rx.session() as session:
+            conn = session.connection()
+            dialect = conn.dialect.name
+            if dialect == "sqlite":
+                cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('userprofile')").fetchall()}
+                if "is_pro" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN is_pro BOOLEAN NOT NULL DEFAULT 0")
+            elif dialect == "postgresql":
+                result = conn.exec_driver_sql(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name='userprofile' AND column_name='is_pro'"
+                ).fetchone()
+                if result is None:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN is_pro BOOLEAN NOT NULL DEFAULT FALSE")
+            session.commit()
+    except Exception as e:
+        print(f"ERROR ensure_userprofile_is_pro: {e}")
+_ensure_userprofile_is_pro()
+
+
 def _ensure_userprofile_premium_activated_at() -> None:
     try:
         with rx.session() as session:
@@ -12111,6 +12263,7 @@ _ensure_chatmessage2_document_columns()
 
 
 api.add_route("/api/gumroad/ping", gumroad_ping, methods=["POST"])
+api.add_route("/api/webhook", dodo_webhook, methods=["POST"])
 api.add_route("/health", health_check, methods=["GET"])
 
 
