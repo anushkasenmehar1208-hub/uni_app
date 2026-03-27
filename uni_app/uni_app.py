@@ -1431,6 +1431,34 @@ class AppState(reflex_local_auth.LocalAuthState):
         return str(min(100, max(0, pct))) + "%"
 
     @rx.var
+    def semester_progress_width_css(self) -> str:
+        """Returns just the percentage number for CSS width, e.g. '38%'."""
+        day = max(0, min(self.current_day, STUDY_PLAN_TOTAL_DAYS))
+        pct = int((day / max(1, STUDY_PLAN_TOTAL_DAYS)) * 100)
+        return str(min(100, max(0, pct))) + "%"
+
+    @rx.var
+    def mobile_header_topic(self) -> str:
+        """Topic name for mobile header, or 'Alex AI' if empty."""
+        topic = getattr(self, "current_topic_name", "")
+        return topic if topic else "Alex AI"
+
+    @rx.var
+    def mobile_header_scope(self) -> str:
+        """Compact scope like '1:1' for mobile header subtitle."""
+        y = self.selected_year.replace("Year ", "").strip()
+        s = self.selected_semester.replace("Semester ", "").strip()
+        if not y or not s:
+            return ""
+        return f"{y}:{s}"
+
+    @rx.var
+    def mobile_progress_day_label(self) -> str:
+        """e.g. 'Day 1 of 110'."""
+        day = max(1, min(self.current_day, STUDY_PLAN_TOTAL_DAYS))
+        return f"Day {day} of {STUDY_PLAN_TOTAL_DAYS}"
+
+    @rx.var
     def account_display_name(self) -> str:
         return _normalize_person_name(getattr(self.authenticated_user, "username", ""))
 
@@ -9314,7 +9342,7 @@ def semester_page():
         # ── Main content (right) ──
         rx.box(
             semester_sidebar_drawer(),
-            # ── Mobile header (Claude-style: hamburger + scope + new-chat) ──
+            # ── Mobile header (Claude-style: hamburger + topic + progress) ──
             rx.box(
                 rx.hstack(
                     rx.button(
@@ -9336,24 +9364,20 @@ def semester_page():
                     ),
                     rx.vstack(
                         rx.text(
-                            AppState.compact_scope_label,
+                            AppState.mobile_header_topic,
                             color="rgba(240,244,248,0.92)",
-                            font_size="0.88rem",
+                            font_size="0.95rem",
                             font_weight="600",
+                            max_width="240px",
+                            overflow="hidden",
+                            text_overflow="ellipsis",
+                            white_space="nowrap",
                         ),
-                        rx.cond(
-                            AppState.current_topic_name != "",
-                            rx.text(
-                                AppState.current_topic_name,
-                                color="rgba(160,170,180,0.5)",
-                                font_size="0.72rem",
-                                font_weight="400",
-                                max_width="200px",
-                                overflow="hidden",
-                                text_overflow="ellipsis",
-                                white_space="nowrap",
-                            ),
-                            rx.fragment(),
+                        rx.text(
+                            AppState.mobile_header_scope,
+                            color="rgba(160,170,180,0.45)",
+                            font_size="0.72rem",
+                            font_weight="500",
                         ),
                         spacing="0",
                         align_items="flex-start",
@@ -9361,26 +9385,26 @@ def semester_page():
                         min_width="0",
                     ),
                     rx.spacer(),
-                    rx.button(
-                        rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
-                        on_click=AppState.new_chat,
-                        width="40px",
-                        height="40px",
-                        min_width="40px",
-                        border_radius="12px",
-                        display="inline-flex",
-                        align_items="center",
-                        justify_content="center",
-                        style={
-                            "background": "transparent",
-                            "border": "none",
-                            "cursor": "pointer",
-                            "_hover": {"background": "rgba(255,255,255,0.06)"},
-                        },
-                    ),
                     width="100%",
                     align="center",
-                    padding="8px 12px",
+                    padding="10px 14px 6px 14px",
+                ),
+                # ── Thin progress bar ──
+                rx.box(
+                    rx.box(
+                        width=AppState.semester_progress_width_css,
+                        height="100%",
+                        background="linear-gradient(90deg, #34D399, #10B981)",
+                        border_radius="2px",
+                        transition="width 0.5s ease",
+                    ),
+                    width="100%",
+                    height="3px",
+                    background="rgba(255,255,255,0.06)",
+                    border_radius="2px",
+                    margin_x="14px",
+                    margin_bottom="6px",
+                    max_width="calc(100% - 28px)",
                 ),
                 display=rx.breakpoints(initial="block", md="none"),
                 flex_shrink="0",
@@ -10504,23 +10528,55 @@ def settings_general_tab() -> rx.Component:
         rx.text("Profile", color="white", font_size="1.15rem", font_weight="700"),
 
         # Avatar + name row
-        rx.hstack(
-            rx.box(
-                rx.text(
-                    AppState.username_initial,
-                    font_size="1.1rem",
-                    font_weight="700",
-                    color="#34D399",
+        rx.box(
+            rx.hstack(
+                rx.box(
+                    rx.text(
+                        AppState.username_initial,
+                        font_size="1.1rem",
+                        font_weight="700",
+                        color="#34D399",
+                    ),
+                    width="48px",
+                    height="48px",
+                    border_radius="50%",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    background="rgba(52,211,153,0.1)",
+                    border="1px solid rgba(52,211,153,0.2)",
+                    flex_shrink="0",
                 ),
-                width="48px",
-                height="48px",
-                border_radius="50%",
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                background="rgba(52,211,153,0.1)",
-                border="1px solid rgba(52,211,153,0.2)",
-                flex_shrink="0",
+                rx.text(
+                    AppState.display_name,
+                    color="rgba(255,255,255,0.8)",
+                    font_size="0.95rem",
+                    font_weight="500",
+                ),
+                spacing="3",
+                align="center",
+                margin_bottom="12px",
+                display=rx.breakpoints(initial="flex", md="none"),
+            ),
+            rx.hstack(
+                rx.box(
+                    rx.text(
+                        AppState.username_initial,
+                        font_size="1.1rem",
+                        font_weight="700",
+                        color="#34D399",
+                    ),
+                    width="48px",
+                    height="48px",
+                    border_radius="50%",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    background="rgba(52,211,153,0.1)",
+                    border="1px solid rgba(52,211,153,0.2)",
+                    flex_shrink="0",
+                ),
+                display=rx.breakpoints(initial="none", md="flex"),
             ),
             rx.vstack(
                 _slabel("Display name"),
@@ -10551,11 +10607,8 @@ def settings_general_tab() -> rx.Component:
                     align="center",
                 ),
                 spacing="1",
-                flex="1",
-                min_width="0",
+                width="100%",
             ),
-            spacing="3",
-            align="end",
             width="100%",
         ),
 
@@ -10605,7 +10658,7 @@ def settings_general_tab() -> rx.Component:
                     spacing="1",
                     width="100%",
                 ),
-                rx.hstack(
+                rx.box(
                     rx.vstack(
                         _slabel("New password"),
                         rx.input(
@@ -10617,6 +10670,7 @@ def settings_general_tab() -> rx.Component:
                         ),
                         spacing="1",
                         flex="1",
+                        width="100%",
                     ),
                     rx.vstack(
                         _slabel("Confirm new password"),
@@ -10629,8 +10683,11 @@ def settings_general_tab() -> rx.Component:
                         ),
                         spacing="1",
                         flex="1",
+                        width="100%",
                     ),
-                    spacing="3",
+                    display="flex",
+                    flex_direction=rx.breakpoints(initial="column", md="row"),
+                    gap="12px",
                     width="100%",
                 ),
                 rx.box(
@@ -10745,14 +10802,14 @@ def settings_account_tab() -> rx.Component:
         ),
         rx.vstack(
             _slabel("Type DELETE to confirm"),
-            rx.hstack(
+            rx.box(
                 rx.input(
                     placeholder="DELETE",
                     value=AppState.settings_delete_confirm,
                     on_change=AppState.set_settings_delete_confirm,
                     style={
                         **_SETTINGS_INPUT_STYLE,
-                        "width": "160px",
+                        "width": rx.breakpoints(initial="100%", md="160px"),
                         "font_family": "monospace",
                         "border": "1px solid rgba(239,68,68,0.2)",
                         "_focus": {"border": "1px solid rgba(239,68,68,0.5)"},
@@ -10762,6 +10819,7 @@ def settings_account_tab() -> rx.Component:
                     "Delete my account",
                     on_click=AppState.settings_delete_account,
                     size="2",
+                    width=rx.breakpoints(initial="100%", md="auto"),
                     style={
                         "background": "rgba(239,68,68,0.12)",
                         "border": "1px solid rgba(239,68,68,0.25)",
@@ -10772,10 +10830,13 @@ def settings_account_tab() -> rx.Component:
                         "_hover": {"background": "rgba(239,68,68,0.2)"},
                     },
                 ),
-                spacing="2",
-                align="center",
+                display="flex",
+                flex_direction=rx.breakpoints(initial="column", md="row"),
+                gap="8px",
+                align_items=rx.breakpoints(initial="stretch", md="center"),
             ),
             spacing="1",
+            width="100%",
         ),
 
         spacing="4",
@@ -10837,9 +10898,85 @@ def settings_learn_more_tab() -> rx.Component:
 )
 @require_app_login
 def settings_page():
+    # ── Shared content area ──
+    _content = rx.box(
+        rx.cond(
+            AppState.settings_tab == "general",
+            settings_general_tab(),
+            rx.cond(
+                AppState.settings_tab == "account",
+                settings_account_tab(),
+                settings_learn_more_tab(),
+            ),
+        ),
+        flex="1",
+        padding=rx.breakpoints(initial="1.2em 1em", md="2em 3em"),
+        overflow_y="auto",
+        min_width="0",
+    )
+
+    # ── Mobile tab pill bar (horizontal) ──
+    def _mtab(label: str, tab_key: str) -> rx.Component:
+        is_active = AppState.settings_tab == tab_key
+        return rx.box(
+            rx.text(
+                label,
+                font_size="0.82rem",
+                font_weight=rx.cond(is_active, "600", "400"),
+                color=rx.cond(is_active, "white", "rgba(255,255,255,0.45)"),
+                white_space="nowrap",
+            ),
+            on_click=AppState.set_settings_tab(tab_key),
+            padding="8px 16px",
+            border_radius="20px",
+            cursor="pointer",
+            background=rx.cond(is_active, "rgba(255,255,255,0.1)", "transparent"),
+            border=rx.cond(is_active, "1px solid rgba(255,255,255,0.12)", "1px solid transparent"),
+            style={
+                "_hover": {"background": rx.cond(is_active, "rgba(255,255,255,0.1)", "rgba(255,255,255,0.04)")},
+            },
+        )
+
     return rx.box(
+        # ── Mobile layout (stacked) ──
+        rx.box(
+            # Mobile top bar: back + "Settings"
+            rx.hstack(
+                rx.icon_button(
+                    rx.icon(tag="arrow_left", size=18),
+                    on_click=rx.redirect(scope_to_route("home")),
+                    variant="ghost",
+                    size="1",
+                    color="rgba(255,255,255,0.6)",
+                    style={"_hover": {"color": "white"}},
+                ),
+                rx.text("Settings", color="white", font_size="1.15rem", font_weight="700"),
+                spacing="2",
+                align="center",
+                padding="14px 16px 10px 16px",
+            ),
+            # Horizontal tab pills
+            rx.hstack(
+                _mtab("General", "general"),
+                _mtab("Account", "account"),
+                _mtab("Learn More", "learn_more"),
+                spacing="2",
+                padding="0 16px 12px 16px",
+                overflow_x="auto",
+            ),
+            # Divider
+            rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)"),
+            # Content
+            _content,
+            display=rx.breakpoints(initial="flex", md="none"),
+            flex_direction="column",
+            height="100vh",
+            width="100%",
+        ),
+
+        # ── Desktop layout (side-by-side, unchanged) ──
         rx.flex(
-            # ── Left sidebar nav ──
+            # Left sidebar nav
             rx.vstack(
                 rx.hstack(
                     rx.icon_button(
@@ -10864,11 +11001,9 @@ def settings_page():
                 padding="2em 1.2em",
                 align_items="stretch",
             ),
-
-            # ── Vertical divider ──
+            # Vertical divider
             rx.box(width="1px", background="rgba(255,255,255,0.06)"),
-
-            # ── Content area ──
+            # Content area
             rx.box(
                 rx.cond(
                     AppState.settings_tab == "general",
@@ -10884,11 +11019,12 @@ def settings_page():
                 overflow_y="auto",
                 min_width="0",
             ),
-
             width="100%",
             height="100vh",
             align_items="stretch",
+            display=rx.breakpoints(initial="none", md="flex"),
         ),
+
         width="100%",
         background="#0a0a0a",
     )
