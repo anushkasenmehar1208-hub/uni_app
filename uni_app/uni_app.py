@@ -11286,45 +11286,45 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                     height: 2px !important;
                     background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.0) 25%, rgba(6,182,212,0.4) 50%, rgba(6,182,212,0.0) 75%, transparent 100%) !important;
                 }
-                /* Card: small, compact, transparent — max space for effects */
+                /* Card: compact, transparent — effects visible through */
                 [data-auth-card] {
-                    padding: 14px 12px !important;
+                    padding: 12px 10px !important;
                     border-radius: 14px !important;
-                    background: rgba(0,0,0,0.3) !important;
-                    backdrop-filter: blur(18px) saturate(1.3) !important;
-                    -webkit-backdrop-filter: blur(18px) saturate(1.3) !important;
+                    background: rgba(0,0,0,0.25) !important;
+                    backdrop-filter: blur(14px) saturate(1.3) !important;
+                    -webkit-backdrop-filter: blur(14px) saturate(1.3) !important;
                     border: 1px solid rgba(56,189,248,0.2) !important;
                     box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(56,189,248,0.08), inset 0 1px 0 rgba(255,255,255,0.06) !important;
                     animation: authCardIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
-                    width: min(88vw, 360px) !important;
+                    max-width: 320px !important;
                 }
                 /* Smaller heading */
                 [data-auth-card] h1, [data-auth-card] h2, [data-auth-card] h3 {
-                    font-size: 1.2rem !important;
-                    margin-bottom: -2px !important;
+                    font-size: 1.1rem !important;
+                    line-height: 1.2 !important;
                 }
                 /* Compact spacing */
-                [data-auth-card] .rt-VStack { gap: 6px !important; }
+                [data-auth-card] .rt-VStack { gap: 4px !important; }
                 /* Smaller inputs */
                 [data-auth-card] input {
-                    height: 36px !important;
-                    font-size: 0.85rem !important;
+                    height: 32px !important;
+                    font-size: 0.82rem !important;
                 }
                 /* Smaller button */
                 [data-auth-card] button[type="submit"], [data-auth-card] .rt-Button {
-                    height: 38px !important;
-                    font-size: 0.85rem !important;
+                    height: 34px !important;
+                    font-size: 0.82rem !important;
                 }
                 /* Smaller labels */
                 [data-auth-card] .rt-Text {
-                    font-size: 0.82rem !important;
+                    font-size: 0.78rem !important;
                 }
                 /* Compact Google button */
                 [data-auth-card] button:first-of-type {
-                    height: 40px !important;
+                    height: 36px !important;
                 }
                 /* Smaller links */
-                [data-auth-card] a { font-size: 0.82rem !important; }
+                [data-auth-card] a { font-size: 0.78rem !important; }
                 /* Particles canvas on top of card so dots show everywhere */
                 #authParticles { z-index: 4 !important; }
                 /* Content: center the card vertically */
