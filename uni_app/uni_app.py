@@ -8865,6 +8865,7 @@ def onboarding_page():
                 filter="blur(60px)",
                 animation="obBlob1 12s ease-in-out infinite",
                 z_index="0", pointer_events="none",
+                custom_attrs={"data-ob-blob1": ""},
             ),
             # ── BLOB 2: Deep navy blue (bottom-left) ──
             rx.box(
@@ -8875,6 +8876,7 @@ def onboarding_page():
                 filter="blur(50px)",
                 animation="obBlob2 15s ease-in-out infinite",
                 z_index="0", pointer_events="none",
+                custom_attrs={"data-ob-blob2": ""},
             ),
             # ── BLOB 3: Icy cyan-blue (center-left) ──
             rx.box(
@@ -8885,6 +8887,7 @@ def onboarding_page():
                 filter="blur(55px)",
                 animation="obBlob3 18s ease-in-out infinite",
                 z_index="0", pointer_events="none",
+                custom_attrs={"data-ob-blob3": ""},
             ),
             # ── BLOB 4: Soft sky blue (top-left) ──
             rx.box(
@@ -8895,6 +8898,7 @@ def onboarding_page():
                 filter="blur(70px)",
                 animation="obBlob4 20s ease-in-out infinite",
                 z_index="0", pointer_events="none",
+                custom_attrs={"data-ob-blob4": ""},
             ),
             # ── Sweeping light beam 1 ──
             rx.box(
@@ -8904,6 +8908,7 @@ def onboarding_page():
                 transform_origin="center center",
                 animation="obBeam1 8s linear infinite",
                 z_index="1", pointer_events="none",
+                custom_attrs={"data-ob-beam": "1"},
             ),
             # ── Sweeping light beam 2 ──
             rx.box(
@@ -8913,6 +8918,7 @@ def onboarding_page():
                 transform_origin="center center",
                 animation="obBeam2 11s linear infinite",
                 z_index="1", pointer_events="none",
+                custom_attrs={"data-ob-beam": "2"},
             ),
             # ── Sweeping light beam 3 ──
             rx.box(
@@ -8922,6 +8928,7 @@ def onboarding_page():
                 transform_origin="center center",
                 animation="obBeam3 14s linear infinite",
                 z_index="1", pointer_events="none",
+                custom_attrs={"data-ob-beam": "3"},
             ),
             # ── Canvas for interactive particles ──
             rx.el.canvas(
@@ -8981,6 +8988,7 @@ def onboarding_page():
                         ),
                     },
                     animation="obCardIn 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s both",
+                    custom_attrs={"data-ob-card": ""},
                 ),
                 width="100%",
                 height="100%",
@@ -9035,6 +9043,17 @@ def onboarding_page():
                     75% { transform: translateY(-6px) scale(1.02); }
                     100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
                 }
+
+                /* ── Mobile: exact same effects, just fit the layout ── */
+                @media (max-width: 640px) {
+                    [data-ob-blob1] { width: 90vmax !important; height: 90vmax !important; top: -30% !important; right: -30% !important; filter: blur(40px) !important; }
+                    [data-ob-blob2] { width: 85vmax !important; height: 85vmax !important; bottom: -35% !important; left: -30% !important; filter: blur(40px) !important; }
+                    [data-ob-card] {
+                        padding: 1.2rem !important;
+                        border-radius: 18px !important;
+                        width: min(94vw, 480px) !important;
+                    }
+                }
             """),
             # ── Particle system ──
             rx.html('''<img src="data:," onerror="
@@ -9044,13 +9063,15 @@ def onboarding_page():
                     c.dataset.init='1';
                     var ctx=c.getContext('2d');
                     var w,h;
+                    var isMobile=window.innerWidth<=640;
                     function resize(){w=c.width=c.offsetWidth;h=c.height=c.offsetHeight;}
                     resize();
                     window.addEventListener('resize',resize);
                     var mx=w/2,my=h/2;
                     document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+                    document.addEventListener('touchmove',function(e){if(e.touches[0]){mx=e.touches[0].clientX;my=e.touches[0].clientY;}});
                     var ps=[];
-                    var n=70;
+                    var n=isMobile?35:70;
                     for(var i=0;i<n;i++){
                         var angle=Math.random()*Math.PI*2;
                         var speed=Math.random()*0.8+0.2;
