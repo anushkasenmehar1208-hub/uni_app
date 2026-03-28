@@ -9088,10 +9088,12 @@ def onboarding_page():
                                 var q=ps[j];
                                 var lx=p.x-q.x,ly=p.y-q.y;
                                 var ld=Math.sqrt(lx*lx+ly*ly);
-                                if(ld<120){
+                                var maxDist=isMobile?100:120;
+                            if(ld<maxDist){
                                     ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);
-                                    ctx.strokeStyle='rgba('+p.color[0]+','+p.color[1]+','+p.color[2]+','+(0.08*(1-ld/120))+')';
-                                    ctx.lineWidth=0.5;ctx.stroke();
+                                    var lineO=isMobile?(0.15*(1-ld/maxDist)):(0.08*(1-ld/maxDist));
+                                    ctx.strokeStyle='rgba('+p.color[0]+','+p.color[1]+','+p.color[2]+','+lineO+')';
+                                    ctx.lineWidth=isMobile?0.8:0.5;ctx.stroke();
                                 }
                             }
                         }
@@ -11132,13 +11134,16 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             rx.center(
                 rx.card(
                     content,
-                    width=AUTH_CARD_WIDTH,
-                    padding="22px 14px",
-                    border="1px solid rgba(56,189,248,0.12)",
-                    border_radius="20px",
-                    background="rgba(0,0,0,0.45)",
-                    box_shadow="0 40px 120px rgba(0,0,0,0.6), 0 0 60px rgba(56,189,248,0.05), inset 0 1px 0 rgba(255,255,255,0.05)",
-                    backdrop_filter="blur(40px) saturate(1.4)",
+                    width=rx.breakpoints(initial="min(85vw, 340px)", sm=AUTH_CARD_WIDTH),
+                    padding=rx.breakpoints(initial="14px 10px", sm="22px 14px"),
+                    border="1px solid rgba(56,189,248,0.15)",
+                    border_radius=rx.breakpoints(initial="14px", sm="20px"),
+                    background=rx.breakpoints(initial="rgba(0,0,0,0.28)", sm="rgba(0,0,0,0.45)"),
+                    box_shadow=rx.breakpoints(
+                        initial="0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(56,189,248,0.08), inset 0 1px 0 rgba(255,255,255,0.06)",
+                        sm="0 40px 120px rgba(0,0,0,0.6), 0 0 60px rgba(56,189,248,0.05), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    ),
+                    backdrop_filter=rx.breakpoints(initial="blur(16px) saturate(1.3)", sm="blur(40px) saturate(1.4)"),
                     animation="authCardIn 1.4s cubic-bezier(0.16,1,0.3,1) 0.2s both",
                     custom_attrs={"data-auth-card": ""},
                 ),
@@ -11246,39 +11251,95 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
             }
 
-            /* ── Mobile optimizations ── */
+            /* ── Mobile: FULL effects, card is see-through ── */
             @media (max-width: 640px) {
-                /* GPU-accelerate blobs with reduced blur for perf */
-                [data-auth-blob] { filter: blur(40px) !important; will-change: transform; }
-                /* Card: tighter padding, compact on mobile */
-                [data-auth-card] {
-                    padding: 16px 12px !important;
-                    border-radius: 16px !important;
-                    backdrop-filter: blur(20px) saturate(1.2) !important;
-                    -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
-                    animation: authCardIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
-                }
-                /* Reduce heading size on mobile */
-                [data-auth-card] h1, [data-auth-card] h2, [data-auth-card] h3 {
-                    font-size: 1.4rem !important;
-                }
-                /* Tighter spacing in card form */
-                [data-auth-card] .rt-VStack { gap: 8px !important; }
-                /* Mobile: stack from top, let footer sit at bottom */
-                [data-auth-content] {
-                    padding: 12px 10px !important;
-                    min-height: 100dvh !important;
-                    justify-content: flex-start !important;
-                    padding-top: max(40px, 6vh) !important;
-                }
-                /* Make blobs bigger on mobile so color fills the visible gaps */
+                /* Blobs: bigger, brighter, GPU-accelerated */
+                [data-auth-blob] { will-change: transform; }
                 [data-auth-blob1] {
-                    width: 90vmax !important; height: 90vmax !important;
-                    top: -30% !important; right: -30% !important;
+                    width: 100vmax !important; height: 100vmax !important;
+                    top: -35% !important; right: -35% !important;
+                    background: radial-gradient(ellipse at 30% 40%, rgba(56,189,248,0.55) 0%, rgba(14,165,233,0.25) 40%, transparent 70%) !important;
                 }
                 [data-auth-blob2] {
-                    width: 85vmax !important; height: 85vmax !important;
-                    bottom: -35% !important; left: -30% !important;
+                    width: 95vmax !important; height: 95vmax !important;
+                    bottom: -40% !important; left: -35% !important;
+                    background: radial-gradient(ellipse at 60% 50%, rgba(37,99,235,0.5) 0%, rgba(29,78,216,0.2) 45%, transparent 70%) !important;
+                }
+                [data-auth-blob3] {
+                    width: 60vmax !important; height: 60vmax !important;
+                    background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.4) 0%, rgba(8,145,178,0.15) 50%, transparent 70%) !important;
+                }
+                [data-auth-blob4] {
+                    width: 50vmax !important; height: 50vmax !important;
+                    background: radial-gradient(ellipse at 50% 50%, rgba(96,165,250,0.35) 0%, transparent 60%) !important;
+                }
+                /* Beams: brighter on mobile */
+                [data-auth-beam="1"] {
+                    height: 3px !important;
+                    background: linear-gradient(90deg, transparent 0%, rgba(56,189,248,0.0) 15%, rgba(56,189,248,0.6) 50%, rgba(56,189,248,0.0) 85%, transparent 100%) !important;
+                }
+                [data-auth-beam="2"] {
+                    height: 2.5px !important;
+                    background: linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.0) 20%, rgba(37,99,235,0.5) 50%, rgba(37,99,235,0.0) 80%, transparent 100%) !important;
+                }
+                [data-auth-beam="3"] {
+                    height: 2px !important;
+                    background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.0) 25%, rgba(6,182,212,0.4) 50%, rgba(6,182,212,0.0) 75%, transparent 100%) !important;
+                }
+                /* Card: small, compact, transparent — max space for effects */
+                [data-auth-card] {
+                    padding: 14px 12px !important;
+                    border-radius: 14px !important;
+                    background: rgba(0,0,0,0.3) !important;
+                    backdrop-filter: blur(18px) saturate(1.3) !important;
+                    -webkit-backdrop-filter: blur(18px) saturate(1.3) !important;
+                    border: 1px solid rgba(56,189,248,0.2) !important;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(56,189,248,0.08), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+                    animation: authCardIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
+                    width: min(88vw, 360px) !important;
+                }
+                /* Smaller heading */
+                [data-auth-card] h1, [data-auth-card] h2, [data-auth-card] h3 {
+                    font-size: 1.2rem !important;
+                    margin-bottom: -2px !important;
+                }
+                /* Compact spacing */
+                [data-auth-card] .rt-VStack { gap: 6px !important; }
+                /* Smaller inputs */
+                [data-auth-card] input {
+                    height: 36px !important;
+                    font-size: 0.85rem !important;
+                }
+                /* Smaller button */
+                [data-auth-card] button[type="submit"], [data-auth-card] .rt-Button {
+                    height: 38px !important;
+                    font-size: 0.85rem !important;
+                }
+                /* Smaller labels */
+                [data-auth-card] .rt-Text {
+                    font-size: 0.82rem !important;
+                }
+                /* Compact Google button */
+                [data-auth-card] button:first-of-type {
+                    height: 40px !important;
+                }
+                /* Smaller links */
+                [data-auth-card] a { font-size: 0.82rem !important; }
+                /* Particles canvas on top of card so dots show everywhere */
+                #authParticles { z-index: 4 !important; }
+                /* Content: center the card vertically */
+                [data-auth-content] {
+                    padding: 10px 8px !important;
+                    min-height: 100dvh !important;
+                    justify-content: center !important;
+                    gap: 0 !important;
+                }
+                /* Compact footer on mobile */
+                [data-auth-content] > div:last-child {
+                    padding: 6px 0 2px !important;
+                }
+                [data-auth-content] > div:last-child .rt-Text {
+                    font-size: 0.65rem !important;
                 }
             }
         """),
@@ -11298,15 +11359,15 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                 document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
                 document.addEventListener('touchmove',function(e){if(e.touches[0]){mx=e.touches[0].clientX;my=e.touches[0].clientY;}});
                 var ps=[];
-                var n=isMobile?35:80;
+                var n=isMobile?40:80;
                 for(var i=0;i<n;i++){
                     var angle=Math.random()*Math.PI*2;
                     var speed=Math.random()*0.8+0.2;
                     ps.push({
                         x:Math.random()*w,y:Math.random()*h,
                         vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
-                        r:Math.random()*2+0.5,
-                        baseO:Math.random()*0.5+0.1,
+                        r:isMobile?Math.random()*2.5+1:Math.random()*2+0.5,
+                        baseO:isMobile?Math.random()*0.6+0.25:Math.random()*0.5+0.1,
                         color:i%3===0?[56,189,248]:i%3===1?[37,99,235]:[6,182,212],
                         pulse:Math.random()*Math.PI*2,
                         pulseSpeed:Math.random()*0.02+0.01
