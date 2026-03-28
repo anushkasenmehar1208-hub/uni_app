@@ -11154,6 +11154,7 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             padding="20px 16px",
             z_index="3",
             position="relative",
+            custom_attrs={"data-auth-content": ""},
         ),
         # ── CSS animations ──
         rx.el.style("""
@@ -11256,13 +11257,24 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                 #authParticles { display: none !important; }
                 /* Hide grain overlay on mobile */
                 [data-auth-grain] { display: none !important; }
-                /* Card: tighter padding, full width */
+                /* Card: tighter padding, compact on mobile */
                 [data-auth-card] {
-                    padding: 18px 12px !important;
+                    padding: 16px 12px !important;
                     border-radius: 16px !important;
                     backdrop-filter: blur(20px) saturate(1.2) !important;
                     -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
                     animation: authCardIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
+                }
+                /* Reduce heading size on mobile */
+                [data-auth-card] h1, [data-auth-card] h2, [data-auth-card] h3 {
+                    font-size: 1.4rem !important;
+                }
+                /* Tighter spacing in card form */
+                [data-auth-card] .rt-VStack { gap: 8px !important; }
+                /* Reduce outer padding on mobile */
+                [data-auth-content] {
+                    padding: 12px 10px !important;
+                    min-height: 100dvh !important;
                 }
                 /* Make blobs bigger on mobile so color fills the visible gaps */
                 [data-auth-blob1] {
@@ -11343,7 +11355,8 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
         " style="display:none">'''),
         password_eye_script(),
         auth_token_bootstrap_script(),
-        width="100vw", min_height="100vh", position="relative", overflow="hidden",
+        width="100vw", min_height="100vh", position="relative",
+        overflow_x="hidden",
         on_mount=AppState.init_auth_forms,
     )
 
