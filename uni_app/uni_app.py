@@ -11271,10 +11271,12 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                 }
                 /* Tighter spacing in card form */
                 [data-auth-card] .rt-VStack { gap: 8px !important; }
-                /* Reduce outer padding on mobile */
+                /* Mobile: stack from top, let footer sit at bottom */
                 [data-auth-content] {
                     padding: 12px 10px !important;
                     min-height: 100dvh !important;
+                    justify-content: flex-start !important;
+                    padding-top: max(40px, 6vh) !important;
                 }
                 /* Make blobs bigger on mobile so color fills the visible gaps */
                 [data-auth-blob1] {
