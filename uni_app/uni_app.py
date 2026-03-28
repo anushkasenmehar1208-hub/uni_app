@@ -11248,15 +11248,8 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
 
             /* ── Mobile optimizations ── */
             @media (max-width: 640px) {
-                /* Reduce blur on blobs for performance */
-                [data-auth-blob] { filter: blur(35px) !important; will-change: transform; }
-                /* Hide blob 3, 4 and all beams on mobile */
-                [data-auth-blob3], [data-auth-blob4],
-                [data-auth-beam] { display: none !important; }
-                /* Hide canvas particles on mobile — CSS blobs are enough */
-                #authParticles { display: none !important; }
-                /* Hide grain overlay on mobile */
-                [data-auth-grain] { display: none !important; }
+                /* GPU-accelerate blobs with reduced blur for perf */
+                [data-auth-blob] { filter: blur(40px) !important; will-change: transform; }
                 /* Card: tighter padding, compact on mobile */
                 [data-auth-card] {
                     padding: 16px 12px !important;
@@ -11294,17 +11287,18 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             (function(){
                 var c=document.getElementById('authParticles');
                 if(!c||c.dataset.init)return;
-                if(window.innerWidth<=640)return;
                 c.dataset.init='1';
                 var ctx=c.getContext('2d');
                 var w,h;
+                var isMobile=window.innerWidth<=640;
                 function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;}
                 resize();
                 window.addEventListener('resize',resize);
                 var mx=w/2,my=h/2;
                 document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+                document.addEventListener('touchmove',function(e){if(e.touches[0]){mx=e.touches[0].clientX;my=e.touches[0].clientY;}});
                 var ps=[];
-                var n=80;
+                var n=isMobile?35:80;
                 for(var i=0;i<n;i++){
                     var angle=Math.random()*Math.PI*2;
                     var speed=Math.random()*0.8+0.2;
