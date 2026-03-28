@@ -11046,6 +11046,7 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             filter="blur(60px)",
             animation="authBlob1 12s ease-in-out infinite",
             z_index="0", pointer_events="none",
+            custom_attrs={"data-auth-blob": "1", "data-auth-blob1": ""},
         ),
         # ── BLOB 2: Deep navy blue (bottom-left) ──
         rx.box(
@@ -11056,8 +11057,9 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             filter="blur(50px)",
             animation="authBlob2 15s ease-in-out infinite",
             z_index="0", pointer_events="none",
+            custom_attrs={"data-auth-blob": "2", "data-auth-blob2": ""},
         ),
-        # ── BLOB 3: Icy cyan-blue (center-left) ──
+        # ── BLOB 3: Icy cyan-blue (center-left, hidden on mobile) ──
         rx.box(
             position="fixed", top="30%", left="-5%",
             width="45vmax", height="45vmax",
@@ -11066,8 +11068,9 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             filter="blur(55px)",
             animation="authBlob3 18s ease-in-out infinite",
             z_index="0", pointer_events="none",
+            custom_attrs={"data-auth-blob3": ""},
         ),
-        # ── BLOB 4: Soft sky blue (top-left) ──
+        # ── BLOB 4: Soft sky blue (top-left, hidden on mobile) ──
         rx.box(
             position="fixed", top="5%", left="20%",
             width="35vmax", height="35vmax",
@@ -11076,8 +11079,9 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             filter="blur(70px)",
             animation="authBlob4 20s ease-in-out infinite",
             z_index="0", pointer_events="none",
+            custom_attrs={"data-auth-blob4": ""},
         ),
-        # ── Sweeping light beam 1 ──
+        # ── Sweeping light beam 1 (hidden on mobile) ──
         rx.box(
             position="fixed", top="50%", left="50%",
             width="200vw", height="2px",
@@ -11085,8 +11089,9 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             transform_origin="center center",
             animation="authBeam1 8s linear infinite",
             z_index="1", pointer_events="none",
+            custom_attrs={"data-auth-beam": "1"},
         ),
-        # ── Sweeping light beam 2 ──
+        # ── Sweeping light beam 2 (hidden on mobile) ──
         rx.box(
             position="fixed", top="50%", left="50%",
             width="200vw", height="1.5px",
@@ -11094,8 +11099,9 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             transform_origin="center center",
             animation="authBeam2 11s linear infinite",
             z_index="1", pointer_events="none",
+            custom_attrs={"data-auth-beam": "2"},
         ),
-        # ── Sweeping light beam 3 ──
+        # ── Sweeping light beam 3 (hidden on mobile) ──
         rx.box(
             position="fixed", top="50%", left="50%",
             width="180vw", height="1px",
@@ -11103,6 +11109,7 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             transform_origin="center center",
             animation="authBeam3 14s linear infinite",
             z_index="1", pointer_events="none",
+            custom_attrs={"data-auth-beam": "3"},
         ),
         # ── Canvas for interactive particles ──
         rx.el.canvas(
@@ -11111,13 +11118,14 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             width="100vw", height="100vh",
             z_index="1", pointer_events="none",
         ),
-        # ── Noise/grain overlay for texture ──
+        # ── Noise/grain overlay for texture (hidden on mobile) ──
         rx.box(
             position="fixed", top="0", left="0", width="100vw", height="100vh",
             opacity="0.03",
             background_image="url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")",
             background_size="128px 128px",
             z_index="2", pointer_events="none",
+            custom_attrs={"data-auth-grain": ""},
         ),
         # ── Main content ──
         rx.box(
@@ -11126,12 +11134,13 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                     content,
                     width=AUTH_CARD_WIDTH,
                     padding="22px 14px",
-                    border="1px solid rgba(99,102,241,0.15)",
+                    border="1px solid rgba(56,189,248,0.12)",
                     border_radius="20px",
                     background="rgba(0,0,0,0.45)",
-                    box_shadow="0 40px 120px rgba(0,0,0,0.6), 0 0 60px rgba(79,70,229,0.06), 0 0 40px rgba(245,158,11,0.03), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    box_shadow="0 40px 120px rgba(0,0,0,0.6), 0 0 60px rgba(56,189,248,0.05), inset 0 1px 0 rgba(255,255,255,0.05)",
                     backdrop_filter="blur(40px) saturate(1.4)",
                     animation="authCardIn 1.4s cubic-bezier(0.16,1,0.3,1) 0.2s both",
+                    custom_attrs={"data-auth-card": ""},
                 ),
                 width="100%",
                 padding_top="0",
@@ -11235,12 +11244,43 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                 75% { transform: translateY(-6px) scale(1.02); }
                 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
             }
+
+            /* ── Mobile optimizations ── */
+            @media (max-width: 640px) {
+                /* Reduce blur on blobs for performance */
+                [data-auth-blob] { filter: blur(35px) !important; will-change: transform; }
+                /* Hide blob 3, 4 and all beams on mobile */
+                [data-auth-blob3], [data-auth-blob4],
+                [data-auth-beam] { display: none !important; }
+                /* Hide canvas particles on mobile — CSS blobs are enough */
+                #authParticles { display: none !important; }
+                /* Hide grain overlay on mobile */
+                [data-auth-grain] { display: none !important; }
+                /* Card: tighter padding, full width */
+                [data-auth-card] {
+                    padding: 18px 12px !important;
+                    border-radius: 16px !important;
+                    backdrop-filter: blur(20px) saturate(1.2) !important;
+                    -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
+                    animation: authCardIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
+                }
+                /* Make blobs bigger on mobile so color fills the visible gaps */
+                [data-auth-blob1] {
+                    width: 90vmax !important; height: 90vmax !important;
+                    top: -30% !important; right: -30% !important;
+                }
+                [data-auth-blob2] {
+                    width: 85vmax !important; height: 85vmax !important;
+                    bottom: -35% !important; left: -30% !important;
+                }
+            }
         """),
         # ── Particle system via img onerror trick ──
         rx.html('''<img src="data:," onerror="
             (function(){
                 var c=document.getElementById('authParticles');
                 if(!c||c.dataset.init)return;
+                if(window.innerWidth<=640)return;
                 c.dataset.init='1';
                 var ctx=c.getContext('2d');
                 var w,h;
@@ -11259,7 +11299,7 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                         vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
                         r:Math.random()*2+0.5,
                         baseO:Math.random()*0.5+0.1,
-                        color:i%3===0?[99,102,241]:i%3===1?[139,92,246]:[245,158,11],
+                        color:i%3===0?[56,189,248]:i%3===1?[37,99,235]:[6,182,212],
                         pulse:Math.random()*Math.PI*2,
                         pulseSpeed:Math.random()*0.02+0.01
                     });
