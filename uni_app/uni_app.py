@@ -2540,7 +2540,9 @@ class AppState(reflex_local_auth.LocalAuthState):
         state = unquote(str(self.router.page.params.get("state", "") or "")).strip()
         origin_b64 = str(self.router.page.params.get("origin_b64", "") or "").strip()
         state_payload = _google_parse_state(state)
-        expected_nonce = (self.google_oauth_nonce or "").strip()
+        expected_nonce = str((self.router.cookies or {}).get(GOOGLE_STATE_COOKIE_NAME, "") or "").strip()
+        if not expected_nonce:
+            expected_nonce = (self.google_oauth_nonce or "").strip()
 
         if not code or state_payload is None or not expected_nonce or state_payload.get("n") != expected_nonce:
             self.google_oauth_nonce = ""
