@@ -9071,20 +9071,48 @@ def onboarding_page():
                     100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
                 }
 
-                /* ── Mobile: exact same effects, just fit the layout ── */
+                /* ── Mobile: lightweight for performance ── */
                 @media (max-width: 640px) {
-                    [data-ob-blob1] { width: 90vmax !important; height: 90vmax !important; top: -30% !important; right: -30% !important; filter: blur(40px) !important; }
-                    [data-ob-blob2] { width: 85vmax !important; height: 85vmax !important; bottom: -35% !important; left: -30% !important; filter: blur(40px) !important; }
+                    /* Kill heavy GPU effects */
+                    #obParticles { display: none !important; }
+                    [data-ob-beam] { display: none !important; }
+                    [data-ob-beam="1"],[data-ob-beam="2"],[data-ob-beam="3"] { display: none !important; }
+
+                    /* Blobs: keep 2, static, reduced blur */
+                    [data-ob-blob1] {
+                        width: 80vmax !important; height: 80vmax !important;
+                        top: -30% !important; right: -30% !important;
+                        filter: blur(80px) !important;
+                        animation: none !important;
+                    }
+                    [data-ob-blob2] {
+                        width: 75vmax !important; height: 75vmax !important;
+                        bottom: -35% !important; left: -30% !important;
+                        filter: blur(80px) !important;
+                        animation: none !important;
+                    }
+                    /* Hide extra blobs */
+                    [data-ob-blob3],[data-ob-blob4] { display: none !important; }
+
+                    /* Card: simple fade-up */
                     [data-ob-card] {
                         padding: 1.2rem !important;
                         border-radius: 18px !important;
                         width: min(94vw, 480px) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        animation: obCardInMob 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
+                    }
+                    @keyframes obCardInMob {
+                        from { opacity: 0; transform: translateY(30px); }
+                        to { opacity: 1; transform: translateY(0); }
                     }
                 }
             """),
             # ── Particle system ──
             rx.html('''<img src="data:," onerror="
                 (function(){
+                    if(window.innerWidth<=640)return;
                     var c=document.getElementById('obParticles');
                     if(!c||c.dataset.init)return;
                     c.dataset.init='1';
@@ -11299,42 +11327,32 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
             }
 
-            /* ── Mobile: FULL effects, card is see-through ── */
+            /* ── Mobile: lightweight for performance ── */
             @media (max-width: 640px) {
-                /* Blobs: bigger, brighter, GPU-accelerated */
-                [data-auth-blob] { will-change: transform; }
+                /* Kill heavy GPU effects */
+                #authParticles { display: none !important; }
+                [data-auth-grain] { display: none !important; }
+                [data-auth-beam] { display: none !important; }
+                [data-auth-beam="1"],[data-auth-beam="2"],[data-auth-beam="3"] { display: none !important; }
+
+                /* Blobs: keep 2 for ambience, static (no animation), reduced blur */
+                [data-auth-blob] { will-change: auto !important; }
                 [data-auth-blob1] {
-                    width: 100vmax !important; height: 100vmax !important;
-                    top: -35% !important; right: -35% !important;
-                    background: radial-gradient(ellipse at 30% 40%, rgba(56,189,248,0.55) 0%, rgba(14,165,233,0.25) 40%, transparent 70%) !important;
+                    width: 80vmax !important; height: 80vmax !important;
+                    top: -30% !important; right: -30% !important;
+                    filter: blur(80px) !important;
+                    animation: none !important;
                 }
                 [data-auth-blob2] {
-                    width: 95vmax !important; height: 95vmax !important;
-                    bottom: -40% !important; left: -35% !important;
-                    background: radial-gradient(ellipse at 60% 50%, rgba(37,99,235,0.5) 0%, rgba(29,78,216,0.2) 45%, transparent 70%) !important;
+                    width: 75vmax !important; height: 75vmax !important;
+                    bottom: -35% !important; left: -30% !important;
+                    filter: blur(80px) !important;
+                    animation: none !important;
                 }
-                [data-auth-blob3] {
-                    width: 60vmax !important; height: 60vmax !important;
-                    background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.4) 0%, rgba(8,145,178,0.15) 50%, transparent 70%) !important;
-                }
-                [data-auth-blob4] {
-                    width: 50vmax !important; height: 50vmax !important;
-                    background: radial-gradient(ellipse at 50% 50%, rgba(96,165,250,0.35) 0%, transparent 60%) !important;
-                }
-                /* Beams: brighter on mobile */
-                [data-auth-beam="1"] {
-                    height: 3px !important;
-                    background: linear-gradient(90deg, transparent 0%, rgba(56,189,248,0.0) 15%, rgba(56,189,248,0.6) 50%, rgba(56,189,248,0.0) 85%, transparent 100%) !important;
-                }
-                [data-auth-beam="2"] {
-                    height: 2.5px !important;
-                    background: linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.0) 20%, rgba(37,99,235,0.5) 50%, rgba(37,99,235,0.0) 80%, transparent 100%) !important;
-                }
-                [data-auth-beam="3"] {
-                    height: 2px !important;
-                    background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.0) 25%, rgba(6,182,212,0.4) 50%, rgba(6,182,212,0.0) 75%, transparent 100%) !important;
-                }
-                /* Card: compact, transparent — effects visible through */
+                /* Hide extra blobs on mobile */
+                [data-auth-blob3],[data-auth-blob4] { display: none !important; }
+
+                /* Card: simple fade-up, no blur filter animation */
                 [data-auth-card] {
                     padding: 12px 10px !important;
                     border-radius: 14px !important;
@@ -11343,8 +11361,12 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                     -webkit-backdrop-filter: blur(14px) saturate(1.3) !important;
                     border: 1px solid rgba(56,189,248,0.2) !important;
                     box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(56,189,248,0.08), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-                    animation: authCardIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
+                    animation: authCardInMob 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
                     max-width: 320px !important;
+                }
+                @keyframes authCardInMob {
+                    from { opacity: 0; transform: translateY(30px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
                 /* Smaller heading */
                 [data-auth-card] h1, [data-auth-card] h2, [data-auth-card] h3 {
@@ -11373,8 +11395,6 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                 }
                 /* Smaller links */
                 [data-auth-card] a { font-size: 0.78rem !important; }
-                /* Particles canvas on top of card so dots show everywhere */
-                #authParticles { z-index: 4 !important; }
                 /* Content: center the card vertically */
                 [data-auth-content] {
                     padding: 10px 8px !important;
@@ -11394,6 +11414,7 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
         # ── Particle system via img onerror trick ──
         rx.html('''<img src="data:," onerror="
             (function(){
+                if(window.innerWidth<=640)return;
                 var c=document.getElementById('authParticles');
                 if(!c||c.dataset.init)return;
                 c.dataset.init='1';
