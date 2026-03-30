@@ -453,6 +453,19 @@ function showLabel(text) {
 }
 
 async function runCinematic() {
+  const isMobile = window.innerWidth <= 768;
+
+  // On mobile: skip auto-scroll, just trigger all animations with staggered delays
+  if (isMobile) {
+    triggerSec(0);
+    for (let i = 1; i < secs.length; i++) {
+      await sleep(300);
+      triggerSec(i);
+    }
+    endCinematic();
+    return;
+  }
+
   cinematicRunning = true;
   document.body.style.overflow = 'hidden'; // lock user scroll
 
