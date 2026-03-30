@@ -924,6 +924,11 @@ SEMESTER_NAVIGATION = {
     "Year 4": ["Semester 7", "Semester 8"],
 }
 
+# ── Years/semesters that are coming soon (Year 3 & 4) ──
+LOCKED_YEARS = {"Year 3", "Year 4"}
+LOCKED_SEMESTERS = {"Semester 5", "Semester 6", "Semester 7", "Semester 8"}
+COMING_SOON_MSG = "Year 3 and Year 4 content is being prepared and will be available soon. Stay tuned \u2014 we'll notify you as soon as it's ready!"
+
 # ── Route-based scope mapping ──
 # Each scope gets its own URL so navigation = full page reload = no stale state.
 SCOPE_ROUTE_MAP: dict[str, dict[str, str]] = {}
@@ -3871,6 +3876,37 @@ Critical operating rules:
 10. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
 11. When web search results are provided in the context, use them to give accurate, up-to-date answers. Synthesize search results in your own mentor voice rather than copying them verbatim. Prefer search results over your training data for version numbers, release dates, and current best practices.
 12. When citing web sources, include clickable markdown links like [Source Title](url) at the end of your response under a "Sources" section. Only include the most relevant 2-4 sources, not all of them.
+
+─── About Alex AI (the platform) ───
+Alex AI is an AI-powered study platform built specifically for Software Engineering degree students. Here is everything about the platform:
+
+Platform overview:
+• Alex AI analyzes the student's degree, organizes each semester, and guides them day by day with a structured 110-day learning plan.
+• The platform provides semester-wise AI guidance — students get a clearer path through each semester before they begin.
+• Each semester workspace includes a personalized study plan generated from the actual course curriculum, broken into daily topics.
+• Alex (you) lives inside the platform as the student's personal Software Engineering mentor, available 24/7 for questions, code help, and career guidance.
+
+Currently available semesters:
+• Semester 1, Semester 2 (Year 1) — fully available
+• Semester 3, Semester 4 (Year 2) — fully available
+• Semester 5, Semester 6 (Year 3) — coming soon, actively being prepared
+• Semester 7, Semester 8 (Year 4) — coming soon, actively being prepared
+
+If a student asks "when will Semester 5/6/7/8 be available?" or "when will Year 3/4 be ready?", respond warmly:
+"Year 3 and Year 4 content is actively being prepared by the team and will be available as soon as possible. You'll be notified the moment it's ready — so you won't miss a thing, {student_name}!"
+
+Key features:
+• AI Study Plan — a 110-day structured plan auto-generated from real semester courses, with daily topics and progress tracking.
+• Alex AI Chat — students can ask questions about any topic in their semester, get code examples with expected output, diagrams, and step-by-step breakdowns.
+• Web Search — Alex can search the web in real-time for up-to-date documentation, tutorials, and best practices.
+• Semester Navigation — students switch between semesters via the sidebar. Each semester has its own isolated workspace, chat history, and study plan.
+• Alex AI Home — a general workspace where students can ask anything related to Software Engineering, not tied to a specific semester.
+• Onboarding — new students go through a 5-step onboarding (degree selection, name, year, semester, confirmation) to set up their personalized workspace.
+• Settings — students can update their name, year, semester, and manage their account.
+
+Support:
+• Students can reach support through the "Contact Support" button on the landing page or the Support page inside the app.
+• For account or billing questions, direct them to the support page.
 """
 
     def _reset_plan_only(self, uid: int, scope: str) -> None:
@@ -4498,6 +4534,9 @@ Critical operating rules:
                 self.onboarding_message = "Please choose one of the listed academic years to continue."
                 self._save_memory(uid)
                 return
+            if year in LOCKED_YEARS:
+                self.onboarding_message = COMING_SOON_MSG
+                return
             self.status_text = ""
             self.onboarding_message = ""
             self.selected_year = year
@@ -4600,6 +4639,20 @@ Critical operating rules:
     async def open_dashboard_semester(self, year: str, semester: str):
         uid = self._uid()
         if uid < 0:
+            return
+        if semester in LOCKED_SEMESTERS:
+            yield rx.call_script(
+                """
+                (function(){
+                    var t=document.createElement('div');
+                    t.innerHTML='<div style="font-weight:700;font-size:13px;margin-bottom:4px">Coming Soon</div><div style="font-size:12px;opacity:0.85">Year 3 & Year 4 content is being prepared and will be available soon. Stay tuned!</div>';
+                    t.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,0.92);color:rgba(240,244,248,0.95);padding:12px 20px;border-radius:14px;font-family:system-ui,sans-serif;z-index:99999;pointer-events:none;backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.2);box-shadow:0 12px 40px rgba(0,0,0,0.4);max-width:320px;text-align:center;transition:opacity 0.4s';
+                    document.body.appendChild(t);
+                    setTimeout(function(){t.style.opacity='0';},3000);
+                    setTimeout(function(){t.remove();},3500);
+                })();
+                """
+            )
             return
         scope = self._set_default_semester_workspace(uid, year, semester)
         yield _hard_navigate(scope_to_route(scope))
@@ -5872,6 +5925,47 @@ def subject_button(label: str, on_click=None, is_active=False):
             },
         },
     )
+def _locked_year_button(label: str, on_click=None):
+    """Onboarding year button styled as 'coming soon' with lock icon."""
+    return rx.button(
+        rx.hstack(
+            rx.text(label),
+            rx.hstack(
+                rx.icon(tag="lock", size=12),
+                rx.text("Coming Soon", font_size="0.68rem", font_weight="600"),
+                spacing="1",
+                align="center",
+                color="rgba(56,189,248,0.6)",
+            ),
+            width="100%",
+            justify_content="space-between",
+            align="center",
+        ),
+        width="100%",
+        height="52px",
+        variant="outline",
+        on_click=on_click,
+        style={
+            "border": "1px solid rgba(56,189,248,0.1)",
+            "background": "rgba(56,189,248,0.02)",
+            "text_transform": "uppercase",
+            "font_weight": "600",
+            "font_size": "0.82rem",
+            "letter_spacing": "2px",
+            "color": "rgba(255,255,255,0.4)",
+            "border_radius": "14px",
+            "transition": "all 0.25s cubic-bezier(0.4,0,0.2,1)",
+            "opacity": "0.7",
+            "_hover": {
+                "background": "rgba(56,189,248,0.05)",
+                "border": "1px solid rgba(56,189,248,0.2)",
+                "color": "rgba(255,255,255,0.55)",
+                "opacity": "0.85",
+            },
+        },
+    )
+
+
 PASSWORD_EYE_JS = """(function(){function a(){return'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';}function b(){return'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';}function c(){try{if(!document.body)return;document.querySelectorAll('input[type="password"]:not([data-eye-attached])').forEach(function(inp){try{inp.setAttribute('data-eye-attached','1');var w=document.createElement('div');w.style.cssText='position:relative;display:block;width:100%;';inp.parentNode.insertBefore(w,inp);w.appendChild(inp);var btn=document.createElement('button');btn.type='button';btn.style.cssText='position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;padding:0;cursor:pointer;color:#34D399;z-index:99999;display:flex;align-items:center;';btn.innerHTML=a();btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();inp.type=inp.type==='password'?(btn.innerHTML=b(),'text'):(btn.innerHTML=a(),'password');});w.appendChild(btn);inp.style.paddingRight='40px';}catch(e){}});}catch(e){}}c();var t=0,iv=setInterval(function(){c();if(++t>60)clearInterval(iv);},300);try{new MutationObserver(c).observe(document.body,{childList:true,subtree:true});}catch(e){}})();"""
 
 def password_eye_script() -> rx.Component:
@@ -9265,8 +9359,8 @@ def onboarding_page():
                         desc_text("This keeps the guidance aligned with your current academic level."),
                         subject_button("Year 1", on_click=AppState.choose_onboarding_year("Year 1")),
                         subject_button("Year 2", on_click=AppState.choose_onboarding_year("Year 2")),
-                        subject_button("Year 3", on_click=AppState.choose_onboarding_year("Year 3")),
-                        subject_button("Year 4", on_click=AppState.choose_onboarding_year("Year 4")),
+                        _locked_year_button("Year 3", on_click=AppState.choose_onboarding_year("Year 3")),
+                        _locked_year_button("Year 4", on_click=AppState.choose_onboarding_year("Year 4")),
                         onboarding_feedback(),
                         spacing="3",
                         align_items="stretch",
@@ -9679,8 +9773,47 @@ def home_page():
     )
 
 
+_LOCKED_SEMESTER_SET = {"Semester 5", "Semester 6", "Semester 7", "Semester 8"}
+
+
 def semester_nav_button(year: str, semester: str) -> rx.Component:
+    is_locked = semester in _LOCKED_SEMESTER_SET
     is_active = AppState.is_semester_scope_active(year, semester)
+
+    if is_locked:
+        return rx.button(
+            rx.hstack(
+                rx.text(semester),
+                rx.icon(tag="lock", size=12, color="rgba(255,255,255,0.3)"),
+                spacing="2",
+                align="center",
+                width="100%",
+                justify_content="space-between",
+            ),
+            on_click=AppState.open_dashboard_semester(year, semester),
+            width="100%",
+            justify_content="flex-start",
+            text_align="left",
+            variant="ghost",
+            style={
+                "background": "rgba(255,255,255,0.01)",
+                "border": "1px solid rgba(255,255,255,0.04)",
+                "color": "rgba(255,255,255,0.35)",
+                "font_weight": "500",
+                "border_radius": "12px",
+                "padding": "0.46em 0.72em",
+                "font_size": "0.78rem",
+                "min_height": "0",
+                "opacity": "0.6",
+                "cursor": "pointer",
+                "_hover": {
+                    "background": "rgba(255,255,255,0.04)",
+                    "border": "1px solid rgba(255,255,255,0.08)",
+                    "color": "rgba(255,255,255,0.5)",
+                },
+            },
+        )
+
     return rx.button(
         semester,
         on_click=AppState.open_dashboard_semester(year, semester),
