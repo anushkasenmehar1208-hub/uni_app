@@ -13479,7 +13479,7 @@ async def google_callback(request: Request):
                 landing_route = scope_to_route(scope_key if scope_key in SCOPE_ROUTE_MAP else "home")
             else:
                 landing_route = scope_to_route("home")
-        landing_url = _frontend_redirect_url(request, landing_route)
+        landing_path = landing_route if str(landing_route).startswith("/") else f"/{landing_route}"
 
         bootstrap_html = f"""<!doctype html>
 <html lang="en">
@@ -13499,7 +13499,7 @@ async def google_callback(request: Request):
           localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
         }} catch (e) {{}}
         setTimeout(function() {{
-          window.location.replace({json.dumps(landing_url)});
+          window.location.replace({json.dumps(landing_path)});
         }}, 90);
       }})();
     </script>
