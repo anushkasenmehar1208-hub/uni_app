@@ -13465,21 +13465,7 @@ async def google_callback(request: Request):
                     expiration=datetime.now(timezone.utc) + timedelta(seconds=GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS),
                 )
             )
-            memory = session.exec(
-                select(UserMemory).where(UserMemory.user_id == int(user.id))
-            ).one_or_none()
             session.commit()
-
-        landing_route = APP_DASHBOARD_ROUTE
-        if memory is not None and bool(memory.is_started):
-            selected_year = str(memory.selected_year or "").strip()
-            selected_semester = str(memory.selected_semester or "").strip()
-            if selected_year and selected_semester:
-                scope_key = semester_scope_key(selected_year, selected_semester)
-                landing_route = scope_to_route(scope_key if scope_key in SCOPE_ROUTE_MAP else "home")
-            else:
-                landing_route = scope_to_route("home")
-        landing_path = landing_route if str(landing_route).startswith("/") else f"/{landing_route}"
 
         bootstrap_html = f"""<!doctype html>
 <html lang="en">
@@ -13498,9 +13484,7 @@ async def google_callback(request: Request):
         try {{
           localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
         }} catch (e) {{}}
-        setTimeout(function() {{
-          window.location.replace({json.dumps(landing_path)});
-        }}, 90);
+        window.location.replace("/");
       }})();
     </script>
   </body>
