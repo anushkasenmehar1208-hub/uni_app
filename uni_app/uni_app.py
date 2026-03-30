@@ -9309,6 +9309,25 @@ def onboarding_page():
                 onboarding_shell(
                     "What\'s your degree?",
                     rx.vstack(
+                        rx.box(
+                            rx.hstack(
+                                rx.icon(tag="info", size=14, color="rgba(56,189,248,0.7)", flex_shrink="0"),
+                                rx.text(
+                                    "More degree programs are on the way and will be available shortly.",
+                                    color="rgba(56,189,248,0.7)",
+                                    font_size="0.78rem",
+                                    font_weight="500",
+                                    line_height="1.4",
+                                ),
+                                spacing="2",
+                                align="center",
+                            ),
+                            padding="10px 14px",
+                            border_radius="12px",
+                            border="1px solid rgba(56,189,248,0.12)",
+                            background="rgba(56,189,248,0.04)",
+                            width="100%",
+                        ),
                         desc_text("We\'ll tailor the study flow to the program you\'re actually following."),
                         rx.select(
                             AppState.options,
