@@ -6743,6 +6743,37 @@ def chat_input_field() -> rx.Component:
           #document_upload_zone input[type="file"] {
             display: none !important;
           }
+          .composer-icon-trigger {
+            position: relative;
+            display: inline-flex;
+            align-items: flex-end;
+          }
+          .composer-hover-label {
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 10px);
+            transform: translateX(-50%) translateY(4px);
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(16,18,24,0.96);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: rgba(236,240,244,0.88);
+            font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 11px;
+            line-height: 1;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s ease;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.34);
+            z-index: 12;
+          }
+          .composer-icon-trigger:hover .composer-hover-label {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+          }
         </style>
         """),
         # ── Thumbnail preview (client shows instantly, backend preview replaces it) ──
@@ -6963,37 +6994,44 @@ def chat_input_field() -> rx.Component:
                 rx.upload(
                     rx.cond(
                         (~AppState.has_image) & (~AppState.has_document),
-                        rx.button(
+                        rx.box(
                             rx.text(
-                                "+",
-                                font_size="22px",
-                                font_weight="400",
-                                color="rgba(255,255,255,0.50)",
-                                line_height="1",
-                                user_select="none",
+                                "Add image",
+                                class_name="composer-hover-label",
                             ),
-                            width="38px",
-                            height="38px",
-                            min_width="38px",
-                            border_radius="50%",
-                            display="inline-flex",
-                            align_items="center",
-                            justify_content="center",
-                            flex_shrink="0",
-                            align_self="flex-end",
-                            margin_bottom="5px",
-                            margin_left="6px",
-                            style={
-                                "background": "transparent",
-                                "border": "1px solid rgba(255,255,255,0.12)",
-                                "cursor": "pointer",
-                                "transition": "all 0.15s ease",
-                                "_hover": {
-                                    "background": "rgba(255,255,255,0.08)",
-                                    "border": "1px solid rgba(255,255,255,0.20)",
+                            rx.button(
+                                rx.text(
+                                    "+",
+                                    font_size="22px",
+                                    font_weight="400",
+                                    color="rgba(255,255,255,0.50)",
+                                    line_height="1",
+                                    user_select="none",
+                                ),
+                                width="38px",
+                                height="38px",
+                                min_width="38px",
+                                border_radius="50%",
+                                display="inline-flex",
+                                align_items="center",
+                                justify_content="center",
+                                flex_shrink="0",
+                                align_self="flex-end",
+                                margin_bottom="5px",
+                                margin_left="6px",
+                                style={
+                                    "background": "transparent",
+                                    "border": "1px solid rgba(255,255,255,0.12)",
+                                    "cursor": "pointer",
+                                    "transition": "all 0.15s ease",
+                                    "_hover": {
+                                        "background": "rgba(255,255,255,0.08)",
+                                        "border": "1px solid rgba(255,255,255,0.20)",
+                                    },
+                                    "_active": {"transform": "scale(0.93)"},
                                 },
-                                "_active": {"transform": "scale(0.93)"},
-                            },
+                            ),
+                            class_name="composer-icon-trigger",
                         ),
                         rx.box(width="0px", height="0px", overflow="hidden"),
                     ),
@@ -7022,30 +7060,37 @@ def chat_input_field() -> rx.Component:
                 rx.upload(
                     rx.cond(
                         (~AppState.has_image) & (~AppState.has_document),
-                        rx.button(
-                            rx.icon(tag="file_text", size=15, color="rgba(255,255,255,0.60)"),
-                            width="38px",
-                            height="38px",
-                            min_width="38px",
-                            border_radius="50%",
-                            display="inline-flex",
-                            align_items="center",
-                            justify_content="center",
-                            flex_shrink="0",
-                            align_self="flex-end",
-                            margin_bottom="5px",
-                            margin_left="8px",
-                            style={
-                                "background": "transparent",
-                                "border": "1px solid rgba(255,255,255,0.12)",
-                                "cursor": "pointer",
-                                "transition": "all 0.15s ease",
-                                "_hover": {
-                                    "background": "rgba(255,255,255,0.08)",
-                                    "border": "1px solid rgba(255,255,255,0.20)",
+                        rx.box(
+                            rx.text(
+                                "Add document",
+                                class_name="composer-hover-label",
+                            ),
+                            rx.button(
+                                rx.icon(tag="file_text", size=15, color="rgba(255,255,255,0.60)"),
+                                width="38px",
+                                height="38px",
+                                min_width="38px",
+                                border_radius="50%",
+                                display="inline-flex",
+                                align_items="center",
+                                justify_content="center",
+                                flex_shrink="0",
+                                align_self="flex-end",
+                                margin_bottom="5px",
+                                margin_left="8px",
+                                style={
+                                    "background": "transparent",
+                                    "border": "1px solid rgba(255,255,255,0.12)",
+                                    "cursor": "pointer",
+                                    "transition": "all 0.15s ease",
+                                    "_hover": {
+                                        "background": "rgba(255,255,255,0.08)",
+                                        "border": "1px solid rgba(255,255,255,0.20)",
+                                    },
+                                    "_active": {"transform": "scale(0.93)"},
                                 },
-                                "_active": {"transform": "scale(0.93)"},
-                            },
+                            ),
+                            class_name="composer-icon-trigger",
                         ),
                         rx.box(width="0px", height="0px", overflow="hidden"),
                     ),
