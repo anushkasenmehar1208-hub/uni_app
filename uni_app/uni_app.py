@@ -9854,6 +9854,28 @@ def home_page():
         # ── Mobile sidebar drawer ──
         semester_sidebar_drawer(),
         global_search_panel(),
+        rx.cond(
+            AppState.scope_hydrating,
+            rx.box(
+                rx.hstack(
+                    rx.spinner(size="1", color="rgba(160,170,180,0.5)"),
+                    rx.text(
+                        "Loading workspace...",
+                        color="rgba(160,170,180,0.5)",
+                        font_size="0.78rem",
+                        font_weight="400",
+                    ),
+                    spacing="2",
+                    align="center",
+                ),
+                width="100%",
+                padding="0.5em 1.5em",
+                background="rgba(255,255,255,0.01)",
+                border_bottom="1px solid rgba(255,255,255,0.03)",
+                flex_shrink="0",
+            ),
+            rx.fragment(),
+        ),
         # ── Main area ──
         rx.flex(
             # Desktop sidebar (hidden on mobile)
@@ -11142,13 +11164,129 @@ def semester_page_with_search():
     )
 
 
+def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Component:
+    subtle_text = "Preparing your workspace"
+    return rx.hstack(
+        rx.box(
+            rx.vstack(
+                rx.box(
+                    width="100%",
+                    height="56px",
+                    border_radius="16px",
+                    background="rgba(255,255,255,0.04)",
+                    border="1px solid rgba(255,255,255,0.06)",
+                ),
+                rx.box(height="1px", width="100%", background="rgba(255,255,255,0.05)"),
+                rx.vstack(
+                    *[
+                        rx.box(
+                            width="100%",
+                            height="32px",
+                            border_radius="12px",
+                            background="rgba(255,255,255,0.025)",
+                            border="1px solid rgba(255,255,255,0.04)",
+                        )
+                        for _ in range(8)
+                    ],
+                    spacing="2",
+                    width="100%",
+                    align_items="stretch",
+                ),
+                rx.spacer(),
+                rx.box(
+                    width="100%",
+                    height="42px",
+                    border_radius="14px",
+                    background="rgba(255,255,255,0.04)",
+                    border="1px solid rgba(255,255,255,0.06)",
+                ),
+                spacing="3",
+                width="100%",
+                height="100%",
+                align_items="stretch",
+            ),
+            width="270px",
+            height="100vh",
+            padding="1.2em 1em",
+            border_right="1px solid rgba(255,255,255,0.04)",
+            background="rgba(255,255,255,0.01)",
+            display=rx.breakpoints(initial="none", md="flex"),
+        ),
+        rx.box(
+            rx.box(
+                rx.hstack(
+                    rx.spinner(size="1", color="rgba(210,220,232,0.55)"),
+                    rx.vstack(
+                        rx.text(
+                            message,
+                            color="rgba(240,244,248,0.82)",
+                            font_size="0.9rem",
+                            font_weight="600",
+                        ),
+                        rx.text(
+                            subtle_text,
+                            color="rgba(160,170,180,0.45)",
+                            font_size="0.75rem",
+                            font_weight="400",
+                        ),
+                        spacing="0",
+                        align_items="flex-start",
+                    ),
+                    spacing="3",
+                    align="center",
+                ),
+                width="100%",
+                padding="0.85em 1.2em",
+                border_bottom="1px solid rgba(255,255,255,0.04)",
+                background="rgba(255,255,255,0.015)",
+            ),
+            rx.center(
+                rx.vstack(
+                    rx.box(
+                        width=rx.breakpoints(initial="88vw", md="min(720px, 58vw)"),
+                        height="20px",
+                        border_radius="999px",
+                        background="rgba(255,255,255,0.03)",
+                    ),
+                    rx.box(
+                        width=rx.breakpoints(initial="88vw", md="min(720px, 58vw)"),
+                        height="64px",
+                        border_radius="22px",
+                        background="rgba(255,255,255,0.03)",
+                    ),
+                    rx.box(
+                        width=rx.breakpoints(initial="88vw", md="min(720px, 58vw)"),
+                        height="64px",
+                        border_radius="22px",
+                        background="rgba(255,255,255,0.03)",
+                    ),
+                    spacing="4",
+                    align_items="center",
+                ),
+                width="100%",
+                height="100%",
+            ),
+            flex="1",
+            height="100vh",
+            display="flex",
+            flex_direction="column",
+            background="#0a0a0c",
+        ),
+        spacing="0",
+        width="100%",
+        height="100vh",
+        overflow="hidden",
+        background="#0a0a0c",
+    )
+
+
 def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallable:
     def protected_page():
         return rx.fragment(
             rx.cond(
                 AppState.is_hydrated,
                 page(),
-                _fullscreen_loading_gate("Loading...", "Preparing your workspace"),
+                _app_shell_loading_gate(),
             )
         )
 
