@@ -66,6 +66,7 @@
   function ease(t){ return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
 
   function cineScroll(){
+    if(window.innerWidth <= 768) return;
     var total = document.documentElement.scrollHeight - window.innerHeight;
     if(total <= 0) return;
     var dMs = 5500, uMs = 2200, st = null;
