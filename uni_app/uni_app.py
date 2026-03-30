@@ -8370,9 +8370,9 @@ def _public_page_frame(main_content: rx.Component) -> rx.Component:
         ),
         rx.html("""<canvas id="cineParticles"></canvas>"""),
         rx.html("""<div id="mouseGlow"></div>"""),
-        rx.box(position="absolute", top="10%", right="10%", width="200px", height="200px", border_radius="50%", background="radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)", animation="orbFloat1 15s ease-in-out infinite", pointer_events="none", z_index="0"),
-        rx.box(position="absolute", top="40%", left="5%", width="250px", height="250px", border_radius="50%", background="radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)", animation="orbFloat2 18s ease-in-out infinite", pointer_events="none", z_index="0"),
-        rx.box(position="absolute", top="70%", right="20%", width="180px", height="180px", border_radius="50%", background="radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)", animation="orbFloat3 12s ease-in-out infinite", pointer_events="none", z_index="0"),
+        rx.box(position="absolute", top="10%", right="10%", width="200px", height="200px", border_radius="50%", background="radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)", animation="orbFloat1 15s ease-in-out infinite", pointer_events="none", z_index="0", display=rx.breakpoints(initial="none", md="block")),
+        rx.box(position="absolute", top="40%", left="5%", width="250px", height="250px", border_radius="50%", background="radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)", animation="orbFloat2 18s ease-in-out infinite", pointer_events="none", z_index="0", display=rx.breakpoints(initial="none", md="block")),
+        rx.box(position="absolute", top="70%", right="20%", width="180px", height="180px", border_radius="50%", background="radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)", animation="orbFloat3 12s ease-in-out infinite", pointer_events="none", z_index="0", display=rx.breakpoints(initial="none", md="block")),
         rx.box(
             _public_nav(),
             main_content,
@@ -8428,6 +8428,24 @@ def _public_page_frame(main_content: rx.Component) -> rx.Component:
             [data-anim="section"]:hover{box-shadow:0 30px 100px rgba(56,189,248,.08),0 24px 80px rgba(2,6,23,.38)!important;transition-duration:.4s!important}
             [data-anim="hero-buttons"] button:first-child{animation:btnGlow 3s ease-in-out 3.5s infinite}
             @keyframes btnGlow{0%,100%{box-shadow:0 18px 44px rgba(16,185,129,.24)}50%{box-shadow:0 18px 44px rgba(16,185,129,.4),0 0 40px rgba(56,189,248,.15)}}
+
+            /* ── Mobile: disable heavy effects for performance ── */
+            @media(max-width:768px){
+                #cineParticles,#mouseGlow{display:none!important}
+                [data-anim="section"],[data-anim="card"],[data-anim="step"],[data-anim="pricing"],[data-anim="footer"]{filter:none!important;will-change:auto!important}
+                [data-anim="section"]::after{display:none!important}
+                [data-anim="card"]{transform:translateY(30px)!important;filter:none!important}
+                [data-anim="card"].cine-visible{transform:translateY(0)!important}
+                [data-anim="hero-title"]{animation:cTitleMob .9s cubic-bezier(.16,1,.3,1) .5s both!important}
+                @keyframes cTitleMob{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+                [data-anim="hero-desc"]{animation:cDescMob .7s cubic-bezier(.16,1,.3,1) .8s both!important}
+                @keyframes cDescMob{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+                [data-anim="hero-buttons"]{animation:cBtnsMob .6s cubic-bezier(.16,1,.3,1) 1s both!important}
+                @keyframes cBtnsMob{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+                [data-anim="hero-cards"],[data-anim="hero-detail"]{filter:none!important;animation-duration:.6s!important}
+                [data-anim="badge"]{animation-duration:.5s!important;filter:none!important}
+                [data-anim="card"]:hover,[data-anim="step"]:hover,[data-anim="section"]:hover{transform:none!important;box-shadow:none!important}
+            }
         """),
         style={
             "--landing-accent": "#34d399",

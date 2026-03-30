@@ -86,6 +86,8 @@
     setTimeout(function(){ requestAnimationFrame(dn); }, 2800);
   }
 
+  function isMobile(){ return window.innerWidth <= 768; }
+
   function init(){
     if(initialized) return;
     var found = setupIO();
@@ -95,8 +97,10 @@
       return;
     }
     initialized = true;
-    initParticles();
-    initMouseGlow();
+    if(!isMobile()){
+      initParticles();
+      initMouseGlow();
+    }
     cineScroll();
   }
 
