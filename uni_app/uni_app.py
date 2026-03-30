@@ -13496,7 +13496,9 @@ async def google_callback(request: Request):
         try {{
           localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
         }} catch (e) {{}}
-        window.location.replace({json.dumps(landing_url)});
+        setTimeout(function() {{
+          window.location.replace({json.dumps(landing_url)});
+        }}, 90);
       }})();
     </script>
   </body>
