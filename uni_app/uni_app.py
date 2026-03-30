@@ -27,7 +27,7 @@ import httpx
 from dodopayments import APIWebhookValidationError, DodoPayments, DodoPaymentsError
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
-from fastapi.responses import PlainTextResponse, RedirectResponse, FileResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse, FileResponse, HTMLResponse
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import reflex_local_auth
 from reflex_local_auth import routes as auth_routes
@@ -2531,23 +2531,8 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._ensure_auth_csrf()
         if not GOOGLE_OAUTH_ENABLED:
             return rx.redirect(auth_routes.LOGIN_ROUTE)
-        oauth_nonce = secrets.token_urlsafe(24)
-        self.google_oauth_nonce = oauth_nonce
-        if GOOGLE_REDIRECT_URI:
-            callback_url = GOOGLE_REDIRECT_URI
-        else:
-            origin = self._router_origin().rstrip("/")
-            callback_url = f"{origin}/auth/google/callback"
-        params = {
-            "client_id": GOOGLE_CLIENT_ID,
-            "redirect_uri": callback_url,
-            "response_type": "code",
-            "scope": "openid email profile",
-            "state": _google_make_state_for_nonce(oauth_nonce),
-            "prompt": "select_account",
-        }
-        auth_url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
-        return rx.call_script(f"window.location.assign({json.dumps(auth_url)});")
+        self.google_oauth_nonce = ""
+        return rx.call_script("window.location.assign('/oauth/google/start');")
 
     @rx.event
     async def handle_google_oauth_callback(self):
@@ -13480,17 +13465,40 @@ async def google_callback(request: Request):
             )
             session.commit()
 
-        complete_url = _frontend_redirect_url(request, "/auth/complete")
-        response = RedirectResponse(url=complete_url, status_code=302)
-        response.set_cookie(
-            GOOGLE_COMPLETE_COOKIE_NAME,
-            auth_token,
-            max_age=GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS,
-            httponly=True,
-            secure=_request_is_https(request),
-            samesite="lax",
+        bootstrap_html = f"""<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Cache-Control" content="no-store, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Signing you in...</title>
+  </head>
+  <body style="margin:0;background:#050505;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;">
+    <div>Signing you in...</div>
+    <script>
+      (function() {{
+        try {{
+          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
+        }} catch (e) {{}}
+        window.location.replace("/");
+      }})();
+    </script>
+  </body>
+</html>"""
+        response = HTMLResponse(
+            bootstrap_html,
+            status_code=200,
+            headers={
+                "Cache-Control": "no-store, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0",
+                "Referrer-Policy": "no-referrer",
+            },
         )
         response.delete_cookie(GOOGLE_STATE_COOKIE_NAME)
+        response.delete_cookie(GOOGLE_COMPLETE_COOKIE_NAME)
         return response
 
     except Exception as e:
@@ -13503,6 +13511,7 @@ async def google_callback(request: Request):
 
 api.add_route("/auth/google/start", google_start, methods=["GET"])
 api.add_route("/auth/google/callback", google_callback, methods=["GET"])
+api.add_route("/oauth/google/start", google_start, methods=["GET"])
 
 
 async def serve_chat_media(request: Request):
