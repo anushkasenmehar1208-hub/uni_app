@@ -701,9 +701,10 @@ DODO_PAYMENTS_API_KEY   = os.getenv(
     "DODO_PAYMENTS_API_KEY",
     "q3bZ--q39UdPN9ED.2q9f5LqY_9BhcOcbUK1-Ngt3zkaQjBjTutD3qkitDtzZ-Kx9",
 ).strip()
+DODO_PAYMENTS_KNOWN_TEST_PRODUCT_ID = "pdt_0NbPrfFmmyxFqzaTmWGQX"
 DODO_PAYMENTS_PRODUCT_ID = os.getenv(
     "DODO_PAYMENTS_PRODUCT_ID",
-    "pdt_0NbPrfFmmyxFqzaTmWGQX",
+    "",
 ).strip()
 DODO_PAYMENTS_WEBHOOK_SECRET = os.getenv(
     "DODO_PAYMENTS_WEBHOOK_SECRET",
@@ -1761,6 +1762,10 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     async def buy_pro_plan(self):
         try:
+            if not DODO_PAYMENTS_PRODUCT_ID:
+                raise RuntimeError("Missing Dodo live product ID. Set DODO_PAYMENTS_PRODUCT_ID from the live dashboard.")
+            if DODO_PAYMENTS_PRODUCT_ID == DODO_PAYMENTS_KNOWN_TEST_PRODUCT_ID:
+                raise RuntimeError("Dodo checkout is still configured with the old test product ID. Replace it with the live product ID.")
             if not (self.user_unique_id or "").strip():
                 uid = self._uid()
                 if uid >= 0:
@@ -1780,6 +1785,8 @@ class AppState(reflex_local_auth.LocalAuthState):
                     ],
                     "metadata": {
                         "unique_id": self.user_unique_id or "",
+                        "checkout_nonce": secrets.token_urlsafe(12),
+                        "checkout_requested_at": datetime.now(timezone.utc).isoformat(),
                     },
                     "return_url": DODO_PAYMENTS_RETURN_URL,
                 }
