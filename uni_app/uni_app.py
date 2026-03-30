@@ -2459,6 +2459,25 @@ class AppState(reflex_local_auth.LocalAuthState):
         yield rx.redirect(target_route)
 
     @rx.event
+    async def on_load_post_login_bridge(self):
+        if not self.is_hydrated:
+            yield AppState.on_load_post_login_bridge()  # type: ignore
+            return
+
+        uid = self._uid()
+        self._cached_uid = uid
+        if uid < 0:
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            return
+
+        try:
+            target_route = self._preload_root_workspace_target(uid)
+        except Exception as e:
+            print(f"[AUTH BRIDGE] redirect load error: {e}")
+            target_route = APP_DASHBOARD_ROUTE
+        yield rx.redirect(target_route)
+
+    @rx.event
     def handle_login(self, form_data: dict[str, Any]):
         self._ensure_auth_csrf()
         self.login_error = ""
@@ -8359,6 +8378,15 @@ def google_complete_page():
     )
 
 
+@rx.page(route="/auth/post-login", image=FAVICON_32, on_load=AppState.on_load_post_login_bridge)
+def google_post_login_bridge_page():
+    return rx.box(
+        width="100%",
+        height="100vh",
+        background="#050505",
+    )
+
+
 # ──────────────────────────────────────────────────────────────
 # Payment pages
 # ──────────────────────────────────────────────────────────────
@@ -13484,7 +13512,7 @@ async def google_callback(request: Request):
         try {{
           localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
         }} catch (e) {{}}
-        window.location.replace("/");
+        window.location.replace("/auth/post-login");
       }})();
     </script>
   </body>
