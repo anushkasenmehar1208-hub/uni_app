@@ -16,6 +16,7 @@ from urllib.parse import unquote, urlencode, urlparse
 from fastapi import Request
 from pathlib import Path
 from datetime import datetime, date, timedelta, timezone
+from zoneinfo import ZoneInfo
 from typing import Any, Optional
 
 import traceback
@@ -51,6 +52,7 @@ except ImportError:
 from groq import Groq
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Asia/Colombo").strip() or "Asia/Colombo"
 
 if GROQ_API_KEY:
     client = Groq(api_key=GROQ_API_KEY)
@@ -119,6 +121,13 @@ def _is_rate_limit_text(text: str) -> bool:
     if any(marker in low for marker in markers):
         return True
     return "rate limit" in low and ("429" in low or "tpd" in low or "requested" in low)
+
+
+def _app_now() -> datetime:
+    try:
+        return datetime.now(ZoneInfo(APP_TIMEZONE))
+    except Exception:
+        return datetime.now(ZoneInfo("Asia/Colombo"))
 
 
 def sanitize_for_ui(text: str) -> str:
@@ -499,6 +508,59 @@ def _might_need_search(text: str) -> bool:
         return False
     lower = text.lower()
     return any(signal in lower for signal in _SEARCH_SIGNAL_PATTERNS)
+
+
+_EXPLICIT_WEB_SEARCH_PATTERNS = (
+    "search the internet",
+    "search internet",
+    "search the web",
+    "search web",
+    "look it up",
+    "look this up",
+    "find on the internet",
+    "find in the internet",
+    "find online",
+    "google it",
+    "search for",
+)
+
+
+def _is_explicit_web_search_request(text: str) -> bool:
+    lower = (text or "").lower().strip()
+    return any(pattern in lower for pattern in _EXPLICIT_WEB_SEARCH_PATTERNS)
+
+
+def _extract_search_query(text: str) -> str:
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return ""
+    patterns = (
+        r"^\s*(?:please\s+)?search (?:the )?(?:internet|web)\s+(?:for|and find)\s+",
+        r"^\s*(?:please\s+)?search for\s+",
+        r"^\s*(?:please\s+)?look (?:it|this)? ?up\s+",
+        r"^\s*(?:please\s+)?google\s+",
+        r"^\s*(?:please\s+)?find (?:on|in) the internet\s+",
+        r"^\s*(?:please\s+)?find online\s+",
+    )
+    for pattern in patterns:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
+    return cleaned.strip(" .,:;!?") or (text or "").strip()
+
+
+def _is_live_time_request(text: str) -> bool:
+    lower = (text or "").lower().strip()
+    if not lower:
+        return False
+    time_markers = (
+        "what time is it",
+        "current time",
+        "time now",
+        "find time",
+        "tell me the time",
+        "time in sri lanka",
+        "time in colombo",
+    )
+    return any(marker in lower for marker in time_markers)
 
 
 async def _should_search_smart(user_msg: str, recent_context: str, topic_context: str = "", user_triggered: bool = False) -> tuple:
@@ -1667,7 +1729,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def greeting_text(self) -> str:
-        h = datetime.now().hour
+        h = _app_now().hour
         if h < 12:
             tod = "Morning"
         elif h < 17:
@@ -5334,6 +5396,21 @@ Subjects:\n{courses_text}"""
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             return
 
+        if _is_live_time_request(user_msg):
+            now = _app_now()
+            time_reply = (
+                f"The current time is {now.strftime('%I:%M %p')} on "
+                f"{now.strftime('%A, %B %d, %Y')} ({APP_TIMEZONE})."
+            )
+            self.chat_history.append({"role": "assistant", "content": time_reply})
+            self._save_message(uid, "assistant", time_reply)
+            self.is_processing = False
+            await self._maybe_auto_update_scope_summary(uid, self.active_scope)
+            await self._maybe_auto_update_global_memory(uid)
+            await self._maybe_auto_update_adaptive_profile(uid)
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            return
+
         # ============================
         # SEMESTER MODE
         # ============================
@@ -5422,9 +5499,14 @@ Subjects:\n{courses_text}"""
                     self.search_status = "Deciding if search is needed..."
                     yield
                     try:
-                        should_search, search_query = await _should_search_smart(
-                            user_msg, recent_text, topic_context, user_triggered
-                        )
+                        explicit_search = _is_explicit_web_search_request(user_msg)
+                        if explicit_search:
+                            should_search = True
+                            search_query = _extract_search_query(user_msg)
+                        else:
+                            should_search, search_query = await _should_search_smart(
+                                user_msg, recent_text, topic_context, user_triggered
+                            )
                         if should_search and search_query:
                             self.search_status = f"Searching: {search_query}"
                             yield
@@ -5490,6 +5572,11 @@ Your response style rules:
 21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
 22. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally.
 23. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them."""
+
+                if _is_explicit_web_search_request(user_msg):
+                    teach_prompt += """
+24. The student explicitly asked you to search the web. Fulfill that lookup directly using the search results.
+25. Do not turn an explicit lookup request into a tutorial, coding lesson, or semester redirection unless the student asks for teaching after the answer."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
@@ -5573,7 +5660,12 @@ Your response style rules:
             self.search_status = "Deciding if search is needed..."
             yield
             try:
-                should_search, search_query = await _should_search(user_msg, recent_text)
+                explicit_search = _is_explicit_web_search_request(user_msg)
+                if explicit_search:
+                    should_search = True
+                    search_query = _extract_search_query(user_msg)
+                else:
+                    should_search, search_query = await _should_search(user_msg, recent_text)
                 if should_search and search_query:
                     self.search_status = f"Searching: {search_query}"
                     yield
@@ -5646,6 +5738,11 @@ Behavior rules:
 18. If the question is technically complex, give a short numbered breakdown before the final answer.
 19. Stay honest about what the stored memory does and does not show.
 20. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them."""
+
+        if _is_explicit_web_search_request(user_msg):
+            prompt += """
+21. The user explicitly asked you to search the web. Answer with the found result directly.
+22. Do not convert an explicit lookup request into a lesson, coding example, or study-plan coaching unless the user asks for that next."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
@@ -7216,7 +7313,7 @@ _CLAUDE_MD_CSS = """
 }
 /* When pre has a language label, add top padding for the header */
 .claude-md pre[data-lang] {
-  padding-top: 40px;
+  padding-top: 46px;
 }
 /* Language label — CSS-only via data attribute */
 .claude-md pre[data-lang]::before {
@@ -7320,6 +7417,7 @@ _CLAUDE_MD_CSS = """
   border: none;
   border-radius: 0;
   padding: 0;
+  margin-top: 2px;
   color: rgba(210, 220, 235, 0.88);
   font-size: 13.5px;
   line-height: 1.6;
