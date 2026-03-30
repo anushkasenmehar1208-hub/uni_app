@@ -1789,6 +1789,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                         "checkout_requested_at": datetime.now(timezone.utc).isoformat(),
                     },
                     "return_url": DODO_PAYMENTS_RETURN_URL,
+                    "failure_url": "https://alexstudies.com/pricing",
                 }
                 checkout_headers = {
                     "Authorization": f"Bearer {DODO_PAYMENTS_API_KEY}",
