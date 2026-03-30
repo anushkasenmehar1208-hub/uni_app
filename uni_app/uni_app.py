@@ -693,13 +693,13 @@ APP_BASE_URL            = os.getenv("APP_BASE_URL", "http://localhost:3000").rst
 API_BASE_URL            = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
 DODO_PAYMENTS_API_URL   = os.getenv(
     "DODO_PAYMENTS_API_URL",
-    "https://test.dodopayments.com/checkouts",
+    "https://live.dodopayments.com/checkouts",
 ).strip()
 DODO_PAYMENTS_LIVE_API_URL = "https://live.dodopayments.com/checkouts"
 DODO_PAYMENTS_TEST_API_URL = "https://test.dodopayments.com/checkouts"
 DODO_PAYMENTS_API_KEY   = os.getenv(
     "DODO_PAYMENTS_API_KEY",
-    "ylDjp2S5fj8PZFOK.8zKVjs9t_kCsOmAbe0zgLw0wl_ulroDa_aktRdemdf3i6zYF",
+    "q3bZ--q39UdPN9ED.2q9f5LqY_9BhcOcbUK1-Ngt3zkaQjBjTutD3qkitDtzZ-Kx9",
 ).strip()
 DODO_PAYMENTS_PRODUCT_ID = os.getenv(
     "DODO_PAYMENTS_PRODUCT_ID",
@@ -707,7 +707,7 @@ DODO_PAYMENTS_PRODUCT_ID = os.getenv(
 ).strip()
 DODO_PAYMENTS_WEBHOOK_SECRET = os.getenv(
     "DODO_PAYMENTS_WEBHOOK_SECRET",
-    "whsec_RHrisqg7SVnVxbOSNXnEp4k+s1a9kbE5",
+    "whsec_k2JN675DNjfpRFMN5VQi7ZIXKduYVG70",
 ).strip()
 DODO_PAYMENTS_RETURN_URL = os.getenv(
     "DODO_PAYMENTS_RETURN_URL",
@@ -1242,7 +1242,8 @@ def _set_pro_status_by_unique_id(unique_id: str, is_pro: bool) -> bool:
 
 
 async def dodo_webhook(request: Request) -> PlainTextResponse:
-    payload = (await request.body()).decode("utf-8")
+    raw_payload = await request.body()
+    payload = raw_payload.decode("utf-8")
 
     try:
         client = DodoPayments(
@@ -1269,16 +1270,16 @@ async def dodo_webhook(request: Request) -> PlainTextResponse:
 
     try:
         if event_type in {"payment.succeeded", "subscription.renewed"}:
-            if not (_set_pro_status_by_unique_id(unique_id, True) or _set_pro_status_by_email(email, True)):
+            if not (_set_pro_status_by_email(email, True) or _set_pro_status_by_unique_id(unique_id, True)):
                 print(f"[Dodo Payments] no matching user for success event unique_id={unique_id} email={email}")
-        elif event_type == "subscription.cancelled":
-            if not (_set_pro_status_by_unique_id(unique_id, False) or _set_pro_status_by_email(email, False)):
-                print(f"[Dodo Payments] no matching user for cancelled event unique_id={unique_id} email={email}")
+        elif event_type in {"subscription.cancelled", "subscription.failed"}:
+            if not (_set_pro_status_by_email(email, False) or _set_pro_status_by_unique_id(unique_id, False)):
+                print(f"[Dodo Payments] no matching user for downgrade event type={event_type} unique_id={unique_id} email={email}")
         else:
             print(f"[Dodo Payments] ignored event type={event_type}")
     except Exception as e:
         print(f"[Dodo Payments] processing error for type={event_type} unique_id={unique_id} email={email}: {e}")
-        return PlainTextResponse("processing error", status_code=500)
+        return PlainTextResponse("OK", status_code=200)
 
     return PlainTextResponse("OK", status_code=200)
 
@@ -1789,7 +1790,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                 }
 
                 candidate_urls: list[str] = []
-                for url in [DODO_PAYMENTS_API_URL, DODO_PAYMENTS_LIVE_API_URL, DODO_PAYMENTS_TEST_API_URL]:
+                for url in [DODO_PAYMENTS_API_URL, DODO_PAYMENTS_LIVE_API_URL]:
                     normalized = (url or "").strip()
                     if normalized and normalized not in candidate_urls:
                         candidate_urls.append(normalized)
