@@ -1674,6 +1674,9 @@ class AppState(reflex_local_auth.LocalAuthState):
             tod = "Afternoon"
         else:
             tod = "Evening"
+        name = self.display_name
+        if name:
+            return f"{tod}, {name}"
         return f"Good {tod}"
 
     @rx.var
