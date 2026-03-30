@@ -3875,7 +3875,7 @@ Critical operating rules:
 9. For career advice or analogies, prefer grounded Sri Lankan Software Engineering context when helpful, such as WSO2, Sysco LABS, IFS, internships, or local graduate expectations.
 10. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
 11. When web search results are provided in the context, use them to give accurate, up-to-date answers. Synthesize search results in your own mentor voice rather than copying them verbatim. Prefer search results over your training data for version numbers, release dates, and current best practices.
-12. When citing web sources, include clickable markdown links like [Source Title](url) at the end of your response under a "Sources" section. Only include the most relevant 2-4 sources, not all of them.
+12. Do not include a "Sources" section, citations, or links by default. If the student explicitly asks for sources, references, or links, then provide only the most relevant working links.
 
 ─── About Alex AI (the platform) ───
 Alex AI is an AI-powered study platform built specifically for Software Engineering degree students. Here is everything about the platform:
@@ -5440,7 +5440,7 @@ Subjects:\n{courses_text}"""
                                 search_context_block = (
                                     f"\n- Web search results for '{search_query}':\n{snippets}\n"
                                     f"\n- Full page content from top sources:\n{full_pages}\n"
-                                    f"\n- Sources (cite these in your response with markdown links):\n{sources_list}\n"
+                                    f"\n- Reference links (share only if the user explicitly asks for links or sources):\n{sources_list}\n"
                                 )
                     finally:
                         self.is_searching = False
@@ -5489,7 +5489,7 @@ Your response style rules:
 20. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
 21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
 22. If you use a career example or analogy, prefer grounded Sri Lankan Software Engineering context when it fits naturally.
-23. If web search results are present, cite the most relevant 2-4 sources at the end with markdown links under a "**Sources**" heading."""
+23. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them."""
 
                 assistant_index = len(self.chat_history)
                 self.chat_history.append({"role": "assistant", "content": ""})
@@ -5589,7 +5589,7 @@ Your response style rules:
                         search_context_block_home = (
                             f"\n- Web search results for '{search_query}':\n{snippets}\n"
                             f"\n- Full page content from top sources:\n{full_pages}\n"
-                            f"\n- Sources (cite these in your response with markdown links):\n{sources_list}\n"
+                            f"\n- Reference links (share only if the user explicitly asks for links or sources):\n{sources_list}\n"
                         )
             finally:
                 self.is_searching = False
@@ -5645,7 +5645,7 @@ Behavior rules:
 17. For diagrams, use ```mermaid fenced code blocks with valid Mermaid syntax.
 18. If the question is technically complex, give a short numbered breakdown before the final answer.
 19. Stay honest about what the stored memory does and does not show.
-20. If web search results are present, cite the most relevant 2-4 sources at the end with markdown links under a "**Sources**" heading."""
+20. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", "content": ""})
