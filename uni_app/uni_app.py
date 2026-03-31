@@ -818,6 +818,10 @@ DODO_PAYMENTS_RETURN_URL = os.getenv(
     "DODO_PAYMENTS_RETURN_URL",
     "https://alexstudies.com/dashboard",
 ).strip()
+DODO_PAYMENTS_FAILURE_URL = os.getenv(
+    "DODO_PAYMENTS_FAILURE_URL",
+    f"{APP_BASE_URL.rstrip('/')}/pricing",
+).strip()
 GUMROAD_PING_SECRET = os.getenv("GUMROAD_PING_SECRET", "").strip()
 GUMROAD_SELLER_ID = os.getenv("GUMROAD_SELLER_ID", "").strip()
 GUMROAD_PRODUCT_ID = os.getenv("GUMROAD_PRODUCT_ID", "").strip()
@@ -933,6 +937,31 @@ def _request_origin(request: Request) -> str:
     if not host:
         return ""
     return f"{proto}://{host}"
+
+
+def _dodo_checkout_candidate_urls(product_id: str, configured_url: str, api_key: str) -> list[str]:
+    normalized_product_id = (product_id or "").strip()
+    normalized_configured = (configured_url or "").strip()
+    normalized_key = (api_key or "").strip().lower()
+    prefers_test = (
+        normalized_product_id == DODO_PAYMENTS_KNOWN_TEST_PRODUCT_ID
+        or "test.dodopayments.com" in normalized_configured
+        or "test_" in normalized_key
+        or "_test" in normalized_key
+    )
+
+    ordered = (
+        [normalized_configured, DODO_PAYMENTS_TEST_API_URL, DODO_PAYMENTS_LIVE_API_URL]
+        if prefers_test
+        else [normalized_configured, DODO_PAYMENTS_LIVE_API_URL, DODO_PAYMENTS_TEST_API_URL]
+    )
+
+    result: list[str] = []
+    for url in ordered:
+        cleaned = (url or "").strip()
+        if cleaned and cleaned not in result:
+            result.append(cleaned)
+    return result
 
 
 def _host_resolves_publicly(host: str) -> bool:
@@ -2001,8 +2030,6 @@ class AppState(reflex_local_auth.LocalAuthState):
                 raise RuntimeError("Missing Dodo API key. Set DODO_PAYMENTS_API_KEY in the environment.")
             if not DODO_PAYMENTS_PRODUCT_ID:
                 raise RuntimeError("Missing Dodo live product ID. Set DODO_PAYMENTS_PRODUCT_ID from the live dashboard.")
-            if DODO_PAYMENTS_PRODUCT_ID == DODO_PAYMENTS_KNOWN_TEST_PRODUCT_ID:
-                raise RuntimeError("Dodo checkout is still configured with the old test product ID. Replace it with the live product ID.")
             if not (self.user_unique_id or "").strip():
                 uid = self._uid()
                 if uid >= 0:
@@ -2026,7 +2053,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                         "checkout_requested_at": datetime.now(timezone.utc).isoformat(),
                     },
                     "return_url": DODO_PAYMENTS_RETURN_URL,
-                    "failure_url": "https://alexstudies.com/pricing",
+                    "failure_url": DODO_PAYMENTS_FAILURE_URL,
                 }
                 checkout_headers = {
                     "Authorization": f"Bearer {DODO_PAYMENTS_API_KEY}",
@@ -2034,11 +2061,11 @@ class AppState(reflex_local_auth.LocalAuthState):
                     "Accept": "application/json",
                 }
 
-                candidate_urls: list[str] = []
-                for url in [DODO_PAYMENTS_API_URL, DODO_PAYMENTS_LIVE_API_URL]:
-                    normalized = (url or "").strip()
-                    if normalized and normalized not in candidate_urls:
-                        candidate_urls.append(normalized)
+                candidate_urls = _dodo_checkout_candidate_urls(
+                    DODO_PAYMENTS_PRODUCT_ID,
+                    DODO_PAYMENTS_API_URL,
+                    DODO_PAYMENTS_API_KEY,
+                )
 
                 for api_url in candidate_urls:
                     response = await client_http.post(
