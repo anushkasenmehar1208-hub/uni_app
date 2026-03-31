@@ -12306,8 +12306,8 @@ def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
 
 @rx.page(
     route="/",
-    title="Alex AI | AI Study Assistant for University Students",
-    description="Alex AI analyzes your degree, organizes each semester, and guides you day by day with a structured 110-day learning plan.",
+    title="Alex Studies | AI Study Assistant for University Students",
+    description="Alex analyzes your degree, organizes each semester, and guides you day by day with a structured 110-day learning plan.",
     image=FAVICON_32,
     on_load=AppState.on_load_public_landing,
     meta=[
