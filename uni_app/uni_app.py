@@ -7292,7 +7292,7 @@ def chat_input_field() -> rx.Component:
             ),
             rx.text_area(
                 id="chat_input",
-                placeholder="Learn with Alex Studies...",
+                placeholder="Learn with Alex...",
                 value=AppState.chat_input,
                 on_change=AppState.set_chat_input,
                 color="rgba(236,240,244,0.92)",
