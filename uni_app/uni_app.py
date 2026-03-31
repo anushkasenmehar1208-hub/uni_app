@@ -818,10 +818,7 @@ DODO_PAYMENTS_RETURN_URL = os.getenv(
     "DODO_PAYMENTS_RETURN_URL",
     "https://alexstudies.com/dashboard",
 ).strip()
-DODO_PAYMENTS_FAILURE_URL = os.getenv(
-    "DODO_PAYMENTS_FAILURE_URL",
-    f"{APP_BASE_URL.rstrip('/')}/pricing",
-).strip()
+DODO_PAYMENTS_FAILURE_URL = os.getenv("DODO_PAYMENTS_FAILURE_URL", "").strip()
 GUMROAD_PING_SECRET = os.getenv("GUMROAD_PING_SECRET", "").strip()
 GUMROAD_SELLER_ID = os.getenv("GUMROAD_SELLER_ID", "").strip()
 GUMROAD_PRODUCT_ID = os.getenv("GUMROAD_PRODUCT_ID", "").strip()
@@ -962,6 +959,19 @@ def _dodo_checkout_candidate_urls(product_id: str, configured_url: str, api_key:
         if cleaned and cleaned not in result:
             result.append(cleaned)
     return result
+
+
+def _dodo_environment(product_id: str, configured_url: str, api_key: str) -> str:
+    normalized_product_id = (product_id or "").strip()
+    normalized_configured = (configured_url or "").strip().lower()
+    normalized_key = (api_key or "").strip().lower()
+    prefers_test = (
+        normalized_product_id == DODO_PAYMENTS_KNOWN_TEST_PRODUCT_ID
+        or "test.dodopayments.com" in normalized_configured
+        or "test_" in normalized_key
+        or "_test" in normalized_key
+    )
+    return "test_mode" if prefers_test else "live_mode"
 
 
 def _host_resolves_publicly(host: str) -> bool:
@@ -2030,17 +2040,38 @@ class AppState(reflex_local_auth.LocalAuthState):
                 raise RuntimeError("Missing Dodo API key. Set DODO_PAYMENTS_API_KEY in the environment.")
             if not DODO_PAYMENTS_PRODUCT_ID:
                 raise RuntimeError("Missing Dodo live product ID. Set DODO_PAYMENTS_PRODUCT_ID from the live dashboard.")
-            if not (self.user_unique_id or "").strip():
-                uid = self._uid()
-                if uid >= 0:
-                    self._cached_uid = uid
-                    self._load_profile(uid)
+            uid = self._uid()
+            if uid >= 0 and not (self.user_unique_id or "").strip():
+                self._cached_uid = uid
+                self._load_profile(uid)
 
-            async with httpx.AsyncClient(timeout=20.0) as client_http:
-                payload: dict[str, Any] = {}
-                response: httpx.Response | None = None
-                attempted_errors: list[str] = []
-                checkout_request = {
+            base_origin = _normalized_origin(self._router_origin()) or _normalized_origin(APP_BASE_URL) or "https://alexstudies.com"
+            return_url = (DODO_PAYMENTS_RETURN_URL or f"{base_origin}{APP_DASHBOARD_ROUTE}").strip()
+            cancel_url = (DODO_PAYMENTS_FAILURE_URL or f"{base_origin}/pricing").strip()
+            environment = _dodo_environment(
+                DODO_PAYMENTS_PRODUCT_ID,
+                DODO_PAYMENTS_API_URL,
+                DODO_PAYMENTS_API_KEY,
+            )
+
+            customer_email = ""
+            if uid >= 0:
+                try:
+                    with rx.session() as session:
+                        profile = session.exec(
+                            select(UserProfile).where(UserProfile.user_id == uid)
+                        ).one_or_none()
+                        if profile is not None:
+                            customer_email = _normalize_email(profile.email or "")
+                except Exception as profile_error:
+                    print(f"[Dodo Payments] profile lookup error: {profile_error}")
+
+            def _create_checkout() -> str:
+                client = DodoPayments(
+                    bearer_token=DODO_PAYMENTS_API_KEY,
+                    environment=environment,  # type: ignore[arg-type]
+                )
+                create_kwargs: dict[str, Any] = {
                     "product_cart": [
                         {
                             "product_id": DODO_PAYMENTS_PRODUCT_ID,
@@ -2052,57 +2083,23 @@ class AppState(reflex_local_auth.LocalAuthState):
                         "checkout_nonce": secrets.token_urlsafe(12),
                         "checkout_requested_at": datetime.now(timezone.utc).isoformat(),
                     },
-                    "return_url": DODO_PAYMENTS_RETURN_URL,
-                    "failure_url": DODO_PAYMENTS_FAILURE_URL,
+                    "return_url": return_url,
+                    "cancel_url": cancel_url,
                 }
-                checkout_headers = {
-                    "Authorization": f"Bearer {DODO_PAYMENTS_API_KEY}",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                }
+                if customer_email:
+                    create_kwargs["customer"] = {"email": customer_email}
 
-                candidate_urls = _dodo_checkout_candidate_urls(
-                    DODO_PAYMENTS_PRODUCT_ID,
-                    DODO_PAYMENTS_API_URL,
-                    DODO_PAYMENTS_API_KEY,
-                )
+                response = client.checkout_sessions.create(**create_kwargs)
+                return str(getattr(response, "checkout_url", "") or "").strip()
 
-                for api_url in candidate_urls:
-                    response = await client_http.post(
-                        api_url,
-                        headers=checkout_headers,
-                        json=checkout_request,
-                    )
-                    if response.is_success:
-                        payload = response.json() or {}
-                        break
-
-                    body_text = ""
-                    try:
-                        body_text = response.text[:500]
-                    except Exception:
-                        body_text = ""
-                    attempted_errors.append(f"{api_url} -> {response.status_code}: {body_text}")
-
-                    if response.status_code not in {401, 404}:
-                        response.raise_for_status()
-                else:
-                    raise RuntimeError(" | ".join(attempted_errors) or "No Dodo Payments endpoint accepted the request.")
-
-            checkout_url = str(payload.get("checkout_url", "") or "").strip()
+            checkout_url = await asyncio.to_thread(_create_checkout)
             if not checkout_url:
                 raise ValueError("Missing checkout_url in Dodo Payments response.")
 
             self.show_pricing_modal = False
             yield rx.call_script(f"window.location.assign({json.dumps(checkout_url)});")
         except Exception as e:
-            response_text = ""
-            if "response" in locals():
-                try:
-                    response_text = response.text[:1000]
-                except Exception:
-                    response_text = ""
-            print(f"[Dodo Payments] checkout error: {e} response={response_text}")
+            print(f"[Dodo Payments] checkout error: {e}")
             yield rx.window_alert("Unable to start checkout right now. Please try again.")
 
     def set_settings_tab(self, tab: str):
