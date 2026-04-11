@@ -2,7 +2,7 @@
  * Alex Live Voice — OpenAI Whisper STT + OpenRouter LLM + OpenAI TTS (WAV base64)
  * STT: OpenAI Whisper  (MediaRecorder → /api/alex-voice-stt, needs OPENAI_API_KEY)
  * LLM: OpenRouter      (/api/alex-voice, needs OPENROUTER_API_KEY)
- * TTS: OpenAI speech   (WAV audio returned as base64, needs OPENAI_API_KEY)
+ * TTS: server returns WAV base64 — Fish Audio (Sol) if FISH_AUDIO_API_KEY is set, else OpenAI or browser fallback
  * Works on ALL browsers (Chrome, Firefox, Safari, Edge)
  */
 (function () {
@@ -17,6 +17,9 @@
   var currentAudio = null;
   var maxRecordTimeout = null;
   var introPlayed = false;
+
+  /** Best-scoring system voice for SpeechSynthesis (neural / local voices rank higher). */
+  var cachedBrowserVoice = null;
 
   // Voice Activity Detection (VAD) state
   var audioContext = null;
@@ -106,6 +109,50 @@
   }
 
   console.log('[AlexVoice] loaded (orb UI + voice APIs + VAD)');
+
+  function voiceQualityScore(v) {
+    var n = (v.name || '').toLowerCase();
+    var lang = (v.lang || '').toLowerCase();
+    var s = 0;
+    if (lang.indexOf('en') === 0) s += 18;
+    try {
+      if (v.localService) s += 50;
+    } catch (e1) {}
+    if (/premium|enhanced|neural|natural|wavenet|neural2|siri/.test(n)) s += 38;
+    if (/google us english|google uk english|microsoft|samantha|^daniel\b|\baaron\b|\bava\b|matthew|melina|zoe|flo|tom/.test(n)) s += 22;
+    if (/zarvox|bad news|whisper|pipe|bubbles|\.loc|compact/.test(n)) s -= 90;
+    return s;
+  }
+
+  function refreshBrowserVoice() {
+    cachedBrowserVoice = null;
+    try {
+      if (typeof speechSynthesis === 'undefined') return;
+      var voices = speechSynthesis.getVoices();
+      if (!voices || !voices.length) return;
+      var best = null;
+      var bestS = -1e9;
+      var i;
+      var sc;
+      for (i = 0; i < voices.length; i++) {
+        sc = voiceQualityScore(voices[i]);
+        if (sc > bestS) {
+          bestS = sc;
+          best = voices[i];
+        }
+      }
+      cachedBrowserVoice = best;
+    } catch (e2) {}
+  }
+
+  if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.onvoiceschanged = refreshBrowserVoice;
+    refreshBrowserVoice();
+  }
+
+  function preferBrowserVoiceOutput() {
+    return window.ALEX_VOICE_BROWSER_ONLY === true;
+  }
 
   // Attach click handler to button (React doesn't support string onclick)
   function attachBtn() {
@@ -304,49 +351,7 @@
         return;
       }
       var data = await resp.json();
-
-      if (data.audio_b64) {
-        setOrbState('ai-speaking');
-        setStatus('Alex is speaking...');
-        setTranscript(data.text || '');
-        currentAudio = new Audio('data:audio/wav;base64,' + data.audio_b64);
-        currentAudio.onended = function () {
-          currentAudio = null;
-          setTranscript('');
-          if (active) startListening();
-        };
-        currentAudio.onerror = function () {
-          currentAudio = null;
-          if (data.text) {
-            speakBrowserTTS(data.text, function () {
-              setTranscript('');
-              if (active) startListening();
-            });
-          } else {
-            if (active) startListening();
-          }
-        };
-        currentAudio.play().catch(function () {
-          if (data.text) {
-            speakBrowserTTS(data.text, function () {
-              setTranscript('');
-              if (active) startListening();
-            });
-          } else {
-            if (active) startListening();
-          }
-        });
-      } else if (data.text) {
-        setOrbState('ai-speaking');
-        setStatus('Alex is speaking...');
-        setTranscript(data.text);
-        speakBrowserTTS(data.text, function () {
-          setTranscript('');
-          if (active) startListening();
-        });
-      } else {
-        if (active) startListening();
-      }
+      playAlexVoiceResponse(data);
     } catch (e) {
       console.error('[AlexVoice] intro error:', e);
       if (active) startListening();
@@ -589,6 +594,7 @@
     setOrbState('ai-speaking');
     setStatus('Alex is speaking...');
     if (data.text) setTranscript('Alex: ' + data.text);
+    var speechText = (data.speech_text || data.text || '').trim();
 
     var done = function () {
       setTranscript('');
@@ -596,7 +602,7 @@
       if (active) startListening();
     };
 
-    if (data.audio_b64) {
+    if (data.audio_b64 && !preferBrowserVoiceOutput()) {
       currentAudio = new Audio('data:audio/wav;base64,' + data.audio_b64);
       currentAudio.onended = function () {
         currentAudio = null;
@@ -604,21 +610,21 @@
       };
       currentAudio.onerror = function () {
         currentAudio = null;
-        if (data.text) {
-          speakBrowserTTS(data.text, done);
+        if (speechText) {
+          speakBrowserTTS(speechText, done);
         } else {
           done();
         }
       };
       currentAudio.play().catch(function () {
-        if (data.text) {
-          speakBrowserTTS(data.text, done);
+        if (speechText) {
+          speakBrowserTTS(speechText, done);
         } else {
           done();
         }
       });
-    } else if (data.text) {
-      speakBrowserTTS(data.text, done);
+    } else if (speechText) {
+      speakBrowserTTS(speechText, done);
     } else {
       setOrbState('idle');
       if (active) startListening();
@@ -706,9 +712,14 @@
 
   function speakBrowserTTS(text, onDone) {
     var utter = new SpeechSynthesisUtterance(text);
+    if (typeof speechSynthesis !== 'undefined') {
+      if (!cachedBrowserVoice) refreshBrowserVoice();
+      if (cachedBrowserVoice) utter.voice = cachedBrowserVoice;
+    }
     utter.onend = function () { if (onDone) onDone(); };
     utter.onerror = function () { if (onDone) onDone(); };
-    speechSynthesis.speak(utter);
+    if (typeof speechSynthesis !== 'undefined') speechSynthesis.speak(utter);
+    else if (onDone) onDone();
   }
 
   // ── Stop ────────────────────────────────────────────────────

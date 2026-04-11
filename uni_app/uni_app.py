@@ -7,6 +7,7 @@ import hashlib
 import asyncio
 import hmac
 import json
+import random
 import time
 import base64
 import ipaddress
@@ -99,9 +100,172 @@ OPENROUTER_SPEC_MODEL = os.getenv("OPENROUTER_SPEC_MODEL", "deepseek/deepseek-ch
 # OpenAI (optional: voice STT/TTS only — OpenRouter does not host these endpoints)
 # ----------------------------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
-OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "whisper-1").strip() or "whisper-1"
-OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "tts-1").strip() or "tts-1"
+OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe").strip() or "gpt-4o-mini-transcribe"
+# Default to the cheaper natural-sounding mini speech stack.
+# If you want the older fixed voice stack, set OPENAI_TTS_MODEL=tts-1-hd or tts-1 explicitly.
+OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
 OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy").strip() or "alloy"
+# When true: skip OpenAI TTS and let the browser speak. If an OPENAI_API_KEY is present,
+# default to server-side speech because it sounds more natural than browser speechSynthesis.
+_bvo_raw = os.getenv("ALEX_VOICE_BROWSER_ONLY")
+if _bvo_raw is None or not str(_bvo_raw).strip():
+    ALEX_VOICE_BROWSER_ONLY = not bool(OPENAI_API_KEY)
+else:
+    ALEX_VOICE_BROWSER_ONLY = str(_bvo_raw).strip().lower() not in ("0", "false", "no", "off")
+
+# Fish Audio (optional): e.g. "Sol" from https://fish.audio — set FISH_AUDIO_API_KEY to enable.
+# Default reference_id is the public Sol model; override with FISH_AUDIO_REFERENCE_ID for another voice.
+FISH_AUDIO_API_KEY = os.getenv("FISH_AUDIO_API_KEY", "").strip()
+FISH_AUDIO_REFERENCE_ID = (os.getenv("FISH_AUDIO_REFERENCE_ID") or "cb41574b02f44753b5a9ee4fb929dd8d").strip()
+FISH_AUDIO_MODEL = (os.getenv("FISH_AUDIO_MODEL") or "s2-pro").strip() or "s2-pro"
+
+
+def _openai_tts_speech_json(input_text: str) -> dict[str, Any]:
+    """JSON body for OpenAI POST /v1/audio/speech."""
+    body: dict[str, Any] = {
+        "model": OPENAI_TTS_MODEL,
+        "input": input_text,
+        "voice": OPENAI_TTS_VOICE,
+        "response_format": "wav",
+    }
+    if "gpt-4o-mini-tts" in OPENAI_TTS_MODEL.lower():
+        instr_env = os.getenv("OPENAI_TTS_INSTRUCTIONS")
+        if instr_env is None:
+            body["instructions"] = (
+                "Speak like a real human tutor in a relaxed one-on-one call. "
+                "Sound warm, casual, and clear. "
+                "Use natural pauses, light conversational emphasis, and gentle variety in pacing. "
+                "Never sound like you are reading a textbook or performing dramatically."
+            )
+        elif instr_env.strip():
+            body["instructions"] = instr_env.strip()
+        # empty string env = omit instructions (API default delivery)
+    return body
+
+
+_VOICE_FILLER_OPENERS = (
+    "Okay",
+    "Alright",
+    "So",
+    "Right",
+    "Now",
+)
+_VOICE_FILLER_MIDDLES = (
+    "now",
+    "think about this",
+    "so",
+    "here's the idea",
+    "let's take it step by step",
+)
+
+
+def _split_for_voice(text: str) -> list[str]:
+    text = re.sub(r"\s+", " ", (text or "").strip())
+    if not text:
+        return []
+
+    chunks: list[str] = []
+    for sentence in re.split(r"(?<=[.!?])\s+", text):
+        s = sentence.strip(" \t\r\n")
+        if not s:
+            continue
+        parts = re.split(r"(?<=[,;:])\s+|\s+(?=(?:and|but|so|because|which|that|then)\b)", s, flags=re.IGNORECASE)
+        for part in parts:
+            p = part.strip(" ,;:")
+            if p:
+                chunks.append(p)
+    return chunks
+
+
+def _split_long_voice_chunk(chunk: str, target_words: int = 10) -> list[str]:
+    words = chunk.split()
+    if len(words) <= 15:
+        return [chunk.strip()]
+
+    pieces: list[str] = []
+    current: list[str] = []
+    soft_breaks = {"and", "but", "because", "so", "then", "which", "that", "if", "when", "while"}
+
+    for word in words:
+        current.append(word)
+        clean_word = word.strip(".,;:!?").lower()
+        should_break = (
+            len(current) >= target_words
+            and clean_word in soft_breaks
+        ) or len(current) >= 14
+        if should_break:
+            segment = " ".join(current).strip(" ,;:")
+            if segment:
+                pieces.append(segment)
+            current = []
+
+    if current:
+        segment = " ".join(current).strip(" ,;:")
+        if segment:
+            pieces.append(segment)
+    return pieces or [chunk.strip()]
+
+
+def _normalize_spoken_piece(piece: str) -> str:
+    p = re.sub(r"\s+", " ", (piece or "").strip())
+    if not p:
+        return ""
+    p = re.sub(r"\bfor example\b", "for example", p, flags=re.IGNORECASE)
+    p = re.sub(r"\be\.g\.\b", "for example", p, flags=re.IGNORECASE)
+    return p
+
+
+def rewrite_for_voice(text: str) -> str:
+    """Make tutor text easier to speak aloud without changing its meaning."""
+    chunks = _split_for_voice(text)
+    if not chunks:
+        return ""
+
+    opener = random.choice(_VOICE_FILLER_OPENERS)
+    bridge = random.choice(_VOICE_FILLER_MIDDLES)
+    spoken_parts: list[str] = []
+
+    for chunk in chunks:
+        for piece in _split_long_voice_chunk(chunk):
+            clean_piece = _normalize_spoken_piece(piece)
+            if clean_piece:
+                spoken_parts.append(clean_piece)
+
+    if not spoken_parts:
+        return text.strip()
+
+    first_core = spoken_parts[0].rstrip(".!?")
+    spoken_parts[0] = f"{opener}... {first_core}."
+
+    if len(spoken_parts) >= 3:
+        insert_at = 2 if len(spoken_parts) > 3 else 1
+        spoken_parts.insert(insert_at, f"{bridge}.")
+
+    voice_parts: list[str] = []
+    for idx, part in enumerate(spoken_parts):
+        part = part.strip()
+        if not part:
+            continue
+        if re.fullmatch(rf"(?:{'|'.join(re.escape(x) for x in _VOICE_FILLER_MIDDLES)})\.", part, flags=re.IGNORECASE):
+            voice_parts.append(part)
+            continue
+        clean = part.rstrip(".!? ")
+        word_count = len(clean.split())
+        if idx == 0:
+            voice_parts.append(part)
+        elif part.endswith("?"):
+            voice_parts.append(f"{clean}?")
+        elif word_count <= 3:
+            voice_parts.append(f"{clean}...")
+        elif word_count <= 8 and idx < len(spoken_parts) - 1:
+            voice_parts.append(f"{clean},")
+        else:
+            voice_parts.append(f"{clean}.")
+
+    voice_text = " ".join(voice_parts)
+    voice_text = re.sub(r"\s+([,.!?])", r"\1", voice_text)
+    voice_text = re.sub(r"\s+", " ", voice_text).strip()
+    return voice_text or text.strip()
 
 
 def _openrouter_llm_ready() -> bool:
@@ -9396,6 +9560,7 @@ Quality rules:
             f"window.ALEX_VOICE_BLOCK_REASON = {json.dumps(block_reason)};"
             f"window.ALEX_VOICE_SHOW_UPSELL = {str(bool(ALEX_VOICE_COMMERCIAL_GATES)).lower()};"
             f"window.ALEX_AUTH_STORAGE_KEY = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)};"
+            f"window.ALEX_VOICE_BROWSER_ONLY = {str(bool(ALEX_VOICE_BROWSER_ONLY)).lower()};"
             "(function(){"
             "var old=document.getElementById('_alex_voice_script');"
             "if(old)old.remove();"
@@ -22155,8 +22320,75 @@ def _alex_voice_trim_history(ctx: dict, history: list) -> list:
     return ctx["history"]
 
 
+async def _alex_fish_tts_wav_bytes(text: str) -> bytes | None:
+    """Synthesize WAV via Fish Audio (default voice: Sol). Returns None if not configured or on error."""
+    if not FISH_AUDIO_API_KEY:
+        return None
+    t = (text or "").strip()
+    if not t:
+        return None
+    ref = FISH_AUDIO_REFERENCE_ID or "cb41574b02f44753b5a9ee4fb929dd8d"
+    try:
+        async with httpx.AsyncClient(timeout=90.0) as http:
+            resp = await http.post(
+                "https://api.fish.audio/v1/tts",
+                headers={
+                    "Authorization": f"Bearer {FISH_AUDIO_API_KEY}",
+                    "Content-Type": "application/json",
+                    "model": FISH_AUDIO_MODEL,
+                },
+                json={
+                    "text": t,
+                    "reference_id": ref,
+                    "format": "wav",
+                    "latency": "balanced",
+                    "chunk_length": 200,
+                    "normalize": True,
+                },
+            )
+            if resp.status_code == 200 and resp.content:
+                return resp.content
+            logger.error("AlexVoice Fish TTS %d: %s", resp.status_code, (resp.text or "")[:300])
+    except Exception as exc:
+        logger.error("AlexVoice Fish TTS error: %s", exc)
+    return None
+
+
+async def _alex_voice_tts_audio_b64(text: str) -> str:
+    """WAV base64 for Alex replies: Fish Audio first (Sol if default ref), else OpenAI when allowed."""
+    fish_raw = await _alex_fish_tts_wav_bytes(text)
+    if fish_raw:
+        return base64.b64encode(fish_raw).decode()
+    if OPENAI_API_KEY and not ALEX_VOICE_BROWSER_ONLY:
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as http:
+                tts = await http.post(
+                    "https://api.openai.com/v1/audio/speech",
+                    headers={
+                        "Authorization": f"Bearer {OPENAI_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json=_openai_tts_speech_json(text),
+                )
+                if tts.status_code == 200 and tts.content:
+                    return base64.b64encode(tts.content).decode()
+                logger.error("AlexVoice OpenAI TTS %d: %s", tts.status_code, tts.text[:200])
+        except Exception as exc:
+            logger.error("AlexVoice OpenAI TTS error: %s", exc)
+    return ""
+
+
+def _prepare_tts_text(text: str, *, is_voice_mode: bool) -> str:
+    clean = (text or "").strip()
+    if not clean:
+        return ""
+    if not is_voice_mode:
+        return clean
+    return rewrite_for_voice(clean)
+
+
 async def alex_voice_api(request: Request):
-    """Receive transcript, respond via OpenRouter LLM; optional OpenAI TTS for audio."""
+    """Receive transcript, respond via OpenRouter LLM; Fish or OpenAI TTS for audio."""
     _prune_stale_voice_sessions()
     v_uid = _voice_request_uid(request)
     if v_uid < 0:
@@ -22196,6 +22428,7 @@ async def alex_voice_api(request: Request):
 
     system_prompt = ctx["system"]
     history = ctx["history"]
+    is_voice_mode = True
 
     if silence_nudge:
         nudge_user_text = (
@@ -22238,31 +22471,10 @@ async def alex_voice_api(request: Request):
     history.append({"role": "assistant", "content": answer})
     _alex_voice_trim_history(ctx, history)
 
-    audio_b64 = ""
-    if OPENAI_API_KEY:
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as http:
-                tts = await http.post(
-                    "https://api.openai.com/v1/audio/speech",
-                    headers={
-                        "Authorization": f"Bearer {OPENAI_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": OPENAI_TTS_MODEL,
-                        "input": answer,
-                        "voice": OPENAI_TTS_VOICE,
-                        "response_format": "wav",
-                    },
-                )
-                if tts.status_code == 200:
-                    audio_b64 = base64.b64encode(tts.content).decode()
-                else:
-                    logger.error("AlexVoice TTS %d: %s", tts.status_code, tts.text[:200])
-        except Exception as exc:
-            logger.error("AlexVoice TTS error: %s", exc)
+    speech_text = _prepare_tts_text(answer, is_voice_mode=is_voice_mode)
+    audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
 
-    return JSONResponse({"text": answer, "audio_b64": audio_b64})
+    return JSONResponse({"text": answer, "speech_text": speech_text, "audio_b64": audio_b64})
 
 
 api.add_route("/api/alex-voice", alex_voice_api, methods=["POST"])
@@ -22275,6 +22487,7 @@ async def alex_voice_intro(request: Request):
     v_uid = _voice_request_uid(request)
     if v_uid < 0:
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    is_voice_mode = True
 
     voice_key = request.query_params.get("voice_key", "").strip()
     ctx = None
@@ -22308,25 +22521,9 @@ async def alex_voice_intro(request: Request):
             f"Welcome{name_part}. I'm Alex, your personal academic tutor. "
             "Shall we begin your session?"
         )
-    audio_b64 = ""
-    if OPENAI_API_KEY:
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as http:
-                tts = await http.post(
-                    "https://api.openai.com/v1/audio/speech",
-                    headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"},
-                    json={
-                        "model": OPENAI_TTS_MODEL,
-                        "input": intro,
-                        "voice": OPENAI_TTS_VOICE,
-                        "response_format": "wav",
-                    },
-                )
-                if tts.status_code == 200:
-                    audio_b64 = base64.b64encode(tts.content).decode()
-        except Exception as exc:
-            logger.error("AlexVoice intro TTS error: %s", exc)
-    return JSONResponse({"text": intro, "audio_b64": audio_b64})
+    speech_text = _prepare_tts_text(intro, is_voice_mode=is_voice_mode)
+    audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+    return JSONResponse({"text": intro, "speech_text": speech_text, "audio_b64": audio_b64})
 
 
 api.add_route("/api/alex-voice-intro", alex_voice_intro, methods=["GET"])
