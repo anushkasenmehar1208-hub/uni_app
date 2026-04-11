@@ -1,8 +1,8 @@
 /**
- * Alex Live Voice — Full Groq pipeline with silence detection + Orb UI
- * STT: Groq Whisper  (MediaRecorder → /api/alex-voice-stt)
- * LLM: Groq Llama    (/api/alex-voice)
- * TTS: Groq Orpheus  (WAV audio returned as base64)
+ * Alex Live Voice — OpenAI Whisper STT + OpenRouter LLM + OpenAI TTS (WAV base64)
+ * STT: OpenAI Whisper  (MediaRecorder → /api/alex-voice-stt, needs OPENAI_API_KEY)
+ * LLM: OpenRouter      (/api/alex-voice, needs OPENROUTER_API_KEY)
+ * TTS: OpenAI speech   (WAV audio returned as base64, needs OPENAI_API_KEY)
  * Works on ALL browsers (Chrome, Firefox, Safari, Edge)
  */
 (function () {
@@ -105,7 +105,7 @@
     return false;
   }
 
-  console.log('[AlexVoice] loaded (orb UI + Groq + VAD)');
+  console.log('[AlexVoice] loaded (orb UI + voice APIs + VAD)');
 
   // Attach click handler to button (React doesn't support string onclick)
   function attachBtn() {

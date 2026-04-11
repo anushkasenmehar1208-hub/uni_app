@@ -5,7 +5,6 @@ psycopg2-binary
 sqlmodel
 fastapi
 uvicorn
-groq
 authlib
 httpx
 itsdangerous
