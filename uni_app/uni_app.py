@@ -14126,7 +14126,6 @@ _CLAUDE_MD_CSS = """
 /* Code blocks — enhanced with language header + copy button */
 .claude-md pre {
   position: relative;
-  /* Solid fill avoids WebKit/Blink alpha-stacking bands over the first lines */
   background: #12141a;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
@@ -14134,29 +14133,9 @@ _CLAUDE_MD_CSS = """
   margin: 0.85em 0;
   overflow-x: auto;
   scrollbar-width: thin;
-  isolation: isolate;
 }
-/* Language strip in normal flow so the first code line cannot sit under the header */
 .claude-md pre[data-lang] {
-  padding: 0;
-  /* Keep normal block flow; Safari/WebKit can mispaint code when <pre> is also a flex container */
-  overflow-x: auto;
-}
-/* Language label — in-flow (not position:absolute) */
-.claude-md pre[data-lang]::before {
-  content: attr(data-lang);
-  display: block;
-  padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 9px 9px 0 0;
-  font-family: 'Söhne Mono', 'SF Mono', 'Menlo', monospace;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.40);
-  pointer-events: none;
+  padding-top: 16px;
 }
 /* Copy button — appended by JS, never moves DOM nodes */
 .code-copy-btn {
@@ -14199,11 +14178,6 @@ _CLAUDE_MD_CSS = """
 .claude-md pre[data-lang="output"] {
   background: #0f1614;
   border-color: rgba(52, 211, 153, 0.1);
-}
-.claude-md pre[data-lang="output"]::before {
-  color: rgba(120, 200, 160, 0.6);
-  background: rgba(52, 211, 153, 0.06);
-  border-bottom-color: rgba(52, 211, 153, 0.08);
 }
 /* Long user messages — collapsible */
 .user-msg-long {
@@ -14259,10 +14233,9 @@ _CLAUDE_MD_CSS = """
   vertical-align: baseline;
 }
 .claude-md pre[data-lang] code {
-  width: 100%;
+  width: auto;
   box-sizing: border-box;
-  padding: 14px 18px 16px 18px;
-  overflow-x: auto;
+  padding: 0;
 }
 
 /* Links */
