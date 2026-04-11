@@ -14126,20 +14126,24 @@ _CLAUDE_MD_CSS = """
 /* Code blocks — enhanced with language header + copy button */
 .claude-md pre {
   position: relative;
-  background: rgba(0, 0, 0, 0.35);
+  /* Solid fill avoids WebKit/Blink alpha-stacking bands over the first lines */
+  background: #12141a;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
   padding: 16px 18px;
   margin: 0.85em 0;
   overflow-x: auto;
   scrollbar-width: thin;
+  isolation: isolate;
 }
 /* Language strip in normal flow so the first code line cannot sit under the header */
 .claude-md pre[data-lang] {
   display: flex;
   flex-direction: column;
   padding: 0;
-  overflow: hidden;
+  /* `overflow:hidden` + radius caused a dark “wash” at the top of fenced blocks in Safari/WebKit */
+  overflow-x: auto;
+  overflow-y: auto;
 }
 /* Language label — in-flow (not position:absolute) */
 .claude-md pre[data-lang]::before {
@@ -14175,12 +14179,17 @@ _CLAUDE_MD_CSS = """
   border-radius: 6px;
   font-size: 11.5px;
   font-family: 'Söhne Mono', 'SF Mono', 'Menlo', monospace;
-  transition: background 0.15s, color 0.15s;
   z-index: 2;
   opacity: 0;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease, visibility 0.15s ease;
 }
-.claude-md pre:hover .code-copy-btn { opacity: 1; }
+.claude-md pre:hover .code-copy-btn {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
 .code-copy-btn:hover {
   background: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.75);
@@ -14188,10 +14197,12 @@ _CLAUDE_MD_CSS = """
 .code-copy-btn.copied {
   color: rgba(120, 200, 160, 0.9);
   opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 /* Output blocks — green accent */
 .claude-md pre[data-lang="output"] {
-  background: rgba(0, 0, 0, 0.2);
+  background: #0f1614;
   border-color: rgba(52, 211, 153, 0.1);
 }
 .claude-md pre[data-lang="output"]::before {
@@ -15046,6 +15057,8 @@ def active_chat_panel() -> rx.Component:
             overflow_y="auto",
             padding="0",
             width="100%",
+            position="relative",
+            z_index="1",
             style={
                 "&::-webkit-scrollbar": {"width": "3px"},
                 "&::-webkit-scrollbar-track": {"background": "transparent"},
