@@ -195,3 +195,8 @@ __pycache__/
 s
 .web/
 .claude/worktrees/cool-matsumoto/
+.claude/worktrees/competent-liskov/
+.claude/worktrees/hardcore-kowalevski/
+.claude/worktrees/interesting-booth/
+.claude/worktrees/quirky-goldstine/
+.claude/worktrees/suspicious-grothendieck/

@@ -1,6 +1,5 @@
 python-dotenv
-reflex==0.8.27
-google-genai
+reflex==0.8.28.post1
 reflex-local-auth
 psycopg2-binary
 sqlmodel
@@ -13,3 +12,4 @@ itsdangerous
 PyMuPDF
 python-docx
 duckduckgo-search
+dodopayments[webhooks]

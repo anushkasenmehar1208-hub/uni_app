@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura City — The Legendary Hub</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+canvas { display: block; }
+#overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 10;
+}
+#title {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  color: #ffd475; font-size: 18px; letter-spacing: 8px; text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255,180,50,0.6), 0 0 60px rgba(255,120,0,0.3);
+  z-index: 20; opacity: 0; animation: fadeIn 3s 1s forwards;
+  font-weight: 300;
+}
+#subtitle {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  color: rgba(255,212,117,0.5); font-size: 11px; letter-spacing: 12px; text-transform: uppercase;
+  z-index: 20; opacity: 0; animation: fadeIn 3s 2s forwards;
+}
+#controls {
+  position: fixed; top: 20px; right: 20px; color: rgba(255,212,117,0.4);
+  font-size: 11px; z-index: 20; text-align: right; letter-spacing: 2px;
+  line-height: 1.8;
+}
+@keyframes fadeIn { to { opacity: 1; } }
+#vignette {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none; z-index: 5;
+}
+#letterbox-top, #letterbox-bottom {
+  position: fixed; left: 0; width: 100%; height: 60px;
+  background: #000; z-index: 15; pointer-events: none;
+}
+#letterbox-top { top: 0; }
+#letterbox-bottom { bottom: 0; }
+</style>
+</head>
+<body>
+<div id="vignette"></div>
+<div id="letterbox-top"></div>
+<div id="letterbox-bottom"></div>
+<div id="title">A U R A &nbsp; C I T Y</div>
+<div id="subtitle">The Eternal Guardian Awaits</div>
+<div id="controls">
+  WASD — Move<br>
+  Mouse — Look<br>
+  Scroll — Zoom<br>
+  Click — Lock Cursor
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+
+// ============ SCENE SETUP ============
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0612);
+scene.fog = new THREE.FogExp2(0x0a0612, 0.004);
+
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 2000);
+camera.position.set(0, 12, 120);
+camera.lookAt(0, 25, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.8;
+document.body.appendChild(renderer.domElement);
+
+// ============ POST PROCESSING ============
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.6, 0.3
+);
+composer.addPass(bloomPass);
+
+// Chromatic aberration + color grading shader
+const colorGradeShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    time: { value: 0 }
+  },
+  vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float time;
+    varying vec2 vUv;
+    void main() {
+      vec2 uv = vUv;
+      float d = length(uv - 0.5);
+      float aberration = d * 0.003;
+      float r = texture2D(tDiffuse, uv + vec2(aberration, 0.0)).r;
+      float g = texture2D(tDiffuse, uv).g;
+      float b = texture2D(tDiffuse, uv - vec2(aberration, 0.0)).b;
+      vec3 col = vec3(r, g, b);
+      // Warm color grade
+      col = pow(col, vec3(0.95, 1.0, 1.1));
+      col *= vec3(1.05, 0.98, 0.92);
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `
+};
+composer.addPass(new ShaderPass(colorGradeShader));
+
+// ============ LIGHTING ============
+// Ambient
+scene.add(new THREE.AmbientLight(0x1a1030, 0.4));
+
+// Golden hour sun
+const sunLight = new THREE.DirectionalLight(0xffb844, 2.0);
+sunLight.position.set(-80, 60, -40);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.near = 1;
+sunLight.shadow.camera.far = 300;
+sunLight.shadow.camera.left = -150;
+sunLight.shadow.camera.right = 150;
+sunLight.shadow.camera.top = 150;
+sunLight.shadow.camera.bottom = -150;
+scene.add(sunLight);
+
+// Rim light (purple/blue back light)
+const rimLight = new THREE.DirectionalLight(0x6633ff, 1.2);
+rimLight.position.set(60, 40, 60);
+scene.add(rimLight);
+
+// Statue spotlight
+const statueSpot = new THREE.SpotLight(0xffd080, 4, 200, Math.PI / 6, 0.5, 1);
+statueSpot.position.set(0, 80, 30);
+statueSpot.target.position.set(0, 20, 0);
+statueSpot.castShadow = true;
+scene.add(statueSpot);
+scene.add(statueSpot.target);
+
+// Ground uplights for statue
+for (let i = 0; i < 6; i++) {
+  const angle = (i / 6) * Math.PI * 2;
+  const uplight = new THREE.PointLight(0xff8830, 2, 40, 2);
+  uplight.position.set(Math.cos(angle) * 12, 1, Math.sin(angle) * 12);
+  scene.add(uplight);
+}
+
+// Neon accent lights along roads
+const neonColors = [0x00ccff, 0xff6600, 0xffaa00, 0x8844ff];
+for (let i = 0; i < 40; i++) {
+  const side = i % 2 === 0 ? -1 : 1;
+  const z = 20 + (Math.floor(i / 2)) * 6;
+  const neon = new THREE.PointLight(neonColors[i % 4], 0.8, 15, 2);
+  neon.position.set(side * 8, 2, z);
+  scene.add(neon);
+}
+
+// ============ MATERIALS ============
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0x0c0c14, roughness: 0.3, metalness: 0.8
+});
+const roadMat = new THREE.MeshStandardMaterial({
+  color: 0x111122, roughness: 0.2, metalness: 0.9
+});
+const buildingMat = new THREE.MeshStandardMaterial({
+  color: 0x12101a, roughness: 0.3, metalness: 0.7
+});
+const glowMat = new THREE.MeshStandardMaterial({
+  color: 0xffaa44, emissive: 0xffaa44, emissiveIntensity: 2, roughness: 0.1
+});
+const blueGlowMat = new THREE.MeshStandardMaterial({
+  color: 0x2288ff, emissive: 0x2288ff, emissiveIntensity: 1.5, roughness: 0.1
+});
+const purpleGlowMat = new THREE.MeshStandardMaterial({
+  color: 0x8844ff, emissive: 0x8844ff, emissiveIntensity: 1.5, roughness: 0.1
+});
+const statueMat = new THREE.MeshStandardMaterial({
+  color: 0xd4af77, roughness: 0.25, metalness: 0.9
+});
+const statueGlowMat = new THREE.MeshStandardMaterial({
+  color: 0xffc860, emissive: 0xffaa30, emissiveIntensity: 3, roughness: 0.0, metalness: 1.0,
+  transparent: true, opacity: 0.7
+});
+const windowMat = new THREE.MeshStandardMaterial({
+  color: 0x88ccff, emissive: 0x4488cc, emissiveIntensity: 0.5, roughness: 0.1, metalness: 0.9
+});
+
+// ============ GROUND ============
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Main road (leading to statue)
+const mainRoad = new THREE.Mesh(new THREE.PlaneGeometry(16, 250), roadMat);
+mainRoad.rotation.x = -Math.PI / 2;
+mainRoad.position.set(0, 0.05, 80);
+scene.add(mainRoad);
+
+// Road glow strips
+for (let side = -1; side <= 1; side += 2) {
+  const strip = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.3, 250),
+    new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff6600, emissiveIntensity: 2 })
+  );
+  strip.rotation.x = -Math.PI / 2;
+  strip.position.set(side * 7.5, 0.06, 80);
+  scene.add(strip);
+
+  // Inner strip
+  const strip2 = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.15, 250),
+    new THREE.MeshStandardMaterial({ color: 0xffcc44, emissive: 0xffaa22, emissiveIntensity: 3 })
+  );
+  strip2.rotation.x = -Math.PI / 2;
+  strip2.position.set(side * 3, 0.06, 80);
+  scene.add(strip2);
+}
+
+// Cross roads
+for (let z = -60; z <= 100; z += 40) {
+  const crossRoad = new THREE.Mesh(new THREE.PlaneGeometry(300, 10), roadMat);
+  crossRoad.rotation.x = -Math.PI / 2;
+  crossRoad.position.set(0, 0.04, z);
+  scene.add(crossRoad);
+}
+
+// ============ STATUE PLATFORM ============
+// Circular plaza
+const plazaGeo = new THREE.CylinderGeometry(25, 28, 2, 64);
+const plazaMat = new THREE.MeshStandardMaterial({ color: 0x1a1528, roughness: 0.2, metalness: 0.8 });
+const plaza = new THREE.Mesh(plazaGeo, plazaMat);
+plaza.position.set(0, 1, 0);
+plaza.receiveShadow = true;
+scene.add(plaza);
+
+// Inner ring glow
+const ringGeo = new THREE.TorusGeometry(20, 0.3, 8, 64);
+const ring = new THREE.Mesh(ringGeo, glowMat);
+ring.rotation.x = -Math.PI / 2;
+ring.position.set(0, 2.1, 0);
+scene.add(ring);
+
+// Outer ring
+const ring2 = new THREE.Mesh(new THREE.TorusGeometry(26, 0.2, 8, 64), purpleGlowMat);
+ring2.rotation.x = -Math.PI / 2;
+ring2.position.set(0, 2.1, 0);
+scene.add(ring2);
+
+// Pedestal
+const pedestalGeo = new THREE.CylinderGeometry(5, 6.5, 8, 8);
+const pedestal = new THREE.Mesh(pedestalGeo, new THREE.MeshStandardMaterial({
+  color: 0x2a1f3a, roughness: 0.15, metalness: 0.9
+}));
+pedestal.position.set(0, 6, 0);
+pedestal.castShadow = true;
+scene.add(pedestal);
+
+// Pedestal glow ring
+const pedRing = new THREE.Mesh(new THREE.TorusGeometry(6, 0.25, 8, 32), glowMat);
+pedRing.rotation.x = -Math.PI / 2;
+pedRing.position.set(0, 10.1, 0);
+scene.add(pedRing);
+
+// ============ STATUE (The Guardian) ============
+const statueGroup = new THREE.Group();
+statueGroup.position.set(0, 10, 0);
+
+// Torso
+const torso = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2, 12, 8), statueMat);
+torso.position.y = 10;
+torso.castShadow = true;
+statueGroup.add(torso);
+
+// Chest plate (armor detail)
+const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(5.5, 6, 2), statueMat);
+chestPlate.position.set(0, 12, 0.5);
+statueGroup.add(chestPlate);
+
+// Shoulder armor left
+const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(2, 8, 8), statueMat);
+shoulderL.scale.set(1.2, 0.8, 1);
+shoulderL.position.set(-3.5, 15, 0);
+statueGroup.add(shoulderL);
+
+// Shoulder armor right
+const shoulderR = shoulderL.clone();
+shoulderR.position.set(3.5, 15, 0);
+statueGroup.add(shoulderR);
+
+// Head
+const head = new THREE.Mesh(new THREE.SphereGeometry(2, 12, 12), statueMat);
+head.scale.set(1, 1.15, 1);
+head.position.set(0, 18.5, 0);
+head.castShadow = true;
+statueGroup.add(head);
+
+// Crown / Helmet
+const crown = new THREE.Mesh(new THREE.ConeGeometry(2.5, 3, 6), statueMat);
+crown.position.set(0, 21, 0);
+statueGroup.add(crown);
+// Crown gem
+const crownGem = new THREE.Mesh(new THREE.OctahedronGeometry(0.6), glowMat);
+crownGem.position.set(0, 19.5, 2);
+statueGroup.add(crownGem);
+
+// Left arm raised in wave/aura pose
+const armGeoUpper = new THREE.CylinderGeometry(0.8, 1, 6, 8);
+const leftUpperArm = new THREE.Mesh(armGeoUpper, statueMat);
+leftUpperArm.position.set(-4.5, 14, 0);
+leftUpperArm.rotation.z = Math.PI / 3;
+statueGroup.add(leftUpperArm);
+
+const leftForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.8, 5, 8), statueMat);
+leftForearm.position.set(-6.5, 17, 0.5);
+leftForearm.rotation.z = Math.PI / 6;
+statueGroup.add(leftForearm);
+
+// Left hand (open palm)
+const leftHand = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2, 0.5), statueMat);
+leftHand.position.set(-7, 19.5, 0.5);
+statueGroup.add(leftHand);
+
+// Right arm raised in wave/aura pose
+const rightUpperArm = new THREE.Mesh(armGeoUpper, statueMat);
+rightUpperArm.position.set(4.5, 14, 0);
+rightUpperArm.rotation.z = -Math.PI / 3;
+statueGroup.add(rightUpperArm);
+
+const rightForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.8, 5, 8), statueMat);
+rightForearm.position.set(6.5, 17, 0.5);
+rightForearm.rotation.z = -Math.PI / 6;
+statueGroup.add(rightForearm);
+
+// Right hand
+const rightHand = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2, 0.5), statueMat);
+rightHand.position.set(7, 19.5, 0.5);
+statueGroup.add(rightHand);
+
+// Legs
+for (let side = -1; side <= 1; side += 2) {
+  const upperLeg = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1, 6, 8), statueMat);
+  upperLeg.position.set(side * 1.5, 3, 0);
+  statueGroup.add(upperLeg);
+  const lowerLeg = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.3, 5, 8), statueMat);
+  lowerLeg.position.set(side * 1.5, -1.5, 0);
+  statueGroup.add(lowerLeg);
+  // Boots
+  const boot = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 3), statueMat);
+  boot.position.set(side * 1.5, -4, 0.5);
+  statueGroup.add(boot);
+}
+
+// Cape
+const capeGeo = new THREE.PlaneGeometry(8, 18, 8, 12);
+const capeMat = new THREE.MeshStandardMaterial({
+  color: 0x2a0a4a, roughness: 0.6, metalness: 0.3, side: THREE.DoubleSide
+});
+const cape = new THREE.Mesh(capeGeo, capeMat);
+cape.position.set(0, 8, -2);
+// Deform cape vertices for flow
+const capePos = cape.geometry.attributes.position;
+for (let i = 0; i < capePos.count; i++) {
+  const y = capePos.getY(i);
+  const wave = Math.sin(y * 0.5) * 1.5;
+  capePos.setZ(i, capePos.getZ(i) - Math.abs(y * 0.15) + wave * 0.3);
+}
+cape.geometry.computeVertexNormals();
+statueGroup.add(cape);
+
+scene.add(statueGroup);
+
+// ============ AURA ENERGY EFFECT ============
+// Aura shell (transparent glowing sphere)
+const auraSphere = new THREE.Mesh(
+  new THREE.SphereGeometry(12, 32, 32),
+  new THREE.MeshStandardMaterial({
+    color: 0xffaa30, emissive: 0xff8800, emissiveIntensity: 0.5,
+    transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false
+  })
+);
+auraSphere.position.set(0, 22, 0);
+scene.add(auraSphere);
+
+// Inner aura
+const auraInner = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 32, 32),
+  new THREE.MeshStandardMaterial({
+    color: 0xffcc44, emissive: 0xffaa00, emissiveIntensity: 1.0,
+    transparent: true, opacity: 0.06, side: THREE.DoubleSide, depthWrite: false
+  })
+);
+auraInner.position.set(0, 22, 0);
+scene.add(auraInner);
+
+// Aura particles (energy swirling around statue)
+const auraParticleCount = 3000;
+const auraGeo = new THREE.BufferGeometry();
+const auraPositions = new Float32Array(auraParticleCount * 3);
+const auraSizes = new Float32Array(auraParticleCount);
+const auraAngles = new Float32Array(auraParticleCount);
+const auraRadii = new Float32Array(auraParticleCount);
+const auraSpeeds = new Float32Array(auraParticleCount);
+const auraYOffsets = new Float32Array(auraParticleCount);
+
+for (let i = 0; i < auraParticleCount; i++) {
+  auraAngles[i] = Math.random() * Math.PI * 2;
+  auraRadii[i] = 3 + Math.random() * 15;
+  auraSpeeds[i] = 0.2 + Math.random() * 0.8;
+  auraYOffsets[i] = Math.random() * 30 + 5;
+  auraSizes[i] = 0.5 + Math.random() * 2;
+  auraPositions[i * 3] = Math.cos(auraAngles[i]) * auraRadii[i];
+  auraPositions[i * 3 + 1] = auraYOffsets[i] + 10;
+  auraPositions[i * 3 + 2] = Math.sin(auraAngles[i]) * auraRadii[i];
+}
+auraGeo.setAttribute('position', new THREE.BufferAttribute(auraPositions, 3));
+auraGeo.setAttribute('size', new THREE.BufferAttribute(auraSizes, 1));
+
+const auraParticleMat = new THREE.ShaderMaterial({
+  uniforms: { time: { value: 0 }, color: { value: new THREE.Color(0xffaa33) } },
+  vertexShader: `
+    attribute float size;
+    uniform float time;
+    varying float vAlpha;
+    void main() {
+      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+      float dist = length(position.xz);
+      vAlpha = smoothstep(15.0, 3.0, dist) * (0.3 + 0.7 * sin(time * 2.0 + position.y * 0.5));
+      gl_PointSize = size * (200.0 / -mvPos.z);
+      gl_Position = projectionMatrix * mvPos;
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 color;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - 0.5) * 2.0;
+      float alpha = (1.0 - d) * vAlpha;
+      if (alpha < 0.01) discard;
+      gl_FragColor = vec4(color, alpha * 0.6);
+    }
+  `,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+});
+const auraParticles = new THREE.Points(auraGeo, auraParticleMat);
+scene.add(auraParticles);
+
+// Energy beams from hands
+function createEnergyBeam(x, y, z) {
+  const beamGeo = new THREE.CylinderGeometry(0.3, 1.5, 8, 8, 1, true);
+  const beamMat = new THREE.MeshStandardMaterial({
+    color: 0xffcc44, emissive: 0xffaa00, emissiveIntensity: 3,
+    transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false
+  });
+  const beam = new THREE.Mesh(beamGeo, beamMat);
+  beam.position.set(x, y, z);
+  return beam;
+}
+const leftBeam = createEnergyBeam(-7, 33, 0.5);
+const rightBeam = createEnergyBeam(7, 33, 0.5);
+scene.add(leftBeam);
+scene.add(rightBeam);
+
+// Floating energy runes around statue
+const runeCount = 12;
+const runes = [];
+for (let i = 0; i < runeCount; i++) {
+  const angle = (i / runeCount) * Math.PI * 2;
+  const runeGeo = new THREE.RingGeometry(0.8, 1.2, 6);
+  const rune = new THREE.Mesh(runeGeo, new THREE.MeshStandardMaterial({
+    color: 0xffcc44, emissive: 0xffaa00, emissiveIntensity: 2,
+    transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false
+  }));
+  rune.position.set(Math.cos(angle) * 10, 15 + Math.sin(angle * 3) * 5, Math.sin(angle) * 10);
+  rune.lookAt(0, 20, 0);
+  rune.userData = { baseAngle: angle, radius: 10, yBase: 15 + Math.sin(angle * 3) * 5 };
+  scene.add(rune);
+  runes.push(rune);
+}
+
+// ============ BUILDINGS ============
+function createBuilding(x, z, w, d, h, style) {
+  const group = new THREE.Group();
+
+  // Main structure
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const mat = buildingMat.clone();
+  if (style === 'dark') mat.color.set(0x0e0a18);
+  if (style === 'light') mat.color.set(0x1a1530);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = h / 2;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  group.add(mesh);
+
+  // Windows (emissive strips)
+  const windowRows = Math.floor(h / 4);
+  for (let row = 0; row < windowRows; row++) {
+    for (let face = 0; face < 4; face++) {
+      const winGeo = new THREE.PlaneGeometry(w * 0.7, 1.2);
+      const winColors = [0x88ccff, 0xffaa44, 0x44aaff, 0xff8844];
+      const wMat = new THREE.MeshStandardMaterial({
+        color: winColors[face % winColors.length],
+        emissive: winColors[face % winColors.length],
+        emissiveIntensity: 0.3 + Math.random() * 0.5,
+        transparent: true, opacity: 0.6
+      });
+      const win = new THREE.Mesh(winGeo, wMat);
+      const y = 3 + row * 4;
+      if (face === 0) { win.position.set(0, y, d / 2 + 0.05); }
+      else if (face === 1) { win.position.set(0, y, -d / 2 - 0.05); win.rotation.y = Math.PI; }
+      else if (face === 2) {
+        win.geometry = new THREE.PlaneGeometry(d * 0.7, 1.2);
+        win.position.set(w / 2 + 0.05, y, 0); win.rotation.y = Math.PI / 2;
+      }
+      else {
+        win.geometry = new THREE.PlaneGeometry(d * 0.7, 1.2);
+        win.position.set(-w / 2 - 0.05, y, 0); win.rotation.y = -Math.PI / 2;
+      }
+      group.add(win);
+    }
+  }
+
+  // Rooftop glow accent
+  const roofGlow = new THREE.Mesh(
+    new THREE.BoxGeometry(w + 1, 0.5, d + 1),
+    new THREE.MeshStandardMaterial({
+      color: 0xff8833, emissive: 0xff6600, emissiveIntensity: 1.5,
+      transparent: true, opacity: 0.4
+    })
+  );
+  roofGlow.position.y = h + 0.25;
+  group.add(roofGlow);
+
+  // Antenna/spire for tall buildings
+  if (h > 30) {
+    const spire = new THREE.Mesh(
+      new THREE.ConeGeometry(0.5, h * 0.3, 4),
+      new THREE.MeshStandardMaterial({
+        color: 0x221133, roughness: 0.2, metalness: 0.9
+      })
+    );
+    spire.position.y = h + h * 0.15;
+    group.add(spire);
+
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.6, 8, 8), glowMat);
+    tip.position.y = h + h * 0.3;
+    group.add(tip);
+  }
+
+  group.position.set(x, 0, z);
+  return group;
+}
+
+// City layout - buildings arranged symmetrically around the statue
+const buildings = [];
+
+// Inner ring (closest to statue, shorter elegant buildings)
+const innerBuildings = [
+  { x: -25, z: -15, w: 10, d: 10, h: 25, s: 'light' },
+  { x: 25, z: -15, w: 10, d: 10, h: 25, s: 'light' },
+  { x: -20, z: 20, w: 8, d: 8, h: 20, s: 'light' },
+  { x: 20, z: 20, w: 8, d: 8, h: 20, s: 'light' },
+  { x: -30, z: 5, w: 12, d: 8, h: 30, s: 'dark' },
+  { x: 30, z: 5, w: 12, d: 8, h: 30, s: 'dark' },
+];
+
+// Mid ring
+const midBuildings = [
+  { x: -50, z: -30, w: 15, d: 12, h: 45, s: 'dark' },
+  { x: 50, z: -30, w: 15, d: 12, h: 45, s: 'dark' },
+  { x: -45, z: 30, w: 12, d: 15, h: 40, s: 'light' },
+  { x: 45, z: 30, w: 12, d: 15, h: 40, s: 'light' },
+  { x: -55, z: 0, w: 14, d: 14, h: 50, s: 'dark' },
+  { x: 55, z: 0, w: 14, d: 14, h: 50, s: 'dark' },
+  { x: -40, z: -50, w: 10, d: 10, h: 35, s: 'light' },
+  { x: 40, z: -50, w: 10, d: 10, h: 35, s: 'light' },
+  { x: -35, z: 55, w: 12, d: 10, h: 30, s: 'dark' },
+  { x: 35, z: 55, w: 12, d: 10, h: 30, s: 'dark' },
+];
+
+// Outer ring (tallest skyscrapers)
+const outerBuildings = [
+  { x: -80, z: -50, w: 18, d: 15, h: 70, s: 'dark' },
+  { x: 80, z: -50, w: 18, d: 15, h: 70, s: 'dark' },
+  { x: -75, z: 40, w: 16, d: 16, h: 65, s: 'light' },
+  { x: 75, z: 40, w: 16, d: 16, h: 65, s: 'light' },
+  { x: -90, z: 0, w: 20, d: 18, h: 80, s: 'dark' },
+  { x: 90, z: 0, w: 20, d: 18, h: 80, s: 'dark' },
+  { x: -70, z: -80, w: 15, d: 15, h: 55, s: 'light' },
+  { x: 70, z: -80, w: 15, d: 15, h: 55, s: 'light' },
+  { x: -60, z: 70, w: 14, d: 14, h: 60, s: 'dark' },
+  { x: 60, z: 70, w: 14, d: 14, h: 60, s: 'dark' },
+  { x: -100, z: -25, w: 16, d: 12, h: 58, s: 'light' },
+  { x: 100, z: -25, w: 16, d: 12, h: 58, s: 'light' },
+  { x: -95, z: 60, w: 18, d: 14, h: 72, s: 'dark' },
+  { x: 95, z: 60, w: 18, d: 14, h: 72, s: 'dark' },
+];
+
+// Road-side buildings (along entrance road)
+const roadBuildings = [
+  { x: -18, z: 40, w: 8, d: 10, h: 22, s: 'light' },
+  { x: 18, z: 40, w: 8, d: 10, h: 22, s: 'light' },
+  { x: -20, z: 60, w: 10, d: 12, h: 28, s: 'dark' },
+  { x: 20, z: 60, w: 10, d: 12, h: 28, s: 'dark' },
+  { x: -22, z: 85, w: 12, d: 10, h: 35, s: 'light' },
+  { x: 22, z: 85, w: 12, d: 10, h: 35, s: 'light' },
+  { x: -25, z: 110, w: 14, d: 12, h: 42, s: 'dark' },
+  { x: 25, z: 110, w: 14, d: 12, h: 42, s: 'dark' },
+  { x: -20, z: 135, w: 10, d: 10, h: 30, s: 'light' },
+  { x: 20, z: 135, w: 10, d: 10, h: 30, s: 'light' },
+];
+
+[...innerBuildings, ...midBuildings, ...outerBuildings, ...roadBuildings].forEach(b => {
+  const building = createBuilding(b.x, b.z, b.w, b.d, b.h, b.s);
+  buildings.push(building);
+  scene.add(building);
+});
+
+// ============ DECORATIVE ELEMENTS ============
+
+// Floating holographic banners along the road
+for (let i = 0; i < 8; i++) {
+  for (let side = -1; side <= 1; side += 2) {
+    const bannerGeo = new THREE.PlaneGeometry(3, 6);
+    const bannerMat = new THREE.MeshStandardMaterial({
+      color: 0x4488ff, emissive: 0x2244aa, emissiveIntensity: 1,
+      transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false
+    });
+    const banner = new THREE.Mesh(bannerGeo, bannerMat);
+    banner.position.set(side * 10, 12, 30 + i * 15);
+    banner.rotation.y = side * 0.2;
+    scene.add(banner);
+
+    // Banner pole
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15, 0.15, 16, 6),
+      new THREE.MeshStandardMaterial({ color: 0x222233, metalness: 0.9, roughness: 0.2 })
+    );
+    pole.position.set(side * 10, 8, 30 + i * 15);
+    scene.add(pole);
+  }
+}
+
+// Pillar monuments leading to statue
+for (let i = 0; i < 6; i++) {
+  for (let side = -1; side <= 1; side += 2) {
+    const pillar = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 1, 8, 6),
+      new THREE.MeshStandardMaterial({ color: 0x1a1528, roughness: 0.2, metalness: 0.8 })
+    );
+    pillar.position.set(side * 6, 4, 15 + i * 8);
+    scene.add(pillar);
+
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.6, 8, 8),
+      i % 2 === 0 ? glowMat : purpleGlowMat
+    );
+    orb.position.set(side * 6, 8.5, 15 + i * 8);
+    scene.add(orb);
+  }
+}
+
+// Floating crystals above the statue
+const crystals = [];
+for (let i = 0; i < 5; i++) {
+  const angle = (i / 5) * Math.PI * 2;
+  const crystal = new THREE.Mesh(
+    new THREE.OctahedronGeometry(1.5, 0),
+    statueGlowMat.clone()
+  );
+  crystal.position.set(
+    Math.cos(angle) * 6,
+    38 + Math.sin(angle * 2) * 2,
+    Math.sin(angle) * 6
+  );
+  crystal.userData = { baseAngle: angle, baseY: 38 + Math.sin(angle * 2) * 2 };
+  scene.add(crystal);
+  crystals.push(crystal);
+}
+
+// ============ ATMOSPHERIC PARTICLES (dust/fireflies) ============
+const dustCount = 2000;
+const dustGeo = new THREE.BufferGeometry();
+const dustPositions = new Float32Array(dustCount * 3);
+const dustVelocities = [];
+for (let i = 0; i < dustCount; i++) {
+  dustPositions[i * 3] = (Math.random() - 0.5) * 250;
+  dustPositions[i * 3 + 1] = Math.random() * 60 + 2;
+  dustPositions[i * 3 + 2] = (Math.random() - 0.5) * 250;
+  dustVelocities.push({
+    x: (Math.random() - 0.5) * 0.02,
+    y: (Math.random() - 0.5) * 0.01 + 0.005,
+    z: (Math.random() - 0.5) * 0.02
+  });
+}
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+const dustMat = new THREE.PointsMaterial({
+  color: 0xffcc66, size: 0.4, transparent: true, opacity: 0.4,
+  blending: THREE.AdditiveBlending, depthWrite: false
+});
+const dust = new THREE.Points(dustGeo, dustMat);
+scene.add(dust);
+
+// ============ SKY / BACKGROUND ============
+// Gradient sky sphere
+const skyGeo = new THREE.SphereGeometry(500, 32, 32);
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  uniforms: { time: { value: 0 } },
+  vertexShader: `varying vec3 vWorldPos; void main() { vWorldPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+  fragmentShader: `
+    varying vec3 vWorldPos;
+    uniform float time;
+    void main() {
+      float y = normalize(vWorldPos).y;
+      vec3 bottom = vec3(0.08, 0.02, 0.12);
+      vec3 mid = vec3(0.15, 0.05, 0.2);
+      vec3 top = vec3(0.02, 0.01, 0.06);
+      vec3 col = mix(bottom, mid, smoothstep(-0.1, 0.3, y));
+      col = mix(col, top, smoothstep(0.3, 0.8, y));
+      // Subtle warm glow near horizon
+      float horizonGlow = exp(-abs(y) * 8.0) * 0.4;
+      col += vec3(0.4, 0.15, 0.05) * horizonGlow;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `
+});
+scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+// ============ CAMERA CONTROLS ============
+let cameraAngle = 0;
+let cameraRadius = 120;
+let cameraHeight = 12;
+let targetAngle = 0;
+let targetRadius = 120;
+let targetHeight = 12;
+let isPointerLocked = false;
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let yaw = Math.PI; // facing toward statue
+let pitch = -0.05;
+
+renderer.domElement.addEventListener('click', () => {
+  renderer.domElement.requestPointerLock();
+});
+
+document.addEventListener('pointerlockchange', () => {
+  isPointerLocked = document.pointerLockElement === renderer.domElement;
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isPointerLocked) return;
+  yaw -= e.movementX * 0.002;
+  pitch -= e.movementY * 0.002;
+  pitch = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, pitch));
+});
+
+document.addEventListener('keydown', (e) => {
+  switch (e.code) {
+    case 'KeyW': moveForward = true; break;
+    case 'KeyS': moveBackward = true; break;
+    case 'KeyA': moveLeft = true; break;
+    case 'KeyD': moveRight = true; break;
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  switch (e.code) {
+    case 'KeyW': moveForward = false; break;
+    case 'KeyS': moveBackward = false; break;
+    case 'KeyA': moveLeft = false; break;
+    case 'KeyD': moveRight = false; break;
+  }
+});
+
+document.addEventListener('wheel', (e) => {
+  targetRadius += e.deltaY * 0.1;
+  targetRadius = Math.max(20, Math.min(200, targetRadius));
+});
+
+// ============ ANIMATION LOOP ============
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const dt = clock.getDelta();
+
+  // Camera movement
+  if (isPointerLocked) {
+    const speed = 0.5;
+    const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+    const right = new THREE.Vector3(-Math.cos(yaw), 0, Math.sin(yaw));
+
+    if (moveForward) camera.position.addScaledVector(forward, speed);
+    if (moveBackward) camera.position.addScaledVector(forward, -speed);
+    if (moveLeft) camera.position.addScaledVector(right, -speed);
+    if (moveRight) camera.position.addScaledVector(right, speed);
+
+    camera.position.y = Math.max(3, camera.position.y);
+    camera.rotation.order = 'YXZ';
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch;
+  } else {
+    // Cinematic orbit
+    cameraAngle += 0.002;
+    cameraRadius += (targetRadius - cameraRadius) * 0.02;
+    camera.position.x = Math.sin(cameraAngle) * cameraRadius * 0.3;
+    camera.position.z = 80 + Math.cos(cameraAngle) * cameraRadius * 0.5;
+    camera.position.y = 12 + Math.sin(t * 0.15) * 3;
+    camera.lookAt(0, 22, 0);
+  }
+
+  // Animate aura particles
+  const positions = auraParticles.geometry.attributes.position.array;
+  for (let i = 0; i < auraParticleCount; i++) {
+    auraAngles[i] += auraSpeeds[i] * 0.015;
+    const r = auraRadii[i] + Math.sin(t * auraSpeeds[i] + i) * 2;
+    const y = auraYOffsets[i] + Math.sin(t * 0.5 + i * 0.1) * 3 + 10;
+    positions[i * 3] = Math.cos(auraAngles[i]) * r;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = Math.sin(auraAngles[i]) * r;
+  }
+  auraParticles.geometry.attributes.position.needsUpdate = true;
+  auraParticleMat.uniforms.time.value = t;
+
+  // Animate aura sphere breathing
+  const breathe = 1 + Math.sin(t * 1.5) * 0.08;
+  auraSphere.scale.setScalar(breathe);
+  auraInner.scale.setScalar(1 + Math.sin(t * 2) * 0.12);
+
+  // Energy beams pulse
+  leftBeam.scale.y = 1 + Math.sin(t * 3) * 0.3;
+  rightBeam.scale.y = 1 + Math.sin(t * 3 + 1) * 0.3;
+  leftBeam.material.opacity = 0.2 + Math.sin(t * 4) * 0.15;
+  rightBeam.material.opacity = 0.2 + Math.sin(t * 4 + 1) * 0.15;
+
+  // Floating runes orbit
+  runes.forEach((rune, i) => {
+    const a = rune.userData.baseAngle + t * 0.3;
+    rune.position.x = Math.cos(a) * rune.userData.radius;
+    rune.position.z = Math.sin(a) * rune.userData.radius;
+    rune.position.y = rune.userData.yBase + Math.sin(t * 2 + i) * 1.5;
+    rune.lookAt(0, 20, 0);
+    rune.material.opacity = 0.3 + Math.sin(t * 2 + i * 0.5) * 0.3;
+  });
+
+  // Floating crystals
+  crystals.forEach((crystal, i) => {
+    const a = crystal.userData.baseAngle + t * 0.5;
+    crystal.position.x = Math.cos(a) * 6;
+    crystal.position.z = Math.sin(a) * 6;
+    crystal.position.y = crystal.userData.baseY + Math.sin(t * 1.5 + i) * 2;
+    crystal.rotation.y = t * 0.8 + i;
+    crystal.rotation.x = t * 0.5;
+  });
+
+  // Dust particles drift
+  const dPos = dust.geometry.attributes.position.array;
+  for (let i = 0; i < dustCount; i++) {
+    dPos[i * 3] += dustVelocities[i].x;
+    dPos[i * 3 + 1] += dustVelocities[i].y;
+    dPos[i * 3 + 2] += dustVelocities[i].z;
+    if (dPos[i * 3 + 1] > 65) dPos[i * 3 + 1] = 2;
+    if (Math.abs(dPos[i * 3]) > 130) dPos[i * 3] *= -0.9;
+    if (Math.abs(dPos[i * 3 + 2]) > 130) dPos[i * 3 + 2] *= -0.9;
+  }
+  dust.geometry.attributes.position.needsUpdate = true;
+
+  // Update sky time
+  skyMat.uniforms.time.value = t;
+
+  // Render
+  composer.render();
+}
+
+animate();
+
+// ============ RESIZE ============
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
