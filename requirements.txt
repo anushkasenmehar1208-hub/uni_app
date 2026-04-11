@@ -1,5 +1,5 @@
 python-dotenv
-reflex==0.8.27
+reflex==0.8.28.post1
 reflex-local-auth
 psycopg2-binary
 sqlmodel
