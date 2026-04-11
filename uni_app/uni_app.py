@@ -4095,6 +4095,9 @@ class AppState(reflex_local_auth.LocalAuthState):
     show_image_modal: bool = False
     image_modal_url: str = ""
 
+    # Voice chat (fullscreen overlay from composer mic — no separate /alex-live step)
+    show_voice_overlay: bool = False
+
     # Document upload state
     _document_data: bytes = b""
     document_name: str = ""
@@ -9309,28 +9312,21 @@ Quality rules:
     def set_other_degree_text(self, value: str):
         self.other_degree_text = value
 
-    @rx.event
-    def on_load_alex_live(self):
-        """Build voice session context from text chat state and inject alex_voice.js."""
+    def _build_alex_voice_boot_script(self, *, auto_start_voice: bool) -> str:
+        """Build JS that configures voice APIs and loads alex_voice.js (optionally starts the call)."""
         import secrets as _secrets
 
-        if self._uid() < 0:
-            return rx.redirect(auth_routes.LOGIN_ROUTE)
-
-        # /alex-live saves voice transcripts via API; workspace on_load may skip hydration
-        # when scope+session match — chat_history would stay stale without this reset.
+        # Voice sync uses chat session; reset hydration keys so chat_history is not stale.
         self._last_hydrated_scope = ""
         self._last_hydrated_session_id = ""
 
         student_name = self.inferred_name or "Student"
 
-        # Full system prompt — same knowledge as semester text AI + voice mode rules
         try:
             base_system = self._alex_system_prompt(student_name)
         except Exception:
             base_system = _ALEX_VOICE_SYSTEM
 
-        # Include compressed semester memory so Alex remembers old conversations in voice
         scope_summary = self._get_scope_summary(self._uid(), self.active_scope or "home")
         memory_block = f"\n\n─── Student Semester Memory ───\n{scope_summary}" if scope_summary else ""
 
@@ -9343,16 +9339,13 @@ Quality rules:
             "numbered lists, or headers — speak naturally as if on a phone call."
         )
 
-        # Last 20 messages from text chat to continue the conversation
         raw = list(self.chat_history[-20:]) if len(self.chat_history) > 20 else list(self.chat_history)
         api_history = [
             {"role": m["role"], "content": str(m.get("content", ""))}
             for m in raw
             if m.get("role") in ("user", "assistant") and m.get("content")
-            # skip voice_session summary messages — they're display-only
         ]
 
-        # Store context server-side keyed by a fresh voice session key
         voice_key = _secrets.token_urlsafe(16)
         _alex_voice_sessions[voice_key] = {
             "system": voice_system,
@@ -9361,18 +9354,17 @@ Quality rules:
             "uid": self._uid(),
             "session_id": int(self.current_session_id) if self.current_session_id else -1,
             "scope": self.active_scope or "",
-            "pre_loaded_count": len(api_history),  # boundary: new voice msgs start here
+            "pre_loaded_count": len(api_history),
             "_created": time.time(),
         }
 
-        # Determine voice access (optional commercial gates for production)
         if ALEX_VOICE_COMMERCIAL_GATES:
             is_premium = self.has_premium_access
             is_home = (self.active_scope or "home") == "home"
 
             if is_premium:
                 voice_allowed = True
-                remaining_sec = -1  # unlimited
+                remaining_sec = -1
                 block_reason = ""
             elif is_home:
                 voice_allowed = False
@@ -9393,8 +9385,11 @@ Quality rules:
             block_reason = ""
 
         api_base = os.getenv("REFLEX_API_URL", os.getenv("API_URL", "http://localhost:8000")).rstrip("/")
-        _alex_boot_js = (
-            f"window.ALEX_API_BASE = {json.dumps(api_base)};"
+        overlay_flag = "window.__alex_overlay_mode=true;" if auto_start_voice else "window.__alex_overlay_mode=false;"
+        onload_extra = "if(window.toggleAlexVoice)window.toggleAlexVoice();" if auto_start_voice else ""
+        return (
+            overlay_flag
+            + f"window.ALEX_API_BASE = {json.dumps(api_base)};"
             f"window.ALEX_VOICE_KEY = {json.dumps(voice_key)};"
             f"window.ALEX_VOICE_ALLOWED = {str(bool(voice_allowed)).lower()};"
             f"window.ALEX_VOICE_REMAINING_SEC = {int(remaining_sec)};"
@@ -9407,12 +9402,38 @@ Quality rules:
             "var s=document.createElement('script');"
             "s.id='_alex_voice_script';"
             "s.src='/alex_voice.js?v='+Date.now();"
-            "s.onload=function(){console.log('[AlexVoice] loaded OK');};"
+            "s.onload=function(){console.log('[AlexVoice] loaded OK');"
+            + onload_extra
+            + "};"
             "s.onerror=function(){console.error('[AlexVoice] FAILED to load /alex_voice.js');};"
             "document.head.appendChild(s);"
             "})();"
         )
-        return rx.call_script(_alex_boot_js)
+
+    @rx.event
+    async def open_voice_chat(self):
+        """Open voice UI over the chat workspace and start the session (mic prompt)."""
+        if self._uid() < 0:
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            return
+        boot = self._build_alex_voice_boot_script(auto_start_voice=True)
+        self.show_voice_overlay = True
+        yield rx.call_script(boot)
+
+    @rx.event
+    def close_voice_overlay_ui(self):
+        """Hide voice overlay after the call ends (invoked from alex_voice.js bridge)."""
+        self.show_voice_overlay = False
+        return rx.call_script("window.__alex_overlay_mode=false;")
+
+    @rx.event
+    async def close_voice_chat(self):
+        """User closed the overlay (X) — stop audio/mic then hide."""
+        yield rx.call_script(
+            "try{if(window.stopAlexVoiceSession)window.stopAlexVoiceSession();}catch(e){}"
+        )
+        self.show_voice_overlay = False
+        yield rx.call_script("window.__alex_overlay_mode=false;")
 
     @rx.event
     async def on_load_free(self):
@@ -13901,10 +13922,10 @@ def chat_input_field() -> rx.Component:
                     "&::-webkit-scrollbar": {"display": "none"},
                 },
             ),
-            # Mic button — opens Alex Live voice chat
-            rx.link(
+            # Mic — opens voice chat immediately (fullscreen overlay)
+            rx.box(
                 rx.icon(tag="mic", size=15, color="rgba(255,255,255,0.45)"),
-                href="/alex-live",
+                on_click=AppState.open_voice_chat,
                 display="flex",
                 align_items="center",
                 justify_content="center",
@@ -13914,6 +13935,8 @@ def chat_input_field() -> rx.Component:
                 flex_shrink="0",
                 align_self="flex-end",
                 margin_bottom="6px",
+                role="button",
+                aria_label="Start voice chat",
                 style={
                     "background": "rgba(255,255,255,0.06)",
                     "border": "none",
@@ -15053,6 +15076,7 @@ def active_chat_panel() -> rx.Component:
         tier_status_bar(),
         pricing_modal(),
         image_preview_modal(),
+        alex_voice_overlay_panel(),
         # ── Feedback dialog (like/dislike) ──
         rx.cond(
             AppState.feedback_msg_index >= 0,
@@ -22450,13 +22474,48 @@ async def alex_voice_sync(request: Request):
 api.add_route("/api/alex-voice-sync", alex_voice_sync, methods=["POST"])
 
 
-def alex_live_page() -> rx.Component:
-    return rx.box(
+def alex_voice_overlay_panel() -> rx.Component:
+    """Fullscreen voice UI over chat; opened from composer mic (session boots via open_voice_chat)."""
+    return rx.cond(
+        AppState.show_voice_overlay,
+        rx.box(
+            rx.button(
+                rx.icon(tag="x", size=20, color="rgba(255,255,255,0.65)"),
+                on_click=AppState.close_voice_chat,
+                variant="ghost",
+                position="absolute",
+                top="12px",
+                right="12px",
+                z_index="2102",
+                width="44px",
+                height="44px",
+                min_width="44px",
+                padding="0",
+                border_radius="12px",
+                style={
+                    "cursor": "pointer",
+                    "_hover": {"background": "rgba(255,255,255,0.08)"},
+                },
+            ),
+            rx.button(
+                on_click=AppState.close_voice_overlay_ui,
+                id="alex-voice-overlay-close-bridge",
+                style={
+                    "display": "block",
+                    "position": "absolute",
+                    "width": "1px",
+                    "height": "1px",
+                    "padding": "0",
+                    "margin": "0",
+                    "border": "none",
+                    "overflow": "hidden",
+                    "clip": "rect(0,0,0,0)",
+                    "opacity": "0",
+                    "pointer_events": "none",
+                },
+            ),
+            rx.box(
         rx.el.style("""
-            @keyframes idle-breathe {
-                0%,100% { transform: translate(-50%,-50%) scale(1);   opacity:.25; }
-                50%      { transform: translate(-50%,-50%) scale(1.1); opacity:.45; }
-            }
             @keyframes ai-ripple {
                 0%   { transform: translate(-50%,-50%) scale(.85); opacity:.85; }
                 100% { transform: translate(-50%,-50%) scale(2.4);  opacity:0;   }
@@ -22482,25 +22541,31 @@ def alex_live_page() -> rx.Component:
                 transform:translate(-50%,-50%);
             }
 
-            /* IDLE */
+            /* IDLE — static orb (no breathe / ripple) */
             #alex-orb.idle .orb-ring {
-                border:1.5px solid rgba(255,255,255,.18);
+                border:1px solid rgba(255,255,255,.12);
                 background:transparent;
-                animation: idle-breathe 3s ease-in-out infinite;
             }
-            #alex-orb.idle .r1 { width:80px;  height:80px;  animation-delay:0s; }
-            #alex-orb.idle .r2 { width:130px; height:130px; animation-delay:.5s; }
-            #alex-orb.idle .r3 { width:185px; height:185px; animation-delay:1s; }
+            #alex-orb.idle .r1 {
+                width:96px; height:96px;
+                opacity:1;
+            }
+            #alex-orb.idle .r2, #alex-orb.idle .r3 {
+                opacity:0;
+                visibility:hidden;
+            }
             #alex-orb.idle .orb-core {
                 position:absolute; top:50%; left:50%;
                 transform:translate(-50%,-50%);
-                width:62px; height:62px; border-radius:50%;
-                background:radial-gradient(circle, rgba(255,255,255,.35) 0%, rgba(255,255,255,.04) 100%);
-                animation: idle-breathe 3s ease-in-out infinite;
+                width:56px; height:56px; border-radius:50%;
+                background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.03) 100%);
+                box-shadow:0 0 32px rgba(255,255,255,.04);
             }
 
             /* AI SPEAKING — cyan */
             #alex-orb.ai-speaking .orb-ring {
+                opacity:1;
+                visibility:visible;
                 background:rgba(0,230,255,.35);
                 border:none;
                 animation: ai-ripple 1.5s ease-out infinite;
@@ -22519,6 +22584,8 @@ def alex_live_page() -> rx.Component:
 
             /* USER SPEAKING — orange */
             #alex-orb.user-speaking .orb-ring {
+                opacity:1;
+                visibility:visible;
                 background:rgba(255,155,40,.38);
                 border:none;
                 animation: user-ripple 1s ease-out infinite;
@@ -22598,6 +22665,7 @@ def alex_live_page() -> rx.Component:
             }
             #alex-type-send:hover:not(:disabled) { filter:brightness(1.06); }
             #alex-type-send:disabled { opacity:.4; cursor:not-allowed; filter:none; }
+            #alex-btn:disabled { opacity:.55; cursor:wait; }
         """),
         rx.center(
             rx.vstack(
@@ -22611,13 +22679,14 @@ def alex_live_page() -> rx.Component:
                     class_name="idle",
                 ),
                 # Status
-                rx.el.p("Tap to start voice chat", id="alex-status"),
+                rx.el.p("Connecting…", id="alex-status"),
                 # Transcript / last heard
                 rx.el.p(id="alex-transcript"),
-                # Button — click handler attached by alex_voice.js
+                # Ends call — click handler attached by alex_voice.js
                 rx.el.button(
-                    "GO LIVE WITH ALEX",
+                    "Connecting…",
                     id="alex-btn",
+                    disabled=True,
                 ),
                 rx.el.div(
                     rx.el.input(
@@ -22646,13 +22715,41 @@ def alex_live_page() -> rx.Component:
                 padding_y="0",
                 style={"gap": "28px"},
             ),
-            height="100vh",
+            width="100%",
+            height="100%",
+            min_height="100%",
             background="#090c10",
         ),
+                width="100%",
+                height="100%",
+                min_height="100%",
+                position="relative",
+            ),
+            width="100%",
+            height="100%",
+            position="fixed",
+            top="0",
+            left="0",
+            right="0",
+            bottom="0",
+            z_index="2100",
+            background="#090c10",
+        ),
+        rx.fragment(),
     )
 
 
-app.add_page(alex_live_page, route="/alex-live", title="Alex Live Tutor", image=FAVICON_32, on_load=AppState.on_load_alex_live)
+def alex_live_legacy_redirect() -> rx.Component:
+    """Old /alex-live URL — send users to the main workspace."""
+    return rx.box(
+        rx.script("window.location.replace('/');"),
+        width="100%",
+        height="100vh",
+        background="#090c10",
+    )
+
+
+app.add_page(alex_live_legacy_redirect, route="/alex-live", title="Alex AI", image=FAVICON_32)
 
 
 # ──────────────────────────────────────────────────────────────

@@ -217,6 +217,12 @@
 
     // Check access before requesting mic
     var allowed = (window.ALEX_VOICE_ALLOWED !== false);
+    var btnEarly = document.getElementById('alex-btn');
+    if (!allowed && btnEarly && btnEarly.textContent === 'Close' && window.__alex_overlay_mode) {
+      var br0 = document.getElementById('alex-voice-overlay-close-bridge');
+      if (br0) br0.click();
+      return;
+    }
     if (!allowed) {
       var reason = window.ALEX_VOICE_BLOCK_REASON || '';
       if (reason === 'home_blocked') {
@@ -229,6 +235,8 @@
         setStatus('Voice chat not available.');
       }
       if (upsellEnabled()) showUpgradeButton();
+      var b0 = document.getElementById('alex-btn');
+      if (b0) { b0.textContent = 'Close'; b0.disabled = false; b0.classList.remove('live'); }
       return;
     }
 
@@ -236,6 +244,9 @@
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
       alert('Microphone access is required for voice chat.');
+      var bMic = document.getElementById('alex-btn');
+      if (bMic) { bMic.textContent = 'Try again'; bMic.disabled = false; bMic.classList.remove('live'); }
+      setStatus('Microphone blocked');
       return;
     }
 
@@ -251,7 +262,7 @@
     hideUpgradeButton();
     setTypeUiEnabled(true);
     var btn = document.getElementById('alex-btn');
-    if (btn) { btn.textContent = 'END CALL'; btn.classList.add('live'); }
+    if (btn) { btn.disabled = false; btn.textContent = 'END CALL'; btn.classList.add('live'); }
 
     // Set auto-cutoff timer for non-premium users (only when commercial gates + upsell are on)
     var remainingSec = window.ALEX_VOICE_REMAINING_SEC;
@@ -745,6 +756,12 @@
     var tin = document.getElementById('alex-type-input');
     if (tin) tin.value = '';
     var btn = document.getElementById('alex-btn');
-    if (btn) { btn.textContent = 'GO LIVE WITH ALEX'; btn.classList.remove('live'); }
+    if (btn) { btn.textContent = 'GO LIVE WITH ALEX'; btn.classList.remove('live'); btn.disabled = false; }
+    if (window.__alex_overlay_mode) {
+      var bridge = document.getElementById('alex-voice-overlay-close-bridge');
+      if (bridge) bridge.click();
+    }
   }
+
+  window.stopAlexVoiceSession = function () { stopAlex(false); };
 })();
