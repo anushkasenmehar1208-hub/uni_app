@@ -79,14 +79,10 @@ APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Asia/Colombo").strip() or "Asia/Colomb
 
 SESSION_SECRET          = os.getenv("SESSION_SECRET", "change-me-in-production").strip() or "change-me-in-production"
 
-REQUIRED_ENVS = {
-    "GROQ_API_KEY": GROQ_API_KEY,
-    "SESSION_SECRET": SESSION_SECRET,
-}
-missing = [k for k, v in REQUIRED_ENVS.items() if not v]
-if missing:
-    logger.error(f"Missing required env vars: {missing}")
-    raise RuntimeError(f"Missing required env vars: {missing}")
+# Do not require GROQ_API_KEY at import time: Docker `reflex export` runs at image build
+# when secrets are often unavailable. Groq paths use `client is None` guards instead.
+if not GROQ_API_KEY:
+    logger.warning("GROQ_API_KEY is not set — Groq is disabled until the env var is configured.")
 
 if GROQ_API_KEY:
     client = Groq(api_key=GROQ_API_KEY)
