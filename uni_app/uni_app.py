@@ -14138,18 +14138,13 @@ _CLAUDE_MD_CSS = """
 }
 /* Language strip in normal flow so the first code line cannot sit under the header */
 .claude-md pre[data-lang] {
-  display: flex;
-  flex-direction: column;
   padding: 0;
-  /* `overflow:hidden` + radius caused a dark “wash” at the top of fenced blocks in Safari/WebKit */
+  /* Keep normal block flow; Safari/WebKit can mispaint code when <pre> is also a flex container */
   overflow-x: auto;
-  overflow-y: auto;
 }
 /* Language label — in-flow (not position:absolute) */
 .claude-md pre[data-lang]::before {
   content: attr(data-lang);
-  position: relative;
-  flex: 0 0 auto;
   display: block;
   padding: 8px 14px;
   background: rgba(255, 255, 255, 0.05);
@@ -14264,8 +14259,8 @@ _CLAUDE_MD_CSS = """
   vertical-align: baseline;
 }
 .claude-md pre[data-lang] code {
-  flex: 1 1 auto;
-  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding: 14px 18px 16px 18px;
   overflow-x: auto;
 }
