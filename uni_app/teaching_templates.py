@@ -105,8 +105,8 @@ def _scene_plant_sun() -> str:
         "<ellipse cx='340' cy='245' rx='40' ry='20' fill='#22c55e' stroke='#14532d' stroke-width='2'/>"
         "<path d='M 291 220 Q 260 150 230 130 Q 260 160 291 200 Z' fill='#4ade80' stroke='#14532d' stroke-width='2'/>"
         "<path d='M 291 220 Q 320 150 355 128 Q 330 165 300 205 Z' fill='#4ade80' stroke='#14532d' stroke-width='2'/>"
-        "<defs><marker id='marr' markerWidth='8' markerHeight='8' refX='7' refY='4' orient='auto'><polygon points='0,0 8,4 0,8' fill='#2563eb'/></marker></defs>"
-        "<line x1='420' y1='130' x2='340' y2='200' stroke='#2563eb' stroke-width='3' marker-end='url(#marr)'/>"
+        "<line x1='418' y1='128' x2='348' y2='190' stroke='#2563eb' stroke-width='3' stroke-linecap='round'/>"
+        "<polygon points='340,200 358,184 358,196' fill='#2563eb' stroke='#1e40af' stroke-width='1'/>"
         + _label(330, 155, "Light energy", size=11)
     )
 
@@ -171,13 +171,11 @@ def _scene_ball(*, physics: bool) -> str:
         return base + _leader(440, 160, 360, 220) + _label(400, 165, "Sphere / ball", anchor="end", size=11)
     return (
         base
-        + "<defs><marker id='mf' markerWidth='10' markerHeight='8' refX='9' refY='4' orient='auto'>"
-        "<polygon points='0,0 10,4 0,8' fill='#dc2626'/></marker>"
-        "<marker id='mb' markerWidth='10' markerHeight='8' refX='9' refY='4' orient='auto'>"
-        "<polygon points='0,0 10,4 0,8' fill='#2563eb'/></marker></defs>"
-        "<line x1='300' y1='265' x2='300' y2='355' stroke='#dc2626' stroke-width='4' marker-end='url(#mf)'/>"
+        + "<line x1='300' y1='278' x2='300' y2='338' stroke='#dc2626' stroke-width='4' stroke-linecap='round'/>"
+        "<polygon points='300,358 288,334 312,334' fill='#dc2626' stroke='#991b1b' stroke-width='1'/>"
         + _label(312, 320, "Weight (mg)", size=11)
-        + "<line x1='300' y1='333' x2='300' y2='250' stroke='#2563eb' stroke-width='4' marker-end='url(#mb)'/>"
+        + "<line x1='300' y1='322' x2='300' y2='262' stroke='#2563eb' stroke-width='4' stroke-linecap='round'/>"
+        "<polygon points='300,242 288,266 312,266' fill='#2563eb' stroke='#1e40af' stroke-width='1'/>"
         + _label(312, 270, "Normal N", size=11)
     )
 
@@ -267,9 +265,8 @@ def _scene_car_ball() -> str:
         "<circle cx='130' cy='292' r='24' fill='#1f2937' stroke='#0f172a' stroke-width='3'/>"
         "<circle cx='260' cy='292' r='24' fill='#1f2937' stroke='#0f172a' stroke-width='3'/>"
         "<circle cx='455' cy='268' r='46' fill='#facc15' stroke='#1e293b' stroke-width='3'/>"
-        "<defs><marker id='mp' markerWidth='10' markerHeight='8' refX='9' refY='4' orient='auto'>"
-        "<polygon points='0,0 10,4 0,8' fill='#16a34a'/></marker></defs>"
-        "<line x1='310' y1='258' x2='395' y2='258' stroke='#16a34a' stroke-width='4' marker-end='url(#mp)'/>"
+        "<line x1='318' y1='258' x2='382' y2='258' stroke='#16a34a' stroke-width='4' stroke-linecap='round'/>"
+        "<polygon points='398,258 378,248 378,268' fill='#16a34a' stroke='#166534' stroke-width='1'/>"
         + _leader(40, 150, 120, 220)
         + _label(30, 155, "Car (mass)", size=11)
         + _leader(520, 200, 455, 265)

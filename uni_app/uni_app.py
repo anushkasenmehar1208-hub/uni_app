@@ -757,10 +757,23 @@ def _to_num_list(values: Any) -> list[float]:
     return out
 
 
+def _repair_svg_marker_glitches(svg: str) -> str:
+    """Drop SVG markers + marker-end/start/mid — thick strokes + markers double-draw in WebKit/Blink."""
+    if not svg or "marker" not in svg.lower():
+        return svg
+    s = re.sub(r"(?is)<marker\b[^>]*>.*?</marker>", "", svg)
+    s = re.sub(r"\s+marker-end\s*=\s*(?:\"[^\"]*\"|'[^']*'|[^\s>]+)", "", s)
+    s = re.sub(r"\s+marker-start\s*=\s*(?:\"[^\"]*\"|'[^']*'|[^\s>]+)", "", s)
+    s = re.sub(r"\s+marker-mid\s*=\s*(?:\"[^\"]*\"|'[^']*'|[^\s>]+)", "", s)
+    s = re.sub(r"(?is)<defs>\s*</defs>", "", s)
+    return s
+
+
 def _sanitize_svg_markup(svg: str) -> str:
     raw = (svg or "").strip()
     if not raw or "<svg" not in raw.lower():
         return ""
+    raw = _repair_svg_marker_glitches(raw)
     # Remove risky content from model-generated SVG before rendering.
     raw = re.sub(r"(?is)<script[^>]*>.*?</script>", "", raw)
     raw = re.sub(r"(?is)<foreignObject[^>]*>.*?</foreignObject>", "", raw)
@@ -1445,25 +1458,55 @@ def _openrouter_generate_user_prompt(model: str, contents: str, max_tokens: int 
     return _openrouter_complete(model, [{"role": "user", "content": contents}], max_tokens=max_tokens)
 
 
-_SVG_DRAWING_SYSTEM_PROMPT = """You are an expert SVG illustrator. Output ONLY a raw <svg>...</svg> tag — nothing else.
+_SVG_DRAWING_SYSTEM_PROMPT = """You are an expert educational SVG illustrator for university tutoring.
+Output ONLY one raw <svg>...</svg> element — no markdown, no commentary, no code fences.
 
-Rules:
-- viewBox='0 0 320 220'
-- First element: <rect width='320' height='220' fill='#f3f4f6'/> (background)
-- Draw a clear, recognizable 2D cartoon-style illustration
-- Bold outlines: stroke='#111' stroke-width='3'
-- Use 4+ bright fill colors
-- Subject should be large and centered
-- Use: rect, circle, ellipse, path, polygon, line
-- Do NOT use: <text>, comments, CDATA, filters, gradients, clip-path, external refs
+Quality (teaching-first):
+- Root: xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 280'
+- Background: <rect width='480' height='280' fill='#f8fafc'/>
+- **Clear educational diagram**: large shapes, generous spacing, hierarchy (main idea centered)
+- Outlines: stroke='#0f172a' stroke-width='2.5' on major shapes; use rx/ry for rounded rects
+- Use **5+** distinct fills from: #3b82f6 #22c55e #f59e0b #ef4444 #8b5cf6 #06b6d4 #ec4899 #64748b
+- Elements: rect, circle, ellipse, path, polygon, line; optional **short** <text> labels (max 4 words each, font-family='sans-serif' font-size='11' or '12' fill='#0f172a')
+- Optional: one simple <linearGradient> for a single accent (no filters, no patterns)
+- **Arrows / forces:** NEVER use <marker>, marker-end, marker-start, or marker-mid (they render broken with thick strokes in browsers). Use <line stroke-linecap='round'> plus a separate <polygon> for each arrowhead.
+- Forbidden: script, foreignObject, animation, image href, clip-path, comments, CDATA, external URLs
 
-Example — a house:
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 220'><rect width='320' height='220' fill='#f3f4f6'/><rect x='100' y='100' width='120' height='100' rx='4' fill='#fbbf24' stroke='#111' stroke-width='3'/><polygon points='90,100 160,40 230,100' fill='#ef4444' stroke='#111' stroke-width='3'/><rect x='145' y='140' width='30' height='60' rx='3' fill='#92400e' stroke='#111' stroke-width='3'/><rect x='110' y='120' width='25' height='25' rx='2' fill='#bae6fd' stroke='#111' stroke-width='3'/><rect x='185' y='120' width='25' height='25' rx='2' fill='#bae6fd' stroke='#111' stroke-width='3'/><circle cx='250' cy='50' r='22' fill='#fde68a' stroke='#111' stroke-width='3'/></svg>
+The graphic must directly support the learning goal in the user message (and lesson context if given).
 
-Example — a tree:
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 220'><rect width='320' height='220' fill='#f3f4f6'/><rect x='145' y='120' width='30' height='80' rx='4' fill='#92400e' stroke='#111' stroke-width='3'/><ellipse cx='160' cy='90' rx='60' ry='50' fill='#22c55e' stroke='#111' stroke-width='3'/><ellipse cx='130' cy='100' rx='35' ry='30' fill='#16a34a' stroke='#111' stroke-width='3'/><ellipse cx='190' cy='100' rx='35' ry='30' fill='#16a34a' stroke='#111' stroke-width='3'/><circle cx='140' cy='80' r='6' fill='#ef4444' stroke='#111' stroke-width='2'/><circle cx='175' cy='75' r='6' fill='#ef4444' stroke='#111' stroke-width='2'/></svg>
+Minimal pattern (style reference only):
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 280'><rect width='480' height='280' fill='#f8fafc'/><rect x='40' y='60' width='160' height='90' rx='12' fill='#93c5fd' stroke='#0f172a' stroke-width='2.5'/><circle cx='340' cy='120' r='48' fill='#34d399' stroke='#0f172a' stroke-width='2.5'/><line x1='200' y1='105' x2='292' y2='120' stroke='#0f172a' stroke-width='2.5'/></svg>"""
 
-Now draw the requested subject in this same clean style."""
+ALEX_TEACHING_AUTO_SVG = os.getenv("ALEX_TEACHING_AUTO_SVG", "true").strip().lower() not in (
+    "0",
+    "false",
+    "no",
+    "off",
+)
+
+
+def _teaching_message_suggests_concept_figure(user_msg: str, response_text: str) -> bool:
+    """Heuristic: topic + answer text suggest a concept diagram would help (no extra user keywords)."""
+    if not ALEX_TEACHING_AUTO_SVG:
+        return False
+    u = (user_msg or "").lower()
+    r = (response_text or "").lower()
+    if len(response_text or "") < 360:
+        return False
+    hints = (
+        "circuit", "logic gate", "boolean", "transistor", "capacitor", "resistor", "amplifier",
+        "free-body", "free body", "vector", "velocity", "acceleration", "momentum", "force ",
+        "newton", "torque", "friction", "projectile",
+        "cell membrane", "mitochondria", "dna ", "rna ", "protein", "enzyme", "photosynthesis",
+        "neuron", "synapse", "heart ", "lung ", "kidney", "blood ",
+        "osi ", "tcp/ip", "tcpip", "packet", "router", "subnet",
+        "stack ", "heap ", "queue", "binary tree", "linked list", "hash table", "graph ",
+        "recursion", "big-o", "sorting algorithm",
+        "lifecycle", "waterfall", "feedback loop", "state machine",
+        "derivative", "integral", "triangle", "geometry", "coordinate",
+        "block cipher", "encryption", "hash function",
+    )
+    return any(h in u or h in r for h in hints)
 
 
 def _strip_think_tags(text: str) -> str:
@@ -1487,27 +1530,42 @@ def _postprocess_svg(svg: str) -> str:
     return _sanitize_svg_markup(svg)
 
 
-def _openrouter_generate_svg(subject: str) -> str:
-    """Generate an SVG drawing via OpenRouter with retry."""
+def _openrouter_generate_svg(subject: str, *, teaching_context: str = "") -> str:
+    """Generate an educational SVG via OpenRouter (multi-attempt, picks best-scoring output)."""
     if not OPENROUTER_API_KEY:
         return ""
-    prompt = f"Draw a 2D cartoon illustration of: {subject}"
+    subj = (subject or "").strip()[:240]
+    if not subj:
+        return ""
+    lines = [
+        f"Create a clear educational diagram or illustration for: {subj}",
+        "Prioritize teaching clarity over decoration.",
+    ]
+    ctx = (teaching_context or "").strip()
+    if ctx:
+        lines.append(f"Align labels and layout with this lesson excerpt:\n{ctx[:900]}")
+    prompt = "\n".join(lines)
     best_svg = ""
     best_score = 0
 
-    for attempt in range(2):
+    for attempt in range(3):
         try:
             retry_hint = ""
             if attempt > 0 and best_svg:
-                retry_hint = " Make it more detailed with more shapes and colors."
+                retry_hint = (
+                    "\nRefine: add more distinct labeled parts, stronger visual hierarchy, "
+                    "and ensure viewBox uses the full 480x280 canvas."
+                )
+            elif attempt > 0:
+                retry_hint = "\nUse more shapes and at least one short text label for the main concept."
             resp = _openrouter_complete(
                 OPENROUTER_DRAW_MODEL,
                 [
                     {"role": "system", "content": _SVG_DRAWING_SYSTEM_PROMPT},
                     {"role": "user", "content": prompt + retry_hint},
                 ],
-                max_tokens=4000,
-                temperature=0.6 + attempt * 0.15,
+                max_tokens=4500,
+                temperature=0.32 + attempt * 0.14,
             )
             raw = _strip_think_tags(resp.text or "")
             svg_match = re.search(r"<svg[^>]*>.*?</svg>", raw, re.DOTALL | re.IGNORECASE)
@@ -1518,19 +1576,29 @@ def _openrouter_generate_svg(subject: str) -> str:
                 continue
             s = svg.lower()
             score = 0
-            for token in ("<circle", "<ellipse", "<rect", "<path", "<polygon"):
+            for token in ("<circle", "<ellipse", "<rect", "<path", "<polygon", "<line"):
                 score += min(3, s.count(token))
             if "stroke-width" in s:
                 score += 2
-            if s.count("fill=") >= 3:
+            if s.count("fill=") >= 4:
+                score += 3
+            elif s.count("fill=") >= 3:
                 score += 2
-            if len(svg) > 400:
+            if "viewbox" in s and ("480" in s or "320" in s):
                 score += 2
+            if "<text" in s:
+                score += min(4, s.count("<text"))
+            if len(svg) > 550:
+                score += 3
+            elif len(svg) > 400:
+                score += 2
+            if "xmlns" in s:
+                score += 1
             logger.info(f"SVG gen attempt {attempt+1}: score={score}, len={len(svg)}")
             if score > best_score:
                 best_score = score
                 best_svg = svg
-            if score >= 10:
+            if score >= 12:
                 break
         except Exception as e:
             logger.error(f"SVG generation error (attempt {attempt+1}): {e}")
@@ -1539,6 +1607,20 @@ def _openrouter_generate_svg(subject: str) -> str:
             break
 
     return best_svg
+
+
+def _openrouter_generate_user_prompt_svg(subject: str) -> str:
+    """Wrapper for illustration blocks: subject-only pictorial SVG."""
+    return _openrouter_generate_svg(subject, teaching_context="")
+
+
+def _openrouter_generate_teaching_svg(user_msg: str, response_excerpt: str) -> str:
+    """SVG aligned to user question + assistant explanation excerpt."""
+    subj = (user_msg or "").strip()[:220]
+    excerpt = (response_excerpt or "").strip()[:1200]
+    if not subj:
+        return ""
+    return _openrouter_generate_svg(subj, teaching_context=excerpt)
 
 
 _SCHEMATIC_SPEC_SYSTEM_PROMPT = """You create compact JSON specs for educational schematic diagrams.
@@ -1822,14 +1904,22 @@ def _render_schematic_spec_svg(spec: dict[str, Any]) -> str:
         ax2 = x1 + dx * ratio_end
         ay2 = y1 + dy_raw * ratio_end
 
-        marker_id = f"ah{seen_pairs}"
+        seg_l = ((ax2 - ax1) ** 2 + (ay2 - ay1) ** 2) ** 0.5
+        if seg_l < 1e-6:
+            continue
+        ux, uy = (ax2 - ax1) / seg_l, (ay2 - ay1) / seg_l
+        tip_back = 14.0
+        stem_x2 = ax2 - ux * tip_back
+        stem_y2 = ay2 - uy * tip_back
+        bx, by = ax2 - ux * 5.5, ay2 - uy * 5.5
+        px, py = -uy * 8.0, ux * 8.0
         arrow_parts.append(
-            f"<defs><marker id='{marker_id}' markerWidth='10' markerHeight='8' refX='8' refY='4' orient='auto'>"
-            f"<polygon points='0,0 10,4 0,8' fill='{color}'/></marker></defs>"
+            f"<line x1='{ax1:.1f}' y1='{ay1:.1f}' x2='{stem_x2:.1f}' y2='{stem_y2:.1f}' "
+            f"stroke='{color}' stroke-width='4' stroke-linecap='round'/>"
         )
         arrow_parts.append(
-            f"<line x1='{ax1:.1f}' y1='{ay1:.1f}' x2='{ax2:.1f}' y2='{ay2:.1f}' "
-            f"stroke='{color}' stroke-width='4' marker-end='url(#{marker_id})'/>"
+            f"<polygon points='{ax2:.1f},{ay2:.1f} {bx+px:.1f},{by+py:.1f} {bx-px:.1f},{by-py:.1f}' "
+            f"fill='{color}' stroke='#1e293b' stroke-width='1'/>"
         )
         legend_entries.append((color, label))
         seen_pairs += 1
@@ -8402,9 +8492,10 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                 "<rect width='360' height='230' fill='#e0f2fe'/>"
                 "<ellipse cx='110' cy='170' rx='70' ry='24' fill='#60a5fa'/>"
                 "<polygon points='220,180 280,90 330,180' fill='#a16207' stroke='#0b0b0b' stroke-width='3'/>"
-                "<path d='M90 165 C150 80 250 70 300 125' fill='none' stroke='#0b0b0b' stroke-width='3' marker-end='url(#arr)'/>"
-                "<path d='M285 95 C245 60 195 55 155 95' fill='none' stroke='#0b0b0b' stroke-width='3' marker-end='url(#arr)'/>"
-                "<defs><marker id='arr' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='6' markerHeight='6' orient='auto-start-reverse'><path d='M0 0 L10 5 L0 10 z' fill='#0b0b0b'/></marker></defs>"
+                "<path d='M90 165 C150 80 250 70 275 115' fill='none' stroke='#0b0b0b' stroke-width='3' stroke-linecap='round'/>"
+                "<polygon points='300,125 276,118 276,108' fill='#0b0b0b'/>"
+                "<path d='M285 95 C245 60 195 55 168 88' fill='none' stroke='#0b0b0b' stroke-width='3' stroke-linecap='round'/>"
+                "<polygon points='155,95 172,86 178,98' fill='#0b0b0b'/>"
                 "</svg>"
             )
             return block("2D water cycle", svg)
@@ -8720,16 +8811,26 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         if "<svg" not in s:
             return 0
         score = 0
-        for token in ("<circle", "<ellipse", "<rect", "<path", "<polygon"):
+        for token in ("<circle", "<ellipse", "<rect", "<path", "<polygon", "<line"):
             score += min(3, s.count(token))
         if "stroke-width" in s:
             score += 2
         if "viewbox" in s:
             score += 2
-        if s.count("fill=") >= 3:
+        if "480" in s and "viewbox" in s:
             score += 2
-        if len(svg) > 400:
+        if s.count("fill=") >= 4:
             score += 2
+        elif s.count("fill=") >= 3:
+            score += 1
+        if "<text" in s:
+            score += min(3, s.count("<text"))
+        if len(svg) > 550:
+            score += 2
+        elif len(svg) > 400:
+            score += 1
+        if "xmlns" in s:
+            score += 1
         return score
 
     def _normalize_illustration_block(self, block_text: str, user_msg: str) -> str:
@@ -8776,23 +8877,20 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         if not is_newton_third:
             return ""
 
+        # No SVG <marker> — thick strokes + markers double-draw arrowheads in WebKit/Blink.
         svg = (
-            "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 440'>"
+            "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 440' overflow='visible'>"
             "<rect width='600' height='440' fill='#f0f4f8'/>"
             "<text x='300' y='34' text-anchor='middle' font-family='sans-serif' font-size='18' font-weight='700' fill='#0f172a'>"
             "Newton's Third Law (Action - Reaction)</text>"
-            "<defs>"
-            "<marker id='arrow-red' markerWidth='12' markerHeight='10' refX='10' refY='5' orient='auto'>"
-            "<polygon points='0,0 12,5 0,10' fill='#ef4444'/></marker>"
-            "<marker id='arrow-blue' markerWidth='12' markerHeight='10' refX='10' refY='5' orient='auto'>"
-            "<polygon points='0,0 12,5 0,10' fill='#3b82f6'/></marker>"
-            "</defs>"
             "<rect x='180' y='168' width='240' height='74' rx='16' fill='#93c5fd' stroke='#1e293b' stroke-width='3'/>"
             "<polygon points='300,136 270,168 330,168' fill='#60a5fa' stroke='#1e293b' stroke-width='3'/>"
             "<text x='300' y='210' text-anchor='middle' font-family='sans-serif' font-size='15' fill='#0f172a' font-weight='700'>Rocket</text>"
-            "<line x1='300' y1='242' x2='300' y2='332' stroke='#ef4444' stroke-width='5' marker-end='url(#arrow-red)'/>"
+            "<line x1='300' y1='248' x2='300' y2='312' stroke='#dc2626' stroke-width='6' stroke-linecap='round'/>"
+            "<polygon points='300,330 286,308 314,308' fill='#dc2626' stroke='#991b1b' stroke-width='1.5' stroke-linejoin='round'/>"
             "<text x='318' y='304' font-family='sans-serif' font-size='13' fill='#b91c1c' font-weight='700'>Action: Gas pushed down</text>"
-            "<line x1='300' y1='166' x2='300' y2='92' stroke='#3b82f6' stroke-width='5' marker-end='url(#arrow-blue)'/>"
+            "<line x1='300' y1='160' x2='300' y2='104' stroke='#2563eb' stroke-width='6' stroke-linecap='round'/>"
+            "<polygon points='300,88 286,110 314,110' fill='#2563eb' stroke='#1e40af' stroke-width='1.5' stroke-linejoin='round'/>"
             "<text x='318' y='110' font-family='sans-serif' font-size='13' fill='#1d4ed8' font-weight='700'>Reaction: Rocket pushed up</text>"
             "<text x='300' y='410' text-anchor='middle' font-family='sans-serif' font-size='12' fill='#475569'>"
             "For every action force, there is an equal and opposite reaction force."
@@ -8842,6 +8940,20 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             )
         )
         if not explicit_extra_visual:
+            if _teaching_message_suggests_concept_figure(user_msg, response_text):
+                kw_topic = self._extract_subject_keyword(user_msg) or "Concept"
+                teach_svg = _openrouter_generate_teaching_svg(
+                    user_msg.strip()[:240],
+                    response_text[:1400],
+                )
+                if teach_svg and self._illustration_quality_score(teach_svg) >= 7:
+                    logger.info("Auto-teaching: concept-diagram heuristic (ALEX_TEACHING_AUTO_SVG)")
+                    title = kw_topic.title() if len(kw_topic) > 2 else "Concept diagram"
+                    block = (
+                        f"\n[VISUAL:type=illustration]\n"
+                        f"{json.dumps({'title': title, 'svg': teach_svg}, ensure_ascii=False)}"
+                    )
+                    return response_text + block
             return response_text
 
         if len(lower) < 8:
@@ -8881,7 +8993,18 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                 illustration_block = f"\n[VISUAL:type=illustration]\n{json.dumps({'title': title, 'svg': spec_svg}, ensure_ascii=False)}"
                 return response_text + illustration_block
 
-        logger.info("Auto-teaching: no schematic spec; skip LLM pictorial SVG")
+        logger.info("Auto-teaching: schematic spec miss; trying teaching-aligned SVG")
+        teach_svg = _openrouter_generate_teaching_svg(
+            user_msg.strip()[:240],
+            response_text[:1400],
+        )
+        if teach_svg and self._illustration_quality_score(teach_svg) >= 6:
+            title = topic.title()
+            illustration_block = (
+                f"\n[VISUAL:type=illustration]\n"
+                f"{json.dumps({'title': title, 'svg': teach_svg}, ensure_ascii=False)}"
+            )
+            return response_text + illustration_block
         return response_text
 
     def _enforce_visual_only_response(self, content: str, user_msg: str) -> str:
@@ -11534,12 +11657,14 @@ Your response style rules:
 29. Do not include any normal sentences, paragraphs, markdown, code fences, links, or notes outside that visual block."""
                     teach_prompt += f"""
 30. If you use [VISUAL:type=illustration], generate a valid inline SVG only. {self._visual_style_instruction(visual_style)}
-31. {self._illustration_subject_instruction(user_msg)}"""
+31. {self._illustration_subject_instruction(user_msg)}
+32. In that SVG, never use <marker> or marker-end — use <line stroke-linecap='round'> and <polygon> for arrowheads (avoids double-draw glitches in Chrome/Safari)."""
                 else:
                     teach_prompt += """
 28. **Default: no [VISUAL] block.** Add at most one diagram, graph, or chart only when the idea is hard to follow without it (e.g. numeric comparison, strict process order). Skip visuals for historical narrative, day-one overviews, and brief answers.
 29. Do NOT use [VISUAL:type=illustration] for routine teaching — only when the student explicitly asks to draw something.
-30. If you use a diagram, every step must use concrete topic language — never generic placeholders."""
+30. If you use a diagram, every step must use concrete topic language — never generic placeholders.
+31. If you output raw SVG (e.g. inside illustration JSON), never use SVG <marker> or marker-end/marker-start — use rounded lines plus <polygon> arrowheads so forces and flow arrows render without browser glitches."""
 
                 reply_after_indepth_request = (typed_user_msg or "").strip() == FOLLOWUP_DEEPEN_PROMPT
                 assistant_index = len(self.chat_history)
@@ -12093,12 +12218,14 @@ Behavior rules:
 29. Do not redirect this request to semester navigation."""
             prompt += f"""
 30. If you use [VISUAL:type=illustration], generate a valid inline SVG only. {self._visual_style_instruction(visual_style)}
-31. {self._illustration_subject_instruction(user_msg)}"""
+31. {self._illustration_subject_instruction(user_msg)}
+32. In that SVG, never use <marker> or marker-end — use <line stroke-linecap='round'> and <polygon> for arrowheads."""
         else:
             prompt += """
 27. **Default: no [VISUAL] block** in home chat. Add at most one graph/chart/diagram only when it is strictly clearer than text.
 28. Do NOT use [VISUAL:type=illustration] unless the user explicitly asks for a drawing.
-29. Never use placeholder labels in diagram steps — use real names from the question."""
+29. Never use placeholder labels in diagram steps — use real names from the question.
+30. If you embed SVG, never use SVG <marker> or marker-end — use rounded lines plus <polygon> arrowheads to avoid browser rendering glitches."""
 
         assistant_index = len(self.chat_history)
         self.chat_history.append({"role": "assistant", **self._assistant_content_meta("")})
@@ -14311,17 +14438,6 @@ _CODE_ENHANCE_JS = """
 
 def active_chat_panel() -> rx.Component:
     return rx.box(
-        # ── Top fade overlay ──
-        rx.box(
-            position="absolute",
-            top="0",
-            left="0",
-            right="0",
-            height="32px",
-            background="linear-gradient(to bottom, #0a0a0c 0%, transparent 100%)",
-            z_index="2",
-            pointer_events="none",
-        ),
         # ── Injected Claude-like markdown CSS ──
         rx.html(_CLAUDE_MD_CSS),
         rx.script(_CODE_ENHANCE_JS),
