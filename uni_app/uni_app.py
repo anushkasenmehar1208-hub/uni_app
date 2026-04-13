@@ -4,6 +4,7 @@ load_dotenv()
 import os
 import shutil
 import hashlib
+from collections import OrderedDict
 import asyncio
 import hmac
 import json
@@ -321,7 +322,8 @@ ALLOWED_EXTERNAL_SVG_HOSTS = {
     "api.iconify.design",
     "cdn.jsdelivr.net",
 }
-ICONIFY_SEARCH_CACHE: dict[str, str] = {}
+_ICONIFY_CACHE_MAX = 500
+ICONIFY_SEARCH_CACHE: OrderedDict[str, str] = OrderedDict()
 MAX_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MB
 ALLOWED_DOCUMENT_TYPES = {
     "application/pdf",
@@ -8825,18 +8827,21 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                 return score
         return 40
 
-    def _iconify_candidate_score(self, icon_id: str, query: str) -> int:
+    _ICON_BAD_MAJOR = frozenset(("logo", "brand", "wordmark", "flag", "country", "currency", "alphabet"))
+    _ICON_BAD_MINOR = frozenset(("off", "disabled", "slash"))
+
+    def _iconify_candidate_score(self, icon_id: str, query: str | None = None, *, _terms: list[str] | None = None) -> int:
         score = self._iconify_prefix_score(icon_id)
         icon_low = icon_id.lower()
-        terms = [t for t in re.split(r"[^a-z0-9]+", (query or "").lower()) if t]
+        terms = _terms if _terms is not None else [t for t in re.split(r"[^a-z0-9]+", (query or "").lower()) if t]
         if terms:
             matches = sum(1 for t in terms if t in icon_low)
             score += matches * 12
             if all(t in icon_low for t in terms):
                 score += 14
-        if any(bad in icon_low for bad in ("logo", "brand", "wordmark", "flag", "country", "currency", "alphabet")):
+        if any(bad in icon_low for bad in self._ICON_BAD_MAJOR):
             score -= 40
-        if any(bad in icon_low for bad in ("off", "disabled", "slash")):
+        if any(bad in icon_low for bad in self._ICON_BAD_MINOR):
             score -= 16
         return score
 
@@ -8845,11 +8850,12 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         if not key:
             return ""
         if key in ICONIFY_SEARCH_CACHE:
-            cached = ICONIFY_SEARCH_CACHE.get(key, "")
+            cached = ICONIFY_SEARCH_CACHE[key]
             # Do not keep serving stale monochrome cache entries.
             if cached and self._is_monochrome_icon(cached):
                 ICONIFY_SEARCH_CACHE.pop(key, None)
             else:
+                ICONIFY_SEARCH_CACHE.move_to_end(key)  # LRU
                 return cached
 
         queries = [key]
@@ -8888,13 +8894,12 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                     ]
                     if not candidates:
                         continue
-                    ranked = sorted(
+                    q_terms = [t for t in re.split(r"[^a-z0-9]+", q.lower()) if t]
+                    selected = max(
                         candidates,
-                        key=lambda icon_id: self._iconify_candidate_score(icon_id, q),
-                        reverse=True,
+                        key=lambda icon_id: self._iconify_candidate_score(icon_id, _terms=q_terms),
                     )
-                    selected = ranked[0]
-                    if selected and self._iconify_candidate_score(selected, q) >= 118:
+                    if selected and self._iconify_candidate_score(selected, _terms=q_terms) >= 118:
                         break
         except Exception:
             selected = ""
@@ -8904,6 +8909,10 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         if selected and self._is_monochrome_icon(selected):
             selected = ""
 
+        if key in ICONIFY_SEARCH_CACHE:
+            ICONIFY_SEARCH_CACHE.move_to_end(key)
+        elif len(ICONIFY_SEARCH_CACHE) >= _ICONIFY_CACHE_MAX:
+            ICONIFY_SEARCH_CACHE.popitem(last=False)
         ICONIFY_SEARCH_CACHE[key] = selected
         return selected
 

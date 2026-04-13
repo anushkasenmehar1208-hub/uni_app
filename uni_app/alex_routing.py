@@ -13,7 +13,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from collections import deque
+from collections import OrderedDict, deque
 from difflib import SequenceMatcher
 from typing import Any
 
@@ -44,7 +44,7 @@ _USER_PREM_LOCK = threading.Lock()
 _user_premium_by_day: dict[str, dict[int, int]] = {}
 
 _CACHE_LOCK = threading.Lock()
-_ANSWER_CACHE: dict[tuple[int, str, str], dict[str, Any]] = {}
+_ANSWER_CACHE: OrderedDict[tuple[int, str, str], dict[str, Any]] = OrderedDict()
 _CACHE_MAX_KEYS = 400
 
 _DECISION_LOCK = threading.Lock()
@@ -632,6 +632,20 @@ def _norm_q_key(q: str) -> str:
     return re.sub(r"\s+", " ", (q or "").lower().strip())[:480]
 
 
+def _trigrams(s: str) -> frozenset[str]:
+    """Character-level trigram set for cheap similarity pre-filtering."""
+    if len(s) < 3:
+        return frozenset((s,)) if s else frozenset()
+    return frozenset(s[i : i + 3] for i in range(len(s) - 2))
+
+
+def _trigram_overlap(a: frozenset[str], b: frozenset[str]) -> float:
+    """Jaccard-like overlap ratio — cheap O(min(|a|,|b|)) check."""
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+
 def cache_lookup(
     uid: int,
     scope: str,
@@ -650,20 +664,32 @@ def cache_lookup(
         hit = _ANSWER_CACHE.get(key)
         if hit and hit.get("answer"):
             if hit.get("subject") == subj and hit.get("difficulty") == diff:
+                _ANSWER_CACHE.move_to_end(key)  # LRU: mark as recently used
                 return str(hit["answer"])
+        # Trigram pre-filter: only run expensive SequenceMatcher on entries
+        # whose trigram overlap suggests they could be similar (Jaccard >= 0.35).
+        nq_tri = _trigrams(nq)
         best_ratio = 0.0
         best_ans = None
+        best_key = None
         for k, v in _ANSWER_CACHE.items():
             if k[0] != uid or k[1] != scope:
                 continue
+            cached_tri = v.get("_trigrams")
+            if cached_tri is not None and _trigram_overlap(nq_tri, cached_tri) < 0.35:
+                continue  # cheap skip — can't be similar enough
             prev_q = v.get("norm_q") or ""
             r = SequenceMatcher(None, nq, prev_q).ratio()
             if r > best_ratio:
                 best_ratio = r
                 best_ans = v.get("answer")
+                best_key = k
             if r >= 0.91 and v.get("subject") == subj and v.get("difficulty") == diff and v.get("answer"):
+                _ANSWER_CACHE.move_to_end(k)  # LRU
                 return str(v["answer"])
         if best_ratio >= 0.88 and best_ans:
+            if best_key:
+                _ANSWER_CACHE.move_to_end(best_key)  # LRU
             return str(best_ans)
     return None
 
@@ -702,12 +728,16 @@ def cache_store(
         "difficulty": str(route.get("difficulty", "MEDIUM")),
         "norm_q": nq,
         "cache_quality_flag": cache_quality_flag,
+        "_trigrams": _trigrams(nq),
     }
     with _CACHE_LOCK:
-        if len(_ANSWER_CACHE) >= _CACHE_MAX_KEYS:
-            items = sorted(_ANSWER_CACHE.items(), key=lambda kv: kv[1].get("ts", 0))
-            for drop_k, _ in items[: max(1, _CACHE_MAX_KEYS // 10)]:
-                _ANSWER_CACHE.pop(drop_k, None)
+        if key in _ANSWER_CACHE:
+            _ANSWER_CACHE.move_to_end(key)  # refresh position
+        elif len(_ANSWER_CACHE) >= _CACHE_MAX_KEYS:
+            # LRU eviction: pop from front (least recently used) — O(1) per pop
+            n_drop = max(1, _CACHE_MAX_KEYS // 10)
+            for _ in range(min(n_drop, len(_ANSWER_CACHE))):
+                _ANSWER_CACHE.popitem(last=False)
         _ANSWER_CACHE[key] = entry
 
 
