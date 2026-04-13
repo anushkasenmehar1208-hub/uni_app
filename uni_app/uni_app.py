@@ -10645,9 +10645,18 @@ Quality rules:
             target_semester = semester or self.selected_semester
             active = self.active_scope
             degree = self.degree
-            print(f"[PLAN-GEN] START uid={uid} scope={target_scope} year={target_year} sem={target_semester} client={'ok' if client else 'None'}", flush=True)
-            if uid < 0 or not _openrouter_llm_ready() or not target_scope:
-                print(f"[PLAN-GEN] BAIL: uid={uid} client={'ok' if client else 'None'} scope='{target_scope}'", flush=True)
+            llm_ready = _openrouter_llm_ready()
+            print(
+                f"[PLAN-GEN] START uid={uid} scope={target_scope} year={target_year} "
+                f"sem={target_semester} openrouter={'ok' if llm_ready else 'None'}",
+                flush=True,
+            )
+            if uid < 0 or not llm_ready or not target_scope:
+                print(
+                    f"[PLAN-GEN] BAIL: uid={uid} openrouter={'ok' if llm_ready else 'None'} "
+                    f"scope='{target_scope}'",
+                    flush=True,
+                )
                 if target_scope == active:
                     self.is_generating_plan = False
                     self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
