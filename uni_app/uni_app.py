@@ -14205,27 +14205,30 @@ def empty_chat_panel() -> rx.Component:
     return rx.box(
         # Centered content group — greeting + input stay together
         rx.vstack(
-            # ── Logo ──
-            rx.image(
-                src="/alex_logo.svg",
-                width=rx.breakpoints(initial="36px", md="40px"),
-                height=rx.breakpoints(initial="36px", md="40px"),
-                object_fit="contain",
-                opacity="0.6",
+            rx.hstack(
+                rx.image(
+                    src="/alex_logo.svg",
+                    width=rx.breakpoints(initial="34px", md="38px"),
+                    height=rx.breakpoints(initial="34px", md="38px"),
+                    object_fit="contain",
+                    opacity="0.6",
+                    flex_shrink="0",
+                ),
+                rx.text(
+                    AppState.greeting_text,
+                    color="rgba(220,225,232,0.7)",
+                    font_size=rx.breakpoints(initial="1.5rem", md="1.85rem"),
+                    font_weight="300",
+                    letter_spacing="-0.02em",
+                    line_height="1.2",
+                    text_align="left",
+                    font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                ),
+                align="center",
+                spacing="3",
+                justify="center",
+                width="100%",
             ),
-            # ── Greeting — large Claude-style ──
-            rx.text(
-                AppState.greeting_text,
-                color="rgba(220,225,232,0.7)",
-                font_size=rx.breakpoints(initial="1.5rem", md="1.85rem"),
-                font_weight="300",
-                letter_spacing="-0.02em",
-                line_height="1.2",
-                text_align="center",
-                font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-            ),
-            # ── Gap ──
-            rx.box(height=rx.breakpoints(initial="20px", md="24px")),
             # ── Input bar ──
             rx.box(
                 rx.cond(
@@ -14235,6 +14238,7 @@ def empty_chat_panel() -> rx.Component:
                 ),
                 width="100%",
                 max_width="740px",
+                margin_top=rx.breakpoints(initial="14px", md="16px"),
             ),
             # ── Tier status (below input) ──
             tier_status_bar(),
@@ -14251,7 +14255,7 @@ def empty_chat_panel() -> rx.Component:
         align_items="center",
         justify_content="center",
         padding=rx.breakpoints(initial="1.2em 1em", md="2em"),
-        padding_bottom=rx.breakpoints(initial="3vh", md="8vh"),
+        padding_bottom=rx.breakpoints(initial="3vh", md="6vh"),
     )
 
 # ── active_chat_panel — Claude-like editorial styling ──────────
