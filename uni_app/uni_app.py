@@ -13507,7 +13507,9 @@ def tier_status_bar() -> rx.Component:
                     ),
                     spacing="1",
                     align="center",
-                    padding="4px 8px",
+                    padding="4px 12px",
+                    min_width="62px",
+                    justify_content="center",
                     border_radius="999px",
                     display=rx.breakpoints(initial="none", md="inline-flex"),
                     style={
