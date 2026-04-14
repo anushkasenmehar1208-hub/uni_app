@@ -10917,6 +10917,7 @@ Course units to cover:\n{courses_text}"""
                     self.current_day = 1
                     self.current_topic_index = 0
                     self._refresh_today_plan(uid)
+                    self.is_generating_plan = False
                     self.plan_generation_error = ""
                     msg = "Your personalized 110 day study plan is ready\n\n" + self._build_today_message(plan, 1, 0)
                     self.chat_history.append(
@@ -10955,6 +10956,7 @@ Course units to cover:\n{courses_text}"""
             self._refresh_today_plan(uid)
             self._load_sessions(uid, target_scope)
             self._load_messages(uid, target_scope)
+            self.is_generating_plan = False
             if not self.chat_history:
                 today_msg = self._build_today_message(plan, day, topic_idx)
                 self.chat_history.append(
@@ -10965,7 +10967,6 @@ Course units to cover:\n{courses_text}"""
                     }
                 )
                 self._save_message(uid, "assistant", today_msg, target_scope, assistant_flags="proceed_only")
-            self.is_generating_plan = False
             self.plan_generation_error = ""
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             return
