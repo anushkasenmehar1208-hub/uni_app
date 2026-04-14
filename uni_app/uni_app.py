@@ -14791,9 +14791,10 @@ def active_chat_panel() -> rx.Component:
                         display="flex",
                         align_items="center",
                         justify_content="center",
-                        padding=rx.breakpoints(initial="1.2em 1em", md="2em"),
-                        padding_bottom=rx.breakpoints(initial="3vh", md="8vh"),
-                        style={"min_height": "min(65vh, 480px)"},
+                        margin_top="auto",
+                        margin_bottom="auto",
+                        padding=rx.breakpoints(initial="0.8em 1em", md="1.2em 2em"),
+                        style={"min_height": "calc(100vh - 220px)"},
                     ),
                     rx.foreach(
                         AppState.chat_history,
