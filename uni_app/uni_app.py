@@ -14786,6 +14786,12 @@ def active_chat_panel() -> rx.Component:
                             align="center",
                             width="100%",
                             max_width="740px",
+                            style={
+                                "transform": rx.breakpoints(
+                                    initial="translateY(-10px)",
+                                    md="translateY(-16px)",
+                                )
+                            },
                         ),
                         width="100%",
                         display="flex",
