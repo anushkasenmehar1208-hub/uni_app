@@ -4669,7 +4669,16 @@ class AppState(reflex_local_auth.LocalAuthState):
             OPENROUTER_SPEC_MODEL,
         ]
         # Keep order stable while removing duplicates and empties.
-        return [m for i, m in enumerate(models) if m and m not in models[:i]]
+        unique_models = [m for i, m in enumerate(models) if m and m not in models[:i]]
+        cleaned: list[str] = []
+        for model_name in unique_models:
+            short_name = model_name.split("/")[-1].strip()
+            if short_name.lower() == "chat":
+                short_name = "V3"
+            elif short_name.lower() == "deepseek-chat":
+                short_name = "DeepSeek V3"
+            cleaned.append(short_name)
+        return cleaned
 
     @rx.var
     def tier_label(self) -> str:
@@ -13488,13 +13497,13 @@ def tier_status_bar() -> rx.Component:
                         AppState.auto_model_label,
                         font_size=rx.breakpoints(initial="0.68rem", md="0.65rem"),
                         font_weight="600",
-                        color="rgba(189, 145, 92, 0.90)",
+                        color="rgba(210, 220, 235, 0.92)",
                         font_family="monospace",
                     ),
                     rx.icon(
                         tag="chevron_down",
                         size=12,
-                        color="rgba(189, 145, 92, 0.70)",
+                        color="rgba(210, 220, 235, 0.70)",
                     ),
                     spacing="1",
                     align="center",
@@ -13502,11 +13511,11 @@ def tier_status_bar() -> rx.Component:
                     border_radius="999px",
                     display=rx.breakpoints(initial="none", md="inline-flex"),
                     style={
-                        "background": "rgba(89, 62, 34, 0.26)",
-                        "border": "1px solid rgba(161, 118, 74, 0.46)",
+                        "background": "rgba(255,255,255,0.07)",
+                        "border": "1px solid rgba(255,255,255,0.16)",
                         "cursor": "pointer",
                         "_hover": {
-                            "background": "rgba(106, 73, 42, 0.35)",
+                            "background": "rgba(255,255,255,0.11)",
                         },
                     },
                 ),
@@ -13516,7 +13525,7 @@ def tier_status_bar() -> rx.Component:
                 rx.vstack(
                     rx.text(
                         "Models in auto mode",
-                        color="rgba(222,198,172,0.84)",
+                        color="rgba(235,242,250,0.88)",
                         font_size="0.68rem",
                         font_weight="600",
                     ),
@@ -13525,7 +13534,7 @@ def tier_status_bar() -> rx.Component:
                         lambda model_name: rx.box(
                             rx.text(
                                 model_name,
-                                color="rgba(232,214,193,0.85)",
+                                color="rgba(226,234,244,0.88)",
                                 font_size="0.66rem",
                                 font_family="monospace",
                             ),
@@ -13533,8 +13542,8 @@ def tier_status_bar() -> rx.Component:
                             padding="6px 8px",
                             border_radius="8px",
                             style={
-                                "background": "rgba(109, 75, 42, 0.23)",
-                                "border": "1px solid rgba(173, 132, 92, 0.26)",
+                                "background": "rgba(255,255,255,0.06)",
+                                "border": "1px solid rgba(255,255,255,0.12)",
                                 "opacity": "0.88",
                                 "cursor": "not-allowed",
                             },
@@ -13542,7 +13551,7 @@ def tier_status_bar() -> rx.Component:
                     ),
                     rx.text(
                         "Selection is automatic",
-                        color="rgba(199,170,138,0.76)",
+                        color="rgba(185,198,212,0.76)",
                         font_size="0.62rem",
                     ),
                     spacing="2",
@@ -13553,8 +13562,8 @@ def tier_status_bar() -> rx.Component:
                 align="end",
                 side_offset=8,
                 style={
-                    "background": "rgba(29, 20, 13, 0.98)",
-                    "border": "1px solid rgba(171, 127, 84, 0.34)",
+                    "background": "rgba(14, 20, 28, 0.98)",
+                    "border": "1px solid rgba(255,255,255,0.14)",
                     "border_radius": "12px",
                     "padding": "10px",
                     "min_width": "250px",
