@@ -290,9 +290,13 @@ def _openrouter_headers() -> dict[str, str]:
 # DuckDuckGo web search setup
 # ----------------------------
 try:
-    from duckduckgo_search import DDGS
+    try:
+        from ddgs import DDGS  # type: ignore
+    except ImportError:
+        from duckduckgo_search import DDGS  # type: ignore
     DDG_SEARCH_ENABLED = True
 except ImportError:
+    DDGS = None  # type: ignore
     DDG_SEARCH_ENABLED = False
 ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp"}
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
@@ -2202,6 +2206,153 @@ async def _web_search(query: str) -> tuple:
     except Exception as e:
         logger.error(f"web_search error: {e}")
         return "", []
+
+
+def _normalize_unicode_json_quotes(s: str) -> str:
+    return (
+        s.replace("\u201c", '"')
+        .replace("\u201d", '"')
+        .replace("\u2018", "'")
+        .replace("\u2019", "'")
+    )
+
+
+def _strip_json_trailing_commas(s: str) -> str:
+    prev = None
+    while prev != s:
+        prev = s
+        s = re.sub(r",(\s*])", r"\1", s)
+        s = re.sub(r",(\s*})", r"\1", s)
+    return s
+
+
+def _balanced_json_array_end(s: str, open_idx: int) -> int:
+    """Index of the `]` that closes the array starting at open_idx, or -1 if unclosed."""
+    if open_idx < 0 or open_idx >= len(s) or s[open_idx] != "[":
+        return -1
+    depth = 0
+    i = open_idx
+    in_string = False
+    escape = False
+    while i < len(s):
+        ch = s[i]
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            i += 1
+            continue
+        if ch == '"':
+            in_string = True
+            i += 1
+            continue
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return -1
+
+
+def _coerce_parsed_json_to_plan_list(obj: Any) -> list | None:
+    if isinstance(obj, list):
+        return obj
+    if isinstance(obj, dict):
+        for k in ("plan", "days", "study_plan", "schedule", "items", "entries"):
+            v = obj.get(k)
+            if isinstance(v, list):
+                return v
+        for v in obj.values():
+            if isinstance(v, list) and v and isinstance(v[0], dict):
+                keys = {str(x).lower() for x in v[0].keys()}
+                if "day" in keys:
+                    return v
+    return None
+
+
+def _try_parse_llm_json_array_payload(s: str, _depth: int = 0) -> list | None:
+    """Return a list if s is valid JSON (optionally after light LLM fixes)."""
+    if _depth > 4:
+        return None
+    s = (s or "").strip()
+    if not s:
+        return None
+    variants = (
+        s,
+        _strip_json_trailing_commas(s),
+        _normalize_unicode_json_quotes(s),
+        _strip_json_trailing_commas(_normalize_unicode_json_quotes(s)),
+    )
+    seen: set[str] = set()
+    for cand in variants:
+        if cand in seen:
+            continue
+        seen.add(cand)
+        try:
+            obj = json.loads(cand)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, str):
+            inner = obj.strip()
+            if inner.startswith("[") or inner.startswith("{"):
+                nested = _try_parse_llm_json_array_payload(inner, _depth + 1)
+                if nested is not None:
+                    return nested
+            continue
+        lst = _coerce_parsed_json_to_plan_list(obj)
+        if isinstance(lst, list):
+            return lst
+    return None
+
+
+def _parse_llm_json_plan_array(text: str) -> list:
+    """Parse a top-level JSON array (or dict wrapper) from LLM study-plan output."""
+    cleaned = (text or "").strip().lstrip("\ufeff")
+    if not cleaned:
+        return []
+    if cleaned.startswith("```"):
+        first_nl = cleaned.find("\n")
+        if first_nl != -1:
+            cleaned = cleaned[first_nl + 1 :]
+        if cleaned.rstrip().endswith("```"):
+            cleaned = cleaned.rstrip()[:-3].rstrip()
+
+    direct = _try_parse_llm_json_array_payload(cleaned)
+    if direct is not None:
+        return direct
+
+    a = cleaned.find("[")
+    if a == -1:
+        return []
+
+    b = _balanced_json_array_end(cleaned, a)
+    if b != -1:
+        slice_str = cleaned[a : b + 1]
+        got = _try_parse_llm_json_array_payload(slice_str)
+        if got is not None:
+            return got
+
+    b2 = cleaned.rfind("]")
+    if b2 != -1 and b2 > a:
+        got2 = _try_parse_llm_json_array_payload(cleaned[a : b2 + 1])
+        if got2 is not None:
+            return got2
+
+    fragment = cleaned[a:]
+    last_brace = fragment.rfind("}")
+    if last_brace > 0:
+        truncated = fragment[: last_brace + 1] + "]"
+        got3 = _try_parse_llm_json_array_payload(truncated)
+        if got3 is not None:
+            print(f"[PLAN-GEN] Recovered {len(got3)} items from truncated JSON", flush=True)
+            return got3
+
+    return []
 
 
 async def _read_top_pages(results: list, max_pages: int = 3) -> str:
@@ -7013,51 +7164,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         return {}
 
     def _extract_json_list(self, text: str) -> list:
-        # Strip markdown code fences
-        cleaned = (text or "").strip()
-        if cleaned.startswith("```"):
-            # Remove opening fence (```json or ```)
-            first_nl = cleaned.find("\n")
-            if first_nl != -1:
-                cleaned = cleaned[first_nl + 1:]
-            # Remove closing fence
-            if cleaned.rstrip().endswith("```"):
-                cleaned = cleaned.rstrip()[:-3].rstrip()
-
-        # Try direct parse
-        try:
-            result = json.loads(cleaned)
-            if isinstance(result, list):
-                return result
-        except Exception:
-            pass
-
-        # Extract outermost [ ... ]
-        a = cleaned.find("[")
-        if a == -1:
-            return []
-        b = cleaned.rfind("]")
-        if b != -1 and b > a:
-            try:
-                return json.loads(cleaned[a:b + 1])
-            except Exception:
-                pass
-
-        # Truncated array: find last complete object and close the array
-        fragment = cleaned[a:]
-        # Find last complete "}" and truncate there
-        last_brace = fragment.rfind("}")
-        if last_brace > 0:
-            truncated = fragment[:last_brace + 1] + "]"
-            try:
-                result = json.loads(truncated)
-                if isinstance(result, list):
-                    print(f"[PLAN-GEN] Recovered {len(result)} items from truncated JSON", flush=True)
-                    return result
-            except Exception:
-                pass
-
-        return []
+        return _parse_llm_json_plan_array(text)
         # ----------------------------
     # memory tuning
     # ----------------------------

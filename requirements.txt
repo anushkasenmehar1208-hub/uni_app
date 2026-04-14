@@ -10,5 +10,5 @@ httpx
 itsdangerous
 PyMuPDF
 python-docx
-duckduckgo-search
+ddgs
 dodopayments[webhooks]
