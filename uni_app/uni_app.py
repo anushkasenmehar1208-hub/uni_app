@@ -4654,6 +4654,24 @@ class AppState(reflex_local_auth.LocalAuthState):
         return OPENROUTER_TEACHER_MODEL
 
     @rx.var
+    def auto_model_label(self) -> str:
+        return "Auto"
+
+    @rx.var
+    def auto_model_list(self) -> list[str]:
+        models = [
+            OPENROUTER_TEACHER_MODEL,
+            OPENROUTER_REASONING_MODEL,
+            OPENROUTER_PREMIUM_MODEL,
+            OPENROUTER_AUX_MODEL,
+            OPENROUTER_VISION_MODEL,
+            OPENROUTER_DRAW_MODEL,
+            OPENROUTER_SPEC_MODEL,
+        ]
+        # Keep order stable while removing duplicates and empties.
+        return [m for i, m in enumerate(models) if m and m not in models[:i]]
+
+    @rx.var
     def tier_label(self) -> str:
         if self.has_premium_access:
             return "⚡ Premium"
@@ -13463,12 +13481,87 @@ def tier_status_bar() -> rx.Component:
             rx.fragment(),
         ),
         rx.spacer(),
-        rx.text(
-            AppState.active_model_name,
-            color="rgba(140,150,160,0.25)",
-            font_size=rx.breakpoints(initial="0.68rem", md="0.65rem"),
-            font_family="monospace",
-            display=rx.breakpoints(initial="none", md="block"),
+        rx.menu.root(
+            rx.menu.trigger(
+                rx.hstack(
+                    rx.text(
+                        AppState.auto_model_label,
+                        font_size=rx.breakpoints(initial="0.68rem", md="0.65rem"),
+                        font_weight="600",
+                        color="rgba(189, 145, 92, 0.90)",
+                        font_family="monospace",
+                    ),
+                    rx.icon(
+                        tag="chevron_down",
+                        size=12,
+                        color="rgba(189, 145, 92, 0.70)",
+                    ),
+                    spacing="1",
+                    align="center",
+                    padding="4px 8px",
+                    border_radius="999px",
+                    display=rx.breakpoints(initial="none", md="inline-flex"),
+                    style={
+                        "background": "rgba(89, 62, 34, 0.26)",
+                        "border": "1px solid rgba(161, 118, 74, 0.46)",
+                        "cursor": "pointer",
+                        "_hover": {
+                            "background": "rgba(106, 73, 42, 0.35)",
+                        },
+                    },
+                ),
+                as_child=True,
+            ),
+            rx.menu.content(
+                rx.vstack(
+                    rx.text(
+                        "Models in auto mode",
+                        color="rgba(222,198,172,0.84)",
+                        font_size="0.68rem",
+                        font_weight="600",
+                    ),
+                    rx.foreach(
+                        AppState.auto_model_list,
+                        lambda model_name: rx.box(
+                            rx.text(
+                                model_name,
+                                color="rgba(232,214,193,0.85)",
+                                font_size="0.66rem",
+                                font_family="monospace",
+                            ),
+                            width="100%",
+                            padding="6px 8px",
+                            border_radius="8px",
+                            style={
+                                "background": "rgba(109, 75, 42, 0.23)",
+                                "border": "1px solid rgba(173, 132, 92, 0.26)",
+                                "opacity": "0.88",
+                                "cursor": "not-allowed",
+                            },
+                        ),
+                    ),
+                    rx.text(
+                        "Selection is automatic",
+                        color="rgba(199,170,138,0.76)",
+                        font_size="0.62rem",
+                    ),
+                    spacing="2",
+                    align_items="stretch",
+                    width="100%",
+                ),
+                side="top",
+                align="end",
+                side_offset=8,
+                style={
+                    "background": "rgba(29, 20, 13, 0.98)",
+                    "border": "1px solid rgba(171, 127, 84, 0.34)",
+                    "border_radius": "12px",
+                    "padding": "10px",
+                    "min_width": "250px",
+                    "box_shadow": "0 14px 28px rgba(0,0,0,0.32)",
+                    "z_index": "9999",
+                },
+            ),
         ),
         width="100%", max_width="740px", margin_x="auto",
         padding_x=rx.breakpoints(initial="1em", md="1.5em"),
