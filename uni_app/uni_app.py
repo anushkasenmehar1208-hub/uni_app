@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+import sys
 import shutil
 import hashlib
 from collections import OrderedDict
@@ -45,10 +46,12 @@ _app_log_level_name = os.getenv("APP_LOG_LEVEL", "INFO").upper()
 _app_log_level = getattr(logging, _app_log_level_name, logging.INFO)
 logging.basicConfig(
     level=_app_log_level,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    stream=sys.stdout,
+    force=True,
 )
 # Keep noisy transport/client internals quiet unless explicitly raised.
-for _quiet_logger in ("httpcore", "httpx", "websockets", "asyncio"):
+for _quiet_logger in ("httpcore", "httpx", "websockets", "asyncio", "engineio", "socketio", "primp"):
     logging.getLogger(_quiet_logger).setLevel(logging.WARNING)
 logger.info("uni_app logger initialized")
 from reflex_local_auth import routes as auth_routes
