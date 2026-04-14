@@ -94,7 +94,7 @@ if not OPENROUTER_API_KEY:
 
 OPENROUTER_TEACHER_MODEL = os.getenv("OPENROUTER_TEACHER_MODEL", "deepseek/deepseek-chat").strip() or "deepseek/deepseek-chat"
 OPENROUTER_REASONING_MODEL = os.getenv("OPENROUTER_REASONING_MODEL", "deepseek/deepseek-r1").strip() or "deepseek/deepseek-r1"
-OPENROUTER_PREMIUM_MODEL = os.getenv("OPENROUTER_PREMIUM_MODEL", "anthropic/claude-3-opus").strip() or "anthropic/claude-3-opus"
+OPENROUTER_PREMIUM_MODEL = os.getenv("OPENROUTER_PREMIUM_MODEL", "anthropic/claude-opus-4.6").strip() or "anthropic/claude-opus-4.6"
 OPENROUTER_AUX_MODEL = os.getenv("OPENROUTER_AUX_MODEL", "").strip() or OPENROUTER_TEACHER_MODEL
 OPENROUTER_VISION_MODEL = os.getenv("OPENROUTER_VISION_MODEL", "openai/gpt-4o-mini").strip() or "openai/gpt-4o-mini"
 OPENROUTER_DRAW_MODEL = os.getenv("OPENROUTER_DRAW_MODEL", "openai/gpt-4o-mini").strip() or "openai/gpt-4o-mini"
