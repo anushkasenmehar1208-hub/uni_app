@@ -15498,6 +15498,10 @@ def active_chat_panel() -> rx.Component:
                     max_width="740px",
                     margin_x="auto",
                     padding=rx.breakpoints(initial="0 0.6em", md="0 1.5em"),
+                    padding_bottom=rx.breakpoints(
+                        initial="calc(env(safe-area-inset-bottom, 0px) + 10px)",
+                        md="0px",
+                    ),
                 ),
                 upgrade_button(),
             ),
@@ -15506,7 +15510,14 @@ def active_chat_panel() -> rx.Component:
         rx.cond(
             AppState.is_empty_chat,
             rx.box(width="100%", height="0px"),
-            tier_status_bar(),
+            rx.box(
+                tier_status_bar(),
+                width="100%",
+                padding_bottom=rx.breakpoints(
+                    initial="calc(env(safe-area-inset-bottom, 0px) + 4px)",
+                    md="0px",
+                ),
+            ),
         ),
         pricing_modal(),
         image_preview_modal(),
