@@ -13248,46 +13248,64 @@ SIDEBAR_GESTURES_JS = """
   }
 
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 7) return;
-    window.__alexSidebarSwipeV = 7;
-    var startX = 0, startY = 0, armed = false, lastAction = 0;
+    if(window.__alexSidebarSwipeV === 8) return;
+    window.__alexSidebarSwipeV = 8;
+    var startX = 0, startY = 0, armed = false, swipeFired = false, lastAction = 0;
+    var DX = 28;
+    var DY_MAX = 95;
+    var COOLDOWN_MS = 110;
+    function swipeTry(clientX, clientY){
+      var now = Date.now();
+      if(now - lastAction < COOLDOWN_MS) return false;
+      var dx = clientX - startX;
+      var dy = Math.abs(clientY - startY);
+      if(dy > DY_MAX) return false;
+      var panelOpen = !!document.getElementById('mobile_sidebar_drawer_panel');
+      if(dx > DX && !panelOpen){
+        var openBtn = document.getElementById('mobile_sidebar_swipe_open_hook');
+        if(reflexEmitSidebar('open') || pokeClick(openBtn)){ lastAction = now; return true; }
+        return false;
+      }
+      if(dx < -DX && panelOpen){
+        var closeBtn = document.getElementById('mobile_sidebar_swipe_close_hook');
+        if(reflexEmitSidebar('close') || pokeClick(closeBtn)){ lastAction = now; return true; }
+      }
+      return false;
+    }
     function onStart(e){
       if(!e.touches || !e.touches[0]) return;
       var t = e.touches[0];
-      startX = t.clientX; startY = t.clientY; armed = true;
+      startX = t.clientX; startY = t.clientY; armed = true; swipeFired = false;
+    }
+    function onMove(e){
+      if(!armed || swipeFired || !e.touches || !e.touches[0]) return;
+      var t = e.touches[0];
+      if(swipeTry(t.clientX, t.clientY)) swipeFired = true;
     }
     function onEnd(e){
-      if(!armed || !e.changedTouches || !e.changedTouches[0]) return;
+      if(!armed) return;
       armed = false;
-      var t = e.changedTouches[0];
-      var dx = t.clientX - startX;
-      var dy = Math.abs(t.clientY - startY);
-      if(dy > 110) return;
-      var now = Date.now();
-      if(now - lastAction < 320) return;
-      var panelOpen = !!document.getElementById('mobile_sidebar_drawer_panel');
-      // Swipe RIGHT (dx positive) -> open when closed.
-      if(dx > 44 && !panelOpen){
-        var openBtn = document.getElementById('mobile_sidebar_swipe_open_hook');
-        if(reflexEmitSidebar('open') || pokeClick(openBtn)) lastAction = now;
-        return;
+      if(!swipeFired && e.changedTouches && e.changedTouches[0]){
+        var t = e.changedTouches[0];
+        swipeTry(t.clientX, t.clientY);
       }
-      // Swipe LEFT (dx negative) -> close when open.
-      if(dx < -44 && panelOpen){
-        var closeBtn = document.getElementById('mobile_sidebar_swipe_close_hook');
-        if(reflexEmitSidebar('close') || pokeClick(closeBtn)) lastAction = now;
-      }
+      swipeFired = false;
+    }
+    function onCancel(){
+      armed = false; swipeFired = false;
     }
     window.addEventListener('touchstart', onStart, {passive:true, capture:true});
+    window.addEventListener('touchmove', onMove, {passive:true, capture:true});
     window.addEventListener('touchend', onEnd, {passive:true, capture:true});
+    window.addEventListener('touchcancel', onCancel, {passive:true, capture:true});
   }
 
   bindLongPress();
   bindEdgeSwipe();
   var _capN = 0;
   var _capIv = setInterval(function(){
-    if(captureReflexAddEvents() || ++_capN > 40) clearInterval(_capIv);
-  }, 250);
+    if(captureReflexAddEvents() || ++_capN > 50) clearInterval(_capIv);
+  }, 100);
   var _n = 0;
   var _iv = setInterval(function(){
     bindLongPress();
