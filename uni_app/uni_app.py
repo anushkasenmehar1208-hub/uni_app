@@ -13311,8 +13311,8 @@ SIDEBAR_GESTURES_JS = """
     }catch(e){ return Math.min(window.innerWidth || 360, 360); }
   }
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 11) return;
-    window.__alexSidebarSwipeV = 11;
+    if(window.__alexSidebarSwipeV === 12) return;
+    window.__alexSidebarSwipeV = 12;
     var startX = 0, startY = 0, armed = false, dominant = false, dragMode = null;
     var armedFromLeftEdge = false;
     var moveBuf = [];
@@ -13383,7 +13383,6 @@ SIDEBAR_GESTURES_JS = """
       startX = t.clientX; startY = t.clientY;
       dominant = false; dragMode = null;
       armedFromLeftEdge = false;
-      clearInlineVisual();
       flushBuf();
       pushMove(t.clientX);
       // Only track gestures that can open/close the drawer (not every touch on the page).
@@ -13393,6 +13392,8 @@ SIDEBAR_GESTURES_JS = """
         armed = startX <= edgeOpenPx();
         armedFromLeftEdge = armed;
       }
+      // Do not strip the panel transform on unrelated taps (breaks Reflex + short open swipes).
+      if(armed) clearInlineVisual();
     }
 
     function onMove(e){
@@ -13417,8 +13418,8 @@ SIDEBAR_GESTURES_JS = """
           if(ratV >= 1.28){
             armed = false; flushBuf(); return;
           }
-          if(adx < 8) return;
-          if(dx < 6) return;
+          if(adx < 6) return;
+          if(dx < 4) return;
           dominant = true;
           dragMode = 'open';
         }else{
@@ -13469,7 +13470,9 @@ SIDEBAR_GESTURES_JS = """
       var closeHook = document.getElementById('mobile_sidebar_swipe_close_hook');
 
       if(dragMode === 'open'){
-        var commitOpen = (dx > W * 0.18) || (v > 0.38);
+        // W is often full viewport; 18% of W is an unrealistically long edge swipe to "peek".
+        var openDx = Math.max(20, Math.min(56, Math.round(W * 0.11)));
+        var commitOpen = (dx > openDx) || (v > 0.28);
         if(commitOpen){
           if(!drawerIsOpen()) reflexEmitSidebar('open') || pokeClick(openHook);
         }
