@@ -301,13 +301,15 @@ try:
 except ImportError:
     DDGS = None  # type: ignore
     DDG_SEARCH_ENABLED = False
-ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp"}
-ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"}
+ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".heic", ".heif"}
 SAFE_MEDIA_TYPES = {
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
     ".webp": "image/webp",
+    ".heic": "image/heic",
+    ".heif": "image/heif",
     ".pdf": "application/pdf",
     ".txt": "text/plain; charset=utf-8",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -352,7 +354,7 @@ NOTE_UPLOAD_BLOCKED_EXT = frozenset({
 # HTML file-picker filter for unified note uploads (react-dropzone → <input accept=…>).
 # Wildcards help macOS/Windows grey out non-media; server still enforces SAFE_MEDIA_TYPES / _classify_note_attachment.
 NOTE_MEDIA_UPLOAD_ACCEPT: dict[str, list[str]] = {
-    "image/*": [".png", ".jpg", ".jpeg", ".webp"],
+    "image/*": [".png", ".jpg", ".jpeg", ".webp", ".heic", ".heif"],
     "audio/*": [".mp3", ".wav", ".m4a", ".ogg", ".flac", ".webm"],
     "video/*": [".mp4", ".webm"],
     "application/pdf": [".pdf"],
@@ -1218,6 +1220,13 @@ def _sniff_image_mime(file_bytes: bytes) -> str:
         return "image/jpeg"
     if file_bytes[:4] == b"RIFF" and file_bytes[8:12] == b"WEBP":
         return "image/webp"
+    # ISO BMFF family (HEIC/HEIF) used by some mobile cameras.
+    if len(file_bytes) >= 12 and file_bytes[4:8] == b"ftyp":
+        brand = file_bytes[8:12]
+        if brand in {b"heic", b"heix", b"hevc", b"hevx"}:
+            return "image/heic"
+        if brand in {b"mif1", b"msf1"}:
+            return "image/heif"
     return ""
 
 
@@ -1238,7 +1247,7 @@ def _is_allowed_image_upload(filename: str, mime_type: str, file_bytes: bytes) -
             return False
     else:
         # Mobile camera capture sometimes provides no/odd extension. Trust content sniff.
-        if detected_mime not in {"image/png", "image/jpeg", "image/webp"}:
+        if detected_mime not in {"image/png", "image/jpeg", "image/webp", "image/heic", "image/heif"}:
             return False
     return True
 
@@ -1458,7 +1467,7 @@ def _classify_note_attachment(filename: str, content_type: str, file_bytes: byte
         return None, None, f"File too large (max {MAX_NOTE_ATTACHMENT_BYTES // (1024 * 1024)} MB)."
     if expect == "image":
         if not _is_allowed_image_upload(name, content_type, file_bytes):
-            return None, None, "Use a real PNG, JPG, or WebP image."
+            return None, None, "Use a real PNG, JPG, WebP, HEIC, or HEIF image."
         mime = _sniff_image_mime(file_bytes) or content_type or "image/png"
         return "image", mime, ""
     if expect == "audio":
@@ -18850,17 +18859,14 @@ def notes_panel() -> rx.Component:
                                                 },
                                             ),
                                             id="note_upl_camera",
-                                            accept={
-                                                "image/png": [".png"],
-                                                "image/jpeg": [".jpg", ".jpeg"],
-                                                "image/webp": [".webp"],
-                                            },
+                                            accept={"image/*": [".png", ".jpg", ".jpeg", ".webp", ".heic", ".heif"]},
                                             max_files=1,
                                             multiple=False,
                                             border="none",
                                             padding="0",
                                             background="transparent",
                                             width="auto",
+                                            custom_attrs={"capture": "environment"},
                                             **{"textAlign": "left"},
                                             on_drop=[
                                                 AppState.handle_note_media_upload,  # type: ignore
