@@ -6370,15 +6370,35 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.renaming_title_input = ""
 
     @rx.event
-    def toggle_global_search(self):
-        if not self.show_global_search:
-            self._notes_persist_editor(manual=False)
-        self.show_global_search = not self.show_global_search
+    def open_global_search(self):
+        """Open global search once (avoids double-toggle if the same tap hits a new backdrop)."""
         if self.show_global_search:
-            self.show_notes_panel = False
+            return
+        self._notes_persist_editor(manual=False)
+        self.show_notes_panel = False
+        self.show_semester_sidebar = False
+        self.show_global_search = True
+
+    @rx.event
+    def close_global_search(self):
         if not self.show_global_search:
+            return
+        self.show_global_search = False
+        self.global_search_query = ""
+        self.global_search_results = []
+
+    @rx.event
+    def toggle_global_search(self):
+        """Toggle global search (backdrop / nav rail); sidebar icon uses open_global_search."""
+        if self.show_global_search:
+            self.show_global_search = False
             self.global_search_query = ""
             self.global_search_results = []
+        else:
+            self._notes_persist_editor(manual=False)
+            self.show_notes_panel = False
+            self.show_semester_sidebar = False
+            self.show_global_search = True
 
     @rx.event
     def set_global_search_query(self, value: str):
@@ -18330,7 +18350,6 @@ def home_page():
         flex_direction="column",
         background="#0a0a0c",
         ),
-        global_search_overlay(),
     )
 
 
@@ -18834,7 +18853,7 @@ def mobile_chat_actions_sheet() -> rx.Component:
 def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
     _sidebar_global_search_btn = rx.icon_button(
         rx.icon(tag="search", size=18),
-        on_click=AppState.toggle_global_search,
+        on_click=AppState.open_global_search,
         variant="ghost",
         size="2",
         custom_attrs={"aria-label": "Search all chats"},
@@ -19040,7 +19059,7 @@ def global_search_panel() -> rx.Component:
                 inset="0",
                 background="rgba(0,0,0,0.65)",
                 z_index="200",
-                on_click=AppState.toggle_global_search,
+                on_click=AppState.close_global_search,
                 backdrop_filter="blur(4px)",
             ),
             # ── Panel ──
@@ -19050,7 +19069,11 @@ def global_search_panel() -> rx.Component:
                     rx.hstack(
                         rx.icon(tag="search", size=16, color="rgba(255,255,255,0.4)"),
                         rx.input(
-                            placeholder="Search across all chats...",
+                            placeholder=rx.cond(
+                                AppState.custom_degree_selected,
+                                "Search across all chats...",
+                                "Search across all chats and semesters...",
+                            ),
                             value=AppState.global_search_query,
                             on_change=AppState.set_global_search_query,
                             auto_focus=True,
@@ -19068,7 +19091,7 @@ def global_search_panel() -> rx.Component:
                         ),
                         rx.icon_button(
                             rx.icon(tag="x", size=14),
-                            on_click=AppState.toggle_global_search,
+                            on_click=AppState.close_global_search,
                             variant="ghost",
                             style={
                                 "color": "rgba(255,255,255,0.35)",
@@ -19926,191 +19949,6 @@ def nav_rail() -> rx.Component:
     )
 
 
-def global_search_overlay() -> rx.Component:
-    """Full-screen search panel — triggered from nav rail search icon."""
-    return rx.cond(
-        AppState.show_global_search,
-        rx.box(
-            # Backdrop
-            rx.box(
-                position="fixed", inset="0",
-                background="rgba(0,0,0,0.6)",
-                z_index="200",
-                on_click=AppState.toggle_global_search,
-                backdrop_filter="blur(4px)",
-            ),
-            # Panel
-            rx.box(
-                rx.vstack(
-                    # Header
-                    rx.hstack(
-                        rx.icon(tag="search", size=16, color="rgba(255,255,255,0.4)"),
-                        rx.input(
-                            placeholder=rx.cond(AppState.custom_degree_selected, "Search all chats...", "Search all chats and semesters..."),
-                            value=AppState.global_search_query,
-                            on_change=AppState.set_global_search_query,
-                            auto_focus=True,
-                            style={
-                                "flex": "1",
-                                "background": "transparent",
-                                "border": "none",
-                                "outline": "none",
-                                "color": "rgba(240,244,248,0.92)",
-                                "font_size": "1rem",
-                                "font_family": "'Söhne', -apple-system, sans-serif",
-                                "padding": "0",
-                                "box_shadow": "none",
-                                "&::placeholder": {"color": "rgba(255,255,255,0.2)"},
-                            },
-                        ),
-                        rx.icon_button(
-                            rx.icon(tag="x", size=16),
-                            on_click=AppState.toggle_global_search,
-                            variant="ghost",
-                            style={
-                                "color": "rgba(255,255,255,0.35)",
-                                "background": "transparent",
-                                "border": "none",
-                                "cursor": "pointer",
-                                "_hover": {"color": "rgba(255,255,255,0.7)"},
-                            },
-                        ),
-                        width="100%",
-                        align="center",
-                        spacing="3",
-                        padding="16px 20px",
-                        border_bottom="1px solid rgba(255,255,255,0.07)",
-                    ),
-                    # Results
-                    rx.box(
-                        rx.cond(
-                            AppState.global_search_query != "",
-                            rx.cond(
-                                AppState.global_search_results.length() > 0,
-                                rx.vstack(
-                                    rx.foreach(
-                                        AppState.global_search_results,
-                                        lambda r: rx.box(
-                                            rx.hstack(
-                                                rx.vstack(
-                                                    rx.hstack(
-                                                        rx.text(
-                                                            r["session_title"],
-                                                            color="rgba(240,244,248,0.9)",
-                                                            font_size="0.85rem",
-                                                            font_weight="600",
-                                                            overflow="hidden",
-                                                            text_overflow="ellipsis",
-                                                            white_space="nowrap",
-                                                            flex="1",
-                                                        ),
-                                                        rx.text(
-                                                            r["scope_label"],
-                                                            color="rgba(52,211,153,0.7)",
-                                                            font_size="0.7rem",
-                                                            font_weight="500",
-                                                            flex_shrink="0",
-                                                            padding="2px 8px",
-                                                            border_radius="4px",
-                                                            background="rgba(52,211,153,0.08)",
-                                                            border="1px solid rgba(52,211,153,0.15)",
-                                                        ),
-                                                        width="100%",
-                                                        align="center",
-                                                        spacing="2",
-                                                    ),
-                                                    rx.text(
-                                                        r["snippet"],
-                                                        color="rgba(180,190,200,0.55)",
-                                                        font_size="0.76rem",
-                                                        overflow="hidden",
-                                                        text_overflow="ellipsis",
-                                                        white_space="nowrap",
-                                                        max_width="100%",
-                                                    ),
-                                                    spacing="1",
-                                                    align_items="flex-start",
-                                                    flex="1",
-                                                    min_width="0",
-                                                ),
-                                                rx.icon(tag="arrow_right", size=14, color="rgba(255,255,255,0.2)", flex_shrink="0"),
-                                                width="100%",
-                                                align="center",
-                                                spacing="2",
-                                            ),
-                                            on_click=AppState.open_search_result(r["session_id"], r["scope"]),
-                                            width="100%",
-                                            padding="12px 20px",
-                                            cursor="pointer",
-                                            style={
-                                                "border_bottom": "1px solid rgba(255,255,255,0.04)",
-                                                "_hover": {"background": "rgba(255,255,255,0.04)"},
-                                            },
-                                        ),
-                                    ),
-                                    width="100%",
-                                    spacing="0",
-                                    align_items="stretch",
-                                ),
-                                rx.box(
-                                    rx.text(
-                                        "No results found",
-                                        color="rgba(160,170,180,0.4)",
-                                        font_size="0.85rem",
-                                        text_align="center",
-                                    ),
-                                    padding="32px 20px",
-                                    width="100%",
-                                    display="flex",
-                                    justify_content="center",
-                                ),
-                            ),
-                            rx.box(
-                                rx.text(
-                                    "Type to search across all your chats",
-                                    color="rgba(160,170,180,0.3)",
-                                    font_size="0.85rem",
-                                    text_align="center",
-                                ),
-                                padding="32px 20px",
-                                width="100%",
-                                display="flex",
-                                justify_content="center",
-                            ),
-                        ),
-                        width="100%",
-                        flex="1",
-                        overflow_y="auto",
-                        style={
-                            "&::-webkit-scrollbar": {"width": "3px"},
-                            "&::-webkit-scrollbar-thumb": {"background": "rgba(255,255,255,0.06)", "border_radius": "4px"},
-                        },
-                    ),
-                    spacing="0",
-                    width="100%",
-                    height="100%",
-                    align_items="stretch",
-                ),
-                position="fixed",
-                top="10vh",
-                left="50%",
-                transform="translateX(-50%)",
-                width="min(640px, 92vw)",
-                max_height="70vh",
-                background="rgba(12,12,16,0.98)",
-                border="1px solid rgba(255,255,255,0.1)",
-                border_radius="18px",
-                box_shadow="0 32px 80px rgba(0,0,0,0.7)",
-                z_index="201",
-                overflow="hidden",
-                display="flex",
-                flex_direction="column",
-            ),
-        ),
-        rx.fragment(),
-    )
-
-
 def subject_switcher_overlay() -> rx.Component:
     return rx.cond(
         AppState.has_subject_switcher & AppState.show_subject_switcher,
@@ -20529,10 +20367,8 @@ def semester_page():
 
 
 def semester_page_with_search():
-    return rx.fragment(
-        semester_page(),
-        global_search_overlay(),
-    )
+    """Route entry: global search is mounted inside semester_page (global_search_panel)."""
+    return semester_page()
 
 
 
@@ -24291,8 +24127,7 @@ def free_page():
                 display=rx.breakpoints(initial="block", md="none"),
             ),
             # ── Global search + overlay ──
-            global_search_panel(),
-            global_search_overlay(),
+        global_search_panel(),
             # ── Main flex ──
             rx.flex(
                 # Desktop sidebar — full when open, icon-strip when collapsed
@@ -24349,7 +24184,7 @@ def free_page():
                                 # Search
                                 rx.icon_button(
                                     rx.icon(tag="search", size=16),
-                                    on_click=AppState.toggle_global_search,
+                                    on_click=AppState.open_global_search,
                                     variant="ghost",
                                     style={
                                         "color": "rgba(255,255,255,0.5)",
