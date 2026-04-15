@@ -13311,9 +13311,10 @@ SIDEBAR_GESTURES_JS = """
     }catch(e){ return Math.min(window.innerWidth || 360, 360); }
   }
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 10) return;
-    window.__alexSidebarSwipeV = 10;
+    if(window.__alexSidebarSwipeV === 11) return;
+    window.__alexSidebarSwipeV = 11;
     var startX = 0, startY = 0, armed = false, dominant = false, dragMode = null;
+    var armedFromLeftEdge = false;
     var moveBuf = [];
     var rafId = 0;
     var pendingTx = null;
@@ -13373,7 +13374,7 @@ SIDEBAR_GESTURES_JS = """
 
     function edgeOpenPx(){
       var w = window.innerWidth || 360;
-      return Math.min(36, Math.max(20, Math.round(w * 0.07)));
+      return Math.min(52, Math.max(24, Math.round(w * 0.11)));
     }
 
     function onStart(e){
@@ -13381,6 +13382,7 @@ SIDEBAR_GESTURES_JS = """
       var t = e.touches[0];
       startX = t.clientX; startY = t.clientY;
       dominant = false; dragMode = null;
+      armedFromLeftEdge = false;
       clearInlineVisual();
       flushBuf();
       pushMove(t.clientX);
@@ -13389,6 +13391,7 @@ SIDEBAR_GESTURES_JS = """
         armed = true;
       }else{
         armed = startX <= edgeOpenPx();
+        armedFromLeftEdge = armed;
       }
     }
 
@@ -13405,22 +13408,34 @@ SIDEBAR_GESTURES_JS = """
         if(hypo < 10) return;
         var ratH = adx / Math.max(dy, 1);
         var ratV = dy / Math.max(adx, 1);
-        // Vertical / diagonal scroll: do not hijack.
-        if(ratV >= 1.15){
-          armed = false; flushBuf(); return;
-        }
-        // Require clear horizontal intent before following the finger.
-        if(ratH < 1.7){
-          if(hypo > 36){
+        var o = drawerIsOpen();
+        // Open-from-bezel: natural arcs are slightly diagonal; use looser rules than close.
+        if(armedFromLeftEdge && !o){
+          if(hypo > 88){
             armed = false; flushBuf(); return;
           }
-          return;
+          if(ratV >= 1.28){
+            armed = false; flushBuf(); return;
+          }
+          if(adx < 8) return;
+          if(dx < 6) return;
+          dominant = true;
+          dragMode = 'open';
+        }else{
+          if(ratV >= 1.15){
+            armed = false; flushBuf(); return;
+          }
+          if(ratH < 1.7){
+            if(hypo > 36){
+              armed = false; flushBuf(); return;
+            }
+            return;
+          }
+          dominant = true;
+          if(dx > 0 && !o) dragMode = 'open';
+          else if(dx < 0 && o) dragMode = 'close';
+          else { armed = false; flushBuf(); return; }
         }
-        dominant = true;
-        var o = drawerIsOpen();
-        if(dx > 0 && !o) dragMode = 'open';
-        else if(dx < 0 && o) dragMode = 'close';
-        else { armed = false; flushBuf(); return; }
       }
       if(!dragMode) return;
 
