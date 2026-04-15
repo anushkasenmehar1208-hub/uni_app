@@ -4347,6 +4347,9 @@ class AppState(reflex_local_auth.LocalAuthState):
     status_text: str = ""
     onboarding_message: str = ""
     show_semester_sidebar: bool = False
+    show_mobile_chat_actions: bool = False
+    mobile_chat_actions_session_id: str = ""
+    mobile_chat_actions_is_home: bool = True
 
     sessions: list[dict] = []
     home_sessions: list[dict] = []
@@ -9640,10 +9643,45 @@ Quality rules:
     @rx.event
     def close_semester_sidebar(self):
         self.show_semester_sidebar = False
+        self.show_mobile_chat_actions = False
 
     @rx.event
     def toggle_free_sidebar(self):
         self.show_free_sidebar = not self.show_free_sidebar
+
+    @rx.event
+    def open_mobile_chat_actions(self, session_id: str, is_home: bool):
+        sid = (session_id or "").strip()
+        if not sid:
+            return
+        self.mobile_chat_actions_session_id = sid
+        self.mobile_chat_actions_is_home = bool(is_home)
+        self.show_mobile_chat_actions = True
+
+    @rx.event
+    def close_mobile_chat_actions(self):
+        self.show_mobile_chat_actions = False
+
+    @rx.event
+    def mobile_chat_actions_rename(self):
+        sid = (self.mobile_chat_actions_session_id or "").strip()
+        if not sid:
+            self.show_mobile_chat_actions = False
+            return
+        self.start_rename_session(sid, self.mobile_chat_actions_is_home)
+        self.show_mobile_chat_actions = False
+
+    @rx.event
+    def mobile_chat_actions_delete(self):
+        sid = (self.mobile_chat_actions_session_id or "").strip()
+        if not sid:
+            self.show_mobile_chat_actions = False
+            return
+        if self.mobile_chat_actions_is_home:
+            self.delete_home_session(sid)
+        else:
+            self.delete_session(sid)
+        self.show_mobile_chat_actions = False
 
     @rx.event
     def set_other_degree_text(self, value: str):
@@ -13080,6 +13118,75 @@ NOTE_CAMERA_CLEAR_JS = (
     f"(function(){{var e=document.getElementById('{_NOTE_UPL_CAMERA_INPUT_ID}');"
     f"if(e)e.value='';}})()"
 )
+
+SIDEBAR_GESTURES_JS = """
+(function(){
+  function bindLongPress(){
+    var rows = document.querySelectorAll('[data-chat-row="1"]');
+    rows.forEach(function(row){
+      if(row.dataset.lpBound === '1') return;
+      row.dataset.lpBound = '1';
+      var timer = null;
+      var moved = false;
+      function clear(){ if(timer){ clearTimeout(timer); timer = null; } }
+      row.addEventListener('touchstart', function(){
+        moved = false;
+        clear();
+        timer = setTimeout(function(){
+          if(moved) return;
+          var btn = row.querySelector('[data-mobile-actions-trigger="1"]');
+          if(btn){ btn.click(); }
+        }, 500);
+      }, {passive:true});
+      row.addEventListener('touchmove', function(){ moved = true; clear(); }, {passive:true});
+      row.addEventListener('touchend', clear, {passive:true});
+      row.addEventListener('touchcancel', clear, {passive:true});
+      row.addEventListener('contextmenu', function(e){
+        e.preventDefault();
+        var btn = row.querySelector('[data-mobile-actions-trigger="1"]');
+        if(btn){ btn.click(); }
+      });
+    });
+  }
+
+  function bindEdgeSwipe(){
+    if(window.__sidebarEdgeSwipeBound) return;
+    window.__sidebarEdgeSwipeBound = true;
+    var startX = 0, startY = 0, tracking = false, lastOpen = 0;
+    document.addEventListener('touchstart', function(e){
+      if(!e.touches || !e.touches[0]) return;
+      var t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+      tracking = startX <= 24;
+    }, {passive:true});
+    document.addEventListener('touchend', function(e){
+      if(!tracking || !e.changedTouches || !e.changedTouches[0]) return;
+      tracking = false;
+      var t = e.changedTouches[0];
+      var dx = t.clientX - startX;
+      var dy = Math.abs(t.clientY - startY);
+      if(dx > 72 && dy < 44){
+        var now = Date.now();
+        if(now - lastOpen < 800) return;
+        lastOpen = now;
+        var btn = document.getElementById('mobile_sidebar_menu_btn');
+        if(btn) btn.click();
+      }
+    }, {passive:true});
+  }
+
+  bindLongPress();
+  bindEdgeSwipe();
+  var _n = 0;
+  var _iv = setInterval(function(){
+    bindLongPress();
+    if(++_n > 90) clearInterval(_iv);
+  }, 500);
+  try{
+    new MutationObserver(function(){ setTimeout(bindLongPress, 60); }).observe(document.body,{childList:true,subtree:true});
+  }catch(e){}
+})();
+"""
 
 AUTO_SCROLL_OBSERVER_JS = """
 (function(){
@@ -17773,6 +17880,7 @@ def home_page():
                 rx.button(
                     rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
                     on_click=AppState.toggle_semester_sidebar,
+                    id="mobile_sidebar_menu_btn",
                     width="40px",
                     height="40px",
                     min_width="40px",
@@ -17936,7 +18044,7 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
                 "font_weight": "500",
                 "border_radius": "12px",
                 "padding": "0.46em 0.72em",
-                "font_size": "0.78rem",
+                "font_size": rx.breakpoints(initial="0.93rem", md="0.78rem"),
                 "min_height": "0",
                 "opacity": "0.6",
                 "cursor": "pointer",
@@ -18083,13 +18191,20 @@ def semester_chat_history_list() -> rx.Component:
                         text_overflow="ellipsis",
                         white_space="nowrap",
                         size="1",
-                        font_size="0.8rem",
+                        font_size=rx.breakpoints(initial="0.93rem", md="0.8rem"),
+                    ),
+                    rx.button(
+                        "",
+                        on_click=AppState.open_mobile_chat_actions(s["id"], False),
+                        display="none",
+                        custom_attrs={"data-mobile-actions-trigger": "1"},
                     ),
                     rx.icon_button(
                         rx.icon(tag="pencil", size=11),
                         on_click=AppState.start_rename_session(s["id"], False),
                         variant="ghost",
                         size="1",
+                        display=rx.breakpoints(initial="none", md="inline-flex"),
                         style={"opacity": "0.4", "_hover": {"opacity": "0.9"}, "color": "rgba(255,255,255,0.5)", "background": "transparent", "border": "none", "cursor": "pointer"},
                     ),
                     rx.icon_button(
@@ -18098,11 +18213,13 @@ def semester_chat_history_list() -> rx.Component:
                         variant="ghost",
                         color_scheme="red",
                         size="1",
+                        display=rx.breakpoints(initial="none", md="inline-flex"),
                         style={"opacity": "0.4", "_hover": {"opacity": "0.9"}},
                     ),
                     width="100%",
                     align="center",
                     spacing="1",
+                    custom_attrs={"data-chat-row": "1"},
                 ),
             ),
         ),
@@ -18170,7 +18287,7 @@ def alex_chat_history_list() -> rx.Component:
                                 overflow="hidden",
                                 text_overflow="ellipsis",
                                 white_space="nowrap",
-                                font_size="0.78rem",
+                                font_size=rx.breakpoints(initial="0.92rem", md="0.78rem"),
                             ),
                             spacing="2",
                             align="center",
@@ -18204,11 +18321,18 @@ def alex_chat_history_list() -> rx.Component:
                             "_hover": {"background": "rgba(255,255,255,0.06)"},
                         },
                     ),
+                    rx.button(
+                        "",
+                        on_click=AppState.open_mobile_chat_actions(s["id"], True),
+                        display="none",
+                        custom_attrs={"data-mobile-actions-trigger": "1"},
+                    ),
                     rx.icon_button(
                         rx.icon(tag="pencil", size=11),
                         on_click=AppState.start_rename_session(s["id"], True),
                         variant="ghost",
                         size="1",
+                        display=rx.breakpoints(initial="none", md="inline-flex"),
                         style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0", "color": "rgba(255,255,255,0.5)", "background": "transparent", "border": "none", "cursor": "pointer"},
                     ),
                     rx.icon_button(
@@ -18217,6 +18341,7 @@ def alex_chat_history_list() -> rx.Component:
                         variant="ghost",
                         color_scheme="red",
                         size="1",
+                        display=rx.breakpoints(initial="none", md="inline-flex"),
                         style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0"},
                     ),
                     width="100%",
@@ -18226,6 +18351,7 @@ def alex_chat_history_list() -> rx.Component:
                         "& .rt-IconButton": {"opacity": "0", "transition": "opacity 0.15s"},
                         "_hover": {"& .rt-IconButton": {"opacity": "0.4"}},
                     },
+                    custom_attrs={"data-chat-row": "1"},
                 ),
             ),
         ),
@@ -18307,6 +18433,83 @@ def alex_workspace_button() -> rx.Component:
     )
 
 
+def mobile_chat_actions_sheet() -> rx.Component:
+    return rx.cond(
+        AppState.show_mobile_chat_actions,
+        rx.box(
+            rx.box(
+                position="fixed",
+                inset="0",
+                background="rgba(0,0,0,0.62)",
+                z_index="120",
+                on_click=AppState.close_mobile_chat_actions,
+                display=rx.breakpoints(initial="block", md="none"),
+            ),
+            rx.box(
+                rx.vstack(
+                    rx.button(
+                        "Rename chat",
+                        on_click=AppState.mobile_chat_actions_rename,
+                        width="100%",
+                        height="44px",
+                        variant="ghost",
+                        style={
+                            "justify_content": "flex-start",
+                            "color": "rgba(230,236,244,0.92)",
+                            "font_size": "0.92rem",
+                            "background": "rgba(255,255,255,0.03)",
+                            "border": "1px solid rgba(255,255,255,0.08)",
+                            "border_radius": "10px",
+                        },
+                    ),
+                    rx.button(
+                        "Delete chat",
+                        on_click=AppState.mobile_chat_actions_delete,
+                        width="100%",
+                        height="44px",
+                        variant="ghost",
+                        style={
+                            "justify_content": "flex-start",
+                            "color": "rgba(255,165,165,0.95)",
+                            "font_size": "0.92rem",
+                            "background": "rgba(248,113,113,0.08)",
+                            "border": "1px solid rgba(248,113,113,0.24)",
+                            "border_radius": "10px",
+                        },
+                    ),
+                    rx.button(
+                        "Cancel",
+                        on_click=AppState.close_mobile_chat_actions,
+                        width="100%",
+                        height="42px",
+                        variant="ghost",
+                        style={
+                            "justify_content": "center",
+                            "color": "rgba(195,205,216,0.82)",
+                            "font_size": "0.88rem",
+                        },
+                    ),
+                    spacing="2",
+                    width="100%",
+                    align_items="stretch",
+                ),
+                position="fixed",
+                left="0",
+                right="0",
+                bottom="0",
+                padding="12px 14px calc(env(safe-area-inset-bottom, 0px) + 12px)",
+                background="rgba(12,13,16,0.98)",
+                border_top="1px solid rgba(255,255,255,0.08)",
+                border_top_left_radius="16px",
+                border_top_right_radius="16px",
+                z_index="121",
+                display=rx.breakpoints(initial="block", md="none"),
+            ),
+        ),
+        rx.fragment(),
+    )
+
+
 def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
     header_blocks: list[rx.Component] = []
     if show_close_button:
@@ -18349,7 +18552,7 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
         rx.text(
             "SEMESTERS",
             color="rgba(255,255,255,0.28)",
-            font_size="0.68rem",
+            font_size=rx.breakpoints(initial="0.78rem", md="0.68rem"),
             letter_spacing="2.4px",
             font_weight="700",
         ),
@@ -18365,7 +18568,7 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             rx.text(
                 "ALEX STUDIES CHATS",
                 color="rgba(255,255,255,0.28)",
-                font_size="0.68rem",
+                font_size=rx.breakpoints(initial="0.78rem", md="0.68rem"),
                 letter_spacing="2.4px",
                 font_weight="700",
             ),
@@ -18408,7 +18611,7 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
                         "border": "none",
                         "outline": "none",
                         "color": "rgba(255,255,255,0.8)",
-                        "font_size": "0.76rem",
+                        "font_size": rx.breakpoints(initial="0.9rem", md="0.76rem"),
                         "width": "100%",
                         "padding": "0",
                         "height": "auto",
@@ -18441,6 +18644,8 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)"),
         # ── Profile button ──────────
         profile_menu_button(),
+        mobile_chat_actions_sheet(),
+        rx.script(SIDEBAR_GESTURES_JS),
         spacing="3",
         width="100%",
         height="100%",
@@ -19236,7 +19441,7 @@ def semester_sidebar_drawer() -> rx.Component:
                 position="fixed",
                 top="0",
                 left="0",
-                width=rx.breakpoints(initial="min(300px, 85vw)", md="300px"),
+                width=rx.breakpoints(initial="100vw", md="300px"),
                 height="100dvh",
                 max_height="100dvh",
                 padding="1.2em 1em",
@@ -19679,6 +19884,7 @@ def semester_page():
                     rx.button(
                         rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
                         on_click=AppState.toggle_semester_sidebar,
+                        id="mobile_sidebar_menu_btn",
                         width="40px",
                         height="40px",
                         min_width="40px",
