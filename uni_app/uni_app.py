@@ -13131,6 +13131,22 @@ NOTE_CAMERA_CLEAR_JS = (
 
 SIDEBAR_GESTURES_JS = """
 (function(){
+  function pokeClick(el){
+    if(!el) return false;
+    try{
+      if(typeof el.click === 'function'){
+        el.click();
+        return true;
+      }
+    }catch(e0){}
+    try{
+      el.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true, view:window}));
+      return true;
+    }catch(e1){
+      return false;
+    }
+  }
+
   function bindLongPress(){
     var rows = document.querySelectorAll('[data-chat-row="1"]');
     rows.forEach(function(row){
@@ -13145,7 +13161,7 @@ SIDEBAR_GESTURES_JS = """
         timer = setTimeout(function(){
           if(moved) return;
           var btn = row.querySelector('[data-mobile-actions-trigger="1"]');
-          if(btn){ btn.click(); }
+          if(btn){ pokeClick(btn); }
         }, 500);
       }, {passive:true});
       row.addEventListener('touchmove', function(){ moved = true; clear(); }, {passive:true});
@@ -13154,47 +13170,40 @@ SIDEBAR_GESTURES_JS = """
       row.addEventListener('contextmenu', function(e){
         e.preventDefault();
         var btn = row.querySelector('[data-mobile-actions-trigger="1"]');
-        if(btn){ btn.click(); }
+        if(btn){ pokeClick(btn); }
       });
     });
   }
 
   function bindEdgeSwipe(){
-    if(window.__sidebarEdgeSwipeBound) return;
-    window.__sidebarEdgeSwipeBound = true;
-    var startX = 0, startY = 0, tracking = false, lastAction = 0;
+    if(window.__alexSidebarSwipeV === 5) return;
+    window.__alexSidebarSwipeV = 5;
+    var startX = 0, startY = 0, armed = false, lastAction = 0;
     function onStart(e){
       if(!e.touches || !e.touches[0]) return;
       var t = e.touches[0];
-      startX = t.clientX; startY = t.clientY;
-      tracking = true;
+      startX = t.clientX; startY = t.clientY; armed = true;
     }
     function onEnd(e){
-      if(!tracking || !e.changedTouches || !e.changedTouches[0]) return;
-      tracking = false;
+      if(!armed || !e.changedTouches || !e.changedTouches[0]) return;
+      armed = false;
       var t = e.changedTouches[0];
       var dx = t.clientX - startX;
       var dy = Math.abs(t.clientY - startY);
-      if(dy >= 70) return;
+      if(dy > 110) return;
       var now = Date.now();
-      if(now - lastAction < 380) return;
+      if(now - lastAction < 320) return;
       var panelOpen = !!document.getElementById('mobile_sidebar_drawer_panel');
-      // Swipe LEFT (finger moves left) -> open when closed.
-      if(dx < -56 && !panelOpen){
+      // Swipe LEFT (dx negative) -> open when closed.
+      if(dx < -44 && !panelOpen){
         var openBtn = document.getElementById('mobile_sidebar_swipe_open_hook');
-        if(openBtn){
-          openBtn.click();
-          lastAction = now;
-        }
+        if(pokeClick(openBtn)) lastAction = now;
         return;
       }
       // Swipe RIGHT -> close when open.
-      if(dx > 56 && panelOpen){
+      if(dx > 44 && panelOpen){
         var closeBtn = document.getElementById('mobile_sidebar_swipe_close_hook');
-        if(closeBtn){
-          closeBtn.click();
-          lastAction = now;
-        }
+        if(pokeClick(closeBtn)) lastAction = now;
       }
     }
     window.addEventListener('touchstart', onStart, {passive:true, capture:true});
@@ -13206,13 +13215,62 @@ SIDEBAR_GESTURES_JS = """
   var _n = 0;
   var _iv = setInterval(function(){
     bindLongPress();
-    if(++_n > 90) clearInterval(_iv);
-  }, 500);
+    if(++_n > 120) clearInterval(_iv);
+  }, 400);
   try{
     new MutationObserver(function(){ setTimeout(bindLongPress, 60); }).observe(document.body,{childList:true,subtree:true});
   }catch(e){}
 })();
 """
+
+
+def _semester_sidebar_swipe_open_hook_btn() -> rx.Component:
+    """Native <button> (not Radix): programmatic .click() must queue Reflex reliably on mobile."""
+    return rx.el.button(
+        "\u00a0",
+        id="mobile_sidebar_swipe_open_hook",
+        type="button",
+        on_click=AppState.open_semester_sidebar,
+        tab_index=-1,
+        custom_attrs={"aria-hidden": "true"},
+        style={
+            "position": "fixed",
+            "left": "-9999px",
+            "top": "0",
+            "width": "48px",
+            "height": "48px",
+            "min_width": "48px",
+            "opacity": "0",
+            "border": "none",
+            "padding": "0",
+            "margin": "0",
+            "z_index": "2147483000",
+        },
+    )
+
+
+def _semester_sidebar_swipe_close_hook_btn() -> rx.Component:
+    return rx.el.button(
+        "\u00a0",
+        id="mobile_sidebar_swipe_close_hook",
+        type="button",
+        on_click=AppState.close_semester_sidebar,
+        tab_index=-1,
+        custom_attrs={"aria-hidden": "true"},
+        style={
+            "position": "absolute",
+            "left": "0",
+            "top": "0",
+            "width": "48px",
+            "height": "48px",
+            "min_width": "48px",
+            "opacity": "0",
+            "border": "none",
+            "padding": "0",
+            "margin": "0",
+        },
+    )
+
 
 AUTO_SCROLL_OBSERVER_JS = """
 (function(){
@@ -17900,24 +17958,7 @@ def profile_menu_button() -> rx.Component:
 def home_page():
     return rx.fragment(
         rx.script(SIDEBAR_GESTURES_JS),
-        rx.el.button(
-            id="mobile_sidebar_swipe_open_hook",
-            type="button",
-            on_click=AppState.open_semester_sidebar,
-            style={
-                "position": "fixed",
-                "left": "0",
-                "top": "0",
-                "width": "1px",
-                "height": "1px",
-                "opacity": "0",
-                "pointer_events": "none",
-                "border": "none",
-                "padding": "0",
-                "margin": "0",
-                "z_index": "-1",
-            },
-        ),
+        _semester_sidebar_swipe_open_hook_btn(),
         rx.box(
         # ── Mobile header (Claude-style: hamburger + new-chat) ──
         rx.box(
@@ -19480,23 +19521,7 @@ def semester_sidebar_drawer() -> rx.Component:
                 on_click=AppState.close_semester_sidebar,
             ),
             rx.box(
-                rx.el.button(
-                    id="mobile_sidebar_swipe_close_hook",
-                    type="button",
-                    on_click=AppState.close_semester_sidebar,
-                    style={
-                        "position": "absolute",
-                        "left": "0",
-                        "top": "0",
-                        "width": "1px",
-                        "height": "1px",
-                        "opacity": "0",
-                        "pointer_events": "none",
-                        "border": "none",
-                        "padding": "0",
-                        "margin": "0",
-                    },
-                ),
+                _semester_sidebar_swipe_close_hook_btn(),
                 workspace_sidebar_content(show_close_button=True),
                 id="mobile_sidebar_drawer_panel",
                 position="fixed",
@@ -19927,24 +19952,7 @@ def _notes_unload_autosave_dom() -> rx.Component:
 def semester_page():
     return rx.fragment(
         rx.script(SIDEBAR_GESTURES_JS),
-        rx.el.button(
-            id="mobile_sidebar_swipe_open_hook",
-            type="button",
-            on_click=AppState.open_semester_sidebar,
-            style={
-                "position": "fixed",
-                "left": "0",
-                "top": "0",
-                "width": "1px",
-                "height": "1px",
-                "opacity": "0",
-                "pointer_events": "none",
-                "border": "none",
-                "padding": "0",
-                "margin": "0",
-                "z_index": "-1",
-            },
-        ),
+        _semester_sidebar_swipe_open_hook_btn(),
         _notes_unload_autosave_dom(),
         rx.hstack(
         # ── Nav rail (left, desktop only) ──
