@@ -18831,30 +18831,7 @@ def notes_panel() -> rx.Component:
                                                 rx.clear_selected_files("note_upl_media"),
                                             ],
                                         ),
-                                        rx.box(
-                                            rx.el.input(
-                                                id=_NOTE_UPL_CAMERA_INPUT_ID,
-                                                type="file",
-                                                accept="image/*",
-                                                capture="environment",
-                                                style={
-                                                    "position": "absolute",
-                                                    "width": "1px",
-                                                    "height": "1px",
-                                                    "padding": "0",
-                                                    "margin": "-1px",
-                                                    "overflow": "hidden",
-                                                    "clip": "rect(0,0,0,0)",
-                                                    "white_space": "nowrap",
-                                                    "border": "0",
-                                                },
-                                                on_change=[
-                                                    AppState.handle_note_media_upload(
-                                                        rx.upload_files(upload_id=_NOTE_UPL_CAMERA_INPUT_ID)
-                                                    ),
-                                                    rx.call_script(NOTE_CAMERA_CLEAR_JS),
-                                                ],
-                                            ),
+                                        rx.upload(
                                             rx.button(
                                                 rx.icon(tag="camera", size=15, color="rgba(200,215,230,0.75)"),
                                                 "Camera",
@@ -18868,12 +18845,25 @@ def notes_panel() -> rx.Component:
                                                     "cursor": "pointer",
                                                     "_hover": {"background": "rgba(255,255,255,0.06)"},
                                                 },
-                                                on_click=rx.call_script(NOTE_CAMERA_OPEN_JS),
                                             ),
-                                            position="relative",
+                                            id="note_upl_camera",
+                                            accept={
+                                                "image/png": [".png"],
+                                                "image/jpeg": [".jpg", ".jpeg"],
+                                                "image/webp": [".webp"],
+                                            },
+                                            max_files=1,
+                                            multiple=False,
+                                            border="none",
+                                            padding="0",
+                                            background="transparent",
+                                            width="auto",
+                                            **{"textAlign": "left"},
+                                            on_drop=[
+                                                AppState.handle_note_media_upload,  # type: ignore
+                                                rx.clear_selected_files("note_upl_camera"),
+                                            ],
                                             display=rx.breakpoints(initial="flex", md="none"),
-                                            align_items="center",
-                                            flex_shrink="0",
                                         ),
                                         spacing="2",
                                         flex_wrap=rx.breakpoints(initial="nowrap", md="wrap"),
