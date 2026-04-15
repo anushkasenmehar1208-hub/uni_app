@@ -13311,10 +13311,10 @@ SIDEBAR_GESTURES_JS = """
     }catch(e){ return Math.min(window.innerWidth || 360, 360); }
   }
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 12) return;
-    window.__alexSidebarSwipeV = 12;
+    if(window.__alexSidebarSwipeV === 13) return;
+    window.__alexSidebarSwipeV = 13;
     var startX = 0, startY = 0, armed = false, dominant = false, dragMode = null;
-    var armedFromLeftEdge = false;
+    var dragVisualStarted = false;
     var moveBuf = [];
     var rafId = 0;
     var pendingTx = null;
@@ -13372,28 +13372,15 @@ SIDEBAR_GESTURES_JS = """
       return (a.x - b.x) / Math.max(1, a.t - b.t);
     }
 
-    function edgeOpenPx(){
-      var w = window.innerWidth || 360;
-      return Math.min(52, Math.max(24, Math.round(w * 0.11)));
-    }
-
     function onStart(e){
       if(!e.touches || !e.touches[0]) return;
       var t = e.touches[0];
       startX = t.clientX; startY = t.clientY;
+      armed = true;
       dominant = false; dragMode = null;
-      armedFromLeftEdge = false;
+      dragVisualStarted = false;
       flushBuf();
       pushMove(t.clientX);
-      // Only track gestures that can open/close the drawer (not every touch on the page).
-      if(drawerIsOpen()){
-        armed = true;
-      }else{
-        armed = startX <= edgeOpenPx();
-        armedFromLeftEdge = armed;
-      }
-      // Do not strip the panel transform on unrelated taps (breaks Reflex + short open swipes).
-      if(armed) clearInlineVisual();
     }
 
     function onMove(e){
@@ -13406,39 +13393,30 @@ SIDEBAR_GESTURES_JS = """
       if(!dominant){
         var adx = Math.abs(dx);
         var hypo = Math.sqrt(adx * adx + dy * dy);
-        if(hypo < 10) return;
+        if(hypo < 11) return;
         var ratH = adx / Math.max(dy, 1);
         var ratV = dy / Math.max(adx, 1);
         var o = drawerIsOpen();
-        // Open-from-bezel: natural arcs are slightly diagonal; use looser rules than close.
-        if(armedFromLeftEdge && !o){
-          if(hypo > 88){
-            armed = false; flushBuf(); return;
-          }
-          if(ratV >= 1.28){
-            armed = false; flushBuf(); return;
-          }
-          if(adx < 6) return;
-          if(dx < 4) return;
-          dominant = true;
-          dragMode = 'open';
-        }else{
-          if(ratV >= 1.15){
-            armed = false; flushBuf(); return;
-          }
-          if(ratH < 1.7){
-            if(hypo > 36){
-              armed = false; flushBuf(); return;
-            }
-            return;
-          }
-          dominant = true;
-          if(dx > 0 && !o) dragMode = 'open';
-          else if(dx < 0 && o) dragMode = 'close';
-          else { armed = false; flushBuf(); return; }
+        if(ratV >= 1.22){
+          armed = false; flushBuf(); return;
         }
+        if(ratH < 1.62){
+          if(hypo > 42){
+            armed = false; flushBuf(); return;
+          }
+          return;
+        }
+        dominant = true;
+        if(dx > 0 && !o) dragMode = 'open';
+        else if(dx < 0 && o) dragMode = 'close';
+        else { armed = false; flushBuf(); return; }
       }
       if(!dragMode) return;
+
+      if(!dragVisualStarted){
+        clearInlineVisual();
+        dragVisualStarted = true;
+      }
 
       var W = drawerWidthPx();
       var tx, scr;
@@ -13453,16 +13431,22 @@ SIDEBAR_GESTURES_JS = """
     }
 
     function onEnd(e){
-      if(!armed){ clearInlineVisual(); return; }
+      if(!armed){
+        dominant = false; dragMode = null; dragVisualStarted = false; flushBuf();
+        return;
+      }
       armed = false;
       if(!dominant || !dragMode){
-        clearInlineVisual();
         flushBuf();
-        dominant = false; dragMode = null;
+        dominant = false; dragMode = null; dragVisualStarted = false;
         return;
       }
       var t = e.changedTouches && e.changedTouches[0];
-      if(!t){ clearInlineVisual(); flushBuf(); dominant = false; dragMode = null; return; }
+      if(!t){
+        clearInlineVisual(); flushBuf();
+        dominant = false; dragMode = null; dragVisualStarted = false;
+        return;
+      }
       var dx = t.clientX - startX;
       var W = drawerWidthPx();
       var v = velocityX();
@@ -13483,11 +13467,11 @@ SIDEBAR_GESTURES_JS = """
         }
       }
       setTimeout(function(){ clearInlineVisual(); }, 80);
-      dominant = false; dragMode = null; flushBuf();
+      dominant = false; dragMode = null; dragVisualStarted = false; flushBuf();
     }
 
     function onCancel(){
-      armed = false; dominant = false; dragMode = null;
+      armed = false; dominant = false; dragMode = null; dragVisualStarted = false;
       clearInlineVisual(); flushBuf();
     }
 
