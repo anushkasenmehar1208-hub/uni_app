@@ -17881,6 +17881,7 @@ def profile_menu_button() -> rx.Component:
 # FIX 2: home_page — clean header, aligned sidebar, no yellow blur
 def home_page():
     return rx.fragment(
+        rx.script(SIDEBAR_GESTURES_JS),
         rx.box(
         # ── Mobile header (Claude-style: hamburger + new-chat) ──
         rx.box(
@@ -19875,6 +19876,7 @@ def _notes_unload_autosave_dom() -> rx.Component:
 
 def semester_page():
     return rx.fragment(
+        rx.script(SIDEBAR_GESTURES_JS),
         _notes_unload_autosave_dom(),
         rx.hstack(
         # ── Nav rail (left, desktop only) ──
