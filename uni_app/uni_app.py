@@ -18850,7 +18850,7 @@ def notes_panel() -> rx.Component:
                                                 },
                                                 on_change=[
                                                     AppState.handle_note_media_upload(
-                                                        rx.upload_files(upload_id="note_upl_camera")
+                                                        rx.upload_files(upload_id=_NOTE_UPL_CAMERA_INPUT_ID)
                                                     ),
                                                     rx.call_script(NOTE_CAMERA_CLEAR_JS),
                                                 ],
