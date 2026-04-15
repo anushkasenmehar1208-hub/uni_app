@@ -1225,18 +1225,21 @@ def _is_allowed_image_upload(filename: str, mime_type: str, file_bytes: bytes) -
     suffix = Path(filename or "").suffix.lower()
     claimed_mime = (mime_type or "").lower().strip()
     detected_mime = _sniff_image_mime(file_bytes)
-    if suffix not in ALLOWED_IMAGE_EXTENSIONS:
-        return False
-    if claimed_mime and claimed_mime not in ALLOWED_IMAGE_TYPES:
+    if claimed_mime and claimed_mime not in ALLOWED_IMAGE_TYPES and not claimed_mime.startswith("image/"):
         return False
     if not detected_mime:
         return False
-    if suffix in {".jpg", ".jpeg"} and detected_mime != "image/jpeg":
-        return False
-    if suffix == ".png" and detected_mime != "image/png":
-        return False
-    if suffix == ".webp" and detected_mime != "image/webp":
-        return False
+    if suffix in ALLOWED_IMAGE_EXTENSIONS:
+        if suffix in {".jpg", ".jpeg"} and detected_mime != "image/jpeg":
+            return False
+        if suffix == ".png" and detected_mime != "image/png":
+            return False
+        if suffix == ".webp" and detected_mime != "image/webp":
+            return False
+    else:
+        # Mobile camera capture sometimes provides no/odd extension. Trust content sniff.
+        if detected_mime not in {"image/png", "image/jpeg", "image/webp"}:
+            return False
     return True
 
 
