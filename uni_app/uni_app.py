@@ -13311,8 +13311,8 @@ SIDEBAR_GESTURES_JS = """
     }catch(e){ return Math.min(window.innerWidth || 360, 360); }
   }
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 13) return;
-    window.__alexSidebarSwipeV = 13;
+    if(window.__alexSidebarSwipeV === 14) return;
+    window.__alexSidebarSwipeV = 14;
     var startX = 0, startY = 0, armed = false, dominant = false, dragMode = null;
     var dragVisualStarted = false;
     var moveBuf = [];
@@ -13393,15 +13393,15 @@ SIDEBAR_GESTURES_JS = """
       if(!dominant){
         var adx = Math.abs(dx);
         var hypo = Math.sqrt(adx * adx + dy * dy);
-        if(hypo < 11) return;
+        if(hypo < 18) return;
         var ratH = adx / Math.max(dy, 1);
         var ratV = dy / Math.max(adx, 1);
         var o = drawerIsOpen();
-        if(ratV >= 1.22){
+        if(ratV >= 1.18){
           armed = false; flushBuf(); return;
         }
-        if(ratH < 1.62){
-          if(hypo > 42){
+        if(ratH < 1.75){
+          if(hypo > 38){
             armed = false; flushBuf(); return;
           }
           return;
@@ -13454,19 +13454,19 @@ SIDEBAR_GESTURES_JS = """
       var closeHook = document.getElementById('mobile_sidebar_swipe_close_hook');
 
       if(dragMode === 'open'){
-        // W is often full viewport; 18% of W is an unrealistically long edge swipe to "peek".
-        var openDx = Math.max(20, Math.min(56, Math.round(W * 0.11)));
-        var commitOpen = (dx > openDx) || (v > 0.28);
+        var openDx = Math.max(52, Math.min(120, Math.round(W * 0.26)));
+        var commitOpen = (dx > openDx && dx > 22) || (v > 0.52 && dx > 26);
         if(commitOpen){
           if(!drawerIsOpen()) reflexEmitSidebar('open') || pokeClick(openHook);
         }
       }else{
-        var commitClose = (dx < -W * 0.18) || (v < -0.38);
+        var closeDx = Math.max(56, Math.min(130, Math.round(W * 0.26)));
+        var commitClose = (dx < -closeDx && dx < -26) || (v < -0.52 && dx < -30);
         if(commitClose){
           if(drawerIsOpen()) reflexEmitSidebar('close') || pokeClick(closeHook);
         }
       }
-      setTimeout(function(){ clearInlineVisual(); }, 80);
+      if(dragVisualStarted) clearInlineVisual();
       dominant = false; dragMode = null; dragVisualStarted = false; flushBuf();
     }
 
