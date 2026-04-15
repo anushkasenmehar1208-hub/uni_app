@@ -6376,7 +6376,6 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
         self._notes_persist_editor(manual=False)
         self.show_notes_panel = False
-        self.show_semester_sidebar = False
         self.show_global_search = True
 
     @rx.event
@@ -6397,7 +6396,6 @@ class AppState(reflex_local_auth.LocalAuthState):
         else:
             self._notes_persist_editor(manual=False)
             self.show_notes_panel = False
-            self.show_semester_sidebar = False
             self.show_global_search = True
 
     @rx.event
@@ -13522,6 +13520,8 @@ def _semester_sidebar_swipe_close_hook_btn() -> rx.Component:
             "border": "none",
             "padding": "0",
             "margin": "0",
+            # Swipe code uses pokeClick(this); real taps must hit the search/header row instead.
+            "pointer_events": "none",
         },
     )
 
