@@ -13248,8 +13248,8 @@ SIDEBAR_GESTURES_JS = """
   }
 
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 6) return;
-    window.__alexSidebarSwipeV = 6;
+    if(window.__alexSidebarSwipeV === 7) return;
+    window.__alexSidebarSwipeV = 7;
     var startX = 0, startY = 0, armed = false, lastAction = 0;
     function onStart(e){
       if(!e.touches || !e.touches[0]) return;
@@ -13266,14 +13266,14 @@ SIDEBAR_GESTURES_JS = """
       var now = Date.now();
       if(now - lastAction < 320) return;
       var panelOpen = !!document.getElementById('mobile_sidebar_drawer_panel');
-      // Swipe LEFT (dx negative) -> open when closed.
-      if(dx < -44 && !panelOpen){
+      // Swipe RIGHT (dx positive) -> open when closed.
+      if(dx > 44 && !panelOpen){
         var openBtn = document.getElementById('mobile_sidebar_swipe_open_hook');
         if(reflexEmitSidebar('open') || pokeClick(openBtn)) lastAction = now;
         return;
       }
-      // Swipe RIGHT -> close when open.
-      if(dx > 44 && panelOpen){
+      // Swipe LEFT (dx negative) -> close when open.
+      if(dx < -44 && panelOpen){
         var closeBtn = document.getElementById('mobile_sidebar_swipe_close_hook');
         if(reflexEmitSidebar('close') || pokeClick(closeBtn)) lastAction = now;
       }
