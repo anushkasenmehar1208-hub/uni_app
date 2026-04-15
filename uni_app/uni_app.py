@@ -18832,20 +18832,48 @@ def mobile_chat_actions_sheet() -> rx.Component:
 
 
 def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
+    _sidebar_global_search_btn = rx.icon_button(
+        rx.icon(tag="search", size=18),
+        on_click=AppState.toggle_global_search,
+        variant="ghost",
+        size="2",
+        custom_attrs={"aria-label": "Search all chats"},
+        style={
+            "color": "rgba(218,226,236,0.55)",
+            "background": "transparent",
+            "border": "none",
+            "border_radius": "10px",
+            "width": "44px",
+            "height": "44px",
+            "min_width": "44px",
+            "min_height": "44px",
+            "cursor": "pointer",
+            "_hover": {
+                "color": "rgba(240,244,248,0.92)",
+                "background": "rgba(255,255,255,0.08)",
+            },
+        },
+    )
     header_blocks: list[rx.Component] = []
     if show_close_button:
         header_blocks.append(
             rx.hstack(
+                _sidebar_global_search_btn,
                 rx.spacer(),
                 rx.icon_button(
                     rx.icon(tag="panel_left", size=18),
                     on_click=AppState.close_semester_sidebar,
                     variant="ghost",
+                    size="2",
                     style={
                         "color": "rgba(200,210,220,0.45)",
                         "background": "transparent",
                         "border": "none",
-                        "border_radius": "8px",
+                        "border_radius": "10px",
+                        "width": "44px",
+                        "height": "44px",
+                        "min_width": "44px",
+                        "min_height": "44px",
                         "cursor": "pointer",
                         "_hover": {
                             "color": "rgba(220,230,240,0.85)",
@@ -18855,6 +18883,16 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
                 ),
                 width="100%",
                 align="center",
+            )
+        )
+    else:
+        header_blocks.append(
+            rx.hstack(
+                _sidebar_global_search_btn,
+                rx.spacer(),
+                width="100%",
+                align="center",
+                display=rx.breakpoints(initial="none", md="flex"),
             )
         )
 
@@ -18879,12 +18917,24 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             on_change=AppState.sidebar_select_semester,
             width="100%",
             size="2",
-            variant="soft",
+            variant="surface",
+            color_scheme="gray",
+            high_contrast=False,
+            radius="medium",
             style={
-                "background": "rgba(255,255,255,0.05)",
-                "border": "1px solid rgba(255,255,255,0.08)",
+                "background": "rgba(255,255,255,0.06)",
+                "border": "1px solid rgba(255,255,255,0.1)",
                 "border_radius": "10px",
                 "color": "rgba(240,244,248,0.92)",
+                "box_shadow": "none",
+                "& .rt-SelectTrigger": {
+                    "background": "rgba(255,255,255,0.06)",
+                    "color": "rgba(240,244,248,0.92)",
+                    "box_shadow": "none",
+                },
+                "&:hover .rt-SelectTrigger": {
+                    "background": "rgba(255,255,255,0.09)",
+                },
             },
         ),
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)"),
@@ -18899,23 +18949,6 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
                 text_transform="uppercase",
             ),
             rx.spacer(),
-            rx.icon_button(
-                rx.icon(tag="search", size=15),
-                on_click=AppState.toggle_global_search,
-                variant="ghost",
-                size="1",
-                title="Search all chats",
-                style={
-                    "color": "rgba(255,255,255,0.4)",
-                    "background": "transparent",
-                    "border": "none",
-                    "cursor": "pointer",
-                    "_hover": {
-                        "color": "rgba(255,255,255,0.85)",
-                        "background": "rgba(255,255,255,0.06)",
-                    },
-                },
-            ),
             rx.cond(
                 AppState.is_home_scope_active,
                 rx.icon_button(
