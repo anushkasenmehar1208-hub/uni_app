@@ -13311,8 +13311,8 @@ SIDEBAR_GESTURES_JS = """
     }catch(e){ return Math.min(window.innerWidth || 360, 360); }
   }
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 9) return;
-    window.__alexSidebarSwipeV = 9;
+    if(window.__alexSidebarSwipeV === 10) return;
+    window.__alexSidebarSwipeV = 10;
     var startX = 0, startY = 0, armed = false, dominant = false, dragMode = null;
     var moveBuf = [];
     var rafId = 0;
@@ -13371,14 +13371,25 @@ SIDEBAR_GESTURES_JS = """
       return (a.x - b.x) / Math.max(1, a.t - b.t);
     }
 
+    function edgeOpenPx(){
+      var w = window.innerWidth || 360;
+      return Math.min(36, Math.max(20, Math.round(w * 0.07)));
+    }
+
     function onStart(e){
       if(!e.touches || !e.touches[0]) return;
       var t = e.touches[0];
       startX = t.clientX; startY = t.clientY;
-      armed = true; dominant = false; dragMode = null;
+      dominant = false; dragMode = null;
       clearInlineVisual();
       flushBuf();
       pushMove(t.clientX);
+      // Only track gestures that can open/close the drawer (not every touch on the page).
+      if(drawerIsOpen()){
+        armed = true;
+      }else{
+        armed = startX <= edgeOpenPx();
+      }
     }
 
     function onMove(e){
@@ -13389,8 +13400,22 @@ SIDEBAR_GESTURES_JS = """
       pushMove(t.clientX);
 
       if(!dominant){
-        if(Math.max(Math.abs(dx), dy) < 10) return;
-        if(dy > Math.abs(dx) + 12){ armed = false; flushBuf(); return; }
+        var adx = Math.abs(dx);
+        var hypo = Math.sqrt(adx * adx + dy * dy);
+        if(hypo < 10) return;
+        var ratH = adx / Math.max(dy, 1);
+        var ratV = dy / Math.max(adx, 1);
+        // Vertical / diagonal scroll: do not hijack.
+        if(ratV >= 1.15){
+          armed = false; flushBuf(); return;
+        }
+        // Require clear horizontal intent before following the finger.
+        if(ratH < 1.7){
+          if(hypo > 36){
+            armed = false; flushBuf(); return;
+          }
+          return;
+        }
         dominant = true;
         var o = drawerIsOpen();
         if(dx > 0 && !o) dragMode = 'open';
