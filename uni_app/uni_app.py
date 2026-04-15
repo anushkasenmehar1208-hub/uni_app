@@ -13152,12 +13152,12 @@ SIDEBAR_GESTURES_JS = """
   function bindEdgeSwipe(){
     if(window.__sidebarEdgeSwipeBound) return;
     window.__sidebarEdgeSwipeBound = true;
-    var startX = 0, startY = 0, tracking = false, lastOpen = 0;
+    var startX = 0, startY = 0, tracking = false, lastAction = 0;
     document.addEventListener('touchstart', function(e){
       if(!e.touches || !e.touches[0]) return;
       var t = e.touches[0];
       startX = t.clientX; startY = t.clientY;
-      tracking = startX <= 24;
+      tracking = true;
     }, {passive:true});
     document.addEventListener('touchend', function(e){
       if(!tracking || !e.changedTouches || !e.changedTouches[0]) return;
@@ -13165,12 +13165,20 @@ SIDEBAR_GESTURES_JS = """
       var t = e.changedTouches[0];
       var dx = t.clientX - startX;
       var dy = Math.abs(t.clientY - startY);
-      if(dx > 72 && dy < 44){
-        var now = Date.now();
-        if(now - lastOpen < 800) return;
-        lastOpen = now;
-        var btn = document.getElementById('mobile_sidebar_menu_btn');
-        if(btn) btn.click();
+      if(dy >= 44) return;
+      var now = Date.now();
+      if(now - lastAction < 450) return;
+      var panelOpen = !!document.getElementById('mobile_sidebar_drawer_panel');
+      // Requested behavior: swipe LEFT anywhere opens sidebar.
+      if(dx < -72 && !panelOpen){
+        var openBtn = document.getElementById('mobile_sidebar_menu_btn');
+        if(openBtn){ openBtn.click(); lastAction = now; }
+        return;
+      }
+      // Requested behavior: swipe RIGHT anywhere closes sidebar.
+      if(dx > 72 && panelOpen){
+        var closeBtn = document.getElementById('mobile_sidebar_close_btn');
+        if(closeBtn){ closeBtn.click(); lastAction = now; }
       }
     }, {passive:true});
   }
@@ -18044,7 +18052,7 @@ def semester_nav_button(year: str, semester: str) -> rx.Component:
                 "font_weight": "500",
                 "border_radius": "12px",
                 "padding": "0.46em 0.72em",
-                "font_size": rx.breakpoints(initial="0.93rem", md="0.78rem"),
+                "font_size": rx.breakpoints(initial="1.08rem", md="0.78rem"),
                 "min_height": "0",
                 "opacity": "0.6",
                 "cursor": "pointer",
@@ -18191,7 +18199,7 @@ def semester_chat_history_list() -> rx.Component:
                         text_overflow="ellipsis",
                         white_space="nowrap",
                         size="1",
-                        font_size=rx.breakpoints(initial="0.93rem", md="0.8rem"),
+                        font_size=rx.breakpoints(initial="1.02rem", md="0.8rem"),
                     ),
                     rx.button(
                         "",
@@ -18519,6 +18527,7 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
                 rx.icon_button(
                     rx.icon(tag="panel_left", size=18),
                     on_click=AppState.close_semester_sidebar,
+                    id="mobile_sidebar_close_btn",
                     variant="ghost",
                     style={
                         "color": "rgba(200,210,220,0.45)",
@@ -18552,7 +18561,7 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
         rx.text(
             "SEMESTERS",
             color="rgba(255,255,255,0.28)",
-            font_size=rx.breakpoints(initial="0.78rem", md="0.68rem"),
+            font_size=rx.breakpoints(initial="0.95rem", md="0.68rem"),
             letter_spacing="2.4px",
             font_weight="700",
         ),
@@ -18568,7 +18577,7 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             rx.text(
                 "ALEX STUDIES CHATS",
                 color="rgba(255,255,255,0.28)",
-                font_size=rx.breakpoints(initial="0.78rem", md="0.68rem"),
+                font_size=rx.breakpoints(initial="0.95rem", md="0.68rem"),
                 letter_spacing="2.4px",
                 font_weight="700",
             ),
@@ -19438,6 +19447,7 @@ def semester_sidebar_drawer() -> rx.Component:
             ),
             rx.box(
                 workspace_sidebar_content(show_close_button=True),
+                id="mobile_sidebar_drawer_panel",
                 position="fixed",
                 top="0",
                 left="0",
