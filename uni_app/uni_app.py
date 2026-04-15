@@ -9641,6 +9641,16 @@ Quality rules:
                 self._load_home_sessions(uid)
 
     @rx.event
+    def open_semester_sidebar(self):
+        """Mobile swipe / hooks: open only when closed (avoids accidental toggle)."""
+        if self.show_semester_sidebar:
+            return
+        self.show_semester_sidebar = True
+        uid = self._uid()
+        if uid >= 0:
+            self._load_home_sessions(uid)
+
+    @rx.event
     def close_semester_sidebar(self):
         self.show_semester_sidebar = False
         self.show_mobile_chat_actions = False
@@ -13153,34 +13163,42 @@ SIDEBAR_GESTURES_JS = """
     if(window.__sidebarEdgeSwipeBound) return;
     window.__sidebarEdgeSwipeBound = true;
     var startX = 0, startY = 0, tracking = false, lastAction = 0;
-    document.addEventListener('touchstart', function(e){
+    function onStart(e){
       if(!e.touches || !e.touches[0]) return;
       var t = e.touches[0];
       startX = t.clientX; startY = t.clientY;
       tracking = true;
-    }, {passive:true});
-    document.addEventListener('touchend', function(e){
+    }
+    function onEnd(e){
       if(!tracking || !e.changedTouches || !e.changedTouches[0]) return;
       tracking = false;
       var t = e.changedTouches[0];
       var dx = t.clientX - startX;
       var dy = Math.abs(t.clientY - startY);
-      if(dy >= 44) return;
+      if(dy >= 70) return;
       var now = Date.now();
-      if(now - lastAction < 450) return;
+      if(now - lastAction < 380) return;
       var panelOpen = !!document.getElementById('mobile_sidebar_drawer_panel');
-      // Requested behavior: swipe LEFT anywhere opens sidebar.
-      if(dx < -72 && !panelOpen){
-        var openBtn = document.getElementById('mobile_sidebar_menu_btn');
-        if(openBtn){ openBtn.click(); lastAction = now; }
+      // Swipe LEFT (finger moves left) -> open when closed.
+      if(dx < -56 && !panelOpen){
+        var openBtn = document.getElementById('mobile_sidebar_swipe_open_hook');
+        if(openBtn){
+          openBtn.click();
+          lastAction = now;
+        }
         return;
       }
-      // Requested behavior: swipe RIGHT anywhere closes sidebar.
-      if(dx > 72 && panelOpen){
-        var closeBtn = document.getElementById('mobile_sidebar_close_btn');
-        if(closeBtn){ closeBtn.click(); lastAction = now; }
+      // Swipe RIGHT -> close when open.
+      if(dx > 56 && panelOpen){
+        var closeBtn = document.getElementById('mobile_sidebar_swipe_close_hook');
+        if(closeBtn){
+          closeBtn.click();
+          lastAction = now;
+        }
       }
-    }, {passive:true});
+    }
+    window.addEventListener('touchstart', onStart, {passive:true, capture:true});
+    window.addEventListener('touchend', onEnd, {passive:true, capture:true});
   }
 
   bindLongPress();
@@ -17882,6 +17900,24 @@ def profile_menu_button() -> rx.Component:
 def home_page():
     return rx.fragment(
         rx.script(SIDEBAR_GESTURES_JS),
+        rx.el.button(
+            id="mobile_sidebar_swipe_open_hook",
+            type="button",
+            on_click=AppState.open_semester_sidebar,
+            style={
+                "position": "fixed",
+                "left": "0",
+                "top": "0",
+                "width": "1px",
+                "height": "1px",
+                "opacity": "0",
+                "pointer_events": "none",
+                "border": "none",
+                "padding": "0",
+                "margin": "0",
+                "z_index": "-1",
+            },
+        ),
         rx.box(
         # ── Mobile header (Claude-style: hamburger + new-chat) ──
         rx.box(
@@ -17889,7 +17925,6 @@ def home_page():
                 rx.button(
                     rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
                     on_click=AppState.toggle_semester_sidebar,
-                    id="mobile_sidebar_menu_btn",
                     width="40px",
                     height="40px",
                     min_width="40px",
@@ -18528,7 +18563,6 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
                 rx.icon_button(
                     rx.icon(tag="panel_left", size=18),
                     on_click=AppState.close_semester_sidebar,
-                    id="mobile_sidebar_close_btn",
                     variant="ghost",
                     style={
                         "color": "rgba(200,210,220,0.45)",
@@ -18655,7 +18689,6 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
         # ── Profile button ──────────
         profile_menu_button(),
         mobile_chat_actions_sheet(),
-        rx.script(SIDEBAR_GESTURES_JS),
         spacing="3",
         width="100%",
         height="100%",
@@ -19447,6 +19480,23 @@ def semester_sidebar_drawer() -> rx.Component:
                 on_click=AppState.close_semester_sidebar,
             ),
             rx.box(
+                rx.el.button(
+                    id="mobile_sidebar_swipe_close_hook",
+                    type="button",
+                    on_click=AppState.close_semester_sidebar,
+                    style={
+                        "position": "absolute",
+                        "left": "0",
+                        "top": "0",
+                        "width": "1px",
+                        "height": "1px",
+                        "opacity": "0",
+                        "pointer_events": "none",
+                        "border": "none",
+                        "padding": "0",
+                        "margin": "0",
+                    },
+                ),
                 workspace_sidebar_content(show_close_button=True),
                 id="mobile_sidebar_drawer_panel",
                 position="fixed",
@@ -19877,6 +19927,24 @@ def _notes_unload_autosave_dom() -> rx.Component:
 def semester_page():
     return rx.fragment(
         rx.script(SIDEBAR_GESTURES_JS),
+        rx.el.button(
+            id="mobile_sidebar_swipe_open_hook",
+            type="button",
+            on_click=AppState.open_semester_sidebar,
+            style={
+                "position": "fixed",
+                "left": "0",
+                "top": "0",
+                "width": "1px",
+                "height": "1px",
+                "opacity": "0",
+                "pointer_events": "none",
+                "border": "none",
+                "padding": "0",
+                "margin": "0",
+                "z_index": "-1",
+            },
+        ),
         _notes_unload_autosave_dom(),
         rx.hstack(
         # ── Nav rail (left, desktop only) ──
@@ -19896,7 +19964,6 @@ def semester_page():
                     rx.button(
                         rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
                         on_click=AppState.toggle_semester_sidebar,
-                        id="mobile_sidebar_menu_btn",
                         width="40px",
                         height="40px",
                         min_width="40px",
