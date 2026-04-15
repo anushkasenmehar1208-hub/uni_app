@@ -4359,6 +4359,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     # Notes (semester workspace)
     show_notes_panel: bool = False
+    show_notes_library_drawer: bool = False
     notes_items: list[dict] = []
     notes_editor_id: str = ""
     notes_editor_title: str = ""
@@ -6585,9 +6586,11 @@ class AppState(reflex_local_auth.LocalAuthState):
     def toggle_notes_panel(self):
         if self.show_notes_panel:
             self._notes_persist_editor(manual=False)
+            self.show_notes_library_drawer = False
         self.show_notes_panel = not self.show_notes_panel
         if self.show_notes_panel:
             self.show_global_search = False
+            self.show_notes_library_drawer = False
             self._reload_notes_items()
             if not self.notes_editor_id and not self.notes_upload_bucket:
                 self.notes_upload_bucket = f"d{secrets.token_hex(6)}"
@@ -6596,6 +6599,15 @@ class AppState(reflex_local_auth.LocalAuthState):
     def close_notes_panel(self):
         self._notes_persist_editor(manual=False)
         self.show_notes_panel = False
+        self.show_notes_library_drawer = False
+
+    @rx.event
+    def toggle_notes_library_drawer(self):
+        self.show_notes_library_drawer = not self.show_notes_library_drawer
+
+    @rx.event
+    def close_notes_library_drawer(self):
+        self.show_notes_library_drawer = False
 
     @rx.event
     def set_notes_editor_title(self, v: str):
@@ -6617,6 +6629,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.notes_upload_bucket = f"d{secrets.token_hex(6)}"
         self.notes_attachment_error = ""
         self.notes_editor_error = ""
+        self.show_notes_library_drawer = False
 
     def _ensure_notes_upload_bucket(self) -> None:
         if not (self.notes_upload_bucket or "").strip():
@@ -6708,6 +6721,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
         self._notes_persist_editor(manual=False)
         self._load_note_for_editor(nid)
+        self.show_notes_library_drawer = False
 
     @rx.event
     def open_note_in_panel(self, note_id: str):
@@ -6719,6 +6733,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self._notes_persist_editor(manual=False)
         self.show_notes_panel = True
         self.show_global_search = False
+        self.show_notes_library_drawer = False
         self._reload_notes_items()
         self._load_note_for_editor(nid)
 
@@ -18630,6 +18645,23 @@ def notes_panel() -> rx.Component:
                             align="center",
                         ),
                         rx.spacer(),
+                        rx.icon_button(
+                            rx.icon(tag="panel_left", size=16),
+                            on_click=AppState.toggle_notes_library_drawer,
+                            variant="ghost",
+                            display=rx.breakpoints(initial="inline-flex", md="none"),
+                            style={
+                                "color": "rgba(190,205,220,0.7)",
+                                "background": "rgba(255,255,255,0.03)",
+                                "border": "1px solid rgba(255,255,255,0.08)",
+                                "border_radius": "10px",
+                                "cursor": "pointer",
+                                "_hover": {
+                                    "background": "rgba(255,255,255,0.08)",
+                                    "color": "rgba(230,238,246,0.9)",
+                                },
+                            },
+                        ),
                         rx.button(
                             "New note",
                             on_click=AppState.notes_new_blank,
@@ -18758,11 +18790,12 @@ def notes_panel() -> rx.Component:
                                     width="100%",
                                 ),
                                 border_right=rx.breakpoints(initial="none", md="1px solid rgba(255,255,255,0.06)"),
+                                display=rx.breakpoints(initial="none", md="block"),
                                 padding=rx.breakpoints(initial="12px 14px 8px", md="12px 14px 16px"),
                                 width=rx.breakpoints(initial="100%", md="280px"),
                                 max_width=rx.breakpoints(initial="100%", md="280px"),
                                 min_width=rx.breakpoints(initial="100%", md="280px"),
-                                height=rx.breakpoints(initial="36vh", md="100%"),
+                                height=rx.breakpoints(initial="auto", md="100%"),
                                 max_height=rx.breakpoints(initial="36vh", md="none"),
                                 flex_shrink="0",
                             ),
@@ -18791,7 +18824,7 @@ def notes_panel() -> rx.Component:
                                             border="none",
                                             padding="0",
                                             background="transparent",
-                                            width="100%",
+                                            width="auto",
                                             **{"textAlign": "left"},
                                             on_drop=[
                                                 AppState.handle_note_media_upload,  # type: ignore
@@ -18843,7 +18876,7 @@ def notes_panel() -> rx.Component:
                                             flex_shrink="0",
                                         ),
                                         spacing="2",
-                                        flex_wrap="wrap",
+                                        flex_wrap=rx.breakpoints(initial="nowrap", md="wrap"),
                                         align="center",
                                         width="100%",
                                         justify="start",
@@ -18996,7 +19029,7 @@ def notes_panel() -> rx.Component:
                                         on_change=AppState.set_notes_editor_body,
                                         style={
                                             "width": "100%",
-                                            "min_height": rx.breakpoints(initial="220px", md="140px"),
+                                            "min_height": rx.breakpoints(initial="180px", md="140px"),
                                             "flex": "1",
                                             "background": "rgba(0,0,0,0.35)",
                                             "border": "1px solid rgba(255,255,255,0.08)",
@@ -19060,7 +19093,7 @@ def notes_panel() -> rx.Component:
                                 flex="1",
                                 min_width="0",
                                 min_height="0",
-                                padding="14px 18px 18px",
+                                padding=rx.breakpoints(initial="10px 14px 16px", md="14px 18px 18px"),
                                 display="flex",
                             ),
                             width="100%",
@@ -19081,6 +19114,124 @@ def notes_panel() -> rx.Component:
                     align_items="stretch",
                     min_height="0",
                     flex="1",
+                ),
+                rx.cond(
+                    AppState.show_notes_library_drawer,
+                    rx.box(
+                        rx.box(
+                            position="fixed",
+                            inset="0",
+                            background="rgba(0,0,0,0.6)",
+                            z_index="208",
+                            on_click=AppState.close_notes_library_drawer,
+                            display=rx.breakpoints(initial="block", md="none"),
+                        ),
+                        rx.box(
+                            rx.vstack(
+                                rx.hstack(
+                                    rx.text(
+                                        "Library",
+                                        color="rgba(240,244,248,0.9)",
+                                        font_size="0.88rem",
+                                        font_weight="700",
+                                    ),
+                                    rx.spacer(),
+                                    rx.icon_button(
+                                        rx.icon(tag="x", size=15),
+                                        on_click=AppState.close_notes_library_drawer,
+                                        variant="ghost",
+                                        style={
+                                            "color": "rgba(255,255,255,0.55)",
+                                            "background": "transparent",
+                                            "border": "none",
+                                            "cursor": "pointer",
+                                        },
+                                    ),
+                                    width="100%",
+                                    align="center",
+                                ),
+                                rx.box(
+                                    rx.cond(
+                                        AppState.notes_items.length() > 0,
+                                        rx.vstack(
+                                            rx.foreach(
+                                                AppState.notes_items,
+                                                lambda n: rx.box(
+                                                    rx.vstack(
+                                                        rx.text(
+                                                            n["title"],
+                                                            color="rgba(240,244,248,0.92)",
+                                                            font_size="0.84rem",
+                                                            font_weight="600",
+                                                            width="100%",
+                                                            overflow="hidden",
+                                                            text_overflow="ellipsis",
+                                                            white_space="nowrap",
+                                                        ),
+                                                        rx.text(
+                                                            n["preview"],
+                                                            color="rgba(160,170,185,0.48)",
+                                                            font_size="0.74rem",
+                                                            width="100%",
+                                                            overflow="hidden",
+                                                            text_overflow="ellipsis",
+                                                            white_space="nowrap",
+                                                        ),
+                                                        spacing="1",
+                                                        align_items="flex-start",
+                                                        width="100%",
+                                                    ),
+                                                    on_click=AppState.notes_select(n["id"]),
+                                                    width="100%",
+                                                    padding="10px 12px",
+                                                    border_radius="10px",
+                                                    cursor="pointer",
+                                                    border="1px solid rgba(255,255,255,0.06)",
+                                                    background="rgba(255,255,255,0.02)",
+                                                    style={
+                                                        "_hover": {
+                                                            "background": "rgba(255,255,255,0.06)",
+                                                            "border_color": "rgba(255,255,255,0.1)",
+                                                        },
+                                                    },
+                                                ),
+                                            ),
+                                            spacing="2",
+                                            width="100%",
+                                            align_items="stretch",
+                                        ),
+                                        rx.text(
+                                            "No notes yet — use Make note on a reply, or New note.",
+                                            color="rgba(150,165,180,0.42)",
+                                            font_size="0.78rem",
+                                            line_height="1.5",
+                                        ),
+                                    ),
+                                    width="100%",
+                                    flex="1",
+                                    min_height="0",
+                                    overflow_y="auto",
+                                ),
+                                spacing="3",
+                                align_items="stretch",
+                                width="100%",
+                                height="100%",
+                            ),
+                            position="fixed",
+                            left="0",
+                            right="0",
+                            bottom="0",
+                            height="min(64vh, 560px)",
+                            padding="14px 14px calc(env(safe-area-inset-bottom, 0px) + 14px)",
+                            background="rgba(12,13,16,0.98)",
+                            border_top="1px solid rgba(255,255,255,0.08)",
+                            border_top_left_radius="16px",
+                            border_top_right_radius="16px",
+                            z_index="209",
+                            display=rx.breakpoints(initial="block", md="none"),
+                        ),
+                    ),
+                    rx.fragment(),
                 ),
                 position="fixed",
                 inset="0",
