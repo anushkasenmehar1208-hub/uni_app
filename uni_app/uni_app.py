@@ -17773,6 +17773,12 @@ def home_page():
             ),
             display=rx.breakpoints(initial="block", md="none"),
             flex_shrink="0",
+            position="sticky",
+            top="0",
+            z_index="80",
+            background="rgba(10,10,12,0.94)",
+            backdrop_filter="blur(10px)",
+            border_bottom="1px solid rgba(255,255,255,0.04)",
         ),
         # ── Mobile sidebar drawer ──
         rx.box(
@@ -19620,6 +19626,12 @@ def semester_page():
                 ),
                 display=rx.breakpoints(initial="block", md="none"),
                 flex_shrink="0",
+                position="sticky",
+                top="0",
+                z_index="80",
+                background="rgba(10,10,12,0.94)",
+                backdrop_filter="blur(10px)",
+                border_bottom="1px solid rgba(255,255,255,0.04)",
             ),
             # ── Desktop top info (no bar, no border — just text) ──
             rx.box(
