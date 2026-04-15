@@ -3705,6 +3705,18 @@ SEMESTER_NAVIGATION = {
     "Year 4": ["Semester 7", "Semester 8"],
 }
 
+SIDEBAR_SEMESTER_SELECT_OPTIONS: list[str] = [
+    sem for _yr, _sems in SEMESTER_NAVIGATION.items() for sem in _sems
+]
+
+
+def _year_for_semester_label(semester: str) -> str:
+    for yr, sems in SEMESTER_NAVIGATION.items():
+        if semester in sems:
+            return yr
+    return ""
+
+
 # ── Years/semesters that are coming soon (Year 3 & 4) ──
 LOCKED_YEARS = {"Year 3", "Year 4"}
 LOCKED_SEMESTERS = {"Semester 5", "Semester 6", "Semester 7", "Semester 8"}
@@ -4489,6 +4501,13 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def has_selected_environment(self) -> bool:
         return bool(self.selected_year and self.selected_semester)
+
+    @rx.var
+    def sidebar_semester_select_value(self) -> str:
+        """Controlled value for sidebar semester dropdown (empty on home → shows placeholder)."""
+        if self.view_mode == "semester" and (self.selected_semester or "").strip():
+            return (self.selected_semester or "").strip()
+        return ""
 
     @rx.var
     def custom_degree_selected(self) -> bool:
@@ -10847,6 +10866,18 @@ Quality rules:
             return
         scope = self._set_default_semester_workspace(uid, year, semester)
         yield _hard_navigate(scope_to_route(scope))
+
+    @rx.event
+    async def sidebar_select_semester(self, semester_label: str):
+        """Sidebar dropdown: navigate to chosen semester (same rules as semester buttons)."""
+        sem = (semester_label or "").strip()
+        if not sem:
+            return
+        year = _year_for_semester_label(sem)
+        if not year:
+            return
+        async for ev in self.open_dashboard_semester(year, sem):
+            yield ev
 
     @rx.event(background=True)
     async def generate_study_plan(self, scope: str = "", year: str = "", semester: str = ""):
@@ -18827,31 +18858,34 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             )
         )
 
-    # Build flat semester buttons (S1–S8)
-    all_semester_buttons: list[rx.Component] = []
-    for yr_label, sems in SEMESTER_NAVIGATION.items():
-        for sem in sems:
-            all_semester_buttons.append(semester_nav_button(yr_label, sem))
-
     return rx.vstack(
         *header_blocks,
         # ── Alex AI workspace button ──
         alex_workspace_button(),
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)"),
-        # ── Semesters (flat, no year groups) ──
+        # ── Semester (compact dropdown — frees space for chat list) ──
         rx.text(
-            "SEMESTERS",
+            "SEMESTER",
             color="rgba(255,255,255,0.38)",
             font_size=rx.breakpoints(initial="0.6875rem", md="0.68rem"),
             letter_spacing="0.08em",
             font_weight="500",
             text_transform="uppercase",
         ),
-        rx.vstack(
-            *all_semester_buttons,
-            spacing=rx.breakpoints(initial="2", md="1"),
+        rx.select(
+            SIDEBAR_SEMESTER_SELECT_OPTIONS,
+            placeholder="Choose semester",
+            value=AppState.sidebar_semester_select_value,
+            on_change=AppState.sidebar_select_semester,
             width="100%",
-            align_items="stretch",
+            size="2",
+            variant="soft",
+            style={
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.08)",
+                "border_radius": "10px",
+                "color": "rgba(240,244,248,0.92)",
+            },
         ),
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.06)"),
         # ── Alex AI Chat History ──
@@ -18865,6 +18899,23 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
                 text_transform="uppercase",
             ),
             rx.spacer(),
+            rx.icon_button(
+                rx.icon(tag="search", size=15),
+                on_click=AppState.toggle_global_search,
+                variant="ghost",
+                size="1",
+                title="Search all chats",
+                style={
+                    "color": "rgba(255,255,255,0.4)",
+                    "background": "transparent",
+                    "border": "none",
+                    "cursor": "pointer",
+                    "_hover": {
+                        "color": "rgba(255,255,255,0.85)",
+                        "background": "rgba(255,255,255,0.06)",
+                    },
+                },
+            ),
             rx.cond(
                 AppState.is_home_scope_active,
                 rx.icon_button(
