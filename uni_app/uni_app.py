@@ -13247,53 +13247,158 @@ SIDEBAR_GESTURES_JS = """
     });
   }
 
+  function drawerPanel(){ return document.getElementById('mobile_sidebar_drawer_panel'); }
+  function drawerScrim(){ return document.getElementById('mobile_sidebar_drawer_scrim'); }
+  function drawerIsOpen(){
+    var p = drawerPanel();
+    return !!(p && p.classList && p.classList.contains('uni-semester-drawer-open'));
+  }
+  function drawerWidthPx(){
+    var p = drawerPanel();
+    if(!p) return Math.min(window.innerWidth || 360, 400);
+    try{
+      var w = p.getBoundingClientRect().width;
+      return Math.max(200, w || 0);
+    }catch(e){ return Math.min(window.innerWidth || 360, 360); }
+  }
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 8) return;
-    window.__alexSidebarSwipeV = 8;
-    var startX = 0, startY = 0, armed = false, swipeFired = false, lastAction = 0;
-    var DX = 28;
-    var DY_MAX = 95;
-    var COOLDOWN_MS = 110;
-    function swipeTry(clientX, clientY){
-      var now = Date.now();
-      if(now - lastAction < COOLDOWN_MS) return false;
-      var dx = clientX - startX;
-      var dy = Math.abs(clientY - startY);
-      if(dy > DY_MAX) return false;
-      var panelOpen = !!document.getElementById('mobile_sidebar_drawer_panel');
-      if(dx > DX && !panelOpen){
-        var openBtn = document.getElementById('mobile_sidebar_swipe_open_hook');
-        if(reflexEmitSidebar('open') || pokeClick(openBtn)){ lastAction = now; return true; }
-        return false;
+    if(window.__alexSidebarSwipeV === 9) return;
+    window.__alexSidebarSwipeV = 9;
+    var startX = 0, startY = 0, armed = false, dominant = false, dragMode = null;
+    var moveBuf = [];
+    var rafId = 0;
+    var pendingTx = null;
+    var pendingScrim = null;
+
+    function clearInlineVisual(){
+      if(rafId){ cancelAnimationFrame(rafId); rafId = 0; }
+      pendingTx = pendingScrim = null;
+      var p = drawerPanel(), s = drawerScrim();
+      if(p){
+        p.style.removeProperty('transform');
+        p.style.removeProperty('transition');
+        p.style.removeProperty('pointer-events');
       }
-      if(dx < -DX && panelOpen){
-        var closeBtn = document.getElementById('mobile_sidebar_swipe_close_hook');
-        if(reflexEmitSidebar('close') || pokeClick(closeBtn)){ lastAction = now; return true; }
+      if(s){
+        s.style.removeProperty('opacity');
+        s.style.removeProperty('transition');
+        s.style.removeProperty('visibility');
+        s.style.removeProperty('pointer-events');
       }
-      return false;
     }
+
+    function applyFrame(){
+      rafId = 0;
+      var p = drawerPanel(), s = drawerScrim();
+      if(!p || pendingTx === null) return;
+      var tx = pendingTx;
+      var sc = pendingScrim;
+      p.style.transition = 'none';
+      p.style.transform = 'translateX(' + tx + 'px)';
+      p.style.pointerEvents = 'auto';
+      if(s && sc !== null){
+        s.style.transition = 'none';
+        s.style.opacity = String(sc);
+        s.style.visibility = sc > 0.02 ? 'visible' : 'hidden';
+        s.style.pointerEvents = sc > 0.02 ? 'auto' : 'none';
+      }
+    }
+
+    function scheduleVisual(tx, scrimOp){
+      pendingTx = tx;
+      pendingScrim = scrimOp;
+      if(rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(applyFrame);
+    }
+
+    function flushBuf(){ moveBuf.length = 0; }
+    function pushMove(x){
+      moveBuf.push({t:Date.now(), x:x});
+      if(moveBuf.length > 10) moveBuf.shift();
+    }
+    function velocityX(){
+      if(moveBuf.length < 2) return 0;
+      var a = moveBuf[moveBuf.length - 1], b = moveBuf[0];
+      return (a.x - b.x) / Math.max(1, a.t - b.t);
+    }
+
     function onStart(e){
       if(!e.touches || !e.touches[0]) return;
       var t = e.touches[0];
-      startX = t.clientX; startY = t.clientY; armed = true; swipeFired = false;
+      startX = t.clientX; startY = t.clientY;
+      armed = true; dominant = false; dragMode = null;
+      clearInlineVisual();
+      flushBuf();
+      pushMove(t.clientX);
     }
+
     function onMove(e){
-      if(!armed || swipeFired || !e.touches || !e.touches[0]) return;
+      if(!armed || !e.touches || !e.touches[0]) return;
       var t = e.touches[0];
-      if(swipeTry(t.clientX, t.clientY)) swipeFired = true;
-    }
-    function onEnd(e){
-      if(!armed) return;
-      armed = false;
-      if(!swipeFired && e.changedTouches && e.changedTouches[0]){
-        var t = e.changedTouches[0];
-        swipeTry(t.clientX, t.clientY);
+      var dx = t.clientX - startX;
+      var dy = Math.abs(t.clientY - startY);
+      pushMove(t.clientX);
+
+      if(!dominant){
+        if(Math.max(Math.abs(dx), dy) < 10) return;
+        if(dy > Math.abs(dx) + 12){ armed = false; flushBuf(); return; }
+        dominant = true;
+        var o = drawerIsOpen();
+        if(dx > 0 && !o) dragMode = 'open';
+        else if(dx < 0 && o) dragMode = 'close';
+        else { armed = false; flushBuf(); return; }
       }
-      swipeFired = false;
+      if(!dragMode) return;
+
+      var W = drawerWidthPx();
+      var tx, scr;
+      if(dragMode === 'open'){
+        tx = -W + Math.max(0, Math.min(W, dx));
+        scr = Math.max(0, Math.min(1, (W + tx) / W)) * 0.58;
+      }else{
+        tx = Math.max(-W, Math.min(0, dx));
+        scr = Math.max(0, Math.min(1, (W + tx) / W)) * 0.58;
+      }
+      scheduleVisual(tx, scr);
     }
+
+    function onEnd(e){
+      if(!armed){ clearInlineVisual(); return; }
+      armed = false;
+      if(!dominant || !dragMode){
+        clearInlineVisual();
+        flushBuf();
+        dominant = false; dragMode = null;
+        return;
+      }
+      var t = e.changedTouches && e.changedTouches[0];
+      if(!t){ clearInlineVisual(); flushBuf(); dominant = false; dragMode = null; return; }
+      var dx = t.clientX - startX;
+      var W = drawerWidthPx();
+      var v = velocityX();
+      var openHook = document.getElementById('mobile_sidebar_swipe_open_hook');
+      var closeHook = document.getElementById('mobile_sidebar_swipe_close_hook');
+
+      if(dragMode === 'open'){
+        var commitOpen = (dx > W * 0.18) || (v > 0.38);
+        if(commitOpen){
+          if(!drawerIsOpen()) reflexEmitSidebar('open') || pokeClick(openHook);
+        }
+      }else{
+        var commitClose = (dx < -W * 0.18) || (v < -0.38);
+        if(commitClose){
+          if(drawerIsOpen()) reflexEmitSidebar('close') || pokeClick(closeHook);
+        }
+      }
+      setTimeout(function(){ clearInlineVisual(); }, 80);
+      dominant = false; dragMode = null; flushBuf();
+    }
+
     function onCancel(){
-      armed = false; swipeFired = false;
+      armed = false; dominant = false; dragMode = null;
+      clearInlineVisual(); flushBuf();
     }
+
     window.addEventListener('touchstart', onStart, {passive:true, capture:true});
     window.addEventListener('touchmove', onMove, {passive:true, capture:true});
     window.addEventListener('touchend', onEnd, {passive:true, capture:true});
@@ -19608,42 +19713,58 @@ def notes_panel() -> rx.Component:
 
 
 def semester_sidebar_drawer() -> rx.Component:
-    return rx.cond(
-        AppState.show_semester_sidebar,
-        rx.fragment(
-            rx.box(
-                position="fixed",
-                inset="0",
-                background="rgba(0,0,0,0.58)",
-                z_index="30",
-                on_click=AppState.close_semester_sidebar,
-            ),
-            rx.box(
-                _semester_sidebar_swipe_close_hook_btn(),
-                workspace_sidebar_content(show_close_button=True),
-                id="mobile_sidebar_drawer_panel",
-                position="fixed",
-                top="0",
-                left="0",
-                width=rx.breakpoints(initial="100vw", md="300px"),
-                height="100dvh",
-                max_height="100dvh",
-                padding="1.2em 1em",
-                padding_bottom=rx.breakpoints(
-                    initial="calc(env(safe-area-inset-bottom, 0px) + 22px)",
-                    md="1.2em",
-                ),
-                background="rgba(10,10,14,0.98)",
-                border_right="1px solid rgba(255,255,255,0.06)",
-                z_index="31",
-                style={
-                    "box_shadow": "20px 0 40px rgba(0,0,0,0.4)",
-                    "box_sizing": "border-box",
-                },
-            ),
-        ),
-        rx.fragment(),
+    """Always mount drawer DOM so touch gestures can drive translateX live; Reflex state still owns open/close."""
+    scrim = rx.box(
+        id="mobile_sidebar_drawer_scrim",
+        position="fixed",
+        inset="0",
+        background="rgba(0,0,0,0.58)",
+        z_index="30",
+        on_click=AppState.close_semester_sidebar,
+        style={
+            "opacity": rx.cond(AppState.show_semester_sidebar, "1", "0"),
+            "visibility": rx.cond(AppState.show_semester_sidebar, "visible", "hidden"),
+            "pointer_events": rx.cond(AppState.show_semester_sidebar, "auto", "none"),
+            "transition": "opacity 0.2s ease",
+        },
     )
+    panel = rx.box(
+        _semester_sidebar_swipe_close_hook_btn(),
+        workspace_sidebar_content(show_close_button=True),
+        id="mobile_sidebar_drawer_panel",
+        position="fixed",
+        top="0",
+        left="0",
+        width=rx.breakpoints(initial="100vw", md="300px"),
+        height="100dvh",
+        max_height="100dvh",
+        padding="1.2em 1em",
+        padding_bottom=rx.breakpoints(
+            initial="calc(env(safe-area-inset-bottom, 0px) + 22px)",
+            md="1.2em",
+        ),
+        background="rgba(10,10,14,0.98)",
+        border_right="1px solid rgba(255,255,255,0.06)",
+        z_index="31",
+        class_name=rx.cond(
+            AppState.show_semester_sidebar,
+            "uni-semester-drawer-open",
+            "uni-semester-drawer-closed",
+        ),
+        style={
+            "box_shadow": "20px 0 40px rgba(0,0,0,0.4)",
+            "box_sizing": "border-box",
+            "will_change": "transform",
+            "transition": "transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
+            "transform": rx.cond(
+                AppState.show_semester_sidebar,
+                "translateX(0)",
+                "translateX(-105%)",
+            ),
+            "pointer_events": rx.cond(AppState.show_semester_sidebar, "auto", "none"),
+        },
+    )
+    return rx.fragment(scrim, panel)
 
 
 # ── Claude-style navigation rail ──────────────────────────────
