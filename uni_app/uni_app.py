@@ -15499,7 +15499,7 @@ def active_chat_panel() -> rx.Component:
                     margin_x="auto",
                     padding=rx.breakpoints(initial="0 0.6em", md="0 1.5em"),
                     padding_bottom=rx.breakpoints(
-                        initial="calc(env(safe-area-inset-bottom, 0px) + 10px)",
+                        initial="calc(env(safe-area-inset-bottom, 0px) + 24px)",
                         md="0px",
                     ),
                 ),
@@ -15514,7 +15514,7 @@ def active_chat_panel() -> rx.Component:
                 tier_status_bar(),
                 width="100%",
                 padding_bottom=rx.breakpoints(
-                    initial="calc(env(safe-area-inset-bottom, 0px) + 4px)",
+                    initial="calc(env(safe-area-inset-bottom, 0px) + 10px)",
                     md="0px",
                 ),
             ),
