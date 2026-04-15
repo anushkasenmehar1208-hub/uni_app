@@ -29,6 +29,7 @@ import traceback
 import reflex as rx
 from reflex.components.sonner.toast import ToastAction
 from reflex.constants import Dirs
+from reflex.utils.format import format_event_handler
 from reflex.utils.imports import ImportVar
 from reflex.vars import VarData
 from reflex.vars.base import Var
@@ -13129,6 +13130,12 @@ NOTE_CAMERA_CLEAR_JS = (
     f"if(e)e.value='';}})()"
 )
 
+_SIDEBAR_SWIPE_REFLEX_OPEN_JSON = json.dumps(
+    format_event_handler(AppState.event_handlers["open_semester_sidebar"])
+)
+_SIDEBAR_SWIPE_REFLEX_CLOSE_JSON = json.dumps(
+    format_event_handler(AppState.event_handlers["close_semester_sidebar"])
+)
 SIDEBAR_GESTURES_JS = """
 (function(){
   function pokeClick(el){
@@ -13145,6 +13152,71 @@ SIDEBAR_GESTURES_JS = """
     }catch(e1){
       return false;
     }
+  }
+
+  /** Reflex hydrates with hydrateRoot(document, …); grab EventLoopContext addEvents from React fibers. */
+  function captureReflexAddEvents(){
+    if(window.__uni_reflex_addEvents) return true;
+    var roots = [];
+    function scanKeys(el){
+      if(!el || typeof el !== 'object') return;
+      try{
+        var keys = Object.keys(el);
+        for(var i = 0; i < keys.length; i++){
+          var k = keys[i];
+          if(k.indexOf('__reactContainer') === 0){
+            var c = el[k];
+            if(c && c.current) roots.push(c.current);
+          } else if(k.indexOf('__reactFiber') === 0){
+            var f = el[k];
+            if(f) roots.push(f);
+          }
+        }
+      }catch(e){}
+    }
+    scanKeys(document);
+    scanKeys(document.documentElement);
+    scanKeys(document.body);
+    var rr = document.getElementById('root');
+    if(rr) scanKeys(rr);
+
+    function maybeEventLoopProvider(f){
+      try{
+        var mp = f.memoizedProps || f.pendingProps;
+        if(!mp || mp.value === undefined) return false;
+        var val = mp.value;
+        if(Array.isArray(val) && val.length >= 2 && typeof val[0] === 'function' && Array.isArray(val[1])){
+          window.__uni_reflex_addEvents = val[0];
+          return true;
+        }
+      }catch(e2){}
+      return false;
+    }
+
+    for(var r = 0; r < roots.length; r++){
+      var stack = [roots[r]];
+      var guard = 0;
+      while(stack.length && guard < 18000){
+        var fiber = stack.pop();
+        guard++;
+        if(!fiber) continue;
+        if(maybeEventLoopProvider(fiber)) return true;
+        if(fiber.child) stack.push(fiber.child);
+        if(fiber.sibling) stack.push(fiber.sibling);
+      }
+    }
+    return false;
+  }
+
+  function reflexEmitSidebar(which){
+    try{
+      captureReflexAddEvents();
+      var add = window.__uni_reflex_addEvents;
+      if(typeof add !== 'function') return false;
+      var name = which === 'open' ? @@REFLEX_OPEN@@ : @@REFLEX_CLOSE@@;
+      add([{name:name, payload:{}, handler:null, event_actions:{}}], [], {});
+      return true;
+    }catch(e3){ return false; }
   }
 
   function bindLongPress(){
@@ -13176,8 +13248,8 @@ SIDEBAR_GESTURES_JS = """
   }
 
   function bindEdgeSwipe(){
-    if(window.__alexSidebarSwipeV === 5) return;
-    window.__alexSidebarSwipeV = 5;
+    if(window.__alexSidebarSwipeV === 6) return;
+    window.__alexSidebarSwipeV = 6;
     var startX = 0, startY = 0, armed = false, lastAction = 0;
     function onStart(e){
       if(!e.touches || !e.touches[0]) return;
@@ -13197,13 +13269,13 @@ SIDEBAR_GESTURES_JS = """
       // Swipe LEFT (dx negative) -> open when closed.
       if(dx < -44 && !panelOpen){
         var openBtn = document.getElementById('mobile_sidebar_swipe_open_hook');
-        if(pokeClick(openBtn)) lastAction = now;
+        if(reflexEmitSidebar('open') || pokeClick(openBtn)) lastAction = now;
         return;
       }
       // Swipe RIGHT -> close when open.
       if(dx > 44 && panelOpen){
         var closeBtn = document.getElementById('mobile_sidebar_swipe_close_hook');
-        if(pokeClick(closeBtn)) lastAction = now;
+        if(reflexEmitSidebar('close') || pokeClick(closeBtn)) lastAction = now;
       }
     }
     window.addEventListener('touchstart', onStart, {passive:true, capture:true});
@@ -13212,6 +13284,10 @@ SIDEBAR_GESTURES_JS = """
 
   bindLongPress();
   bindEdgeSwipe();
+  var _capN = 0;
+  var _capIv = setInterval(function(){
+    if(captureReflexAddEvents() || ++_capN > 40) clearInterval(_capIv);
+  }, 250);
   var _n = 0;
   var _iv = setInterval(function(){
     bindLongPress();
@@ -13221,7 +13297,11 @@ SIDEBAR_GESTURES_JS = """
     new MutationObserver(function(){ setTimeout(bindLongPress, 60); }).observe(document.body,{childList:true,subtree:true});
   }catch(e){}
 })();
-"""
+""".replace(
+    "@@REFLEX_OPEN@@", _SIDEBAR_SWIPE_REFLEX_OPEN_JSON
+).replace(
+    "@@REFLEX_CLOSE@@", _SIDEBAR_SWIPE_REFLEX_CLOSE_JSON
+)
 
 
 def _semester_sidebar_swipe_open_hook_btn() -> rx.Component:
