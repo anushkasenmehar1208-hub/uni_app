@@ -20600,7 +20600,6 @@ def landing_page():
         ),
         width="100%",
         align="center",
-        spacing=rx.breakpoints(initial="2", md="4"),
         justify="between",
         position="relative",
         z_index="5",
@@ -20700,7 +20699,7 @@ def landing_page():
         rx.hstack(
             hero_button("Start Learning", auth_routes.LOGIN_ROUTE, "solid"),
             hero_button("Contact Support", "/support", "secondary"),
-            spacing=rx.breakpoints(initial="2", md="4"),
+            spacing="4",
             justify="center",
             flex_wrap="wrap",
             width="100%",
@@ -20738,8 +20737,8 @@ def landing_page():
             justify_content="center",
         ),
         width="100%",
-        padding_top=rx.breakpoints(initial="72px", md="120px"),
-        padding_bottom=rx.breakpoints(initial="20px", md="32px"),
+        padding_top="120px",
+        padding_bottom="32px",
         custom_attrs={"data-landing-animate": "logo-video"},
     )
 
@@ -21265,28 +21264,10 @@ def landing_page():
                 transition-delay: 0.66s;
             }
             @media (max-width: 768px) {
-                [data-landing-animate="headline-box"] {
-                    transform: translateY(18vh) !important;
-                }
                 [data-landing-type="line-1"],
                 [data-landing-type="line-2"] {
-                    white-space: normal !important;
-                    width: 100% !important;
-                    text-align: center !important;
-                    display: block !important;
-                    line-height: 1.08 !important;
                     letter-spacing: -0.05em !important;
                     word-spacing: 0.08em !important;
-                    margin: 0 auto !important;
-                }
-                [data-landing-cursor] {
-                    display: none !important;
-                }
-                [data-landing-type="line-1"] {
-                    animation: landingFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards !important;
-                }
-                [data-landing-type="line-2"] {
-                    animation: landingFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards !important;
                 }
                 [data-landing-story-type="line-1"],
                 [data-landing-story-type="line-2"] {
@@ -21307,27 +21288,6 @@ def landing_page():
                 }
                 #landing-journey-flow {
                     max-width: 100% !important;
-                }
-                [data-landing-animate="actions"] a {
-                    width: 100%;
-                }
-                [data-landing-animate="actions"] button {
-                    width: 100%;
-                    min-height: 48px;
-                    padding-left: 16px !important;
-                    padding-right: 16px !important;
-                }
-                #landing-story-section {
-                    padding-left: 14px !important;
-                    padding-right: 14px !important;
-                }
-                [data-landing-animate="logo-video"] img {
-                    max-width: 220px;
-                }
-                [data-landing-animate="nav"] button {
-                    height: 40px !important;
-                    padding: 0 16px !important;
-                    font-size: 0.86rem !important;
                 }
             }
         """),
