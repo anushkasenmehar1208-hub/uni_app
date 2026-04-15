@@ -21266,20 +21266,45 @@ def landing_page():
             @media (max-width: 768px) {
                 [data-landing-type="line-1"],
                 [data-landing-type="line-2"] {
+                    width: 100% !important;
+                    overflow: visible !important;
+                    white-space: normal !important;
+                    text-wrap: balance !important;
+                    display: block !important;
+                    text-align: center !important;
                     letter-spacing: -0.05em !important;
                     word-spacing: 0.08em !important;
+                    animation: landingFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards !important;
+                }
+                [data-landing-type="line-2"] {
+                    animation-delay: 0.28s !important;
+                }
+                [data-landing-cursor="line-1"],
+                [data-landing-cursor="line-2"] {
+                    display: none !important;
                 }
                 [data-landing-story-type="line-1"],
                 [data-landing-story-type="line-2"] {
                     font-size: clamp(1.7rem, 7vw, 2.6rem) !important;
                     white-space: normal !important;
                     line-height: 1.02 !important;
+                    width: 100% !important;
+                    overflow: visible !important;
+                    text-wrap: balance !important;
+                    animation: landingFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards !important;
                 }
                 [data-landing-story-type="line-3"] {
                     white-space: normal !important;
                     width: 100% !important;
+                    overflow: visible !important;
                     font-size: clamp(1.05rem, 3.5vw, 1.25rem) !important;
                     line-height: 1.55 !important;
+                    animation: landingFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.24s forwards !important;
+                }
+                [data-landing-story-cursor="line-1"],
+                [data-landing-story-cursor="line-2"],
+                [data-landing-story-cursor="line-3"] {
+                    display: none !important;
                 }
                 [data-landing-ambient="field"] {
                     opacity: 0.35 !important;
