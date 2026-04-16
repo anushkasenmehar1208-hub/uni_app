@@ -23900,6 +23900,33 @@ def alex_voice_overlay_panel() -> rx.Component:
                 font-size:0.78rem; line-height:1.45;
                 color:rgba(255,180,160,0.88);
             }
+            #alex-transcript .alex-tap-to-play-wrap {
+                margin-top:14px; padding-top:12px;
+                border-top:1px solid rgba(255,180,100,0.28);
+            }
+            #alex-transcript .alex-tap-to-play-wrap .alex-tap-hint {
+                font-size:0.78rem; line-height:1.45;
+                color:rgba(255,200,165,0.92);
+                margin:0 0 10px 0;
+            }
+            #alex-transcript .alex-tap-to-play-btn {
+                display:inline-block; margin-right:10px; margin-bottom:8px;
+                padding:10px 20px; font-size:0.85rem; font-weight:600;
+                border-radius:999px; border:none; cursor:pointer;
+                background:linear-gradient(135deg,#00c8ff,#0088cc);
+                color:#05080c;
+            }
+            #alex-transcript .alex-tap-to-play-btn:hover { filter:brightness(1.06); }
+            #alex-transcript .alex-tap-skip-audio {
+                display:inline-block; margin-bottom:8px;
+                padding:10px 16px; font-size:0.78rem;
+                border-radius:999px; cursor:pointer;
+                border:1.5px solid rgba(255,255,255,0.22);
+                background:transparent; color:rgba(255,255,255,0.78);
+            }
+            #alex-transcript .alex-tap-skip-audio:hover {
+                border-color:rgba(255,255,255,0.35); color:rgba(255,255,255,0.92);
+            }
             #alex-btn {
                 background:#1a1a1a; color:rgba(255,255,255,.85);
                 border:1.5px solid rgba(255,255,255,.15);

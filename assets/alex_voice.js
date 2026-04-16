@@ -18,7 +18,36 @@
   var currentAudioObjectUrl = null;
   var maxRecordTimeout = null;
 
+  /** Tiny silent WAV — used only to satisfy autoplay policy on a user gesture (muted play). */
+  var ALEX_SILENT_WAV_DATA_URL = (
+    'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA='
+  );
+
+  function removeTapToPlayFallback() {
+    var w = document.getElementById('alex-tap-to-play-audio-wrap');
+    if (w && w.parentNode) w.parentNode.removeChild(w);
+  }
+
+  /** Call synchronously from click/key handlers so later async TTS play() is more likely allowed. */
+  function tryPrimeAudioOnUserGesture() {
+    try {
+      var a = new Audio(ALEX_SILENT_WAV_DATA_URL);
+      a.muted = true;
+      var p = a.play();
+      if (p && typeof p.then === 'function') {
+        p.then(function () {
+          try {
+            a.pause();
+            a.removeAttribute('src');
+            a.load();
+          } catch (e1) {}
+        }).catch(function () {});
+      }
+    } catch (e2) {}
+  }
+
   function disposeCurrentPlayback() {
+    removeTapToPlayFallback();
     try {
       if (currentAudio) {
         currentAudio.onended = null;
@@ -167,6 +196,7 @@
       b._alexMicBound = true;
       b.addEventListener('click', function () {
         if (b.disabled) return;
+        tryPrimeAudioOnUserGesture();
         setMicMuted(!micMuted());
       });
     }
@@ -285,6 +315,67 @@
     el.appendChild(n);
   }
 
+  /**
+   * When audio.play() is blocked (async fetch broke user-activation), keep the clip and offer
+   * a gesture-bound Play button plus skip.
+   */
+  function appendTapToPlayFallback(done) {
+    removeTapToPlayFallback();
+    var el = document.getElementById('alex-transcript');
+    if (!el) {
+      if (typeof done === 'function') done({ keepReadingPane: true });
+      return;
+    }
+    var wrap = document.createElement('div');
+    wrap.id = 'alex-tap-to-play-audio-wrap';
+    wrap.className = 'alex-tap-to-play-wrap';
+    var hint = document.createElement('p');
+    hint.className = 'alex-tap-hint';
+    hint.textContent = (
+      "Your browser blocked automatic playback. Tap Play to hear Alex's voice (the reply stays above)."
+    );
+    var playBtn = document.createElement('button');
+    playBtn.type = 'button';
+    playBtn.id = 'alex-tap-to-play-audio';
+    playBtn.className = 'alex-tap-to-play-btn';
+    playBtn.textContent = "Play Alex's reply";
+    playBtn.addEventListener('click', function onTap() {
+      playBtn.removeEventListener('click', onTap);
+      if (!currentAudio) {
+        removeTapToPlayFallback();
+        if (typeof done === 'function') done({ keepReadingPane: true });
+        return;
+      }
+      tryPrimeAudioOnUserGesture();
+      var pr = currentAudio.play();
+      if (pr && typeof pr.then === 'function') {
+        pr.then(function () {
+          removeTapToPlayFallback();
+          setOrbState('ai-speaking');
+          setStatus('Alex is speaking...');
+        }).catch(function () {
+          appendVoiceServerNotice(
+            'Still could not play audio. Try another browser or check site sound permissions.'
+          );
+        });
+      }
+    });
+    var skipBtn = document.createElement('button');
+    skipBtn.type = 'button';
+    skipBtn.className = 'alex-tap-skip-audio';
+    skipBtn.textContent = 'Continue without audio';
+    skipBtn.addEventListener('click', function () {
+      removeTapToPlayFallback();
+      disposeCurrentPlayback();
+      if (typeof done === 'function') done({ keepReadingPane: true });
+    });
+    wrap.appendChild(hint);
+    wrap.appendChild(playBtn);
+    wrap.appendChild(document.createTextNode(' '));
+    wrap.appendChild(skipBtn);
+    el.appendChild(wrap);
+  }
+
   function renderVoiceTranscriptBlock(userLinePlain, alexData) {
     var el = document.getElementById('alex-transcript');
     if (!el) return;
@@ -350,6 +441,7 @@
   // ── Toggle ──────────────────────────────────────────────────
   window.toggleAlexVoice = async function () {
     if (active) { stopAlex(); return; }
+    tryPrimeAudioOnUserGesture();
 
     // Check access before requesting mic
     var allowed = (window.ALEX_VOICE_ALLOWED !== false);
@@ -666,6 +758,7 @@
   }
 
   async function sendTypedAlexMessage() {
+    tryPrimeAudioOnUserGesture();
     var input = document.getElementById('alex-type-input');
     if (!input || !active) {
       if (!active) setStatus('Start the call first — then type or speak.');
@@ -746,10 +839,12 @@
     };
     currentAudio.play().catch(function (err) {
       console.warn('[AlexVoice] audio.play() failed', err);
-      disposeCurrentPlayback();
-      setStatus('Reply on screen only');
-      appendVoiceServerNotice('Playback was blocked or failed. Interact with the page and try again, or use text chat.');
-      done({ keepReadingPane: true });
+      try {
+        currentAudio.pause();
+      } catch (ePause) {}
+      setOrbState('idle');
+      setStatus('Tap Play below to hear Alex');
+      appendTapToPlayFallback(done);
     });
   }
 
