@@ -125,6 +125,66 @@
 
   console.log('[AlexVoice] loaded (orb UI + voice APIs + VAD)');
 
+  function micMuted() {
+    try {
+      return !!window.__alex_mic_muted;
+    } catch (eM) {
+      return false;
+    }
+  }
+
+  function syncMicToggleButton() {
+    var b = document.getElementById('alex-mic-toggle');
+    if (!b) return;
+    var m = micMuted();
+    b.textContent = m ? 'Unmute mic' : 'Mute mic';
+    if (m) b.classList.add('alex-mic-muted');
+    else b.classList.remove('alex-mic-muted');
+    b.setAttribute('aria-pressed', m ? 'true' : 'false');
+  }
+
+  /** Pause auto-capture / VAD — student can type and listen without mic segments. */
+  function setMicMuted(muted) {
+    try {
+      window.__alex_mic_muted = !!muted;
+    } catch (e0) {}
+    syncMicToggleButton();
+    if (muted && active) {
+      abortCurrentListenSegment();
+      stopVAD();
+      clearNoSpeechNudgeTimer();
+      silenceNudgePending = false;
+      setOrbState('idle');
+      setStatus('Mic muted — type below; tap Unmute mic to speak again');
+    } else if (!muted && active && !processing) {
+      startListening();
+    }
+  }
+
+  function attachMicToggle() {
+    var b = document.getElementById('alex-mic-toggle');
+    if (b && !b._alexMicBound) {
+      b._alexMicBound = true;
+      b.addEventListener('click', function () {
+        if (b.disabled) return;
+        setMicMuted(!micMuted());
+      });
+    }
+  }
+
+  function installPageHideEndVoiceOnce() {
+    if (window.__alex_voice_pagehide_installed) return;
+    window.__alex_voice_pagehide_installed = true;
+    window.addEventListener('pagehide', function () {
+      try {
+        if (window.__alex_voice_session_active && window.stopAlexVoiceSession) {
+          window.stopAlexVoiceSession();
+        }
+      } catch (ePh) {}
+    });
+  }
+  installPageHideEndVoiceOnce();
+
   /**
    * Decode server WAV base64 into a blob: URL — more reliable than huge data: URLs (esp. Safari).
    * @returns {string|null}
@@ -157,8 +217,10 @@
     var row = document.getElementById('alex-type-row');
     var inp = document.getElementById('alex-type-input');
     var snd = document.getElementById('alex-type-send');
+    var mt = document.getElementById('alex-mic-toggle');
     if (inp) inp.disabled = !on;
     if (snd) snd.disabled = !on;
+    if (mt) mt.disabled = !on;
     if (row) row.style.opacity = on ? '1' : '0.45';
   }
 
@@ -186,10 +248,12 @@
   // Try immediately + poll for React render
   attachBtn();
   attachTypeUi();
+  attachMicToggle();
   var _bindAttempts = 0;
   var _bindPoll = setInterval(function () {
     attachBtn();
     attachTypeUi();
+    attachMicToggle();
     _bindAttempts++;
     var b = document.getElementById('alex-btn');
     var i = document.getElementById('alex-type-input');
@@ -330,6 +394,11 @@
     source.connect(analyser);
 
     active = true;
+    try {
+      window.__alex_voice_session_active = true;
+      window.__alex_mic_muted = false;
+    } catch (eSess) {}
+    syncMicToggleButton();
     voiceStartedAt = Date.now();
     hideUpgradeButton();
     setTypeUiEnabled(true);
@@ -386,6 +455,12 @@
   // ── Listening with silence detection ────────────────────────
   function startListening() {
     if (!active || !micStream) return;
+    if (micMuted()) {
+      processing = false;
+      setOrbState('idle');
+      setStatus('Mic muted — type below; tap Unmute mic to speak again');
+      return;
+    }
     processing = false;
     audioChunks = [];
     speechDetected = false;
@@ -762,6 +837,9 @@
   function stopAlex(skipSync) {
     // Fire-and-forget: sync voice session back to text chat DB
     var durationSec = voiceStartedAt ? Math.round((Date.now() - voiceStartedAt) / 1000) : 0;
+    try {
+      window.__alex_voice_session_active = false;
+    } catch (eS0) {}
     if (!skipSync) {
       fetch(apiBase() + '/api/alex-voice-sync', {
         method: 'POST',
@@ -798,6 +876,12 @@
     if (micStream) { micStream.getTracks().forEach(function (t) { t.stop(); }); micStream = null; }
     if (audioContext) { audioContext.close().catch(function(){}); audioContext = null; analyser = null; }
     disposeCurrentPlayback();
+    try {
+      window.__alex_mic_muted = false;
+    } catch (eM2) {}
+    syncMicToggleButton();
+    var mtEnd = document.getElementById('alex-mic-toggle');
+    if (mtEnd) mtEnd.disabled = true;
     setOrbState('idle');
     setStatus('Tap to start voice chat');
     setTranscript('');

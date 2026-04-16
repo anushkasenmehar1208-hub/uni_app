@@ -9847,9 +9847,13 @@ Quality rules:
 
     @rx.event
     def close_voice_overlay_ui(self):
-        """Hide voice overlay after the call ends (invoked from alex_voice.js bridge)."""
+        """Hide voice overlay (bridge from JS or stray dismiss). Ends mic if a session is still marked active."""
         self.show_voice_overlay = False
-        return rx.call_script("window.__alex_overlay_mode=false;")
+        return rx.call_script(
+            "window.__alex_overlay_mode=false;"
+            "try{if(window.__alex_voice_session_active&&window.stopAlexVoiceSession){"
+            "window.stopAlexVoiceSession();}}catch(e){}"
+        )
 
     @rx.event
     async def close_voice_chat(self):
@@ -23933,6 +23937,21 @@ def alex_voice_overlay_panel() -> rx.Component:
             #alex-type-send:hover:not(:disabled) { filter:brightness(1.06); }
             #alex-type-send:disabled { opacity:.4; cursor:not-allowed; filter:none; }
             #alex-btn:disabled { opacity:.55; cursor:wait; }
+            #alex-mic-toggle {
+                font-size:0.82rem; font-weight:600; letter-spacing:0.04em;
+                padding:9px 20px; border-radius:999px; cursor:pointer;
+                border:1.5px solid rgba(255,255,255,0.22);
+                background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.88);
+                transition: background .15s, border-color .15s, color .15s;
+            }
+            #alex-mic-toggle:hover:not(:disabled) {
+                background:rgba(255,255,255,0.1); border-color:rgba(0,238,255,0.35);
+            }
+            #alex-mic-toggle:disabled { opacity:0.35; cursor:not-allowed; }
+            #alex-mic-toggle.alex-mic-muted {
+                border-color:rgba(255,120,100,0.45); color:rgba(255,200,180,0.95);
+                background:rgba(255,80,60,0.12);
+            }
         """),
         rx.center(
             rx.vstack(
@@ -23947,6 +23966,13 @@ def alex_voice_overlay_panel() -> rx.Component:
                 ),
                 # Status
                 rx.el.p("Connecting…", id="alex-status"),
+                rx.el.button(
+                    "Mute mic",
+                    id="alex-mic-toggle",
+                    type="button",
+                    disabled=True,
+                    title="Stop auto-listening — type and hear Alex without the mic cutting in",
+                ),
                 # Reading pane (markdown HTML) + optional user line — populated by alex_voice.js
                 rx.el.div(id="alex-transcript"),
                 # Ends call — click handler attached by alex_voice.js
