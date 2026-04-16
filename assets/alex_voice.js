@@ -1,9 +1,8 @@
 /**
- * Alex Live Voice — OpenAI Whisper STT + OpenRouter LLM + OpenAI TTS (WAV base64)
+ * Alex Live Voice — OpenAI Whisper STT + OpenRouter LLM + server TTS only (WAV base64)
  * STT: OpenAI Whisper  (MediaRecorder → /api/alex-voice-stt, needs OPENAI_API_KEY)
  * LLM: OpenRouter      (/api/alex-voice, needs OPENROUTER_API_KEY)
- * TTS: server returns WAV base64 — Fish Audio (Sol) if FISH_AUDIO_API_KEY is set, else OpenAI or browser fallback
- * Works on ALL browsers (Chrome, Firefox, Safari, Edge)
+ * TTS: Fish Audio if FISH_AUDIO_API_KEY, else OpenAI /v1/audio/speech — no browser / system robot voice
  */
 (function () {
   var sessionId = Math.random().toString(36).slice(2); // fallback only
@@ -36,9 +35,6 @@
     }
   }
   var introPlayed = false;
-
-  /** Best-scoring system voice for SpeechSynthesis (neural / local voices rank higher). */
-  var cachedBrowserVoice = null;
 
   // Voice Activity Detection (VAD) state
   var audioContext = null;
@@ -129,53 +125,6 @@
 
   console.log('[AlexVoice] loaded (orb UI + voice APIs + VAD)');
 
-  function voiceQualityScore(v) {
-    var n = (v.name || '').toLowerCase();
-    var lang = (v.lang || '').toLowerCase();
-    var s = 0;
-    if (lang.indexOf('en') === 0) s += 18;
-    try {
-      if (v.localService) s += 50;
-    } catch (e1) {}
-    if (/premium|enhanced|neural|natural|wavenet|neural2|siri/.test(n)) s += 38;
-    if (/google us english|google uk english|microsoft|samantha|^daniel\b|\baaron\b|\bava\b|matthew|melina|zoe|flo|tom/.test(n)) s += 22;
-    if (/zarvox|bad news|whisper|pipe|bubbles|\.loc|compact/.test(n)) s -= 90;
-    return s;
-  }
-
-  function refreshBrowserVoice() {
-    cachedBrowserVoice = null;
-    try {
-      if (typeof speechSynthesis === 'undefined') return;
-      var voices = speechSynthesis.getVoices();
-      if (!voices || !voices.length) return;
-      var best = null;
-      var bestS = -1e9;
-      var i;
-      var sc;
-      for (i = 0; i < voices.length; i++) {
-        sc = voiceQualityScore(voices[i]);
-        if (sc > bestS) {
-          bestS = sc;
-          best = voices[i];
-        }
-      }
-      cachedBrowserVoice = best;
-    } catch (e2) {}
-  }
-
-  if (typeof speechSynthesis !== 'undefined') {
-    speechSynthesis.onvoiceschanged = refreshBrowserVoice;
-    refreshBrowserVoice();
-  }
-
-  function preferBrowserVoiceOutput() {
-    var v = window.ALEX_VOICE_BROWSER_ONLY;
-    if (v === true || v === 1) return true;
-    if (typeof v === 'string' && v.toLowerCase() === 'true') return true;
-    return false;
-  }
-
   /**
    * Decode server WAV base64 into a blob: URL — more reliable than huge data: URLs (esp. Safari).
    * @returns {string|null}
@@ -263,28 +212,13 @@
   }
 
   /** Rich markdown pane (server-rendered HTML) + optional plain user line above — like main chat. */
-  /** Plain string for TTS fallbacks — never use raw markdown `text` as first choice. */
-  function plainTextForVoiceTts(data) {
-    var st = (data.speech_text || '').trim();
-    if (st) return st;
-    var html = data.display_html || '';
-    if (html) {
-      try {
-        var d = document.createElement('div');
-        d.innerHTML = html;
-        var t = (d.textContent || d.innerText || '').trim();
-        if (t) return t;
-      } catch (e0) {}
-    }
-    var md = (data.text || '').trim();
-    if (!md) return '';
-    return md
-      .replace(/\*\*([^*]+)\*\*/g, '$1')
-      .replace(/\*([^*]+)\*/g, '$1')
-      .replace(/^#{1,6}\s+/gm, '')
-      .replace(/^\s*[-*•]\s+/gm, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+  function appendVoiceServerNotice(text) {
+    var el = document.getElementById('alex-transcript');
+    if (!el || !text) return;
+    var n = document.createElement('div');
+    n.className = 'alex-voice-server-notice';
+    n.textContent = text;
+    el.appendChild(n);
   }
 
   function renderVoiceTranscriptBlock(userLinePlain, alexData) {
@@ -671,7 +605,6 @@
     input.value = '';
 
     disposeCurrentPlayback();
-    speechSynthesis.cancel();
 
     abortCurrentListenSegment();
 
@@ -689,9 +622,6 @@
     window.__voiceLastUserLine = '';
     console.log('[AlexVoice] response:', (data.text || '').substring(0, 80), '| audio:', (data.audio_b64 || '').length);
     disposeCurrentPlayback();
-    try {
-      if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
-    } catch (eC) {}
     setOrbState('ai-speaking');
     setStatus('Alex is speaking...');
     if (data.display_html || data.text) {
@@ -699,55 +629,53 @@
     } else if (uLine) {
       setTranscript(uLine);
     }
-    var speechText = plainTextForVoiceTts(data);
 
-    var done = function () {
-      setTranscript('');
-      setOrbState('idle');
-      if (active) startListening();
-    };
-
-    if (data.audio_b64 && !preferBrowserVoiceOutput()) {
-      var objectUrl = wavBase64ToObjectUrl(data.audio_b64);
-      if (!objectUrl) {
-        console.warn('[AlexVoice] no playable server audio — browser TTS fallback');
-        if (speechText) speakBrowserTTS(speechText, done);
-        else done();
-        return;
-      }
-      currentAudioObjectUrl = objectUrl;
-      currentAudio = new Audio(objectUrl);
-      currentAudio.onended = function () {
-        disposeCurrentPlayback();
-        done();
-      };
-      currentAudio.onerror = function () {
-        console.warn('[AlexVoice] <audio> error — browser TTS fallback');
-        disposeCurrentPlayback();
-        if (speechText) {
-          speakBrowserTTS(speechText, done);
-        } else {
-          done();
-        }
-      };
-      currentAudio.play().catch(function (err) {
-        console.warn('[AlexVoice] play() blocked or failed — browser TTS fallback', err);
-        disposeCurrentPlayback();
-        if (speechText) {
-          speakBrowserTTS(speechText, done);
-        } else {
-          done();
-        }
-      });
-    } else if (speechText) {
-      if (!data.audio_b64 && !preferBrowserVoiceOutput()) {
-        console.warn('[AlexVoice] empty server audio (check OPENAI_API_KEY + redeploy / Railway logs) — browser TTS fallback');
-      }
-      speakBrowserTTS(speechText, done);
-    } else {
+    function done(opts) {
+      opts = opts || {};
+      if (!opts.keepReadingPane) setTranscript('');
       setOrbState('idle');
       if (active) startListening();
     }
+
+    if (!data.audio_b64) {
+      console.warn('[AlexVoice] empty server audio — configure Fish or OpenAI TTS (no browser voice)');
+      setStatus('Reply on screen only');
+      appendVoiceServerNotice(
+        'No voice clip from the server. Set OPENAI_API_KEY (for TTS) or FISH_AUDIO_API_KEY, redeploy, and try again.'
+      );
+      done({ keepReadingPane: true });
+      return;
+    }
+
+    var objectUrl = wavBase64ToObjectUrl(data.audio_b64);
+    if (!objectUrl) {
+      console.warn('[AlexVoice] invalid audio base64');
+      setStatus('Reply on screen only');
+      appendVoiceServerNotice('Voice audio could not be decoded. Check server TTS logs.');
+      done({ keepReadingPane: true });
+      return;
+    }
+
+    currentAudioObjectUrl = objectUrl;
+    currentAudio = new Audio(objectUrl);
+    currentAudio.onended = function () {
+      disposeCurrentPlayback();
+      done({});
+    };
+    currentAudio.onerror = function () {
+      console.warn('[AlexVoice] <audio> element error');
+      disposeCurrentPlayback();
+      setStatus('Reply on screen only');
+      appendVoiceServerNotice('This browser could not play the voice clip. You can still read the reply above.');
+      done({ keepReadingPane: true });
+    };
+    currentAudio.play().catch(function (err) {
+      console.warn('[AlexVoice] audio.play() failed', err);
+      disposeCurrentPlayback();
+      setStatus('Reply on screen only');
+      appendVoiceServerNotice('Playback was blocked or failed. Interact with the page and try again, or use text chat.');
+      done({ keepReadingPane: true });
+    });
   }
 
   async function fetchSilenceNudgeAndPlay() {
@@ -830,18 +758,6 @@
     await fetchVoiceReplyAndPlay(transcript);
   }
 
-  function speakBrowserTTS(text, onDone) {
-    var utter = new SpeechSynthesisUtterance(text);
-    if (typeof speechSynthesis !== 'undefined') {
-      if (!cachedBrowserVoice) refreshBrowserVoice();
-      if (cachedBrowserVoice) utter.voice = cachedBrowserVoice;
-    }
-    utter.onend = function () { if (onDone) onDone(); };
-    utter.onerror = function () { if (onDone) onDone(); };
-    if (typeof speechSynthesis !== 'undefined') speechSynthesis.speak(utter);
-    else if (onDone) onDone();
-  }
-
   // ── Stop ────────────────────────────────────────────────────
   function stopAlex(skipSync) {
     // Fire-and-forget: sync voice session back to text chat DB
@@ -882,7 +798,6 @@
     if (micStream) { micStream.getTracks().forEach(function (t) { t.stop(); }); micStream = null; }
     if (audioContext) { audioContext.close().catch(function(){}); audioContext = null; analyser = null; }
     disposeCurrentPlayback();
-    speechSynthesis.cancel();
     setOrbState('idle');
     setStatus('Tap to start voice chat');
     setTranscript('');

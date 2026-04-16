@@ -112,13 +112,7 @@ OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe").strip
 # If you want the older fixed voice stack, set OPENAI_TTS_MODEL=tts-1-hd or tts-1 explicitly.
 OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
 OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy").strip() or "alloy"
-# When true: skip OpenAI TTS and let the browser speak. If an OPENAI_API_KEY is present,
-# default to server-side speech because it sounds more natural than browser speechSynthesis.
-_bvo_raw = os.getenv("ALEX_VOICE_BROWSER_ONLY")
-if _bvo_raw is None or not str(_bvo_raw).strip():
-    ALEX_VOICE_BROWSER_ONLY = not bool(OPENAI_API_KEY)
-else:
-    ALEX_VOICE_BROWSER_ONLY = str(_bvo_raw).strip().lower() not in ("0", "false", "no", "off")
+# Spoken replies are server-only (Fish Audio and/or OpenAI TTS). Browser speechSynthesis is not used.
 
 # Fish Audio (optional): e.g. "Sol" from https://fish.audio — set FISH_AUDIO_API_KEY to enable.
 # Default reference_id is the public Sol model; override with FISH_AUDIO_REFERENCE_ID for another voice.
@@ -9827,7 +9821,6 @@ Quality rules:
             f"window.ALEX_VOICE_BLOCK_REASON = {json.dumps(block_reason)};"
             f"window.ALEX_VOICE_SHOW_UPSELL = {str(bool(ALEX_VOICE_COMMERCIAL_GATES)).lower()};"
             f"window.ALEX_AUTH_STORAGE_KEY = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)};"
-            f"window.ALEX_VOICE_BROWSER_ONLY = {str(bool(ALEX_VOICE_BROWSER_ONLY)).lower()};"
             "(function(){"
             "var old=document.getElementById('_alex_voice_script');"
             "if(old)old.remove();"
@@ -23258,11 +23251,11 @@ async def _alex_fish_tts_wav_bytes(text: str) -> bytes | None:
 
 
 async def _alex_voice_tts_audio_b64(text: str) -> str:
-    """WAV base64 for Alex replies: Fish Audio first (Sol if default ref), else OpenAI when allowed."""
+    """WAV base64 for Alex replies: Fish Audio first (Sol if default ref), else OpenAI when OPENAI_API_KEY is set."""
     fish_raw = await _alex_fish_tts_wav_bytes(text)
     if fish_raw:
         return base64.b64encode(fish_raw).decode()
-    if OPENAI_API_KEY and not ALEX_VOICE_BROWSER_ONLY:
+    if OPENAI_API_KEY:
         try:
             async with httpx.AsyncClient(timeout=60.0) as http:
                 tts = await http.post(
@@ -23896,6 +23889,12 @@ def alex_voice_overlay_panel() -> rx.Component:
             }
             #alex-transcript .alex-voice-md-pane {
                 font-style:normal;
+            }
+            #alex-transcript .alex-voice-server-notice {
+                margin-top:12px; padding-top:10px;
+                border-top:1px solid rgba(255,120,100,0.25);
+                font-size:0.78rem; line-height:1.45;
+                color:rgba(255,180,160,0.88);
             }
             #alex-btn {
                 background:#1a1a1a; color:rgba(255,255,255,.85);
