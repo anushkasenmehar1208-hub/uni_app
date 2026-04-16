@@ -15,7 +15,26 @@
   var micStream = null;
   var audioChunks = [];
   var currentAudio = null;
+  /** When using Blob URLs for TTS playback (Safari often fails on long data:audio/wav;base64,...). */
+  var currentAudioObjectUrl = null;
   var maxRecordTimeout = null;
+
+  function disposeCurrentPlayback() {
+    try {
+      if (currentAudio) {
+        currentAudio.onended = null;
+        currentAudio.onerror = null;
+        currentAudio.pause();
+      }
+    } catch (e0) {}
+    currentAudio = null;
+    if (currentAudioObjectUrl) {
+      try {
+        URL.revokeObjectURL(currentAudioObjectUrl);
+      } catch (e1) {}
+      currentAudioObjectUrl = null;
+    }
+  }
   var introPlayed = false;
 
   /** Best-scoring system voice for SpeechSynthesis (neural / local voices rank higher). */
@@ -151,7 +170,28 @@
   }
 
   function preferBrowserVoiceOutput() {
-    return window.ALEX_VOICE_BROWSER_ONLY === true;
+    var v = window.ALEX_VOICE_BROWSER_ONLY;
+    if (v === true || v === 1) return true;
+    if (typeof v === 'string' && v.toLowerCase() === 'true') return true;
+    return false;
+  }
+
+  /**
+   * Decode server WAV base64 into a blob: URL — more reliable than huge data: URLs (esp. Safari).
+   * @returns {string|null}
+   */
+  function wavBase64ToObjectUrl(b64) {
+    try {
+      var bin = atob(b64);
+      var n = bin.length;
+      var bytes = new Uint8Array(n);
+      for (var i = 0; i < n; i++) bytes[i] = bin.charCodeAt(i);
+      var blob = new Blob([bytes], { type: 'audio/wav' });
+      return URL.createObjectURL(blob);
+    } catch (e) {
+      console.warn('[AlexVoice] invalid audio base64:', e);
+      return null;
+    }
   }
 
   // Attach click handler to button (React doesn't support string onclick)
@@ -573,10 +613,7 @@
     }
     input.value = '';
 
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio = null;
-    }
+    disposeCurrentPlayback();
     speechSynthesis.cancel();
 
     abortCurrentListenSegment();
@@ -591,6 +628,10 @@
 
   function playAlexVoiceResponse(data) {
     console.log('[AlexVoice] response:', (data.text || '').substring(0, 80), '| audio:', (data.audio_b64 || '').length);
+    disposeCurrentPlayback();
+    try {
+      if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+    } catch (eC) {}
     setOrbState('ai-speaking');
     setStatus('Alex is speaking...');
     if (data.text) setTranscript('Alex: ' + data.text);
@@ -603,20 +644,31 @@
     };
 
     if (data.audio_b64 && !preferBrowserVoiceOutput()) {
-      currentAudio = new Audio('data:audio/wav;base64,' + data.audio_b64);
+      var objectUrl = wavBase64ToObjectUrl(data.audio_b64);
+      if (!objectUrl) {
+        console.warn('[AlexVoice] no playable server audio — browser TTS fallback');
+        if (speechText) speakBrowserTTS(speechText, done);
+        else done();
+        return;
+      }
+      currentAudioObjectUrl = objectUrl;
+      currentAudio = new Audio(objectUrl);
       currentAudio.onended = function () {
-        currentAudio = null;
+        disposeCurrentPlayback();
         done();
       };
       currentAudio.onerror = function () {
-        currentAudio = null;
+        console.warn('[AlexVoice] <audio> error — browser TTS fallback');
+        disposeCurrentPlayback();
         if (speechText) {
           speakBrowserTTS(speechText, done);
         } else {
           done();
         }
       };
-      currentAudio.play().catch(function () {
+      currentAudio.play().catch(function (err) {
+        console.warn('[AlexVoice] play() blocked or failed — browser TTS fallback', err);
+        disposeCurrentPlayback();
         if (speechText) {
           speakBrowserTTS(speechText, done);
         } else {
@@ -624,6 +676,9 @@
         }
       });
     } else if (speechText) {
+      if (!data.audio_b64 && !preferBrowserVoiceOutput()) {
+        console.warn('[AlexVoice] empty server audio (check OPENAI_API_KEY + redeploy / Railway logs) — browser TTS fallback');
+      }
       speakBrowserTTS(speechText, done);
     } else {
       setOrbState('idle');
@@ -758,7 +813,7 @@
     mediaRecorder = null;
     if (micStream) { micStream.getTracks().forEach(function (t) { t.stop(); }); micStream = null; }
     if (audioContext) { audioContext.close().catch(function(){}); audioContext = null; analyser = null; }
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    disposeCurrentPlayback();
     speechSynthesis.cancel();
     setOrbState('idle');
     setStatus('Tap to start voice chat');
