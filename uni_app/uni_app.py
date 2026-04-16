@@ -100,6 +100,8 @@ OPENROUTER_AUX_MODEL = os.getenv("OPENROUTER_AUX_MODEL", "").strip() or OPENROUT
 OPENROUTER_VISION_MODEL = os.getenv("OPENROUTER_VISION_MODEL", "openai/gpt-4o-mini").strip() or "openai/gpt-4o-mini"
 OPENROUTER_DRAW_MODEL = os.getenv("OPENROUTER_DRAW_MODEL", "openai/gpt-4o-mini").strip() or "openai/gpt-4o-mini"
 OPENROUTER_SPEC_MODEL = os.getenv("OPENROUTER_SPEC_MODEL", "deepseek/deepseek-chat").strip() or "deepseek/deepseek-chat"
+# Live voice calls only: set to a smaller/faster OpenRouter model to cut wait time (defaults to teacher).
+OPENROUTER_VOICE_MODEL = (os.getenv("OPENROUTER_VOICE_MODEL") or "").strip() or OPENROUTER_TEACHER_MODEL
 
 # ----------------------------
 # OpenAI (optional: voice STT/TTS only — OpenRouter does not host these endpoints)
@@ -9756,17 +9758,16 @@ Quality rules:
         voice_system = (
             base_system
             + memory_block
-            + "\n\n─── VOICE CALL (THIS OVERRIDES TEXT-CHAT RULES ABOVE) ───\n"
-            "You are on a live voice call: the student HEARS you via speech synthesis; they are not reading text.\n"
-            "DISCARD for this channel: markdown, # headings, **asterisks**, bullets, numbered lists, code fences, "
-            "[VISUAL] blocks, and any instruction to 'lead with structure' or paste outlines.\n"
-            "Write ONLY natural connected prose — like a professor at office hours beside them. Use 'you' and 'we'. "
-            "If you need two points, weave them in spoken sentences — for example you might say 'First…' then 'Next…' — never as a typed list.\n"
-            "Never type the abbreviations e.g. or i.e. — always write the full words 'for example' or 'that is'. "
-            "Do not use Latin abbreviations the robot would mis-speak.\n"
-            "Teach one clear layer per turn (stay roughly under ~200 spoken words unless they asked for a tight definition only). "
-            "If the topic is huge, explain the heart clearly, then offer to go deeper on the next piece when they are ready.\n"
-            "Sound human: varied rhythm, light signposting ('here's the idea'), no document tone."
+            + "\n\n─── VOICE CALL + READING PANE (OVERRIDES LOOSE TEXT RULES ABOVE) ───\n"
+            "The student is on a live voice call AND sees a formatted reading pane (same spirit as the main chat).\n"
+            "Reply using **clear markdown for the reading pane**: a short ### heading when it helps, **bold** key terms, "
+            "and bullet or numbered lists with full sentences so they can scan while they listen.\n"
+            "The platform will also derive a plain spoken version automatically — still avoid the abbreviations "
+            "e.g. and i.e.; write the words 'for example' or 'that is' so both screen and speech sound natural.\n"
+            "Do not use [VISUAL] blocks in voice mode. Keep code fences short only when essential.\n"
+            "Teach one clear layer per turn (aim under ~220 words in the reading pane unless they want a crisp definition). "
+            "If the topic is huge, cover the core clearly, then invite them to go deeper next.\n"
+            "Sound like a human professor: warm, direct, and structured for reading — not a wall of unbroken prose."
         )
 
         raw = list(self.chat_history[-20:]) if len(self.chat_history) > 20 else list(self.chat_history)
@@ -23065,10 +23066,10 @@ api.add_route("/api/notes/unload-autosave", notes_unload_autosave_api, methods=[
 _alex_voice_sessions: dict[str, dict] = {}  # voice_key → {system, history, student_name}
 
 _ALEX_VOICE_SYSTEM = (
-    "You are Alex, a friendly university tutor on a live voice call. "
-    "Reply in flowing spoken sentences only — no markdown, lists, or symbols. "
-    "Say 'for example' and 'that is' — never the abbreviations e.g. or i.e. "
-    "Teach one clear layer at a time, warmly, as if beside the student."
+    "You are Alex, a friendly university tutor on a live voice call with a markdown reading pane. "
+    "Use short headings, bullets with full sentences, and **bold** key ideas like the main chat. "
+    "Write 'for example' / 'that is' — never the abbreviations e.g. or i.e. "
+    "No [VISUAL] blocks. Teach one clear layer per turn, warmly."
 )
 
 VOICE_FREE_LIMIT_SEC = 600  # 10 minutes per day for non-premium users
@@ -23327,6 +23328,62 @@ def _polish_llm_text_for_voice_speech(text: str) -> str:
     return t
 
 
+def _voice_display_markdown(source: str) -> str:
+    """Markdown shown in the voice overlay: drop visuals, fix Latin abbreviations, keep structure."""
+    t = (source or "").strip()
+    if not t:
+        return ""
+    try:
+        t, _vb = _extract_all_visual_blocks(t)
+    except Exception:
+        pass
+    t = (t or "").strip()
+    if not t:
+        return ""
+    t = re.sub(
+        r"\(\s*e\.?\s*g\.?\s*[,:]?\s*([^)]+)\)",
+        r", for example, \1",
+        t,
+        flags=re.IGNORECASE,
+    )
+    t = re.sub(
+        r"\(\s*i\.?\s*e\.?\s*[,:]?\s*([^)]+)\)",
+        r", that is, \1",
+        t,
+        flags=re.IGNORECASE,
+    )
+    t = re.sub(r"\(\s*e\.?\s*g\.?\s*[,:]?\s*\)", " for example ", t, flags=re.IGNORECASE)
+    t = re.sub(r"\(\s*i\.?\s*e\.?\s*[,:]?\s*\)", " that is ", t, flags=re.IGNORECASE)
+    t = re.sub(r"\be\.?\s*g\.?\s*[,:]?\s+", "for example, ", t, flags=re.IGNORECASE)
+    t = re.sub(r"\bi\.?\s*e\.?\s*[,:]?\s+", "that is, ", t, flags=re.IGNORECASE)
+    t = re.sub(r"\bet\s*al\b\.?", "and others", t, flags=re.IGNORECASE)
+    return t.strip()
+
+
+def _markdown_to_safe_html_for_voice(md: str) -> str:
+    """Render markdown to sanitized HTML for the voice-call reading pane (matches .claude-md styling)."""
+    if not (md or "").strip():
+        return ""
+    try:
+        import nh3  # type: ignore
+        from markdown import markdown as _md_render  # type: ignore
+    except ImportError:
+        from html import escape as _esc
+
+        return f'<p class="voice-md-fallback">{_esc(md.strip())}</p>'
+    try:
+        raw_html = _md_render(
+            md.strip(),
+            extensions=["extra", "nl2br"],
+            output_format="html",
+        )
+        return str(nh3.clean(raw_html))
+    except Exception:
+        from html import escape as _esc
+
+        return f'<p class="voice-md-fallback">{_esc(md.strip())}</p>'
+
+
 def _prepare_tts_text(text: str, *, is_voice_mode: bool) -> str:
     clean = (text or "").strip()
     if not clean:
@@ -23341,7 +23398,10 @@ async def alex_voice_api(request: Request):
     _prune_stale_voice_sessions()
     v_uid = _voice_request_uid(request)
     if v_uid < 0:
-        return JSONResponse({"error": "Unauthorized", "text": "", "audio_b64": ""}, status_code=401)
+        return JSONResponse(
+            {"error": "Unauthorized", "text": "", "display_html": "", "audio_b64": ""},
+            status_code=401,
+        )
     try:
         body = await request.json()
     except Exception:
@@ -23358,20 +23418,31 @@ async def alex_voice_api(request: Request):
         return JSONResponse({"error": "Empty transcript"}, status_code=400)
 
     if not _is_valid_voice_key(voice_key):
-        return JSONResponse({"error": "Invalid voice session key", "text": "", "audio_b64": ""}, status_code=400)
+        return JSONResponse(
+            {"error": "Invalid voice session key", "text": "", "display_html": "", "audio_b64": ""},
+            status_code=400,
+        )
 
     ctx = _alex_voice_sessions.get(voice_key)
     if not ctx:
         return JSONResponse(
-            {"error": "Voice session expired — reload this page.", "text": "", "audio_b64": ""},
+            {
+                "error": "Voice session expired — reload this page.",
+                "text": "",
+                "display_html": "",
+                "audio_b64": "",
+            },
             status_code=410,
         )
     if int(ctx.get("uid", -1)) != v_uid:
-        return JSONResponse({"error": "Forbidden", "text": "", "audio_b64": ""}, status_code=403)
+        return JSONResponse(
+            {"error": "Forbidden", "text": "", "display_html": "", "audio_b64": ""},
+            status_code=403,
+        )
 
     if not OPENROUTER_API_KEY:
         return JSONResponse(
-            {"error": "OPENROUTER_API_KEY missing.", "text": "", "audio_b64": ""},
+            {"error": "OPENROUTER_API_KEY missing.", "text": "", "display_html": "", "audio_b64": ""},
             status_code=503,
         )
 
@@ -23395,42 +23466,52 @@ async def alex_voice_api(request: Request):
         history.append({"role": "user", "content": transcript})
         history = _alex_voice_trim_history(ctx, history)
         messages = [{"role": "system", "content": system_prompt}, *history]
-        max_tokens = 280
+        max_tokens = 220
 
     try:
         res = await asyncio.to_thread(
             _openrouter_complete,
-            OPENROUTER_TEACHER_MODEL,
+            OPENROUTER_VOICE_MODEL,
             messages,
             max_tokens,
         )
-        answer = (res.text or "").strip() or (
+        answer_raw = (res.text or "").strip() or (
             "I'm right here whenever you want to jump in — what's on your mind?"
             if silence_nudge
             else "Sorry, could you say that again?"
         )
     except Exception as exc:
         logger.error("AlexVoice LLM error: %s", exc)
-        answer = (
+        answer_raw = (
             "I'm right here whenever you want to jump in — what's on your mind?"
             if silence_nudge
             else "Sorry, I had trouble thinking. Could you repeat that?"
         )
 
-    answer = _polish_llm_text_for_voice_speech(answer)
-    if not answer:
-        answer = (
+    answer_spoken = _polish_llm_text_for_voice_speech(answer_raw)
+    if not answer_spoken:
+        answer_spoken = (
             "I'm right here whenever you want to jump in — what's on your mind?"
             if silence_nudge
             else "Sorry, could you say that again?"
         )
-    history.append({"role": "assistant", "content": answer})
+    display_md = _voice_display_markdown(answer_raw) or answer_spoken
+    display_html = _markdown_to_safe_html_for_voice(display_md)
+
+    history.append({"role": "assistant", "content": display_md})
     _alex_voice_trim_history(ctx, history)
 
-    speech_text = _prepare_tts_text(answer, is_voice_mode=is_voice_mode)
+    speech_text = _prepare_tts_text(answer_spoken, is_voice_mode=is_voice_mode)
     audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
 
-    return JSONResponse({"text": answer, "speech_text": speech_text, "audio_b64": audio_b64})
+    return JSONResponse(
+        {
+            "text": display_md,
+            "display_html": display_html,
+            "speech_text": speech_text,
+            "audio_b64": audio_b64,
+        }
+    )
 
 
 api.add_route("/api/alex-voice", alex_voice_api, methods=["POST"])
@@ -23479,7 +23560,16 @@ async def alex_voice_intro(request: Request):
         )
     speech_text = _prepare_tts_text(intro, is_voice_mode=is_voice_mode)
     audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-    return JSONResponse({"text": intro, "speech_text": speech_text, "audio_b64": audio_b64})
+    intro_display_md = _voice_display_markdown(intro) or intro.strip()
+    intro_html = _markdown_to_safe_html_for_voice(intro_display_md)
+    return JSONResponse(
+        {
+            "text": intro_display_md,
+            "display_html": intro_html,
+            "speech_text": speech_text,
+            "audio_b64": audio_b64,
+        }
+    )
 
 
 api.add_route("/api/alex-voice-intro", alex_voice_intro, methods=["GET"])
@@ -23777,10 +23867,29 @@ def alex_voice_overlay_panel() -> rx.Component:
                 min-height:1.4em; transition: color .4s;
             }
             #alex-transcript {
-                font-size:.82rem; color:rgba(255,255,255,.35);
-                text-align:center; max-width:320px;
-                min-height:1.2em; font-style:italic;
+                width:100%; max-width:min(560px, 92vw);
+                max-height:min(42vh, 420px);
+                overflow-x:hidden; overflow-y:auto;
+                text-align:left; font-size:0.9rem; line-height:1.65;
+                color:rgba(228,232,238,0.92);
+                padding:14px 16px 16px;
+                margin:0 12px;
+                border-radius:16px;
+                background:rgba(255,255,255,0.04);
+                border:1px solid rgba(255,255,255,0.08);
+                box-sizing:border-box;
+                -webkit-overflow-scrolling:touch;
                 transition: opacity .4s;
+            }
+            #alex-transcript .alex-voice-user-line {
+                font-size:0.78rem; color:rgba(255,255,255,0.45);
+                font-style:italic;
+                margin-bottom:10px;
+                padding-bottom:8px;
+                border-bottom:1px solid rgba(255,255,255,0.07);
+            }
+            #alex-transcript .alex-voice-md-pane {
+                font-style:normal;
             }
             #alex-btn {
                 background:#1a1a1a; color:rgba(255,255,255,.85);
@@ -23833,8 +23942,8 @@ def alex_voice_overlay_panel() -> rx.Component:
                 ),
                 # Status
                 rx.el.p("Connecting…", id="alex-status"),
-                # Transcript / last heard
-                rx.el.p(id="alex-transcript"),
+                # Reading pane (markdown HTML) + optional user line — populated by alex_voice.js
+                rx.el.div(id="alex-transcript"),
                 # Ends call — click handler attached by alex_voice.js
                 rx.el.button(
                     "Connecting…",

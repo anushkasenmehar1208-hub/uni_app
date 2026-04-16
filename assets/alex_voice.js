@@ -257,7 +257,34 @@
 
   function setTranscript(msg) {
     var el = document.getElementById('alex-transcript');
-    if (el) el.textContent = msg || '';
+    if (!el) return;
+    el.innerHTML = '';
+    el.textContent = msg || '';
+  }
+
+  /** Rich markdown pane (server-rendered HTML) + optional plain user line above — like main chat. */
+  function renderVoiceTranscriptBlock(userLinePlain, alexData) {
+    var el = document.getElementById('alex-transcript');
+    if (!el) return;
+    el.innerHTML = '';
+    if (userLinePlain) {
+      var uw = document.createElement('div');
+      uw.className = 'alex-voice-user-line';
+      uw.textContent = userLinePlain;
+      el.appendChild(uw);
+    }
+    if (alexData && (alexData.display_html || alexData.text)) {
+      var box = document.createElement('div');
+      box.className = 'claude-md alex-voice-md-pane';
+      if (alexData.display_html) {
+        box.innerHTML = alexData.display_html;
+      } else {
+        var p = document.createElement('p');
+        p.textContent = alexData.text || '';
+        box.appendChild(p);
+      }
+      el.appendChild(box);
+    }
   }
 
   function upsellEnabled() {
@@ -581,6 +608,9 @@
           if (vBody.error) vErr = String(vBody.error);
         } catch (e2) {}
         setStatus('Alex could not reply');
+        try {
+          window.__voiceLastUserLine = '';
+        } catch (eClr) {}
         setTranscript(vErr);
         setOrbState('idle');
         processing = false;
@@ -592,6 +622,9 @@
       playAlexVoiceResponse(data);
     } catch (err) {
       console.error('[AlexVoice] API error:', err);
+      try {
+        window.__voiceLastUserLine = '';
+      } catch (eClr2) {}
       setStatus('Network error — retrying...');
       setOrbState('idle');
       processing = false;
@@ -621,12 +654,15 @@
     processing = true;
     setOrbState('thinking');
     setStatus('Alex is thinking...');
-    setTranscript('You: ' + text);
+    window.__voiceLastUserLine = 'You: ' + text;
+    setTranscript('');
 
     await fetchVoiceReplyAndPlay(text);
   }
 
   function playAlexVoiceResponse(data) {
+    var uLine = window.__voiceLastUserLine || '';
+    window.__voiceLastUserLine = '';
     console.log('[AlexVoice] response:', (data.text || '').substring(0, 80), '| audio:', (data.audio_b64 || '').length);
     disposeCurrentPlayback();
     try {
@@ -634,8 +670,13 @@
     } catch (eC) {}
     setOrbState('ai-speaking');
     setStatus('Alex is speaking...');
-    if (data.text) setTranscript('Alex: ' + data.text);
-    var speechText = (data.speech_text || data.text || '').trim();
+    if (data.display_html || data.text) {
+      renderVoiceTranscriptBlock(uLine, data);
+    } else if (uLine) {
+      setTranscript(uLine);
+    }
+    /* Never fall back to data.text for TTS — it may be markdown for the reading pane only. */
+    var speechText = (data.speech_text || '').trim();
 
     var done = function () {
       setTranscript('');
@@ -745,7 +786,8 @@
       var sttData = await sttResp.json();
       transcript = (sttData.text || '').trim();
       console.log('[AlexVoice] transcript:', transcript);
-      if (transcript) setTranscript('You: ' + transcript);
+      if (transcript) window.__voiceLastUserLine = 'You: ' + transcript;
+      setTranscript('');
     } catch (e) {
       console.error('[AlexVoice] STT error:', e);
       setOrbState('idle');
@@ -799,6 +841,9 @@
         .catch(function (e) { console.warn('[AlexVoice] sync failed:', e); });
     }
     voiceStartedAt = 0;
+    try {
+      window.__voiceLastUserLine = '';
+    } catch (eVu) {}
 
     active = false;
     processing = false;
