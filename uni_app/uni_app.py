@@ -9756,10 +9756,17 @@ Quality rules:
         voice_system = (
             base_system
             + memory_block
-            + "\n\nVOICE MODE RULES: You are now speaking aloud to the student. "
-            "Keep every reply to 2-3 sentences maximum — brevity is essential. "
-            "Be warm and conversational. Never use markdown, bullet points, code blocks, "
-            "numbered lists, or headers — speak naturally as if on a phone call."
+            + "\n\n─── VOICE CALL (THIS OVERRIDES TEXT-CHAT RULES ABOVE) ───\n"
+            "You are on a live voice call: the student HEARS you via speech synthesis; they are not reading text.\n"
+            "DISCARD for this channel: markdown, # headings, **asterisks**, bullets, numbered lists, code fences, "
+            "[VISUAL] blocks, and any instruction to 'lead with structure' or paste outlines.\n"
+            "Write ONLY natural connected prose — like a professor at office hours beside them. Use 'you' and 'we'. "
+            "If you need two points, weave them in spoken sentences — for example you might say 'First…' then 'Next…' — never as a typed list.\n"
+            "Never type the abbreviations e.g. or i.e. — always write the full words 'for example' or 'that is'. "
+            "Do not use Latin abbreviations the robot would mis-speak.\n"
+            "Teach one clear layer per turn (stay roughly under ~200 spoken words unless they asked for a tight definition only). "
+            "If the topic is huge, explain the heart clearly, then offer to go deeper on the next piece when they are ready.\n"
+            "Sound human: varied rhythm, light signposting ('here's the idea'), no document tone."
         )
 
         raw = list(self.chat_history[-20:]) if len(self.chat_history) > 20 else list(self.chat_history)
@@ -23058,9 +23065,10 @@ api.add_route("/api/notes/unload-autosave", notes_unload_autosave_api, methods=[
 _alex_voice_sessions: dict[str, dict] = {}  # voice_key → {system, history, student_name}
 
 _ALEX_VOICE_SYSTEM = (
-    "You are Alex, a friendly and knowledgeable university tutor. "
-    "Keep your answers concise (2-3 sentences) since they will be spoken aloud. "
-    "Be warm, encouraging, and conversational."
+    "You are Alex, a friendly university tutor on a live voice call. "
+    "Reply in flowing spoken sentences only — no markdown, lists, or symbols. "
+    "Say 'for example' and 'that is' — never the abbreviations e.g. or i.e. "
+    "Teach one clear layer at a time, warmly, as if beside the student."
 )
 
 VOICE_FREE_LIMIT_SEC = 600  # 10 minutes per day for non-premium users
@@ -23271,6 +23279,54 @@ async def _alex_voice_tts_audio_b64(text: str) -> str:
     return ""
 
 
+def _polish_llm_text_for_voice_speech(text: str) -> str:
+    """Strip markdown, code, and Latin abbreviations so TTS reads like a human tutor, not a document."""
+    t = (text or "").strip()
+    if not t:
+        return ""
+    try:
+        t, _vb = _extract_all_visual_blocks(t)
+    except Exception:
+        pass
+    t = (t or "").strip()
+    if not t:
+        return ""
+    # "(e.g., …)" / "(i.e., …)" → spoken phrasing
+    t = re.sub(
+        r"\(\s*e\.?\s*g\.?\s*[,:]?\s*([^)]+)\)",
+        r", for example, \1",
+        t,
+        flags=re.IGNORECASE,
+    )
+    t = re.sub(
+        r"\(\s*i\.?\s*e\.?\s*[,:]?\s*([^)]+)\)",
+        r", that is, \1",
+        t,
+        flags=re.IGNORECASE,
+    )
+    t = re.sub(r"\(\s*e\.?\s*g\.?\s*[,:]?\s*\)", " for example ", t, flags=re.IGNORECASE)
+    t = re.sub(r"\(\s*i\.?\s*e\.?\s*[,:]?\s*\)", " that is ", t, flags=re.IGNORECASE)
+    t = re.sub(r"\be\.?\s*g\.?\s*[,:]?\s+", "for example, ", t, flags=re.IGNORECASE)
+    t = re.sub(r"\bi\.?\s*e\.?\s*[,:]?\s+", "that is, ", t, flags=re.IGNORECASE)
+    t = re.sub(r"\bet\s*al\b\.?", "and others", t, flags=re.IGNORECASE)
+    t = re.sub(r"```[\s\S]*?```", " ", t)
+    t = re.sub(r"`([^`]+)`", r"\1", t)
+    t = re.sub(r"(?m)^#{1,6}\s+", "", t)
+    t = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", t)
+    for _ in range(6):
+        t2 = re.sub(r"\*\*([^*]+)\*\*", r"\1", t)
+        t2 = re.sub(r"\*([^*]+)\*", r"\1", t2)
+        t2 = re.sub(r"__([^_]+)__", r"\1", t2)
+        t2 = re.sub(r"_([^_]+)_", r"\1", t2)
+        if t2 == t:
+            break
+        t = t2
+    t = re.sub(r"(?m)^\s*[-*•]\s+", "", t)
+    t = re.sub(r"(?m)^\s*\d+\.\s+", "", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
+
 def _prepare_tts_text(text: str, *, is_voice_mode: bool) -> str:
     clean = (text or "").strip()
     if not clean:
@@ -23339,7 +23395,7 @@ async def alex_voice_api(request: Request):
         history.append({"role": "user", "content": transcript})
         history = _alex_voice_trim_history(ctx, history)
         messages = [{"role": "system", "content": system_prompt}, *history]
-        max_tokens = 300
+        max_tokens = 280
 
     try:
         res = await asyncio.to_thread(
@@ -23361,6 +23417,13 @@ async def alex_voice_api(request: Request):
             else "Sorry, I had trouble thinking. Could you repeat that?"
         )
 
+    answer = _polish_llm_text_for_voice_speech(answer)
+    if not answer:
+        answer = (
+            "I'm right here whenever you want to jump in — what's on your mind?"
+            if silence_nudge
+            else "Sorry, could you say that again?"
+        )
     history.append({"role": "assistant", "content": answer})
     _alex_voice_trim_history(ctx, history)
 
