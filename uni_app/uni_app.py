@@ -226,7 +226,7 @@ def rewrite_for_voice(text: str) -> str:
     """Make tutor text easier to speak aloud without changing its meaning."""
     chunks = _split_for_voice(text)
     if not chunks:
-        return ""
+        return (text or "").strip()
 
     opener = random.choice(_VOICE_FILLER_OPENERS)
     bridge = random.choice(_VOICE_FILLER_MIDDLES)
@@ -23391,7 +23391,8 @@ def _prepare_tts_text(text: str, *, is_voice_mode: bool) -> str:
         return ""
     if not is_voice_mode:
         return clean
-    return rewrite_for_voice(clean)
+    out = (rewrite_for_voice(clean) or "").strip()
+    return out or clean
 
 
 async def alex_voice_api(request: Request):
@@ -23503,6 +23504,8 @@ async def alex_voice_api(request: Request):
     _alex_voice_trim_history(ctx, history)
 
     speech_text = _prepare_tts_text(answer_spoken, is_voice_mode=is_voice_mode)
+    if not (speech_text or "").strip():
+        speech_text = (answer_spoken or "").strip()
     audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
 
     return JSONResponse(
@@ -23560,6 +23563,8 @@ async def alex_voice_intro(request: Request):
             "Shall we begin your session?"
         )
     speech_text = _prepare_tts_text(intro, is_voice_mode=is_voice_mode)
+    if not (speech_text or "").strip():
+        speech_text = intro.strip()
     audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
     intro_display_md = _voice_display_markdown(intro) or intro.strip()
     intro_html = _markdown_to_safe_html_for_voice(intro_display_md)

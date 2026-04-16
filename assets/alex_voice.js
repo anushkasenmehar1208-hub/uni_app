@@ -263,6 +263,30 @@
   }
 
   /** Rich markdown pane (server-rendered HTML) + optional plain user line above — like main chat. */
+  /** Plain string for TTS fallbacks — never use raw markdown `text` as first choice. */
+  function plainTextForVoiceTts(data) {
+    var st = (data.speech_text || '').trim();
+    if (st) return st;
+    var html = data.display_html || '';
+    if (html) {
+      try {
+        var d = document.createElement('div');
+        d.innerHTML = html;
+        var t = (d.textContent || d.innerText || '').trim();
+        if (t) return t;
+      } catch (e0) {}
+    }
+    var md = (data.text || '').trim();
+    if (!md) return '';
+    return md
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/^\s*[-*•]\s+/gm, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   function renderVoiceTranscriptBlock(userLinePlain, alexData) {
     var el = document.getElementById('alex-transcript');
     if (!el) return;
@@ -675,8 +699,7 @@
     } else if (uLine) {
       setTranscript(uLine);
     }
-    /* Never fall back to data.text for TTS — it may be markdown for the reading pane only. */
-    var speechText = (data.speech_text || '').trim();
+    var speechText = plainTextForVoiceTts(data);
 
     var done = function () {
       setTranscript('');
