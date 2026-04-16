@@ -23075,9 +23075,10 @@ _ALEX_VOICE_SYSTEM = (
 VOICE_FREE_LIMIT_SEC = 600  # 10 minutes per day for non-premium users
 _VOICE_DAILY_SCOPE = "__voice_daily__"
 
-# When false: voice works everywhere (incl. home) with no daily cap UI, no upgrade CTAs — for local testing.
-# Set ALEX_VOICE_COMMERCIAL_GATES=true (or unset) before launch to restore premium / home / daily limits.
-ALEX_VOICE_COMMERCIAL_GATES = os.getenv("ALEX_VOICE_COMMERCIAL_GATES", "true").strip().lower() not in (
+# When false: voice works everywhere (incl. home) with no daily cap UI, no upgrade CTAs.
+# Default is OFF for dev/test. Before production launch, set env ALEX_VOICE_COMMERCIAL_GATES=true
+# (Railway / server) to enforce premium-only home voice + 10 min/day free tier + upsell UI.
+ALEX_VOICE_COMMERCIAL_GATES = os.getenv("ALEX_VOICE_COMMERCIAL_GATES", "false").strip().lower() not in (
     "0",
     "false",
     "no",
