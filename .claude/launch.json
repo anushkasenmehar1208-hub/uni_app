@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "reflex-dev",
+      "runtimeExecutable": "/opt/homebrew/bin/reflex",
+      "runtimeArgs": ["run"],
+      "port": 3000,
+      "autoPort": false
+    }
+    ,{
+      "name": "city3d",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8090"],
+      "port": 8090
+    }
+    ,{
+      "name": "landing",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8091"],
+      "port": 8091
+    }
+  ]
+}
