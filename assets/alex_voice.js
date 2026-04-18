@@ -319,11 +319,15 @@
    * When audio.play() is blocked (async fetch broke user-activation), keep the clip and offer
    * a gesture-bound Play button plus skip.
    */
-  function appendTapToPlayFallback(done) {
+  /**
+   * @param {function} onResumeAfterPlay — after a blocked clip plays successfully (onended chains this).
+   * @param {function} onSkipAllAudio — user skipped / no clip; clear tail and end without clearing reading pane.
+   */
+  function appendTapToPlayFallback(onResumeAfterPlay, onSkipAllAudio) {
     removeTapToPlayFallback();
     var el = document.getElementById('alex-transcript');
     if (!el) {
-      if (typeof done === 'function') done({ keepReadingPane: true });
+      if (typeof onSkipAllAudio === 'function') onSkipAllAudio();
       return;
     }
     var wrap = document.createElement('div');
@@ -343,7 +347,7 @@
       playBtn.removeEventListener('click', onTap);
       if (!currentAudio) {
         removeTapToPlayFallback();
-        if (typeof done === 'function') done({ keepReadingPane: true });
+        if (typeof onSkipAllAudio === 'function') onSkipAllAudio();
         return;
       }
       tryPrimeAudioOnUserGesture();
@@ -367,7 +371,7 @@
     skipBtn.addEventListener('click', function () {
       removeTapToPlayFallback();
       disposeCurrentPlayback();
-      if (typeof done === 'function') done({ keepReadingPane: true });
+      if (typeof onSkipAllAudio === 'function') onSkipAllAudio();
     });
     wrap.appendChild(hint);
     wrap.appendChild(playBtn);
@@ -805,7 +809,69 @@
       if (active) startListening();
     }
 
+    var tailState = { rest: (data.audio_b64_tail || '').trim() };
+
+    function scheduleNextOrDone() {
+      if (tailState.rest) {
+        var next = tailState.rest;
+        tailState.rest = '';
+        playWavSegment(next);
+        return;
+      }
+      done({});
+    }
+
+    function skipAllVoiceAudio() {
+      tailState.rest = '';
+      done({ keepReadingPane: true });
+    }
+
+    function playWavSegment(b64) {
+      if (!b64) {
+        scheduleNextOrDone();
+        return;
+      }
+      var objectUrl = wavBase64ToObjectUrl(b64);
+      if (!objectUrl) {
+        console.warn('[AlexVoice] invalid audio base64 (segment)');
+        setStatus('Reply on screen only');
+        appendVoiceServerNotice('Voice audio could not be decoded. You can still read the reply above.');
+        tailState.rest = '';
+        done({ keepReadingPane: true });
+        return;
+      }
+
+      currentAudioObjectUrl = objectUrl;
+      currentAudio = new Audio(objectUrl);
+      currentAudio.onended = function () {
+        disposeCurrentPlayback();
+        scheduleNextOrDone();
+      };
+      currentAudio.onerror = function () {
+        console.warn('[AlexVoice] <audio> element error');
+        disposeCurrentPlayback();
+        setStatus('Reply on screen only');
+        appendVoiceServerNotice('This browser could not play the voice clip. You can still read the reply above.');
+        tailState.rest = '';
+        done({ keepReadingPane: true });
+      };
+      currentAudio.play().catch(function (err) {
+        console.warn('[AlexVoice] audio.play() failed', err);
+        try {
+          currentAudio.pause();
+        } catch (ePause) {}
+        setOrbState('idle');
+        setStatus('Tap Play below to hear Alex');
+        appendTapToPlayFallback(scheduleNextOrDone, skipAllVoiceAudio);
+      });
+    }
+
     if (!data.audio_b64) {
+      if (tailState.rest) {
+        playWavSegment(tailState.rest);
+        tailState.rest = '';
+        return;
+      }
       console.warn('[AlexVoice] empty server audio — configure Fish or OpenAI TTS (no browser voice)');
       setStatus('Reply on screen only');
       appendVoiceServerNotice(
@@ -815,37 +881,7 @@
       return;
     }
 
-    var objectUrl = wavBase64ToObjectUrl(data.audio_b64);
-    if (!objectUrl) {
-      console.warn('[AlexVoice] invalid audio base64');
-      setStatus('Reply on screen only');
-      appendVoiceServerNotice('Voice audio could not be decoded. Check server TTS logs.');
-      done({ keepReadingPane: true });
-      return;
-    }
-
-    currentAudioObjectUrl = objectUrl;
-    currentAudio = new Audio(objectUrl);
-    currentAudio.onended = function () {
-      disposeCurrentPlayback();
-      done({});
-    };
-    currentAudio.onerror = function () {
-      console.warn('[AlexVoice] <audio> element error');
-      disposeCurrentPlayback();
-      setStatus('Reply on screen only');
-      appendVoiceServerNotice('This browser could not play the voice clip. You can still read the reply above.');
-      done({ keepReadingPane: true });
-    };
-    currentAudio.play().catch(function (err) {
-      console.warn('[AlexVoice] audio.play() failed', err);
-      try {
-        currentAudio.pause();
-      } catch (ePause) {}
-      setOrbState('idle');
-      setStatus('Tap Play below to hear Alex');
-      appendTapToPlayFallback(done);
-    });
+    playWavSegment(data.audio_b64);
   }
 
   async function fetchSilenceNudgeAndPlay() {
