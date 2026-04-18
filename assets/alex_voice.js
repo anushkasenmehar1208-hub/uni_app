@@ -131,7 +131,6 @@
           alexPendingSegments--;
           if (alexPendingSegments === 0 && !alexSseDone) {
             setOrbState('thinking');
-            setStatus('Preparing...');
           }
           resolve();
         };
