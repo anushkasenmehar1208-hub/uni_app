@@ -11,11 +11,29 @@
   'use strict';
 
   // ── Config ─────────────────────────────────────────────────────────────────
+  // Resolve default avatar URL relative to THIS script's location so the same file
+  // works both inside the Reflex app (/alex_avatar.js → /models/…) and when the
+  // script is served from /assets/ (e.g. static test harness).
+  var AVATAR_SCRIPT_SRC =
+    (document.currentScript && document.currentScript.src) ||
+    (function () {
+      var scripts = document.getElementsByTagName('script');
+      for (var i = scripts.length - 1; i >= 0; i--) {
+        var s = scripts[i].src || '';
+        if (/alex_avatar\.js(\?|$)/.test(s)) return s;
+      }
+      return '';
+    })();
+  var AVATAR_URL_BASE = AVATAR_SCRIPT_SRC.replace(/[^/?#]*(\?.*)?(#.*)?$/, '');
+  var LOCAL_AVATAR_URL = AVATAR_URL_BASE + 'models/facecap.glb';
+  // Fallback CDN copy of the same Three.js example model — used only if the local file is missing.
+  var REMOTE_AVATAR_URL =
+    'https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/models/gltf/facecap.glb';
   var AVATAR_URL =
     (window.ALEX_AVATAR_URL && typeof window.ALEX_AVATAR_URL === 'string')
       ? window.ALEX_AVATAR_URL
-      // Default: free Ready Player Me preset, realistic young man, with visemes for lip-sync.
-      : 'https://models.readyplayer.me/64bfa15f0e72c63d7c3934a6.glb?morphTargets=ARKit,Oculus%20Visemes&textureAtlas=1024';
+      : LOCAL_AVATAR_URL;
+  var AVATAR_URL_FALLBACK = REMOTE_AVATAR_URL;
 
   var THREE_CDN = 'https://unpkg.com/three@0.160.0/build/three.module.js';
   var GLTF_CDN  = 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
@@ -155,7 +173,9 @@
       boot.textContent = [
         "import * as THREE from 'three';",
         "import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';",
-        "window.__alexAvatarTHREE = { THREE: THREE, GLTFLoader: GLTFLoader };",
+        "import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';",
+        "import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';",
+        "window.__alexAvatarTHREE = { THREE: THREE, GLTFLoader: GLTFLoader, KTX2Loader: KTX2Loader, MeshoptDecoder: MeshoptDecoder };",
         "window.dispatchEvent(new Event('alex-avatar-three-ready'));"
       ].join('\n');
       boot.onerror = function (e) { reject(new Error('three module load error')); };
@@ -252,6 +272,8 @@
   function initScene(mods, canvas, orb) {
     var THREE = mods.THREE;
     var GLTFLoader = mods.GLTFLoader;
+    var KTX2Loader = mods.KTX2Loader;
+    var MeshoptDecoder = mods.MeshoptDecoder;
 
     var scene = new THREE.Scene();
     scene.background = null; // transparent
@@ -309,60 +331,171 @@
     }
     window.addEventListener('resize', sizeToCanvas);
 
-    // Load avatar.
+    // Load avatar — try local GLB first, then remote fallback if local is missing.
     var loader = new GLTFLoader();
-    loader.load(
-      AVATAR_URL,
-      function onLoaded(gltf) {
-        var avatar = gltf.scene;
-        avatar.traverse(function (node) {
-          if (node.isMesh) {
-            node.castShadow = false;
-            node.receiveShadow = false;
-            if (node.morphTargetDictionary && node.morphTargetInfluences) {
-              rig.morphMeshes.push(node);
-              // Pick best available jaw/open morph by priority.
-              var dict = node.morphTargetDictionary;
-              var priorities = [
-                'jawOpen',        // ARKit
-                'mouthOpen',
-                'viseme_aa',      // Oculus Visemes
-                'viseme_O',
-                'viseme_E',
-                'viseme_U'
-              ];
-              for (var i = 0; i < priorities.length; i++) {
-                if (priorities[i] in dict) {
-                  rig.viseme[node.uuid] = dict[priorities[i]];
-                  break;
-                }
+    // facecap.glb uses KTX2 compressed textures and meshopt-compressed buffers; wire the decoders.
+    try {
+      if (KTX2Loader) {
+        var ktx2 = new KTX2Loader()
+          .setTranscoderPath(AVATAR_URL_BASE + 'basis/')
+          .detectSupport(renderer);
+        loader.setKTX2Loader(ktx2);
+      }
+      if (MeshoptDecoder) {
+        loader.setMeshoptDecoder(MeshoptDecoder);
+      }
+    } catch (e) {
+      warn('KTX2/Meshopt setup skipped:', e && e.message);
+    }
+
+    function loadWithFallback(urls, idx) {
+      idx = idx || 0;
+      if (idx >= urls.length) {
+        warn('All GLB sources failed — keeping orb fallback.');
+        try { canvas.remove(); } catch (e) {}
+        return;
+      }
+      var url = urls[idx];
+      log('loading GLB:', url);
+      loader.load(url, onLoaded, undefined, function onErr(err) {
+        warn('GLB load failed (' + url + '):', err && (err.message || err));
+        loadWithFallback(urls, idx + 1);
+      });
+    }
+
+    function onLoaded(gltf) {
+      var avatar = gltf.scene;
+      avatar.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = false;
+          node.receiveShadow = false;
+          node.frustumCulled = false;
+          if (node.morphTargetDictionary && node.morphTargetInfluences) {
+            rig.morphMeshes.push(node);
+            // Pick best available jaw/open morph by priority.
+            var dict = node.morphTargetDictionary;
+            var priorities = [
+              'jawOpen',        // ARKit (facecap + RPM ARKit)
+              'mouthOpen',
+              'viseme_aa',      // Oculus Visemes
+              'viseme_O',
+              'viseme_E',
+              'viseme_U'
+            ];
+            for (var i = 0; i < priorities.length; i++) {
+              if (priorities[i] in dict) {
+                rig.viseme[node.uuid] = dict[priorities[i]];
+                break;
               }
             }
           }
-          if (node.isBone || node.type === 'Bone') {
-            var nm = (node.name || '').toLowerCase();
-            if (!rig.head && (nm === 'head' || nm.indexOf('head') !== -1)) {
-              rig.head = node;
-            }
+        }
+        if (node.isBone || node.type === 'Bone') {
+          var nm = (node.name || '').toLowerCase();
+          if (!rig.head && (nm === 'head' || nm.indexOf('head') !== -1)) {
+            rig.head = node;
           }
+        }
+      });
+
+      rig.root = avatar;
+      scene.add(avatar);
+
+      // Auto-frame: normalize the avatar to a known scale, then frame the face tightly.
+      // Handles full-body rigs (RPM, lots of bones) and head-only scans (facecap, no bones).
+      try {
+        // Collect visible meshes, ignoring bones/skeletons/helpers. For skinned meshes the
+        // geometry's local bbox is more trustworthy than setFromObject (which inflates for
+        // bone extents).
+        var meshes = [];
+        var boneCount = 0;
+        avatar.traverse(function (n) {
+          if (n.isMesh && n.visible !== false) meshes.push(n);
+          if (n.isBone || n.type === 'Bone') boneCount++;
         });
 
-        rig.root = avatar;
-        scene.add(avatar);
-        log('avatar loaded — morph meshes:', rig.morphMeshes.length, 'head bone:', !!rig.head);
+        avatar.updateWorldMatrix(true, true);
+        function worldBBoxUnion(list) {
+          var b = new THREE.Box3();
+          list.forEach(function (m) {
+            if (!m.geometry) return;
+            if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+            var gbb = m.geometry.boundingBox && m.geometry.boundingBox.clone();
+            if (!gbb) return;
+            gbb.applyMatrix4(m.matrixWorld);
+            b.union(gbb);
+          });
+          return b;
+        }
+        var fullBox = worldBBoxUnion(meshes);
+        if (fullBox.isEmpty()) fullBox.setFromObject(avatar);
+        var size = fullBox.getSize(new THREE.Vector3());
+        var center = fullBox.getCenter(new THREE.Vector3());
 
-        canvas.classList.add('alex-avatar-ready');
-        orb.classList.add('alex-avatar-active');
+        // Normalize: scale avatar so its largest axis is 1 unit, center at origin.
+        var maxDim = Math.max(size.x, size.y, size.z) || 1;
+        var scale = 1.0 / maxDim;
+        avatar.scale.multiplyScalar(scale);
+        avatar.position.x -= center.x * scale;
+        avatar.position.y -= center.y * scale;
+        avatar.position.z -= center.z * scale;
+        avatar.updateWorldMatrix(true, true);
 
-        startObservers();
-        startLoop();
-      },
-      undefined,
-      function onErr(err) {
-        warn('GLB load failed:', err);
-        try { canvas.remove(); } catch (e) {}
+        // Full-body rigs have many bones and tall aspect (height >> width). Head-only scans
+        // have few/no bones and are roughly as wide as tall.
+        var aspectTall = size.y / Math.max(size.x, size.z);
+        var isFullBody = boneCount > 10 && aspectTall > 1.8;
+
+        // Find the face mesh (one with visemes) and compute its bbox post-normalization.
+        var faceMesh = null;
+        for (var fi = 0; fi < rig.morphMeshes.length; fi++) {
+          if (rig.viseme[rig.morphMeshes[fi].uuid] != null) { faceMesh = rig.morphMeshes[fi]; break; }
+        }
+        if (!faceMesh && rig.morphMeshes.length) faceMesh = rig.morphMeshes[0];
+        var faceBox = faceMesh ? worldBBoxUnion([faceMesh]) : fullBox.clone();
+        if (faceBox.isEmpty()) faceBox = fullBox.clone();
+        var faceCenter = faceBox.getCenter(new THREE.Vector3());
+        var faceSize = faceBox.getSize(new THREE.Vector3());
+
+        var headY, frameHeight;
+        if (isFullBody) {
+          // Head-and-shoulders for RPM-style avatars — frame top ~30% of body.
+          headY = faceCenter.y; // face mesh center is usually the head anyway
+          frameHeight = faceSize.y * 1.4 + 0.05;
+        } else {
+          // Head/face scan — frame the face with a bit of padding.
+          headY = faceCenter.y;
+          frameHeight = Math.max(faceSize.x * 1.35, faceSize.y * 1.15);
+        }
+
+        var fov = camera.fov * Math.PI / 180;
+        var dist = (frameHeight / 2) / Math.tan(fov / 2) * 1.15;
+        camera.position.set(0, headY, dist);
+        camera.lookAt(0, headY, 0);
+        camera.near = Math.max(0.001, dist * 0.02);
+        camera.far = dist * 20;
+        camera.updateProjectionMatrix();
+
+        log('auto-framed — bones:', boneCount, 'aspectTall:', aspectTall.toFixed(2),
+            'isFullBody:', isFullBody, 'headY:', headY.toFixed(3),
+            'frameHeight:', frameHeight.toFixed(3), 'dist:', dist.toFixed(3));
+      } catch (e) {
+        warn('auto-frame failed, using defaults:', e && e.message);
       }
-    );
+      // Expose rig for debugging (window.AlexAvatar.__rig).
+      try { window.AlexAvatar = window.AlexAvatar || {}; window.AlexAvatar.__rig = rig; window.AlexAvatar.__camera = camera; } catch (e) {}
+      log('avatar loaded — morph meshes:', rig.morphMeshes.length, 'head bone:', !!rig.head);
+
+      canvas.classList.add('alex-avatar-ready');
+      orb.classList.add('alex-avatar-active');
+
+      startObservers();
+      startLoop();
+    }
+
+    var urls = [AVATAR_URL];
+    if (AVATAR_URL_FALLBACK && AVATAR_URL_FALLBACK !== AVATAR_URL) urls.push(AVATAR_URL_FALLBACK);
+    loadWithFallback(urls);
 
     function startObservers() {
       rig.currentState = (orb.className || 'idle').trim().split(/\s+/)[0] || 'idle';

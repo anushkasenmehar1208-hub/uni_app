@@ -133,7 +133,13 @@
     </div>
 
     <!-- Load avatar script -->
-    <script src="assets/alex_avatar.js"></script>
+    <script>
+      (function () {
+        var s = document.createElement('script');
+        s.src = 'assets/alex_avatar.js?v=' + Date.now();
+        document.currentScript.parentNode.insertBefore(s, document.currentScript.nextSibling);
+      })();
+    </script>
 
     <script>
         const statusEl = document.getElementById('status');
