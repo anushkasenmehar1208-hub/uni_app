@@ -22435,7 +22435,7 @@ def landing_page():
     on_load=AppState.on_load,
 )
 @require_app_login
-def index():
+def app_dashboard_page():
     # on_load redirects started users to /app/home or /app/y1s1 etc.
     # This page only renders for users still in onboarding.
     return onboarding_page()
