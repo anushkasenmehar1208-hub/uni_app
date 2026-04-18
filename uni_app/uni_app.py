@@ -793,7 +793,7 @@ def _strip_leading_unit_code(unit: str) -> str:
     return u
 
 
-_VISUAL_TAG_RE = re.compile(r"\[VISUAL:type=(graph|chart|diagram|illustration)\]", re.IGNORECASE)
+_VISUAL_TAG_RE = re.compile(r"\[VISUAL:type=(graph|chart|diagram|illustration|model3d)\]", re.IGNORECASE)
 
 
 def _response_contains_visual_block(text: str) -> bool:
@@ -936,6 +936,166 @@ def _to_num_list(values: Any) -> list[float]:
     return out
 
 
+def _stable_dom_id(prefix: str, seed: str) -> str:
+    digest = hashlib.md5((seed or prefix).encode("utf-8")).hexdigest()[:10]
+    return f"{prefix}-{digest}"
+
+
+def _normalize_model3d_kind(value: str) -> str:
+    kind = (value or "").strip().lower()
+    if kind in {"atom", "molecule", "orbital"}:
+        return "atom"
+    if kind in {"vector", "axes", "axis", "xyz", "coordinate"}:
+        return "axes"
+    if kind in {"cube", "cuboid", "box"}:
+        return "cube"
+    return "cube"
+
+
+def _infer_model3d_kind(text: str) -> str:
+    lower = (text or "").lower()
+    if any(k in lower for k in ("atom", "electron", "nucleus", "orbital", "molecule")):
+        return "atom"
+    if any(k in lower for k in ("vector", "x-axis", "y-axis", "z-axis", "coordinate", "3d axis", "three dimensional axis", "axes")):
+        return "axes"
+    if any(k in lower for k in ("cube", "cuboid", "box", "rectangular prism")):
+        return "cube"
+    return "cube"
+
+
+def _render_model3d_scene(kind: str, labels: list[str]) -> str:
+    safe_labels = [_esc_html(x) for x in labels[:4] if str(x).strip()]
+    if kind == "atom":
+        nucleus = safe_labels[0] if len(safe_labels) > 0 else "Nucleus"
+        shell = safe_labels[1] if len(safe_labels) > 1 else "Shell"
+        electron = safe_labels[2] if len(safe_labels) > 2 else "Electron"
+        return (
+            "<div class='alex-3d-atom'>"
+            "<div class='alex-3d-nucleus'></div>"
+            "<div class='alex-3d-orbit alex-3d-orbit-a'></div>"
+            "<div class='alex-3d-orbit alex-3d-orbit-b'></div>"
+            "<div class='alex-3d-orbit alex-3d-orbit-c'></div>"
+            "<div class='alex-3d-electron alex-3d-electron-a'></div>"
+            "<div class='alex-3d-electron alex-3d-electron-b'></div>"
+            "<div class='alex-3d-electron alex-3d-electron-c'></div>"
+            f"<div class='alex-3d-chip alex-3d-chip-top'>{nucleus}</div>"
+            f"<div class='alex-3d-chip alex-3d-chip-right'>{shell}</div>"
+            f"<div class='alex-3d-chip alex-3d-chip-bottom'>{electron}</div>"
+            "</div>"
+        )
+    if kind == "axes":
+        x_label = safe_labels[0] if len(safe_labels) > 0 else "X-axis"
+        y_label = safe_labels[1] if len(safe_labels) > 1 else "Y-axis"
+        z_label = safe_labels[2] if len(safe_labels) > 2 else "Z-axis"
+        vector_label = safe_labels[3] if len(safe_labels) > 3 else "Vector"
+        return (
+            "<div class='alex-3d-axes'>"
+            "<div class='alex-3d-axis alex-3d-axis-x'></div>"
+            "<div class='alex-3d-axis alex-3d-axis-y'></div>"
+            "<div class='alex-3d-axis alex-3d-axis-z'></div>"
+            "<div class='alex-3d-vector'></div>"
+            f"<div class='alex-3d-chip alex-3d-chip-left'>{x_label}</div>"
+            f"<div class='alex-3d-chip alex-3d-chip-top'>{y_label}</div>"
+            f"<div class='alex-3d-chip alex-3d-chip-right'>{z_label}</div>"
+            f"<div class='alex-3d-chip alex-3d-chip-bottom'>{vector_label}</div>"
+            "</div>"
+        )
+    front = safe_labels[0] if len(safe_labels) > 0 else "Front"
+    top = safe_labels[1] if len(safe_labels) > 1 else "Top"
+    side = safe_labels[2] if len(safe_labels) > 2 else "Side"
+    return (
+        "<div class='alex-3d-cube'>"
+        f"<div class='alex-3d-face alex-3d-face-front'>{front}</div>"
+        "<div class='alex-3d-face alex-3d-face-back'></div>"
+        f"<div class='alex-3d-face alex-3d-face-right'>{side}</div>"
+        "<div class='alex-3d-face alex-3d-face-left'></div>"
+        f"<div class='alex-3d-face alex-3d-face-top'>{top}</div>"
+        "<div class='alex-3d-face alex-3d-face-bottom'></div>"
+        "</div>"
+    )
+
+
+def _render_model3d_html(data: dict[str, Any]) -> str:
+    title = _esc_html(data.get("title", "3D teaching model"))
+    caption = _esc_html(data.get("caption", "Rotate the model to inspect the idea from different angles."))
+    kind = _normalize_model3d_kind(str(data.get("model", "")) or _infer_model3d_kind(title + " " + caption))
+    labels_raw = data.get("labels", [])
+    labels = [str(x) for x in labels_raw] if isinstance(labels_raw, list) else []
+    dom_id = _stable_dom_id("alex-3d", json.dumps(data, sort_keys=True, ensure_ascii=False))
+    stage_html = _render_model3d_scene(kind, labels)
+    card = "background:linear-gradient(180deg, rgba(10,18,30,0.92), rgba(6,10,18,0.98));border:1px solid rgba(120,180,255,0.18);border-radius:16px;padding:14px 16px;margin:12px 0 6px 0;max-width:560px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,0.26);"
+    title_style = "font-size:0.78rem;font-weight:600;color:rgba(160,205,255,0.82);margin-bottom:8px;letter-spacing:.03em;text-transform:uppercase;"
+    return (
+        f"<div id='{dom_id}' class='alex-3d-card' style='{card}'>"
+        "<style>"
+        f"#{dom_id} .alex-3d-wrap{{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;}}"
+        f"#{dom_id} .alex-3d-stage{{position:relative;height:290px;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 22%, rgba(92,173,255,0.24), rgba(10,18,30,0.2) 38%, rgba(7,12,22,0.96) 76%);border:1px solid rgba(255,255,255,0.06);}}"
+        f"#{dom_id} .alex-3d-grid{{position:absolute;inset:auto -12% 0;height:48%;background:linear-gradient(to top, rgba(255,255,255,0.05), transparent),repeating-linear-gradient(90deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 52px),repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 38px);transform:perspective(700px) rotateX(72deg) translateY(34px);transform-origin:bottom center;opacity:.42;}}"
+        f"#{dom_id} .alex-3d-view{{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:900px;}}"
+        f"#{dom_id} .alex-3d-scene{{position:relative;width:170px;height:170px;transform-style:preserve-3d;transform:rotateX(-20deg) rotateY(28deg);transition:transform .18s ease-out;}}"
+        f"#{dom_id} .alex-3d-chip{{position:absolute;padding:6px 10px;border-radius:999px;background:rgba(10,18,30,0.8);border:1px solid rgba(126,214,255,0.28);font-size:11px;letter-spacing:.02em;color:rgba(232,241,250,0.92);backdrop-filter:blur(6px);box-shadow:0 8px 18px rgba(0,0,0,0.18);white-space:nowrap;}}"
+        f"#{dom_id} .alex-3d-chip-top{{top:-16px;left:50%;transform:translateX(-50%);}}"
+        f"#{dom_id} .alex-3d-chip-right{{right:-34px;top:50%;transform:translateY(-50%);}}"
+        f"#{dom_id} .alex-3d-chip-bottom{{bottom:-18px;left:50%;transform:translateX(-50%);}}"
+        f"#{dom_id} .alex-3d-chip-left{{left:-34px;top:50%;transform:translateY(-50%);}}"
+        f"#{dom_id} .alex-3d-cube,#{dom_id} .alex-3d-axes,#{dom_id} .alex-3d-atom{{position:absolute;inset:0;transform-style:preserve-3d;}}"
+        f"#{dom_id} .alex-3d-face{{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border:1px solid rgba(163,214,255,0.25);background:linear-gradient(135deg, rgba(74,140,255,0.28), rgba(66,214,255,0.12));color:rgba(234,244,255,0.86);font-size:13px;font-weight:600;backdrop-filter:blur(2px);}}"
+        f"#{dom_id} .alex-3d-face-front{{transform:translateZ(85px);}}"
+        f"#{dom_id} .alex-3d-face-back{{transform:rotateY(180deg) translateZ(85px);background:rgba(75,85,99,0.16);}}"
+        f"#{dom_id} .alex-3d-face-right{{transform:rotateY(90deg) translateZ(85px);}}"
+        f"#{dom_id} .alex-3d-face-left{{transform:rotateY(-90deg) translateZ(85px);background:rgba(59,130,246,0.12);}}"
+        f"#{dom_id} .alex-3d-face-top{{transform:rotateX(90deg) translateZ(85px);}}"
+        f"#{dom_id} .alex-3d-face-bottom{{transform:rotateX(-90deg) translateZ(85px);background:rgba(59,130,246,0.08);}}"
+        f"#{dom_id} .alex-3d-axis{{position:absolute;left:50%;top:50%;width:8px;height:120px;transform-origin:50% 100%;border-radius:999px;background:linear-gradient(to top, rgba(255,255,255,0.2), rgba(255,255,255,0.95));box-shadow:0 0 16px rgba(96,165,250,0.15);}}"
+        f"#{dom_id} .alex-3d-axis::after{{content:'';position:absolute;top:-12px;left:50%;transform:translateX(-50%);border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:16px solid rgba(255,255,255,0.92);}}"
+        f"#{dom_id} .alex-3d-axis-x{{background:linear-gradient(to top, rgba(250,120,120,0.22), rgba(250,120,120,1));transform:translate(-50%,-92%) rotateZ(90deg) rotateY(-18deg) translateZ(18px);}}"
+        f"#{dom_id} .alex-3d-axis-y{{background:linear-gradient(to top, rgba(255,255,255,0.22), rgba(255,255,255,0.96));transform:translate(-50%,-92%) translateZ(6px);}}"
+        f"#{dom_id} .alex-3d-axis-z{{background:linear-gradient(to top, rgba(120,220,160,0.22), rgba(120,220,160,0.98));transform:translate(-50%,-92%) rotateX(90deg) translateZ(12px);}}"
+        f"#{dom_id} .alex-3d-vector{{position:absolute;left:50%;top:50%;width:10px;height:122px;border-radius:999px;background:linear-gradient(to top, rgba(110,240,255,0.12), rgba(110,240,255,1));transform-origin:50% 100%;transform:translate(-50%,-94%) rotateZ(38deg) rotateX(-35deg) translateZ(18px);box-shadow:0 0 18px rgba(34,211,238,0.28);}}"
+        f"#{dom_id} .alex-3d-vector::after{{content:'';position:absolute;top:-13px;left:50%;transform:translateX(-50%);border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid rgba(110,240,255,0.98);}}"
+        f"#{dom_id} .alex-3d-nucleus{{position:absolute;left:50%;top:50%;width:56px;height:56px;border-radius:50%;transform:translate(-50%,-50%) translateZ(14px);background:radial-gradient(circle at 35% 35%, rgba(255,246,180,0.98), rgba(251,146,60,0.96) 60%, rgba(194,65,12,0.95));box-shadow:0 0 28px rgba(251,146,60,0.38);}}"
+        f"#{dom_id} .alex-3d-orbit{{position:absolute;left:50%;top:50%;width:150px;height:150px;margin-left:-75px;margin-top:-75px;border-radius:50%;border:2px solid rgba(125,211,252,0.48);box-shadow:0 0 16px rgba(56,189,248,0.1);}}"
+        f"#{dom_id} .alex-3d-orbit-a{{transform:rotateX(74deg) rotateZ(8deg);}}"
+        f"#{dom_id} .alex-3d-orbit-b{{transform:rotateY(72deg) rotateZ(28deg);}}"
+        f"#{dom_id} .alex-3d-orbit-c{{transform:rotateX(74deg) rotateY(72deg) rotateZ(76deg);}}"
+        f"#{dom_id} .alex-3d-electron{{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%, rgba(255,255,255,0.96), rgba(34,211,238,0.98));box-shadow:0 0 18px rgba(34,211,238,0.5);}}"
+        f"#{dom_id} .alex-3d-electron-a{{left:50%;top:50%;transform:translate(55px,-72px) translateZ(4px);}}"
+        f"#{dom_id} .alex-3d-electron-b{{left:50%;top:50%;transform:translate(-68px,42px) translateZ(18px);}}"
+        f"#{dom_id} .alex-3d-electron-c{{left:50%;top:50%;transform:translate(52px,60px) translateZ(-12px);}}"
+        f"#{dom_id} .alex-3d-controls{{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;}}"
+        f"#{dom_id} .alex-3d-sliders{{display:grid;grid-template-columns:1fr 1fr;gap:12px;}}"
+        f"#{dom_id} .alex-3d-slider-group{{display:grid;gap:6px;}}"
+        f"#{dom_id} .alex-3d-label{{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:rgba(190,210,230,0.62);}}"
+        f"#{dom_id} input[type=range]{{width:100%;accent-color:#7dd3fc;}}"
+        f"#{dom_id} .alex-3d-reset{{border:none;border-radius:10px;padding:10px 12px;background:rgba(125,211,252,0.12);color:rgba(226,238,249,0.92);font-size:12px;cursor:pointer;}}"
+        f"#{dom_id} .alex-3d-reset:hover{{background:rgba(125,211,252,0.2);}}"
+        f"#{dom_id} .alex-3d-caption{{font-size:13px;line-height:1.55;color:rgba(219,230,241,0.8);}}"
+        f"@media (max-width:640px){{#{dom_id} .alex-3d-stage{{height:250px;}}#{dom_id} .alex-3d-sliders{{grid-template-columns:1fr;}}#{dom_id} .alex-3d-controls{{grid-template-columns:1fr;}}#{dom_id} .alex-3d-chip-right{{right:-10px;top:auto;bottom:18px;transform:none;}}#{dom_id} .alex-3d-chip-left{{left:-10px;top:18px;transform:none;}}}}"
+        "</style>"
+        f"<div style='{title_style}'>{title}</div>"
+        "<div class='alex-3d-wrap'>"
+        "<div class='alex-3d-stage'>"
+        "<div class='alex-3d-grid'></div>"
+        "<div class='alex-3d-view'>"
+        f"<div class='alex-3d-scene'>{stage_html}</div>"
+        "</div>"
+        "</div>"
+        f"<div class='alex-3d-caption'>{caption}</div>"
+        "<div class='alex-3d-controls'>"
+        "<div class='alex-3d-sliders'>"
+        "<label class='alex-3d-slider-group'><span class='alex-3d-label'>Tilt</span><input class='alex-3d-range alex-3d-range-x' type='range' min='-65' max='65' value='-20' /></label>"
+        "<label class='alex-3d-slider-group'><span class='alex-3d-label'>Spin</span><input class='alex-3d-range alex-3d-range-y' type='range' min='-180' max='180' value='28' /></label>"
+        "</div>"
+        "<button type='button' class='alex-3d-reset'>Reset View</button>"
+        "</div>"
+        "</div>"
+        "<script>(function(){var root=document.getElementById("
+        + json.dumps(dom_id)
+        + ");if(!root||root.dataset.bound3d)return;root.dataset.bound3d='1';var scene=root.querySelector('.alex-3d-scene');var x=root.querySelector('.alex-3d-range-x');var y=root.querySelector('.alex-3d-range-y');var btn=root.querySelector('.alex-3d-reset');function paint(){if(!scene||!x||!y)return;scene.style.transform='rotateX('+x.value+'deg) rotateY('+y.value+'deg)';}if(x)x.addEventListener('input',paint);if(y)y.addEventListener('input',paint);if(btn)btn.addEventListener('click',function(){if(x)x.value='-20';if(y)y.value='28';paint();});paint();})();</script>"
+        "</div>"
+    )
+
+
 def _repair_svg_marker_glitches(svg: str) -> str:
     """Drop SVG markers + marker-end/start/mid — thick strokes + markers double-draw in WebKit/Blink."""
     if not svg or "marker" not in svg.lower():
@@ -1038,6 +1198,9 @@ def _render_visual_html(visual_type: str, visual_json: str) -> str:
     title = _esc_html(data.get("title", ""))
     card = "background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin:12px 0 6px 0;max-width:520px;"
     title_style = "font-size:0.78rem;font-weight:600;color:rgba(200,212,224,0.7);margin-bottom:8px;letter-spacing:.03em;text-transform:uppercase;"
+
+    if visual_type == "model3d":
+        return _render_model3d_html(data)
 
     if visual_type == "illustration":
         ext_url = str(data.get("url", "")).strip()
@@ -7951,6 +8114,10 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             "draw",
             "plot",
             "show me",
+            "3d",
+            "3-d",
+            "three dimensional",
+            "model",
         )
         no_text_markers = (
             "no text",
@@ -7982,6 +8149,15 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                 return False
             return True
         return False
+
+    def _is_3d_model_request(self, text: str) -> bool:
+        lower = (text or "").lower().strip()
+        if not lower:
+            return False
+        return (
+            ("3d" in lower or "3-d" in lower or "three dimensional" in lower)
+            and any(k in lower for k in ("model", "viewer", "visual", "show", "teach", "explain", "diagram", "atom", "vector", "cube", "axis"))
+        )
 
     def _is_teaching_request(self, text: str) -> bool:
         lower = (text or "").lower().strip()
@@ -8050,6 +8226,34 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                 "The subject is a real object. Keep proportions recognizable and avoid abstract-only geometry."
             )
         return "Keep the subject visually recognizable at first glance."
+
+    def _model3d_visual_block(self, user_msg: str) -> str:
+        lower = (user_msg or "").lower()
+        kind = _infer_model3d_kind(lower)
+        topic = self._extract_subject_keyword(user_msg).title()
+        if kind == "atom":
+            data = {
+                "title": f"3D {topic or 'Atom'} model",
+                "model": "atom",
+                "caption": "A simple 3D teaching model: the center is the nucleus, and the surrounding rings show electron shells in space.",
+                "labels": ["Nucleus", "Shell", "Electron"],
+            }
+            return f"[VISUAL:type=model3d]\n{json.dumps(data, ensure_ascii=False)}"
+        if kind == "axes":
+            data = {
+                "title": f"3D {topic or 'Vector'} model",
+                "model": "axes",
+                "caption": "Use the three axes to reason about direction, sign, and the final vector in space.",
+                "labels": ["X-axis", "Y-axis", "Z-axis", "Vector"],
+            }
+            return f"[VISUAL:type=model3d]\n{json.dumps(data, ensure_ascii=False)}"
+        data = {
+            "title": f"3D {topic or 'Solid'} model",
+            "model": "cube",
+            "caption": "Rotate the solid to compare the front, top, and side faces while Alex explains the structure.",
+            "labels": ["Front", "Top", "Side"],
+        }
+        return f"[VISUAL:type=model3d]\n{json.dumps(data, ensure_ascii=False)}"
 
     def _visual_only_fallback_block(self, user_msg: str) -> str:
         style = self._visual_style_from_request(user_msg)
@@ -9309,6 +9513,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             return response_text
         if _response_contains_visual_block(response_text):
             return response_text
+        if self._is_3d_model_request(user_msg):
+            return response_text + "\n" + self._model3d_visual_block(user_msg)
         templated = self._teaching_illustration_template(user_msg)
         if templated:
             logger.info("Auto-teaching: using deterministic teaching template")
@@ -9411,6 +9617,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         return response_text
 
     def _enforce_visual_only_response(self, content: str, user_msg: str) -> str:
+        if self._is_3d_model_request(user_msg):
+            return self._model3d_visual_block(user_msg)
         forced = self._template_illustration_block(user_msg)
         if forced:
             return forced
@@ -9473,7 +9681,7 @@ Critical operating rules:
 4. If the student asks who you are, your answer must stay aligned with: "{self._alex_identity_reply()}"
 5. Personalize the conversation naturally, but use {student_name} sparingly. Do not start every reply with the student's name and avoid repeating it unless it adds warmth or clarity.
 6. When you share code, always wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate fenced code block labeled ```output so the student can verify their understanding.
-7. If (and only if) a diagram truly helps, you may use one [VISUAL:type=diagram] block with steps — NEVER use ```mermaid code blocks. Most answers should use prose, bullets, or numbered steps only.
+7. If (and only if) a visual truly helps, you may use one [VISUAL:type=diagram] block, or for explicit 3D requests one [VISUAL:type=model3d] block. NEVER use ```mermaid code blocks. Most answers should use prose, bullets, or numbered steps only.
 8. For complex technical questions, give a numbered step-by-step breakdown before the final answer or code.
 9. {career_context}
 10. Stay focused, structured, and mentor-like. Do not drift into generic chatbot behavior.
@@ -9531,12 +9739,17 @@ Step diagram (at most **one** per reply; only for a genuine ordered process):
 [VISUAL:type=diagram]
 {{"description": "Short description", "steps": ["Concrete step using topic vocabulary", "…"]}}
 
+Interactive 3D teaching model (only when the student explicitly asks for a 3D model/view):
+[VISUAL:type=model3d]
+{{"title": "3D Topic", "model": "atom|axes|cube", "caption": "Short teaching note", "labels": ["Label 1","Label 2","Label 3"]}}
+
 Quality rules:
 - Never use placeholder labels like "Concept 1", "Step A", or "Box 1" — every step must name the real idea (e.g. "Input devices → CPU → output devices").
 - At most **one** [VISUAL:type=…] block per reply.
 - Do NOT explain or mention the visual format to the student — embed the block naturally.
 - Keep JSON arrays flat and short.
 - Do NOT use [VISUAL:type=illustration] for routine teaching — only when the student explicitly asks to draw a concrete object or scene.
+- Do NOT use [VISUAL:type=model3d] unless the student explicitly asks for a 3D model, 3D view, or 3D explanation.
 """
 
     def _alex_openrouter_system_bundle(self, student_name: str, teaching_mode: str) -> str:
@@ -12147,7 +12360,7 @@ Your response style rules:
 17. Keep the tutoring personal, but mention {student_name} only occasionally when it feels genuinely helpful.
 18. Acknowledge progress occasionally by connecting the explanation to Day {day}/110.
 19. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
-20. Optional diagrams only: you may add **at most one** [VISUAL:type=diagram|graph|chart] block when it clearly beats plain text. **Default to no visual** for history, introductions, and short explanations. NEVER use ```mermaid code blocks. Never use placeholder step text ("Concept 1", etc.) — only real topic wording.
+20. Optional visuals only: you may add **at most one** [VISUAL:type=diagram|graph|chart] block when it clearly beats plain text. If the student explicitly asks for a 3D explanation or 3D model, you may instead return one [VISUAL:type=model3d] block. **Default to no visual** for history, introductions, and short explanations. NEVER use ```mermaid code blocks. Never use placeholder step text ("Concept 1", etc.) — only real topic wording.
 21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
 22. If you use a career example or analogy, prefer grounded Sri Lankan university and industry context relevant to the active degree and subject.
 23. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them.
@@ -12160,15 +12373,16 @@ Your response style rules:
 27. Do not turn an explicit lookup request into a tutorial, coding lesson, or semester redirection unless the student asks for teaching after the answer."""
                 if visual_only_request:
                     teach_prompt += """
-28. The student requested a visual-only answer. Return ONLY one valid [VISUAL:type=graph|chart|diagram|illustration] block.
+28. The student requested a visual-only answer. Return ONLY one valid [VISUAL:type=graph|chart|diagram|illustration|model3d] block.
 29. Do not include any normal sentences, paragraphs, markdown, code fences, links, or notes outside that visual block."""
                     teach_prompt += f"""
-30. If you use [VISUAL:type=illustration], generate a valid inline SVG only. {self._visual_style_instruction(visual_style)}
-31. {self._illustration_subject_instruction(user_msg)}
-32. In that SVG, never use <marker> or marker-end — use <line stroke-linecap='round'> and <polygon> for arrowheads (avoids double-draw glitches in Chrome/Safari)."""
+30. If the student explicitly asked for 3D, prefer [VISUAL:type=model3d] over illustration. Use model="atom" for atoms/orbitals, model="axes" for vectors/coordinate space, and model="cube" for simple solids.
+31. If you use [VISUAL:type=illustration], generate a valid inline SVG only. {self._visual_style_instruction(visual_style)}
+32. {self._illustration_subject_instruction(user_msg)}
+33. In SVG, never use <marker> or marker-end — use <line stroke-linecap='round'> and <polygon> for arrowheads (avoids double-draw glitches in Chrome/Safari)."""
                 else:
                     teach_prompt += """
-28. **Default: no [VISUAL] block.** Add at most one diagram, graph, or chart only when the idea is hard to follow without it (e.g. numeric comparison, strict process order). Skip visuals for historical narrative, day-one overviews, and brief answers.
+28. **Default: no [VISUAL] block.** Add at most one diagram, graph, or chart only when the idea is hard to follow without it (e.g. numeric comparison, strict process order). Use [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation. Skip visuals for historical narrative, day-one overviews, and brief answers.
 29. Do NOT use [VISUAL:type=illustration] for routine teaching — only when the student explicitly asks to draw something.
 30. If you use a diagram, every step must use concrete topic language — never generic placeholders.
 31. If you output raw SVG (e.g. inside illustration JSON), never use SVG <marker> or marker-end/marker-start — use rounded lines plus <polygon> arrowheads so forces and flow arrows render without browser glitches."""
@@ -12661,7 +12875,7 @@ Behavior rules:
 4. Answer directly and helpfully. Keep replies short and clear.
 5. Use bullets when they improve clarity. Avoid walls of text.
 6. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
-7. For diagrams, use [VISUAL:type=diagram] blocks with steps — NEVER use ```mermaid code blocks.
+7. For visuals, use [VISUAL:type=diagram] blocks with steps, or [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation. NEVER use ```mermaid code blocks.
 8. If the question is technically complex, give a short numbered breakdown before the final answer.
 9. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them.
 10. Teach proactively like a university professor: lead with clear structure, definitions, and examples. Do not end with open-ended invitations like "What would you like to know?" or "Ask me anything about…".
@@ -12705,7 +12919,7 @@ Behavior rules:
 14. Keep the support personal, but mention {student_name} only occasionally when it helps the tone feel warm rather than repetitive.
 15. Adapt to the adaptive profile for brevity, formatting, pace, and tone.
 16. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
-17. For diagrams, use [VISUAL:type=diagram] blocks with steps — NEVER use ```mermaid code blocks.
+17. For visuals, use [VISUAL:type=diagram] blocks with steps, or [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation. NEVER use ```mermaid code blocks.
 18. If the question is technically complex, give a short numbered breakdown before the final answer.
 19. Stay honest about what the stored memory does and does not show.
 20. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them.
@@ -12720,16 +12934,17 @@ Behavior rules:
 26. Do not convert an explicit lookup request into a lesson, coding example, or study-plan coaching unless the user asks for that next."""
         if visual_only_request:
             prompt += """
-27. The user requested a visual-only response. Return ONLY one valid [VISUAL:type=graph|chart|diagram|illustration] block.
+27. The user requested a visual-only response. Return ONLY one valid [VISUAL:type=graph|chart|diagram|illustration|model3d] block.
 28. Do not include any normal sentences, markdown, links, or extra text outside that visual block.
 29. Do not redirect this request to semester navigation."""
             prompt += f"""
-30. If you use [VISUAL:type=illustration], generate a valid inline SVG only. {self._visual_style_instruction(visual_style)}
-31. {self._illustration_subject_instruction(user_msg)}
-32. In that SVG, never use <marker> or marker-end — use <line stroke-linecap='round'> and <polygon> for arrowheads."""
+30. If the user explicitly asked for 3D, prefer [VISUAL:type=model3d] over illustration. Use model="atom" for atoms/orbitals, model="axes" for vectors/coordinate space, and model="cube" for simple solids.
+31. If you use [VISUAL:type=illustration], generate a valid inline SVG only. {self._visual_style_instruction(visual_style)}
+32. {self._illustration_subject_instruction(user_msg)}
+33. In that SVG, never use <marker> or marker-end — use <line stroke-linecap='round'> and <polygon> for arrowheads."""
         else:
             prompt += """
-27. **Default: no [VISUAL] block** in home chat. Add at most one graph/chart/diagram only when it is strictly clearer than text.
+27. **Default: no [VISUAL] block** in home chat. Add at most one graph/chart/diagram only when it is strictly clearer than text. Use [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation.
 28. Do NOT use [VISUAL:type=illustration] unless the user explicitly asks for a drawing.
 29. Never use placeholder labels in diagram steps — use real names from the question.
 30. If you embed SVG, never use SVG <marker> or marker-end — use rounded lines plus <polygon> arrowheads to avoid browser rendering glitches."""
