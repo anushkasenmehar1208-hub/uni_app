@@ -65,6 +65,16 @@
   }
   var introPlayed = false;
 
+  /** Wait before reopening the mic after Alex finishes speaking — reduces speaker→mic echo re-triggering STT. */
+  var POST_SPEECH_MIC_DELAY_MS = 700;
+
+  function scheduleListenAfterSpeech() {
+    if (!active) return;
+    setTimeout(function () {
+      if (active) startListening();
+    }, POST_SPEECH_MIC_DELAY_MS);
+  }
+
   // Voice Activity Detection (VAD) state
   var audioContext = null;
   var analyser = null;
@@ -87,8 +97,8 @@
   var MIN_BLOB_FOR_STT = 80;
   var SILENCE_DURATION = 1500;   // ms of silence before auto-stop
   var MAX_RECORD_MS = 15000;     // absolute max recording time
-  /** If user never starts speaking, Alex checks in after this many ms */
-  var NO_SPEECH_NUDGE_MS = 5000;
+  /** If user never starts speaking, Alex checks in after this many ms (keep high to avoid nagging / repeat). */
+  var NO_SPEECH_NUDGE_MS = 12000;
   var noSpeechNudgeTimer = null;
   var silenceNudgePending = false;
 
@@ -720,202 +730,20 @@
     audioChunks = [];
   }
 
-  /**
-   * SSE from POST /api/alex-voice-stream — first audio may arrive before the reply is finished generating.
-   * Events: {type:'audio'}, {type:'audio_tail'}, {type:'done', text, display_html}, {type:'error'}.
-   */
-  async function consumeAlexVoiceStream(response, uLine) {
-    var reader = response.body.getReader();
-    var decoder = new TextDecoder();
-    var carry = '';
-    var tailState = { rest: '' };
-    var firstStarted = false;
-
-    function streamDone(opts) {
-      opts = opts || {};
-      if (!opts.keepReadingPane) setTranscript('');
-      setOrbState('idle');
-      if (active) startListening();
-      processing = false;
-    }
-
-    function scheduleNextOrDone() {
-      if (tailState.rest) {
-        var next = tailState.rest;
-        tailState.rest = '';
-        playStreamWav(next);
-        return;
-      }
-      streamDone({});
-    }
-
-    function skipAllStreamAudio() {
-      tailState.rest = '';
-      streamDone({ keepReadingPane: true });
-    }
-
-    function playStreamWav(b64) {
-      if (!b64) {
-        scheduleNextOrDone();
-        return;
-      }
-      var objectUrl = wavBase64ToObjectUrl(b64);
-      if (!objectUrl) {
-        appendVoiceServerNotice('Voice audio could not be decoded. You can still read the reply above.');
-        tailState.rest = '';
-        streamDone({ keepReadingPane: true });
-        return;
-      }
-
-      disposeCurrentPlayback();
-      currentAudioObjectUrl = objectUrl;
-      currentAudio = new Audio(objectUrl);
-      currentAudio.onended = function () {
-        disposeCurrentPlayback();
-        scheduleNextOrDone();
-      };
-      currentAudio.onerror = function () {
-        disposeCurrentPlayback();
-        setStatus('Reply on screen only');
-        appendVoiceServerNotice('This browser could not play the voice clip. You can still read the reply above.');
-        tailState.rest = '';
-        streamDone({ keepReadingPane: true });
-      };
-      currentAudio.play().catch(function (err) {
-        console.warn('[AlexVoice] stream audio.play() failed', err);
-        try {
-          currentAudio.pause();
-        } catch (ePause) {}
-        setOrbState('idle');
-        setStatus('Tap Play below to hear Alex');
-        appendTapToPlayFallback(scheduleNextOrDone, skipAllStreamAudio);
-      });
-    }
-
-    function dispatch(obj) {
-      if (!obj || !obj.type) return;
-      if (obj.type === 'audio') {
-        var ab = (obj.audio_b64 || '').trim();
-        if (!ab) return;
-        processing = false;
-        if (!firstStarted) {
-          firstStarted = true;
-          disposeCurrentPlayback();
-          setOrbState('ai-speaking');
-          setStatus('Alex is speaking...');
-          setTranscript('');
-          playStreamWav(ab);
-        }
-        return;
-      }
-      if (obj.type === 'audio_tail') {
-        var tb = (obj.audio_b64 || '').trim();
-        if (tb) tailState.rest = tb;
-        return;
-      }
-      if (obj.type === 'done') {
-        try {
-          window.__voiceLastUserLine = '';
-        } catch (eZ) {}
-        if (obj.display_html || obj.text) {
-          renderVoiceTranscriptBlock(uLine, obj);
-        } else if (uLine) {
-          setTranscript(uLine);
-        }
-        if (!firstStarted) {
-          streamDone({ keepReadingPane: true });
-        }
-        return;
-      }
-      if (obj.type === 'error') {
-        appendVoiceServerNotice(obj.message || 'Voice reply failed.');
-        try {
-          window.__voiceLastUserLine = '';
-        } catch (eZ2) {}
-        streamDone({ keepReadingPane: true });
-      }
-    }
-
-    try {
-      while (true) {
-        var rd = await reader.read();
-        if (rd.done) break;
-        carry += decoder.decode(rd.value, { stream: true });
-        var parts = carry.split('\n\n');
-        carry = parts.pop() || '';
-        for (var p = 0; p < parts.length; p++) {
-          var block = parts[p];
-          var lines = block.split('\n');
-          for (var L = 0; L < lines.length; L++) {
-            var line = lines[L];
-            if (line.indexOf('data:') !== 0) continue;
-            var payload = line.slice(5).replace(/^\s+/, '');
-            if (!payload || payload === '[DONE]') continue;
-            try {
-              dispatch(JSON.parse(payload));
-            } catch (eJ) {}
-          }
-        }
-      }
-    } catch (eRead) {
-      console.error('[AlexVoice] stream read error:', eRead);
-      streamDone({ keepReadingPane: true });
-    }
-  }
-
   async function fetchVoiceReplyAndPlay(transcript) {
     setOrbState('thinking');
     setStatus('Alex is thinking...');
-    var uLine = '';
     try {
-      uLine = window.__voiceLastUserLine || '';
-    } catch (eU) {}
-    var payload = JSON.stringify({ transcript: transcript, voice_key: voiceKey() });
-    var headers = authHeadersJson();
-    try {
-      var streamResp = await fetch(apiBase() + '/api/alex-voice-stream', {
+      var resp = await fetch(apiBase() + '/api/alex-voice', {
         method: 'POST',
-        headers: headers,
-        body: payload
+        headers: authHeadersJson(),
+        body: JSON.stringify({ transcript: transcript, voice_key: voiceKey() })
       });
-      if (streamResp.ok) {
-        var ct = (streamResp.headers.get('content-type') || '').toLowerCase();
-        if (ct.indexOf('text/event-stream') >= 0 && streamResp.body && streamResp.body.getReader) {
-          await consumeAlexVoiceStream(streamResp, uLine);
-          return;
-        }
-        var jsonResp = await fetch(apiBase() + '/api/alex-voice', {
-          method: 'POST',
-          headers: headers,
-          body: payload
-        });
-        if (!jsonResp.ok) {
-          if (handleVoiceHttpError(jsonResp.status)) return;
-          var vErr2 = 'Voice reply failed.';
-          try {
-            var vBody2 = await jsonResp.json();
-            if (vBody2.error) vErr2 = String(vBody2.error);
-          } catch (eJ2) {}
-          setStatus('Alex could not reply');
-          try {
-            window.__voiceLastUserLine = '';
-          } catch (eClrJ) {}
-          setTranscript(vErr2);
-          setOrbState('idle');
-          processing = false;
-          setTimeout(function () { if (active) startListening(); }, 2200);
-          return;
-        }
-        var dataFallback = await jsonResp.json();
-        processing = false;
-        playAlexVoiceResponse(dataFallback);
-        return;
-      }
-      if (!streamResp.ok) {
-        if (handleVoiceHttpError(streamResp.status)) return;
+      if (!resp.ok) {
+        if (handleVoiceHttpError(resp.status)) return;
         var vErr = 'Voice reply failed.';
         try {
-          var vBody = await streamResp.json();
+          var vBody = await resp.json();
           if (vBody.error) vErr = String(vBody.error);
         } catch (e2) {}
         setStatus('Alex could not reply');
@@ -928,6 +756,9 @@
         setTimeout(function () { if (active) startListening(); }, 2200);
         return;
       }
+      var data = await resp.json();
+      processing = false;
+      playAlexVoiceResponse(data);
     } catch (err) {
       console.error('[AlexVoice] API error:', err);
       try {
@@ -985,7 +816,7 @@
       opts = opts || {};
       if (!opts.keepReadingPane) setTranscript('');
       setOrbState('idle');
-      if (active) startListening();
+      if (active) scheduleListenAfterSpeech();
     }
 
     var tailState = { rest: (data.audio_b64_tail || '').trim() };
@@ -1069,49 +900,27 @@
     setOrbState('thinking');
     setStatus('Alex is checking in...');
     setTranscript('');
-    var headers = authHeadersJson();
-    var payload = JSON.stringify({ silence_nudge: true, voice_key: voiceKey() });
     try {
-      var streamResp = await fetch(apiBase() + '/api/alex-voice-stream', {
+      var resp = await fetch(apiBase() + '/api/alex-voice', {
         method: 'POST',
-        headers: headers,
-        body: payload
+        headers: authHeadersJson(),
+        body: JSON.stringify({ silence_nudge: true, voice_key: voiceKey() })
       });
-      if (streamResp.ok) {
-        var ct = (streamResp.headers.get('content-type') || '').toLowerCase();
-        if (ct.indexOf('text/event-stream') >= 0 && streamResp.body && streamResp.body.getReader) {
-          await consumeAlexVoiceStream(streamResp, '');
-          return;
-        }
-        var jsonResp = await fetch(apiBase() + '/api/alex-voice', {
-          method: 'POST',
-          headers: headers,
-          body: payload
-        });
-        if (!jsonResp.ok) {
-          if (handleVoiceHttpError(jsonResp.status)) return;
-          processing = false;
-          setOrbState('idle');
-          if (active) startListening();
-          return;
-        }
-        var dataFb = await jsonResp.json();
-        processing = false;
-        playAlexVoiceResponse(dataFb);
-        return;
-      }
-      if (!streamResp.ok) {
-        if (handleVoiceHttpError(streamResp.status)) return;
+      if (!resp.ok) {
+        if (handleVoiceHttpError(resp.status)) return;
         processing = false;
         setOrbState('idle');
-        if (active) startListening();
+        if (active) scheduleListenAfterSpeech();
         return;
       }
+      var data = await resp.json();
+      processing = false;
+      playAlexVoiceResponse(data);
     } catch (e) {
       console.error('[AlexVoice] silence nudge error:', e);
       processing = false;
       setOrbState('idle');
-      setTimeout(function () { if (active) startListening(); }, 1200);
+      setTimeout(function () { if (active) scheduleListenAfterSpeech(); }, 1200);
     }
   }
 

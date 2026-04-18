@@ -23285,23 +23285,6 @@ async def _alex_voice_tts_audio_b64(text: str) -> str:
     return ""
 
 
-def _alex_voice_first_tts_prefix(visible: str) -> str | None:
-    """First chunk of streamed assistant text suitable for early TTS (sentence or long clause)."""
-    if not visible or len(visible) < 24:
-        return None
-    t = visible.strip()
-    m = re.search(r"[.!?](?:\s+|\s*$)", t)
-    if m:
-        chunk = t[: m.end()].strip()
-        if len(chunk) >= 24:
-            return chunk
-    if len(t) >= 200:
-        cut = t[:190].rfind(" ")
-        if cut > 55:
-            return t[:cut].strip()
-    return None
-
-
 def _polish_llm_text_for_voice_speech(text: str) -> str:
     """Strip markdown, code, and Latin abbreviations so TTS reads like a human tutor, not a document."""
     t = (text or "").strip()
@@ -23492,8 +23475,6 @@ async def alex_voice_api(request: Request):
         max_tokens = 220
 
     answer_raw = ""
-    first_raw_captured: str | None = None
-    first_tts_task: asyncio.Task | None = None
 
     if silence_nudge:
         try:
@@ -23516,8 +23497,6 @@ async def alex_voice_api(request: Request):
                 if piece in (RATE_LIMIT_UI_MESSAGE, GENERIC_ERROR_UI_MESSAGE, "API not ready") or _is_rate_limit_text(
                     piece
                 ):
-                    if first_tts_task and not first_tts_task.done():
-                        first_tts_task.cancel()
                     buf = (
                         RATE_LIMIT_UI_MESSAGE
                         if _is_rate_limit_text(piece) or piece == RATE_LIMIT_UI_MESSAGE
@@ -23525,23 +23504,10 @@ async def alex_voice_api(request: Request):
                     )
                     break
                 buf += piece
-                visible = _strip_think_tags(buf)
-                if first_tts_task is None and len(visible.strip()) >= 24:
-                    cand = _alex_voice_first_tts_prefix(visible)
-                    if cand:
-                        first_raw_captured = cand
-                        polished_head = _polish_llm_text_for_voice_speech(cand)
-                        head_speech = _prepare_tts_text(polished_head, is_voice_mode=is_voice_mode)
-                        if (head_speech or "").strip():
-                            first_tts_task = asyncio.create_task(_alex_voice_tts_audio_b64(head_speech))
             answer_raw = (_strip_think_tags(buf) or "").strip() or "Sorry, could you say that again?"
         except Exception as exc:
             logger.error("AlexVoice LLM stream error: %s", exc)
-            if first_tts_task and not first_tts_task.done():
-                first_tts_task.cancel()
             answer_raw = "Sorry, I had trouble thinking. Could you repeat that?"
-            first_tts_task = None
-            first_raw_captured = None
 
     answer_spoken = _polish_llm_text_for_voice_speech(answer_raw)
     if not answer_spoken:
@@ -23560,46 +23526,7 @@ async def alex_voice_api(request: Request):
     if not (speech_text or "").strip():
         speech_text = (answer_spoken or "").strip()
 
-    audio_b64 = ""
-    audio_b64_tail = ""
-
-    if silence_nudge or first_tts_task is None:
-        audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-    else:
-        prefix_ok = bool(first_raw_captured and answer_raw.startswith(first_raw_captured))
-        if not prefix_ok and first_tts_task and not first_tts_task.done():
-            first_tts_task.cancel()
-
-        early_b64 = ""
-        if first_tts_task is not None:
-            try:
-                early_b64 = await first_tts_task
-            except (asyncio.CancelledError, Exception):
-                early_b64 = ""
-
-        if not prefix_ok:
-            audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-        else:
-            frc = first_raw_captured or ""
-            remainder_raw = answer_raw[len(frc) :].lstrip()
-            rest_spoken = _polish_llm_text_for_voice_speech(remainder_raw) if remainder_raw else ""
-            rest_speech = _prepare_tts_text(rest_spoken, is_voice_mode=is_voice_mode) if rest_spoken.strip() else ""
-
-            if not remainder_raw.strip() or not (rest_speech or "").strip():
-                if early_b64:
-                    audio_b64 = early_b64
-                else:
-                    audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-            else:
-                tail_b64 = await _alex_voice_tts_audio_b64(rest_speech) if (rest_speech or "").strip() else ""
-                if early_b64:
-                    if tail_b64:
-                        audio_b64 = early_b64
-                        audio_b64_tail = tail_b64
-                    else:
-                        audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-                else:
-                    audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+    audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
 
     return JSONResponse(
         {
@@ -23607,13 +23534,13 @@ async def alex_voice_api(request: Request):
             "display_html": display_html,
             "speech_text": speech_text,
             "audio_b64": audio_b64,
-            "audio_b64_tail": audio_b64_tail,
+            "audio_b64_tail": "",
         }
     )
 
 
 async def alex_voice_stream(request: Request):
-    """SSE variant: first WAV may be sent before the LLM stream finishes so the client can play while generating."""
+    """SSE variant (optional): same single WAV as /api/alex-voice — events: audio, then done."""
     _prune_stale_voice_sessions()
     v_uid = _voice_request_uid(request)
     if v_uid < 0:
@@ -23713,17 +23640,11 @@ async def alex_voice_stream(request: Request):
                 return
 
             buf = ""
-            first_raw_captured: str | None = None
-            first_tts_task: asyncio.Task | None = None
-            first_audio_sent = False
-
             try:
                 async for piece in _openrouter_stream_async(OPENROUTER_VOICE_MODEL, messages, max_tokens):
                     if piece in (RATE_LIMIT_UI_MESSAGE, GENERIC_ERROR_UI_MESSAGE, "API not ready") or _is_rate_limit_text(
                         piece
                     ):
-                        if first_tts_task and not first_tts_task.done():
-                            first_tts_task.cancel()
                         buf = (
                             RATE_LIMIT_UI_MESSAGE
                             if _is_rate_limit_text(piece) or piece == RATE_LIMIT_UI_MESSAGE
@@ -23731,32 +23652,9 @@ async def alex_voice_stream(request: Request):
                         )
                         break
                     buf += piece
-                    visible = _strip_think_tags(buf)
-                    if first_tts_task is None and len(visible.strip()) >= 24:
-                        cand = _alex_voice_first_tts_prefix(visible)
-                        if cand:
-                            first_raw_captured = cand
-                            polished_head = _polish_llm_text_for_voice_speech(cand)
-                            head_speech = _prepare_tts_text(polished_head, is_voice_mode=is_voice_mode)
-                            if (head_speech or "").strip():
-                                first_tts_task = asyncio.create_task(_alex_voice_tts_audio_b64(head_speech))
-                    await asyncio.sleep(0)
-                    if first_tts_task and not first_audio_sent and first_tts_task.done():
-                        try:
-                            early_b64 = first_tts_task.result()
-                        except Exception:
-                            early_b64 = ""
-                        if early_b64:
-                            yield sse({"type": "audio", "audio_b64": early_b64})
-                            first_audio_sent = True
-
                 answer_raw = (_strip_think_tags(buf) or "").strip() or "Sorry, could you say that again?"
             except Exception as exc:
                 logger.error("AlexVoice LLM stream error (sse): %s", exc)
-                if first_tts_task and not first_tts_task.done():
-                    first_tts_task.cancel()
-                first_tts_task = None
-                first_raw_captured = None
                 answer_raw = "Sorry, I had trouble thinking. Could you repeat that?"
 
             answer_spoken = _polish_llm_text_for_voice_speech(answer_raw)
@@ -23771,53 +23669,9 @@ async def alex_voice_stream(request: Request):
             history.append({"role": "assistant", "content": display_md})
             _alex_voice_trim_history(ctx, history)
 
-            audio_b64 = ""
-            audio_b64_tail = ""
-
-            if first_tts_task is None:
-                audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-            else:
-                prefix_ok = bool(first_raw_captured and answer_raw.startswith(first_raw_captured))
-                if not prefix_ok and first_tts_task and not first_tts_task.done():
-                    first_tts_task.cancel()
-
-                early_b64 = ""
-                if first_tts_task is not None:
-                    try:
-                        early_b64 = await first_tts_task
-                    except (asyncio.CancelledError, Exception):
-                        early_b64 = ""
-
-                if not prefix_ok:
-                    audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-                else:
-                    frc = first_raw_captured or ""
-                    remainder_raw = answer_raw[len(frc) :].lstrip()
-                    rest_spoken = _polish_llm_text_for_voice_speech(remainder_raw) if remainder_raw else ""
-                    rest_speech = (
-                        _prepare_tts_text(rest_spoken, is_voice_mode=is_voice_mode) if rest_spoken.strip() else ""
-                    )
-
-                    if not remainder_raw.strip() or not (rest_speech or "").strip():
-                        if early_b64:
-                            audio_b64 = early_b64
-                        else:
-                            audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-                    else:
-                        tail_b64 = await _alex_voice_tts_audio_b64(rest_speech) if (rest_speech or "").strip() else ""
-                        if early_b64:
-                            if tail_b64:
-                                audio_b64 = early_b64
-                                audio_b64_tail = tail_b64
-                            else:
-                                audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-                        else:
-                            audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
-
-            if audio_b64 and not first_audio_sent:
+            audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+            if audio_b64:
                 yield sse({"type": "audio", "audio_b64": audio_b64})
-            if audio_b64_tail:
-                yield sse({"type": "audio_tail", "audio_b64": audio_b64_tail})
             yield sse(
                 {
                     "type": "done",
