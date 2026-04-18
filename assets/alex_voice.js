@@ -83,6 +83,10 @@
   var alexAudioChain = Promise.resolve();
   /** Active stream clip — stopped when clearing playback. */
   var alexStreamActiveAudio = null;
+  /** Segments enqueued but not yet finished playing. */
+  var alexPendingSegments = 0;
+  /** True once the SSE 'done' event has been received for the current stream. */
+  var alexSseDone = false;
 
   function stopAlexPlaybackEngine() {
     try {
@@ -94,19 +98,26 @@
       }
     } catch (eSt) {}
     alexAudioChain = Promise.resolve();
+    alexPendingSegments = 0;
+    alexSseDone = false;
   }
 
   /**
    * Queue one WAV segment after the previous ends (promise chain).
+   * Shows "Preparing..." when a clip ends but more is still incoming.
    * @returns {Promise}
    */
   function enqueueAlexStreamAudioSegment(b64) {
     var raw = (b64 || '').trim();
     if (!raw) return alexAudioChain;
+    alexPendingSegments++;
     alexAudioChain = alexAudioChain.then(function () {
+      setOrbState('ai-speaking');
+      setStatus('Alex is speaking...');
       return new Promise(function (resolve) {
         var url = wavBase64ToObjectUrl(raw);
         if (!url) {
+          alexPendingSegments--;
           resolve();
           return;
         }
@@ -117,6 +128,11 @@
             URL.revokeObjectURL(url);
           } catch (eR) {}
           if (alexStreamActiveAudio === a) alexStreamActiveAudio = null;
+          alexPendingSegments--;
+          if (alexPendingSegments === 0 && !alexSseDone) {
+            setOrbState('thinking');
+            setStatus('Preparing...');
+          }
           resolve();
         };
         a.onerror = function () {
@@ -124,6 +140,7 @@
             URL.revokeObjectURL(url);
           } catch (eR2) {}
           if (alexStreamActiveAudio === a) alexStreamActiveAudio = null;
+          alexPendingSegments--;
           resolve();
         };
         var pr = a.play();
@@ -137,6 +154,7 @@
               URL.revokeObjectURL(url);
             } catch (eRv) {}
             if (alexStreamActiveAudio === a) alexStreamActiveAudio = null;
+            alexPendingSegments--;
             resolve();
           });
         }
@@ -181,6 +199,7 @@
       }
       if (obj.type === 'done') {
         streamUiDone = true;
+        alexSseDone = true;
         try {
           window.__voiceLastUserLine = '';
         } catch (eZ) {}
