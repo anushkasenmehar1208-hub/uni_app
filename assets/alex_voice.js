@@ -67,7 +67,7 @@
   var introPlayed = false;
 
   /** Wait before reopening the mic after Alex finishes speaking — reduces speaker→mic echo re-triggering STT. */
-  var POST_SPEECH_MIC_DELAY_MS = 700;
+  var POST_SPEECH_MIC_DELAY_MS = 250;
 
   function scheduleListenAfterSpeech() {
     if (!active) return;
@@ -260,10 +260,10 @@
   // Lower threshold after speech began — keeps natural pauses inside a sentence
   var VAD_SPEECH_END_RMS = 10;
   // Require this many ms of continuous “loud” before we treat it as real speech
-  var VAD_SPEECH_SUSTAIN_MS = 200;
+  var VAD_SPEECH_SUSTAIN_MS = 140;
   // Still run STT if blob is at least this big, even when VAD never armed (fixes “ok” / whispers)
   var MIN_BLOB_FOR_STT = 80;
-  var SILENCE_DURATION = 1500;   // ms of silence before auto-stop
+  var SILENCE_DURATION = 700;    // ms of silence before auto-stop (ChatGPT/Gemini-like snappiness)
   var MAX_RECORD_MS = 15000;     // absolute max recording time
   /** If user never starts speaking, Alex checks in after this many ms (keep high to avoid nagging / repeat). */
   var NO_SPEECH_NUDGE_MS = 12000;

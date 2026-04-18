@@ -23267,8 +23267,10 @@ async def _alex_fish_tts_wav_bytes(text: str) -> bytes | None:
                     "text": t,
                     "reference_id": ref,
                     "format": "wav",
-                    "latency": "balanced",
-                    "chunk_length": 200,
+                    # "normal" = Fish Audio's low-latency mode (faster first byte than "balanced").
+                    "latency": "normal",
+                    # Smaller chunk → less audio batched before first bytes return.
+                    "chunk_length": 100,
                     "normalize": True,
                 },
             )
@@ -23306,17 +23308,26 @@ async def _alex_voice_tts_audio_b64(text: str) -> str:
 
 def _alex_voice_first_tts_prefix(visible: str) -> str | None:
     """First clause for early TTS while the model still streams (sentence end or long clause break)."""
-    if not visible or len(visible) < 28:
+    if not visible or len(visible) < 16:
         return None
     t = visible.strip()
+    # Prefer a sentence end (., !, ?) as the earliest trigger.
     m = re.search(r"[.!?](?:\s+|$)", t)
     if m:
         chunk = t[: m.end()].strip()
-        if len(chunk) >= 28:
+        if len(chunk) >= 16:
             return chunk
-    if len(t) >= 220:
-        cut = t[:200].rfind(" ")
-        if cut > 60:
+    # Fallback: comma / em-dash / colon break once we have a reasonable clause,
+    # so Alex starts speaking without waiting for the full sentence.
+    m2 = re.search(r"[,;:—](?:\s+|$)", t)
+    if m2 and m2.end() >= 24:
+        chunk2 = t[: m2.end()].strip().rstrip(",;:—").strip()
+        if len(chunk2) >= 16:
+            return chunk2
+    # Last-resort long-text fallback.
+    if len(t) >= 140:
+        cut = t[:120].rfind(" ")
+        if cut > 48:
             return t[:cut].strip()
     return None
 
@@ -23809,18 +23820,27 @@ async def alex_voice_stream(request: Request):
                             audio_b64 = early_b64
                             # Split long remainder so each chunk can be synthesized and streamed in order;
                             # later chunks generate while earlier ones play on the client.
-                            remainder_tail_segments = _alex_voice_split_tts_segments(rest_speech, max_chars=400)
+                            # Smaller tail chunks → next clip is ready while previous one plays.
+                            remainder_tail_segments = _alex_voice_split_tts_segments(rest_speech, max_chars=220)
                         else:
                             audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
 
             if audio_b64 and not first_audio_yielded:
                 yield sse({"type": "audio", "audio_b64": audio_b64})
             if remainder_tail_segments:
+                # Fire all TTS jobs in parallel, but yield them in order as each completes.
+                # This overlaps network/synthesis so later clips are ready while earlier ones play.
+                tail_tasks: list[asyncio.Task] = []
                 for seg in remainder_tail_segments:
                     seg = (seg or "").strip()
                     if not seg:
                         continue
-                    tb64 = await _alex_voice_tts_audio_b64(seg)
+                    tail_tasks.append(asyncio.create_task(_alex_voice_tts_audio_b64(seg)))
+                for task in tail_tasks:
+                    try:
+                        tb64 = await task
+                    except Exception:
+                        tb64 = ""
                     if tb64:
                         yield sse({"type": "audio_tail", "audio_b64": tb64})
             yield sse(
