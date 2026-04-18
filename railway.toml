@@ -1,5 +1,0 @@
-[build]
-builder = "DOCKERFILE"
-
-# Railway deploys this app from the root Dockerfile.
-# Runtime entrypoint: ./start.sh
