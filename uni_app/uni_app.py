@@ -2797,6 +2797,18 @@ GOOGLE_STRICT_STATE     = os.getenv("GOOGLE_STRICT_STATE", "false").lower() == "
 _google_state_serializer = URLSafeTimedSerializer(SESSION_SECRET, salt="google-oauth-state")
 GOOGLE_STATE_COOKIE_NAME = "alex_google_oauth_nonce"
 GOOGLE_COMPLETE_COOKIE_NAME = "alex_google_complete_token"
+# CSRF for login/register/reset must be visible to every app worker; SessionStorage only syncs
+# with the worker that created the page, so multi-replica deploys (e.g. Railway) see false
+# "Session expired" on submit. Cookies are sent on every request to any replica.
+_CSRF_COOKIE_SECURE = (
+    os.getenv(
+        "CSRF_COOKIE_SECURE",
+        "true" if bool(str(_IS_PRODUCTION).strip()) else "false",
+    )
+    .strip()
+    .lower()
+    == "true"
+)
 MEDIA_URL_MAX_AGE_SECONDS = max(300, int(os.getenv("MEDIA_URL_MAX_AGE_SECONDS", str(60 * 60 * 24))))
 _chat_media_serializer = URLSafeTimedSerializer(SESSION_SECRET, salt="chat-media")
 
@@ -4331,7 +4343,14 @@ async def health_check(request):
 # ============================
 class AppState(reflex_local_auth.LocalAuthState):
     app_auth_token: str = rx.LocalStorage(name=AUTH_TOKEN_LOCAL_STORAGE_KEY)
-    auth_csrf_token: str = rx.SessionStorage(name="auth_csrf_token")
+    auth_csrf_token: str = rx.Cookie(
+        "",
+        name="alex_auth_csrf",
+        path="/",
+        same_site="lax",
+        secure=_CSRF_COOKIE_SECURE,
+        max_age=60 * 60 * 4,
+    )
     google_oauth_nonce: str = rx.SessionStorage(name="google_oauth_nonce")
     post_login_redirect: str = ""
     plan_generation_error: str = ""
