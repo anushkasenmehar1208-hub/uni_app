@@ -37,7 +37,14 @@ import httpx
 from dodopayments import APIWebhookValidationError, DodoPayments, DodoPaymentsError
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
-from fastapi.responses import PlainTextResponse, RedirectResponse, FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import (
+    PlainTextResponse,
+    RedirectResponse,
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    StreamingResponse,
+)
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import reflex_local_auth
 
@@ -23605,7 +23612,237 @@ async def alex_voice_api(request: Request):
     )
 
 
+async def alex_voice_stream(request: Request):
+    """SSE variant: first WAV may be sent before the LLM stream finishes so the client can play while generating."""
+    _prune_stale_voice_sessions()
+    v_uid = _voice_request_uid(request)
+    if v_uid < 0:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Bad request"}, status_code=400)
+
+    transcript = str(body.get("transcript", "")).strip()
+    voice_key = str(body.get("voice_key", "")).strip()
+    silence_nudge = bool(body.get("silence_nudge"))
+
+    if silence_nudge:
+        if transcript:
+            return JSONResponse({"error": "Invalid request"}, status_code=400)
+    elif not transcript:
+        return JSONResponse({"error": "Bad request"}, status_code=400)
+
+    if not _is_valid_voice_key(voice_key):
+        return JSONResponse({"error": "Invalid voice session key"}, status_code=400)
+
+    ctx = _alex_voice_sessions.get(voice_key)
+    if not ctx:
+        return JSONResponse({"error": "Voice session expired — reload this page."}, status_code=410)
+    if int(ctx.get("uid", -1)) != v_uid:
+        return JSONResponse({"error": "Forbidden"}, status_code=403)
+
+    if not OPENROUTER_API_KEY:
+        return JSONResponse({"error": "OPENROUTER_API_KEY missing."}, status_code=503)
+
+    system_prompt = ctx["system"]
+    history = ctx["history"]
+    is_voice_mode = True
+
+    if silence_nudge:
+        nudge_user_text = (
+            "[Voice session: you have been quietly listening for several seconds and the student has not spoken yet. "
+            "Reply with exactly one short, warm spoken sentence (at most ~22 words): gently invite them to share "
+            "what they're working on or ask if they're ready when they are. No markdown, bullets, numbers, or lists.]"
+        )
+        messages = [
+            {"role": "system", "content": system_prompt},
+            *history,
+            {"role": "user", "content": nudge_user_text},
+        ]
+        max_tokens = 120
+    else:
+        history.append({"role": "user", "content": transcript})
+        history = _alex_voice_trim_history(ctx, history)
+        messages = [{"role": "system", "content": system_prompt}, *history]
+        max_tokens = 220
+
+    async def sse_gen():
+        def sse(obj: dict) -> str:
+            return f"data: {json.dumps(obj, ensure_ascii=False)}\n\n"
+
+        try:
+            if silence_nudge:
+                try:
+                    res = await asyncio.to_thread(
+                        _openrouter_complete,
+                        OPENROUTER_VOICE_MODEL,
+                        messages,
+                        max_tokens,
+                    )
+                    answer_raw = (res.text or "").strip() or (
+                        "I'm right here whenever you want to jump in — what's on your mind?"
+                    )
+                except Exception as exc:
+                    logger.error("AlexVoice LLM error (sse nudge): %s", exc)
+                    answer_raw = "I'm right here whenever you want to jump in — what's on your mind?"
+
+                answer_spoken = _polish_llm_text_for_voice_speech(answer_raw)
+                if not answer_spoken:
+                    answer_spoken = answer_raw
+                display_md = _voice_display_markdown(answer_raw) or answer_spoken
+                display_html = _markdown_to_safe_html_for_voice(display_md)
+                speech_text = _prepare_tts_text(answer_spoken, is_voice_mode=is_voice_mode)
+                if not (speech_text or "").strip():
+                    speech_text = answer_spoken.strip()
+
+                history.append({"role": "assistant", "content": display_md})
+                _alex_voice_trim_history(ctx, history)
+
+                audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+                if audio_b64:
+                    yield sse({"type": "audio", "audio_b64": audio_b64})
+                yield sse(
+                    {
+                        "type": "done",
+                        "text": display_md,
+                        "display_html": display_html,
+                        "speech_text": speech_text,
+                    }
+                )
+                return
+
+            buf = ""
+            first_raw_captured: str | None = None
+            first_tts_task: asyncio.Task | None = None
+            first_audio_sent = False
+
+            try:
+                async for piece in _openrouter_stream_async(OPENROUTER_VOICE_MODEL, messages, max_tokens):
+                    if piece in (RATE_LIMIT_UI_MESSAGE, GENERIC_ERROR_UI_MESSAGE, "API not ready") or _is_rate_limit_text(
+                        piece
+                    ):
+                        if first_tts_task and not first_tts_task.done():
+                            first_tts_task.cancel()
+                        buf = (
+                            RATE_LIMIT_UI_MESSAGE
+                            if _is_rate_limit_text(piece) or piece == RATE_LIMIT_UI_MESSAGE
+                            else piece
+                        )
+                        break
+                    buf += piece
+                    visible = _strip_think_tags(buf)
+                    if first_tts_task is None and len(visible.strip()) >= 24:
+                        cand = _alex_voice_first_tts_prefix(visible)
+                        if cand:
+                            first_raw_captured = cand
+                            polished_head = _polish_llm_text_for_voice_speech(cand)
+                            head_speech = _prepare_tts_text(polished_head, is_voice_mode=is_voice_mode)
+                            if (head_speech or "").strip():
+                                first_tts_task = asyncio.create_task(_alex_voice_tts_audio_b64(head_speech))
+                    await asyncio.sleep(0)
+                    if first_tts_task and not first_audio_sent and first_tts_task.done():
+                        try:
+                            early_b64 = first_tts_task.result()
+                        except Exception:
+                            early_b64 = ""
+                        if early_b64:
+                            yield sse({"type": "audio", "audio_b64": early_b64})
+                            first_audio_sent = True
+
+                answer_raw = (_strip_think_tags(buf) or "").strip() or "Sorry, could you say that again?"
+            except Exception as exc:
+                logger.error("AlexVoice LLM stream error (sse): %s", exc)
+                if first_tts_task and not first_tts_task.done():
+                    first_tts_task.cancel()
+                first_tts_task = None
+                first_raw_captured = None
+                answer_raw = "Sorry, I had trouble thinking. Could you repeat that?"
+
+            answer_spoken = _polish_llm_text_for_voice_speech(answer_raw)
+            if not answer_spoken:
+                answer_spoken = "Sorry, could you say that again?"
+            display_md = _voice_display_markdown(answer_raw) or answer_spoken
+            display_html = _markdown_to_safe_html_for_voice(display_md)
+            speech_text = _prepare_tts_text(answer_spoken, is_voice_mode=is_voice_mode)
+            if not (speech_text or "").strip():
+                speech_text = answer_spoken.strip()
+
+            history.append({"role": "assistant", "content": display_md})
+            _alex_voice_trim_history(ctx, history)
+
+            audio_b64 = ""
+            audio_b64_tail = ""
+
+            if first_tts_task is None:
+                audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+            else:
+                prefix_ok = bool(first_raw_captured and answer_raw.startswith(first_raw_captured))
+                if not prefix_ok and first_tts_task and not first_tts_task.done():
+                    first_tts_task.cancel()
+
+                early_b64 = ""
+                if first_tts_task is not None:
+                    try:
+                        early_b64 = await first_tts_task
+                    except (asyncio.CancelledError, Exception):
+                        early_b64 = ""
+
+                if not prefix_ok:
+                    audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+                else:
+                    frc = first_raw_captured or ""
+                    remainder_raw = answer_raw[len(frc) :].lstrip()
+                    rest_spoken = _polish_llm_text_for_voice_speech(remainder_raw) if remainder_raw else ""
+                    rest_speech = (
+                        _prepare_tts_text(rest_spoken, is_voice_mode=is_voice_mode) if rest_spoken.strip() else ""
+                    )
+
+                    if not remainder_raw.strip() or not (rest_speech or "").strip():
+                        if early_b64:
+                            audio_b64 = early_b64
+                        else:
+                            audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+                    else:
+                        tail_b64 = await _alex_voice_tts_audio_b64(rest_speech) if (rest_speech or "").strip() else ""
+                        if early_b64:
+                            if tail_b64:
+                                audio_b64 = early_b64
+                                audio_b64_tail = tail_b64
+                            else:
+                                audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+                        else:
+                            audio_b64 = await _alex_voice_tts_audio_b64(speech_text)
+
+            if audio_b64 and not first_audio_sent:
+                yield sse({"type": "audio", "audio_b64": audio_b64})
+            if audio_b64_tail:
+                yield sse({"type": "audio_tail", "audio_b64": audio_b64_tail})
+            yield sse(
+                {
+                    "type": "done",
+                    "text": display_md,
+                    "display_html": display_html,
+                    "speech_text": speech_text,
+                }
+            )
+        except Exception as exc:
+            logger.exception("AlexVoice stream SSE: %s", exc)
+            yield sse({"type": "error", "message": "Voice reply failed. Please try again."})
+
+    return StreamingResponse(
+        sse_gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 api.add_route("/api/alex-voice", alex_voice_api, methods=["POST"])
+api.add_route("/api/alex-voice-stream", alex_voice_stream, methods=["POST"])
 api.add_route("/api/alex-voice-stt", alex_voice_stt, methods=["POST"])
 
 
