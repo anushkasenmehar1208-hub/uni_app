@@ -10073,10 +10073,13 @@ Quality rules:
             "document.head.appendChild(s);"
             # 3D avatar overlay — loads once, no-op if already booted. Separate from voice logic
             # so a failure here never breaks the call.
-            "if(!document.getElementById('_alex_avatar_script')){"
+            "window.ALEX_AVATAR_TARGET_ID='alex-orb';"
+            "if(window.AlexAvatarMount){window.AlexAvatarMount('alex-orb');}"
+            "else if(!document.getElementById('_alex_avatar_script')){"
             "var av=document.createElement('script');"
             "av.id='_alex_avatar_script';"
             "av.src='/alex_avatar.js?v='+Date.now();"
+            "av.onload=function(){try{if(window.AlexAvatarMount)window.AlexAvatarMount('alex-orb');}catch(e){}};"
             "av.onerror=function(){console.warn('[AlexAvatar] failed to load /alex_avatar.js');};"
             "document.head.appendChild(av);"
             "}"
@@ -15594,14 +15597,212 @@ _CODE_ENHANCE_JS = """
 """
 
 
+_CHAT_TEACHER_AVATAR_JS = """
+(function() {
+  function mountTeacherAvatar() {
+    try {
+      if (window.AlexAvatarMount) window.AlexAvatarMount('alex-teacher-orb');
+    } catch (e) {
+      console.warn('[AlexTeacher] avatar mount failed', e);
+    }
+  }
+  function ensureTeacherAvatar() {
+    if (!document.getElementById('alex-teacher-orb')) return;
+    if (window.AlexAvatarMount) {
+      mountTeacherAvatar();
+      return;
+    }
+    if (document.getElementById('_alex_avatar_script')) return;
+    window.ALEX_AVATAR_TARGET_ID = 'alex-teacher-orb';
+    var av = document.createElement('script');
+    av.id = '_alex_avatar_script';
+    av.src = '/alex_avatar.js?v=' + Date.now();
+    av.onload = mountTeacherAvatar;
+    av.onerror = function() { console.warn('[AlexTeacher] failed to load /alex_avatar.js'); };
+    document.head.appendChild(av);
+  }
+  ensureTeacherAvatar();
+  var tries = 0;
+  var iv = setInterval(function() {
+    ensureTeacherAvatar();
+    if (++tries > 60 || window.AlexAvatarMount) clearInterval(iv);
+  }, 600);
+})();
+"""
+
+
+def teacher_avatar_panel() -> rx.Component:
+    return rx.box(
+        rx.el.style("""
+            @keyframes teacher-ai-ripple {
+                0% { transform: translate(-50%,-50%) scale(.82); opacity:.82; }
+                100% { transform: translate(-50%,-50%) scale(2.1); opacity:0; }
+            }
+            @keyframes teacher-think-rotate {
+                from { transform: translate(-50%,-50%) rotate(0deg); }
+                to { transform: translate(-50%,-50%) rotate(360deg); }
+            }
+            @keyframes teacher-core-pulse {
+                0%,100% { transform: translate(-50%,-50%) scale(1); }
+                50% { transform: translate(-50%,-50%) scale(1.06); }
+            }
+            #alex-teacher-orb {
+                position: relative;
+                width: 180px;
+                height: 180px;
+                flex-shrink: 0;
+            }
+            #alex-teacher-orb .orb-ring {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+            }
+            #alex-teacher-orb.idle .orb-ring {
+                border: 1px solid rgba(255,255,255,.12);
+                background: transparent;
+            }
+            #alex-teacher-orb.idle .r1 {
+                width: 84px;
+                height: 84px;
+                opacity: 1;
+            }
+            #alex-teacher-orb.idle .r2, #alex-teacher-orb.idle .r3 {
+                opacity: 0;
+                visibility: hidden;
+            }
+            #alex-teacher-orb.idle .orb-core {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 52px;
+                height: 52px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(255,255,255,.26) 0%, rgba(255,255,255,.03) 100%);
+                box-shadow: 0 0 26px rgba(255,255,255,.04);
+            }
+            #alex-teacher-orb.ai-speaking .orb-ring {
+                opacity: 1;
+                visibility: visible;
+                background: rgba(0,230,255,.28);
+                border: none;
+                animation: teacher-ai-ripple 1.45s ease-out infinite;
+            }
+            #alex-teacher-orb.ai-speaking .r1 { width: 72px; height: 72px; animation-delay: 0s; }
+            #alex-teacher-orb.ai-speaking .r2 { width: 72px; height: 72px; animation-delay: .48s; }
+            #alex-teacher-orb.ai-speaking .r3 { width: 72px; height: 72px; animation-delay: .96s; }
+            #alex-teacher-orb.ai-speaking .orb-core {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 62px;
+                height: 62px;
+                border-radius: 50%;
+                background: radial-gradient(circle, #00EEFF, #0077CC);
+                box-shadow: 0 0 24px #00EEFF, 0 0 46px rgba(0,238,255,.22);
+                animation: teacher-core-pulse .9s ease-in-out infinite;
+            }
+            #alex-teacher-orb.thinking .orb-ring { opacity: 0; }
+            #alex-teacher-orb.thinking .r1 {
+                opacity: 1;
+                width: 72px;
+                height: 72px;
+                border: none;
+                background: conic-gradient(from 0deg, #00EEFF, #0044AA, #00EEFF);
+                animation: teacher-think-rotate 1s linear infinite;
+            }
+            #alex-teacher-orb.thinking .orb-core {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 58px;
+                height: 58px;
+                border-radius: 50%;
+                background: #090c10;
+            }
+            @media (max-width: 768px) {
+                #alex-teacher-orb {
+                    width: 150px;
+                    height: 150px;
+                }
+            }
+        """),
+        rx.box(
+            rx.hstack(
+                rx.el.div(
+                    rx.el.div(class_name="orb-ring r1"),
+                    rx.el.div(class_name="orb-ring r2"),
+                    rx.el.div(class_name="orb-ring r3"),
+                    rx.el.div(class_name="orb-core"),
+                    id="alex-teacher-orb",
+                    class_name=rx.cond(AppState.is_processing, "thinking", "idle"),
+                ),
+                rx.vstack(
+                    rx.text(
+                        "Alex Teacher",
+                        color="rgba(228,236,245,0.95)",
+                        font_size=rx.breakpoints(initial="1rem", md="1.05rem"),
+                        font_weight="600",
+                        letter_spacing="-0.01em",
+                    ),
+                    rx.text(
+                        rx.cond(
+                            AppState.is_processing,
+                            "Thinking through the next explanation...",
+                            "Your 3D tutor is on the lesson stage.",
+                        ),
+                        color="rgba(196,210,225,0.74)",
+                        font_size="0.84rem",
+                        line_height="1.6",
+                    ),
+                    rx.text(
+                        "The avatar is visual for now. Voice-mode lip sync still works when you open live voice.",
+                        color="rgba(164,178,194,0.54)",
+                        font_size="0.76rem",
+                        line_height="1.55",
+                    ),
+                    align_items="start",
+                    spacing="2",
+                    flex="1",
+                    min_width="0",
+                ),
+                spacing=rx.breakpoints(initial="4", md="6"),
+                align="center",
+                width="100%",
+                flex_direction=rx.breakpoints(initial="column", md="row"),
+            ),
+            width="100%",
+            max_width="740px",
+            margin_x="auto",
+            margin_top="16px",
+            margin_bottom="16px",
+            padding=rx.breakpoints(initial="16px", md="18px 20px"),
+            border_radius="24px",
+            border="1px solid rgba(255,255,255,0.07)",
+            background="linear-gradient(135deg, rgba(7,11,18,0.96), rgba(10,20,34,0.9))",
+            box_shadow="0 20px 50px rgba(0,0,0,0.22)",
+        ),
+    )
+
+
 def active_chat_panel() -> rx.Component:
     return rx.box(
         # ── Injected Claude-like markdown CSS ──
         rx.html(_CLAUDE_MD_CSS),
         rx.script(_CODE_ENHANCE_JS),
+        rx.script(_CHAT_TEACHER_AVATAR_JS),
         # Scrollable messages
         rx.box(
             rx.vstack(
+                rx.cond(
+                    AppState.is_empty_chat,
+                    rx.fragment(),
+                    teacher_avatar_panel(),
+                ),
                 rx.cond(
                     AppState.is_empty_chat,
                     rx.box(

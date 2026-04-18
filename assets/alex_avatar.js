@@ -1,5 +1,5 @@
 /**
- * Alex 3D Avatar — realistic talking head overlay on top of #alex-orb.
+ * Alex 3D Avatar — realistic talking head overlay on top of a target orb.
  * Zero-touch integration with alex_voice.js:
  *   - State:     MutationObserver on #alex-orb className  →  avatar anim state
  *   - Lip-sync:  patched HTMLMediaElement.prototype.play  →  Web Audio analyser  →  jaw/viseme morphs
@@ -30,12 +30,7 @@
     try { console.warn.apply(console, ['[AlexAvatar]'].concat([].slice.call(arguments))); } catch (e) {}
   }
 
-  // Prevent double-init if the boot script re-injects us on a new voice session.
-  if (window.__alexAvatarBooted) {
-    log('already booted, skipping');
-    return;
-  }
-  window.__alexAvatarBooted = true;
+  window.__alexAvatarBootedTargets = window.__alexAvatarBootedTargets || {};
 
   // ── WebGL capability check ────────────────────────────────────────────────
   function hasWebGL() {
@@ -178,12 +173,12 @@
   }
 
   // ── DOM helpers ───────────────────────────────────────────────────────────
-  function waitForOrb(timeoutMs) {
+  function waitForOrb(targetId, timeoutMs) {
     return new Promise(function (resolve, reject) {
-      var existing = document.getElementById('alex-orb');
+      var existing = document.getElementById(targetId);
       if (existing) return resolve(existing);
       var obs = new MutationObserver(function () {
-        var el = document.getElementById('alex-orb');
+        var el = document.getElementById(targetId);
         if (el) { obs.disconnect(); resolve(el); }
       });
       obs.observe(document.documentElement, { childList: true, subtree: true });
@@ -191,15 +186,16 @@
     });
   }
 
-  function injectStyleOnce() {
-    if (document.getElementById('alex-avatar-styles')) return;
+  function injectStyleOnce(targetId, canvasId) {
+    var styleId = 'alex-avatar-styles-' + targetId;
+    if (document.getElementById(styleId)) return;
     var st = document.createElement('style');
-    st.id = 'alex-avatar-styles';
+    st.id = styleId;
     st.textContent = [
       // Let the canvas extend outside the 220px orb bounds so avatar can be bigger.
-      '#alex-orb { overflow: visible !important; }',
+      '#' + targetId + ' { overflow: visible !important; }',
       // Avatar canvas sits centered over the orb; pointer-events off so buttons still work.
-      '#alex-avatar-canvas {',
+      '#' + canvasId + ' {',
       '  position: absolute;',
       '  top: 50%; left: 50%;',
       '  transform: translate(-50%, -50%);',
@@ -211,25 +207,33 @@
       '  transition: opacity .6s ease;',
       '  z-index: 2;',
       '}',
-      '#alex-avatar-canvas.alex-avatar-ready { opacity: 1; }',
+      '#' + canvasId + '.alex-avatar-ready { opacity: 1; }',
       // Once avatar is ready, fade the old orb core/rings so they act as soft halo only.
-      '#alex-orb.alex-avatar-active .orb-core { opacity: .25; }',
-      '#alex-orb.alex-avatar-active.ai-speaking .orb-core,',
-      '#alex-orb.alex-avatar-active.user-speaking .orb-core { opacity: .55; }',
+      '#' + targetId + '.alex-avatar-active .orb-core { opacity: .25; }',
+      '#' + targetId + '.alex-avatar-active.ai-speaking .orb-core,',
+      '#' + targetId + '.alex-avatar-active.user-speaking .orb-core { opacity: .55; }',
       '@media (max-width: 520px) {',
-      '  #alex-avatar-canvas { width: 300px; height: 300px; }',
+      '  #' + canvasId + ' { width: 300px; height: 300px; }',
       '}'
     ].join('\n');
     document.head.appendChild(st);
   }
 
   // ── Main boot ─────────────────────────────────────────────────────────────
-  function boot() {
-    injectStyleOnce();
+  function boot(targetId) {
+    targetId = targetId || 'alex-orb';
+    if (window.__alexAvatarBootedTargets[targetId]) {
+      log('already booted for target', targetId);
+      return;
+    }
+    window.__alexAvatarBootedTargets[targetId] = true;
+    var canvasId = targetId + '-avatar-canvas';
+    injectStyleOnce(targetId, canvasId);
 
-    waitForOrb().then(function (orb) {
+    waitForOrb(targetId).then(function (orb) {
+      if (document.getElementById(canvasId)) return;
       var canvas = document.createElement('canvas');
-      canvas.id = 'alex-avatar-canvas';
+      canvas.id = canvasId;
       orb.appendChild(canvas);
 
       loadThreeModules()
@@ -237,9 +241,11 @@
         .catch(function (err) {
           warn('3D init failed, keeping orb fallback:', err && err.message);
           try { canvas.remove(); } catch (e) {}
+          delete window.__alexAvatarBootedTargets[targetId];
         });
     }).catch(function (err) {
-      warn('could not find #alex-orb:', err && err.message);
+      warn('could not find #' + targetId + ':', err && err.message);
+      delete window.__alexAvatarBootedTargets[targetId];
     });
   }
 
@@ -429,16 +435,25 @@
     }
   }
 
+  window.AlexAvatarMount = boot;
+
+  function bootDefaultAvatar() {
+    boot(window.ALEX_AVATAR_TARGET_ID || 'alex-orb');
+  }
+
   // Kick off when DOM is ready (handles both before/after DOMContentLoaded).
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot, { once: true });
+    document.addEventListener('DOMContentLoaded', bootDefaultAvatar, { once: true });
   } else {
-    boot();
+    bootDefaultAvatar();
   }
 
   // Expose a tiny debug API.
   window.AlexAvatar = {
-    version: '0.1.0',
-    isBooted: function () { return !!window.__alexAvatarBooted; }
+    version: '0.2.0',
+    isBooted: function (targetId) {
+      var key = targetId || window.ALEX_AVATAR_TARGET_ID || 'alex-orb';
+      return !!(window.__alexAvatarBootedTargets && window.__alexAvatarBootedTargets[key]);
+    }
   };
 })();
