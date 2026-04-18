@@ -9858,6 +9858,15 @@ Quality rules:
             + "};"
             "s.onerror=function(){console.error('[AlexVoice] FAILED to load /alex_voice.js');};"
             "document.head.appendChild(s);"
+            # 3D avatar overlay — loads once, no-op if already booted. Separate from voice logic
+            # so a failure here never breaks the call.
+            "if(!document.getElementById('_alex_avatar_script')){"
+            "var av=document.createElement('script');"
+            "av.id='_alex_avatar_script';"
+            "av.src='/alex_avatar.js?v='+Date.now();"
+            "av.onerror=function(){console.warn('[AlexAvatar] failed to load /alex_avatar.js');};"
+            "document.head.appendChild(av);"
+            "}"
             "})();"
         )
 
