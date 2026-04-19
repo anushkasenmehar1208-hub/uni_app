@@ -906,45 +906,48 @@
           tgt.rightArm = { x: 0.00, y: -0.015 * Math.sin(t * 0.55 + 0.3), z: 0.00 };
         }
 
-        // ── Hand-wave greeting ──────────────────────────────────────────────
-        // Verified axes (empirically probed on this RPM rig, 2026-04):
-        //   rightArm  X:   rest = +1.25 (arm hanging). Delta -2.50 lifts the
-        //                  upper arm to its mirror position (x = -1.25), which
-        //                  renders as arm-up-and-slightly-out — a natural "hi"
-        //                  pose.
-        //   rightForeArm Y (twist): when the upper arm is up, the forearm's
-        //                  local Y axis aligns roughly with the arm length, so
-        //                  oscillating Y rotates the hand side-to-side — the
-        //                  wave motion itself. Rest = +0.10; amplitude ±0.55
-        //                  around rest gives a full wave without snapping the
-        //                  wrist past its natural range.
-        //   rightForeArm X (elbow flex): kept near rest so the elbow stays
-        //                  lightly extended overhead rather than chickening
-        //                  the hand down to the shoulder.
+        // ── Hand-wave greeting (natural human biomechanics) ─────────────────
+        // Humans don't wave by raising a stiff straight arm overhead. They
+        // raise the upper arm moderately (~40°), BEND THE ELBOW sharply so
+        // the hand comes up next to the face, and oscillate the wrist/forearm
+        // side-to-side. Built on top of the proven teaching-pose bone deltas
+        // (line ~894) which already render naturally on this rig.
         //
-        // NOTE: we do NOT touch head rotation here — rig.head is driven by
-        // the head-sway block above and will keep animating naturally.
+        // Rest pose (post-normalization, see setRot block line ~516):
+        //   rightArm     = (+1.25,  -0.10,  0.00)  → arm hanging at side
+        //   rightForeArm = (+0.20,  +0.10,  0.00)  → slight relaxed bend
+        //
+        // Target wave pose (total after delta):
+        //   rightArm     ≈ (+0.35,  -0.10, -0.40)  → upper arm raised ~50°
+        //                                             out-and-forward, NOT up
+        //   rightForeArm ≈ (-1.50,  +0.10, +0.20)  → elbow flexed ~85°, hand
+        //                                             ends up at head height
+        //   rightForeArm Y oscillates → the actual wave motion (hand sweeps
+        //                                 side to side)
         if (rig.waveT != null && rig.waveT >= 0) {
           rig.waveT += dt;
           var wt = rig.waveT;
           var env;
-          if (wt < 0.35)      env = wt / 0.35;                    // ease-in:   raise arm up
-          else if (wt < 1.85) env = 1.0;                          // hold:      wave hand
-          else if (wt < 2.30) env = 1.0 - (wt - 1.85) / 0.45;     // ease-out:  return to rest
+          if (wt < 0.45)      env = wt / 0.45;                    // ease-in:   raise arm + bend elbow
+          else if (wt < 1.70) env = 1.0;                          // hold:      wave
+          else if (wt < 2.20) env = 1.0 - (wt - 1.70) / 0.50;     // ease-out:  relax back to rest
           else { env = 0; rig.waveT = -1; }
           if (env > 0) {
-            // Upper-arm raise — delta -1.40 lifts arm to ~head height (total
-            // ≈ -0.15 rad), not straight up like -2.50 did.
-            tgt.rightArm = { x: -1.40 * env, y: 0.00, z: 0.00 };
-            // Slight elbow bend so the forearm angles naturally toward camera.
-            var wave = Math.sin(wt * 10.0) * 0.40 * env * env;
-            tgt.rightForeArm = { x: -0.30 * env, y: wave, z: 0.00 };
+            // Upper arm: moderate raise + outward rotation. Same vector family
+            // as the teaching pose (which looks human), just slightly higher.
+            tgt.rightArm = { x: -0.90 * env, y: 0.00, z: -0.40 * env };
+            // Elbow: strong flex — this is what brings the HAND up to head
+            // height while the upper arm stays moderate. The wrist wave rides
+            // on the forearm's Y (twist along its length) so the palm sweeps
+            // left-right without the whole arm swinging.
+            var wave = Math.sin(wt * 8.5) * 0.45 * env * env;
+            tgt.rightForeArm = { x: -1.70 * env, y: wave, z: 0.20 * env };
             // Subtle spine counter-rotation so the shoulder can follow the
             // raised arm instead of fighting it (keeps the chest open).
             tgt.spine1 = {
               x: (tgt.spine1.x || 0),
-              y: (tgt.spine1.y || 0) + 0.04 * env,
-              z: (tgt.spine1.z || 0) - 0.03 * env
+              y: (tgt.spine1.y || 0) + 0.05 * env,
+              z: (tgt.spine1.z || 0) - 0.04 * env
             };
           }
         }
