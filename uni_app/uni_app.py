@@ -24556,11 +24556,56 @@ def alex_voice_overlay_panel() -> rx.Component:
                 50%     { transform: translate(-50%,-50%) scale(1.08); }
             }
 
+            /* SaaS-style backdrop: layered radial glows + soft grid + vignette.
+               The outer container is #090c10; these pseudo-elements paint on top. */
+            .alex-voice-stage {
+                position:absolute; inset:0; pointer-events:none; overflow:hidden;
+                z-index:0;
+            }
+            .alex-voice-stage::before {
+                content:"";
+                position:absolute; inset:0;
+                background:
+                    radial-gradient(1200px 700px at 50% -10%,
+                        rgba(0,140,210,0.18) 0%, rgba(0,140,210,0.05) 35%, transparent 70%),
+                    radial-gradient(900px 600px at 50% 120%,
+                        rgba(80,40,200,0.10) 0%, transparent 60%),
+                    linear-gradient(180deg, #070b13 0%, #0a0f18 50%, #060910 100%);
+            }
+            .alex-voice-stage::after {
+                content:"";
+                position:absolute; inset:0;
+                background-image:
+                    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+                    linear-gradient(0deg,  rgba(255,255,255,0.018) 1px, transparent 1px);
+                background-size: 48px 48px;
+                mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 40%, transparent 90%);
+                -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 40%, transparent 90%);
+                opacity:.55;
+            }
+
             #alex-orb { position:relative; width:220px; height:220px; flex-shrink:0; z-index:1; }
             /* When the 3D avatar is mounted we want the character to feel tall — give the orb
-               container more vertical breathing room so the 560px portrait canvas can render
-               without clipping the vstack gap. */
-            #alex-orb.alex-avatar-active { height:420px; margin-bottom:-40px; }
+               container more vertical breathing room so the 520px portrait canvas can render
+               and sit above the wall below. */
+            #alex-orb.alex-avatar-active {
+                height:440px;
+                width:340px;
+                margin-bottom:-96px;   /* pulls the wall up to meet the waist */
+            }
+            /* Subtle floor shadow directly under the avatar — reads as "standing on ground" */
+            #alex-orb.alex-avatar-active::after {
+                content:"";
+                position:absolute;
+                left:50%; bottom:78px;
+                transform:translateX(-50%);
+                width:220px; height:14px;
+                background:radial-gradient(ellipse at center,
+                    rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.18) 55%, transparent 80%);
+                pointer-events:none;
+                z-index:1;
+                filter: blur(3px);
+            }
 
             .orb-ring {
                 position:absolute; top:50%; left:50%;
@@ -24646,51 +24691,79 @@ def alex_voice_overlay_panel() -> rx.Component:
             }
 
             #alex-status {
-                font-size:1rem; font-weight:600; letter-spacing:.02em;
-                color:rgba(255,255,255,.75); margin:0; text-align:center;
+                font-size:0.82rem; font-weight:500; letter-spacing:.14em;
+                text-transform:uppercase;
+                color:rgba(180,205,235,.70); margin:0; text-align:center;
                 min-height:1.4em; transition: color .4s;
             }
+            /* The WALL — distinct panel that sits clearly BELOW the avatar.
+               Body's lower half tucks behind it (thanks to the canvas bottom mask
+               and a small -top overlap here). The text reads ON the wall. */
             #alex-transcript {
-                width:100%; max-width:min(620px, 94vw);
-                min-height:120px;
-                max-height:min(44vh, 440px);
+                width:100%; max-width:min(640px, 94vw);
+                min-height:140px;
+                max-height:min(42vh, 420px);
                 overflow-x:hidden; overflow-y:auto;
-                text-align:left; font-size:0.92rem; line-height:1.7;
-                color:rgba(228,232,238,0.94);
-                padding:20px 22px 18px;
-                margin:-140px 12px 0;        /* pull up under the avatar so legs fade into it */
-                border-radius:20px 20px 16px 16px;
+                text-align:left; font-size:0.93rem; line-height:1.65;
+                color:rgba(228,232,238,0.92);
+                padding:24px 26px 22px;
+                margin:0 12px 0;
+                border-radius:18px;
                 position:relative;
-                z-index:3;                    /* stay in front of the avatar canvas */
+                z-index:3;
                 background:
-                    linear-gradient(to bottom,
-                        rgba(40, 52, 70, 0.86) 0%,
-                        rgba(24, 32, 46, 0.92) 26%,
-                        rgba(18, 24, 34, 0.94) 100%);
-                border:1px solid rgba(255,255,255,0.10);
-                border-top:1px solid rgba(180, 220, 255, 0.22);
+                    linear-gradient(180deg,
+                        rgba(22,30,44,0.94) 0%,
+                        rgba(14,20,32,0.96) 100%);
+                border:1px solid rgba(110,160,220,0.18);
                 box-shadow:
-                    inset 0 1px 0 rgba(255,255,255,0.10),
-                    0 -30px 60px -20px rgba(0, 230, 255, 0.08),
-                    0 14px 34px rgba(0,0,0,0.45);
-                -webkit-backdrop-filter: blur(16px) saturate(1.15);
-                        backdrop-filter: blur(16px) saturate(1.15);
+                    inset 0 1px 0 rgba(255,255,255,0.06),
+                    0 -12px 40px -10px rgba(0, 140, 210, 0.12),
+                    0 18px 42px rgba(0,0,0,0.50),
+                    0 0 0 1px rgba(0,0,0,0.30);
+                -webkit-backdrop-filter: blur(18px) saturate(1.2);
+                        backdrop-filter: blur(18px) saturate(1.2);
                 box-sizing:border-box;
                 -webkit-overflow-scrolling:touch;
-                transition: opacity .4s;
+                transition: opacity .4s, border-color .4s, box-shadow .4s;
             }
-            /* Subtle glowing seam on top of the wall — reads as the wall's edge
-               catching light from the avatar above. */
+            /* Hard light seam on the top edge — makes the wall feel like a real
+               desk/podium facing catching the avatar's keylight. */
             #alex-transcript::before {
                 content:"";
                 position:absolute;
-                left:8%; right:8%; top:-1px; height:1px;
+                left:0; right:0; top:0; height:1px;
                 background:linear-gradient(90deg,
                     transparent 0%,
-                    rgba(180,220,255,0.55) 50%,
+                    rgba(120,200,255,0.35) 12%,
+                    rgba(200,230,255,0.85) 50%,
+                    rgba(120,200,255,0.35) 88%,
                     transparent 100%);
                 pointer-events:none;
-                border-radius:2px;
+                border-radius:18px 18px 0 0;
+            }
+            /* Ambient glow above the wall edge to suggest the character's glow
+               spilling onto the top surface. */
+            #alex-transcript::after {
+                content:"";
+                position:absolute;
+                left:10%; right:10%; top:-14px; height:14px;
+                background:radial-gradient(ellipse at center top,
+                    rgba(80,180,255,0.22) 0%, transparent 70%);
+                pointer-events:none;
+                filter: blur(2px);
+            }
+            /* When Alex is speaking, nudge the wall's accent color to cyan */
+            #alex-orb.ai-speaking ~ #alex-transcript {
+                border-color: rgba(0,220,255,0.28);
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.06),
+                    0 -12px 40px -10px rgba(0, 220, 255, 0.22),
+                    0 18px 42px rgba(0,0,0,0.50),
+                    0 0 0 1px rgba(0,0,0,0.30);
+            }
+            #alex-orb.user-speaking ~ #alex-transcript {
+                border-color: rgba(255,160,80,0.28);
             }
             #alex-transcript .alex-voice-user-line {
                 font-size:0.78rem; color:rgba(255,255,255,0.45);
@@ -24735,60 +24808,119 @@ def alex_voice_overlay_panel() -> rx.Component:
             #alex-transcript .alex-tap-skip-audio:hover {
                 border-color:rgba(255,255,255,0.35); color:rgba(255,255,255,0.92);
             }
+            /* End-call button — refined. Neutral "live session" color, shifts to
+               a soft crimson when actively live. Subtle inner highlight + outer
+               shadow for SaaS depth. */
             #alex-btn {
-                background:#1a1a1a; color:rgba(255,255,255,.85);
-                border:1.5px solid rgba(255,255,255,.15);
-                padding:13px 34px; font-size:1rem; font-weight:600;
-                border-radius:50px; cursor:pointer; letter-spacing:.04em;
-                transition: all .2s;
+                background:linear-gradient(180deg,
+                    rgba(255,255,255,0.06) 0%,
+                    rgba(255,255,255,0.02) 100%);
+                color:rgba(235,240,248,.95);
+                border:1px solid rgba(255,255,255,.14);
+                padding:12px 30px; font-size:.92rem; font-weight:600;
+                border-radius:10px; cursor:pointer;
+                letter-spacing:.04em;
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.08),
+                    0 1px 2px rgba(0,0,0,0.25),
+                    0 4px 12px rgba(0,0,0,0.18);
+                transition: all .2s ease;
             }
-            #alex-btn:hover { background:#2a2a2a; border-color:rgba(255,255,255,.3); }
-            #alex-btn.live  { background:#c0392b; border-color:#c0392b; color:white; }
+            #alex-btn:hover:not(:disabled) {
+                background:linear-gradient(180deg,
+                    rgba(255,255,255,0.10) 0%,
+                    rgba(255,255,255,0.04) 100%);
+                border-color:rgba(255,255,255,.24);
+                transform:translateY(-1px);
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.12),
+                    0 2px 4px rgba(0,0,0,0.28),
+                    0 8px 18px rgba(0,0,0,0.22);
+            }
+            #alex-btn.live  {
+                background:linear-gradient(180deg,#e04b3a 0%, #b5291e 100%);
+                border-color:rgba(255,255,255,0.14);
+                color:#fff;
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.22),
+                    0 2px 4px rgba(0,0,0,0.30),
+                    0 8px 20px rgba(200,50,30,0.35);
+            }
+            #alex-btn.live:hover { filter:brightness(1.05); }
+            #alex-btn:disabled { opacity:.55; cursor:wait; }
 
             #alex-type-row {
                 display:flex; align-items:stretch; gap:10px;
-                width:100%; max-width:360px; margin-top:4px;
-                opacity:0.45;
+                width:100%; max-width:420px; margin-top:4px;
+                opacity:0.55;
                 transition: opacity .25s;
             }
             #alex-type-input {
                 flex:1; min-width:0;
-                padding:12px 16px; font-size:.95rem;
-                border-radius:12px;
-                border:1.5px solid rgba(255,255,255,.18);
-                background:rgba(255,255,255,.06);
-                color:rgba(255,255,255,.92);
+                padding:12px 16px; font-size:.92rem;
+                border-radius:10px;
+                border:1px solid rgba(255,255,255,.12);
+                background:rgba(255,255,255,.03);
+                color:rgba(235,240,248,.95);
                 outline:none;
+                transition: border-color .15s, background .15s, box-shadow .15s;
             }
-            #alex-type-input::placeholder { color:rgba(255,255,255,.35); }
-            #alex-type-input:focus { border-color:rgba(0,238,255,.45); }
+            #alex-type-input::placeholder { color:rgba(180,195,215,.35); }
+            #alex-type-input:focus {
+                border-color:rgba(0,200,255,.45);
+                background:rgba(255,255,255,.05);
+                box-shadow:0 0 0 3px rgba(0,200,255,0.10);
+            }
             #alex-type-input:disabled { opacity:.55; cursor:not-allowed; }
             #alex-type-send {
-                padding:12px 20px; font-size:.9rem; font-weight:600;
-                border-radius:12px; border:none; cursor:pointer;
-                background:linear-gradient(135deg,#00c8ff,#0088cc);
-                color:#05080c; white-space:nowrap;
+                padding:12px 22px; font-size:.88rem; font-weight:600;
+                border-radius:10px; border:none; cursor:pointer;
+                background:linear-gradient(135deg,#00d4ff 0%, #0099e0 100%);
+                color:#051a26; white-space:nowrap;
+                letter-spacing:.02em;
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.28),
+                    0 2px 4px rgba(0,0,0,0.25),
+                    0 6px 16px rgba(0,170,220,0.25);
+                transition: filter .15s, transform .1s, box-shadow .2s;
             }
-            #alex-type-send:hover:not(:disabled) { filter:brightness(1.06); }
-            #alex-type-send:disabled { opacity:.4; cursor:not-allowed; filter:none; }
-            #alex-btn:disabled { opacity:.55; cursor:wait; }
+            #alex-type-send:hover:not(:disabled) {
+                filter:brightness(1.08);
+                transform:translateY(-1px);
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.32),
+                    0 3px 6px rgba(0,0,0,0.28),
+                    0 10px 22px rgba(0,170,220,0.32);
+            }
+            #alex-type-send:disabled { opacity:.4; cursor:not-allowed; filter:none; transform:none; }
+
             #alex-mic-toggle {
-                font-size:0.82rem; font-weight:600; letter-spacing:0.04em;
-                padding:9px 20px; border-radius:999px; cursor:pointer;
-                border:1.5px solid rgba(255,255,255,0.22);
-                background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.88);
-                transition: background .15s, border-color .15s, color .15s;
+                font-size:0.78rem; font-weight:600; letter-spacing:0.06em;
+                text-transform:uppercase;
+                padding:9px 18px; border-radius:999px; cursor:pointer;
+                border:1px solid rgba(255,255,255,0.14);
+                background:rgba(255,255,255,0.04);
+                color:rgba(220,230,245,0.85);
+                transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
             }
             #alex-mic-toggle:hover:not(:disabled) {
-                background:rgba(255,255,255,0.1); border-color:rgba(0,238,255,0.35);
+                background:rgba(255,255,255,0.08);
+                border-color:rgba(0,220,255,0.35);
+                color:rgba(240,250,255,0.98);
+                box-shadow: 0 0 0 3px rgba(0,220,255,0.08);
             }
             #alex-mic-toggle:disabled { opacity:0.35; cursor:not-allowed; }
             #alex-mic-toggle.alex-mic-muted {
-                border-color:rgba(255,120,100,0.45); color:rgba(255,200,180,0.95);
-                background:rgba(255,80,60,0.12);
+                border-color:rgba(255,120,100,0.45);
+                color:rgba(255,200,180,0.95);
+                background:rgba(255,80,60,0.10);
+                box-shadow: 0 0 0 3px rgba(255,120,100,0.08);
             }
         """),
         rx.center(
+            # Painted backdrop (gradients + subtle grid + vignette). Absolutely
+            # positioned so it doesn't participate in flex centering.
+            rx.el.div(class_name="alex-voice-stage"),
             rx.vstack(
                 # Animated orb — hosts the 3D avatar canvas mounted by alex_avatar.js
                 rx.el.div(
@@ -24799,24 +24931,28 @@ def alex_voice_overlay_panel() -> rx.Component:
                     id="alex-orb",
                     class_name="idle",
                 ),
-                # Reading pane doubles as the "wall" — its negative top margin pulls it up
-                # under the avatar so the character's legs fade into the wall, and the
-                # transcript text is what reads on the wall itself.
+                # The "wall" — a distinct SaaS panel below the body. The avatar canvas
+                # fades to transparent near the waist so the character reads as standing
+                # behind this surface; the transcript text lives ON the wall.
                 rx.el.div(id="alex-transcript"),
                 # Status sits below the wall so it isn't hidden by the overlap.
                 rx.el.p("Connecting…", id="alex-status"),
-                rx.el.button(
-                    "Mute mic",
-                    id="alex-mic-toggle",
-                    type="button",
-                    disabled=True,
-                    title="Stop auto-listening — type and hear Alex without the mic cutting in",
-                ),
-                # Ends call — click handler attached by alex_voice.js
-                rx.el.button(
-                    "Connecting…",
-                    id="alex-btn",
-                    disabled=True,
+                rx.el.hstack(
+                    rx.el.button(
+                        "Mute mic",
+                        id="alex-mic-toggle",
+                        type="button",
+                        disabled=True,
+                        title="Stop auto-listening — type and hear Alex without the mic cutting in",
+                    ),
+                    # Ends call — click handler attached by alex_voice.js
+                    rx.el.button(
+                        "Connecting…",
+                        id="alex-btn",
+                        disabled=True,
+                    ),
+                    spacing="3",
+                    align="center",
                 ),
                 rx.el.div(
                     rx.el.input(
@@ -24830,25 +24966,28 @@ def alex_voice_overlay_panel() -> rx.Component:
                     id="alex-type-row",
                 ),
                 rx.el.p(
-                    f"{BUSINESS_NAME} — your voice study space. Take a breath, then say what's on your mind.",
+                    f"{BUSINESS_NAME} — your voice study space.",
                     style={
-                        "color": "rgba(255,236,220,0.42)",
-                        "font-size": ".78rem",
-                        "margin-top": "10px",
+                        "color": "rgba(180,200,225,0.38)",
+                        "font-size": ".72rem",
+                        "letter-spacing": ".08em",
+                        "text-transform": "uppercase",
+                        "margin-top": "2px",
                         "max-width": "340px",
                         "text-align": "center",
                         "line-height": "1.5",
                     },
                 ),
-                spacing="5",
+                spacing="4",
                 align="center",
                 padding_y="0",
-                style={"gap": "28px"},
+                style={"gap": "18px", "position": "relative", "z_index": "1"},
             ),
             width="100%",
             height="100%",
             min_height="100%",
-            background="#090c10",
+            background="#070a12",
+            position="relative",
         ),
                 width="100%",
                 height="100%",

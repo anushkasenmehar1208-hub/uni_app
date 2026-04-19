@@ -176,7 +176,8 @@
         "import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';",
         "import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';",
         "import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';",
-        "window.__alexAvatarTHREE = { THREE: THREE, GLTFLoader: GLTFLoader, KTX2Loader: KTX2Loader, MeshoptDecoder: MeshoptDecoder };",
+        "import { OrbitControls } from 'three/addons/controls/OrbitControls.js';",
+        "window.__alexAvatarTHREE = { THREE: THREE, GLTFLoader: GLTFLoader, KTX2Loader: KTX2Loader, MeshoptDecoder: MeshoptDecoder, OrbitControls: OrbitControls };",
         "window.dispatchEvent(new Event('alex-avatar-three-ready'));"
       ].join('\n');
       boot.onerror = function (e) { reject(new Error('three module load error')); };
@@ -222,16 +223,21 @@
       '  position: absolute;',
       '  left: 50%;',
       '  top: 50%;',
-      '  transform: translate(-50%, -46%);',
-      '  width: 340px; height: 560px;',
+      '  transform: translate(-50%, -58%);',
+      '  width: 320px; height: 520px;',
       '  max-width: 92vw;',
-      '  pointer-events: none;',
+      '  pointer-events: auto;',
+      '  cursor: grab;',
       '  opacity: 0;',
       '  transition: opacity .6s ease;',
       '  z-index: 2;',
-      '  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 62%, rgba(0,0,0,0.6) 78%, transparent 94%);',
-      '          mask-image: linear-gradient(to bottom, black 0%, black 62%, rgba(0,0,0,0.6) 78%, transparent 94%);',
+      '  touch-action: none;',
+      // Hard-ish fade at the waist so the bottom half of the body tucks neatly behind
+      // the wall below, rather than bleeding onto the transcript text.
+      '  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 68%, rgba(0,0,0,0.35) 82%, transparent 92%);',
+      '          mask-image: linear-gradient(to bottom, black 0%, black 68%, rgba(0,0,0,0.35) 82%, transparent 92%);',
       '}',
+      '#' + canvasId + ':active { cursor: grabbing; }',
       '#' + canvasId + '.alex-avatar-ready { opacity: 1; }',
       // Once avatar is ready, strongly dim the old orb core so only a soft halo remains around the avatar.
       '#' + targetId + '.alex-avatar-active .orb-core { opacity: .15; }',
@@ -279,6 +285,7 @@
     var GLTFLoader = mods.GLTFLoader;
     var KTX2Loader = mods.KTX2Loader;
     var MeshoptDecoder = mods.MeshoptDecoder;
+    var OrbitControls = mods.OrbitControls;
 
     var scene = new THREE.Scene();
     scene.background = null; // transparent
@@ -316,11 +323,16 @@
     var rig = {
       root: null,
       head: null,
+      bones: {},             // named bones: leftArm, rightArm, leftForeArm, rightForeArm, leftHand, rightHand, spine, spine1, spine2, neck
+      rest: {},              // captured rest-pose rotations (Euler copies) per bone key
       morphMeshes: [],       // meshes with morphTargetDictionary
       jawOpenKeys: [],       // preferred morph target names per mesh for jaw
       viseme: {},            // mesh → index of best "aa/open" viseme
       currentState: 'idle',
       targetState: 'idle',
+      prevState: 'idle',
+      stateEnteredAt: 0,     // rig.t when the current target state began
+      greetT: -1,            // >=0 while a "hi" wave is playing
       loudness: 0,
       t: 0,
       restY: 0               // avatar.position.y after auto-centering; breathing anim adds on top
@@ -398,14 +410,70 @@
         }
         if (node.isBone || node.type === 'Bone') {
           var nm = (node.name || '').toLowerCase();
-          if (!rig.head && (nm === 'head' || nm.indexOf('head') !== -1)) {
+          if (!rig.head && (nm === 'head' || nm === 'mixamorig:head')) {
             rig.head = node;
           }
+          // RPM / Mixamo bone map — capture the upper body bones we need for posing
+          // and gesture animation. Names vary (`LeftArm`, `mixamorig:LeftArm`, `arm_l`),
+          // so we test suffixes.
+          function pick(key, tests) {
+            if (rig.bones[key]) return;
+            for (var ti = 0; ti < tests.length; ti++) {
+              if (nm === tests[ti] || nm.indexOf(tests[ti]) !== -1) {
+                rig.bones[key] = node;
+                return;
+              }
+            }
+          }
+          pick('leftShoulder',  ['leftshoulder']);
+          pick('rightShoulder', ['rightshoulder']);
+          pick('leftArm',       ['leftarm']);
+          pick('rightArm',      ['rightarm']);
+          pick('leftForeArm',   ['leftforearm']);
+          pick('rightForeArm',  ['rightforearm']);
+          pick('leftHand',      ['lefthand']);
+          pick('rightHand',     ['righthand']);
+          pick('neck',          ['neck']);
+          pick('spine2',        ['spine2']);
+          pick('spine1',        ['spine1']);
+          pick('spine',         ['spine']);
+          pick('hips',          ['hips']);
         }
       });
 
       rig.root = avatar;
       scene.add(avatar);
+
+      // ── Apply natural rest pose (fix RPM's default T-pose) ──────────────
+      // Verified empirically against the Wolf3D/RPM bind pose: the arm bone's
+      // local +X axis rotates it from "straight out to the side" down toward
+      // the body's side. +1.25 rad ≈ 72° of drop per arm puts hands alongside
+      // the thighs; a tiny +Y splay keeps the arms from clipping the hips.
+      (function applyRestPose() {
+        function setRot(key, x, y, z) {
+          var b = rig.bones[key];
+          if (!b) return;
+          b.rotation.set(x, y, z);
+        }
+        // Upper arms: the main "bring T-pose arms down" rotation.
+        setRot('leftArm',       1.25,  0.10,  0.00);
+        setRot('rightArm',      1.25, -0.10,  0.00);
+        // Forearms: a subtle relaxed bend so hands sit just in front of the
+        // thighs instead of locked flat.
+        setRot('leftForeArm',   0.20, -0.10,  0.00);
+        setRot('rightForeArm',  0.20,  0.10,  0.00);
+        // Hands: neutral (the avatar's bind hand shape is already relaxed).
+        setRot('leftHand',      0.00,  0.00,  0.00);
+        setRot('rightHand',     0.00,  0.00,  0.00);
+
+        // Record rest rotations so animations can modulate AROUND them rather
+        // than overwriting (otherwise the arms snap back to T-pose).
+        Object.keys(rig.bones).forEach(function (k) {
+          var b = rig.bones[k];
+          if (!b) return;
+          rig.rest[k] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
+        });
+      })();
 
       // Auto-frame: normalize the avatar to a known scale, then frame the face tightly.
       // Handles full-body rigs (RPM, lots of bones) and head-only scans (facecap, no bones).
@@ -498,18 +566,52 @@
         // around it rather than overwriting the centering back to ~0.
         rig.restY = avatar.position.y;
 
+        // Stash framing info on rig so OrbitControls can use the same focal point.
+        rig.focus = new THREE.Vector3(0, headY, 0);
+        rig.focusDist = dist;
+
         log('auto-framed — bones:', boneCount, 'aspectTall:', aspectTall.toFixed(2),
             'isFullBody:', isFullBody, 'headY:', headY.toFixed(3),
             'frameHeight:', frameHeight.toFixed(3), 'dist:', dist.toFixed(3));
       } catch (e) {
         warn('auto-frame failed, using defaults:', e && e.message);
       }
+
+      // ── OrbitControls — let the user rotate the character ─────────────────
+      // Constrained: no zoom/pan, limited yaw (±55°) and pitch (near horizontal).
+      try {
+        if (OrbitControls) {
+          var controls = new OrbitControls(camera, canvas);
+          controls.target.copy(rig.focus || new THREE.Vector3(0, 1.5, 0));
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.08;
+          controls.enableZoom = false;
+          controls.enablePan = false;
+          controls.rotateSpeed = 0.6;
+          // Vertical limits: ~70°–100° polar (just above & below eye line)
+          controls.minPolarAngle = Math.PI * 0.38;
+          controls.maxPolarAngle = Math.PI * 0.56;
+          // Horizontal limits: ±55° around the front
+          controls.minAzimuthAngle = -Math.PI * 0.30;
+          controls.maxAzimuthAngle =  Math.PI * 0.30;
+          controls.update();
+          rig.controls = controls;
+          try { window.AlexAvatar.__controls = controls; } catch (e) {}
+        }
+      } catch (e) {
+        warn('OrbitControls init failed:', e && e.message);
+      }
+
       // Expose rig for debugging (window.AlexAvatar.__rig).
       try { window.AlexAvatar = window.AlexAvatar || {}; window.AlexAvatar.__rig = rig; window.AlexAvatar.__camera = camera; } catch (e) {}
-      log('avatar loaded — morph meshes:', rig.morphMeshes.length, 'head bone:', !!rig.head);
+      log('avatar loaded — morph meshes:', rig.morphMeshes.length, 'head bone:', !!rig.head,
+          'arm bones:', !!(rig.bones.leftArm && rig.bones.rightArm));
 
       canvas.classList.add('alex-avatar-ready');
       orb.classList.add('alex-avatar-active');
+
+      // Trigger a welcome wave once the avatar is on-screen.
+      rig.greetT = 0;
 
       startObservers();
       startLoop();
@@ -522,19 +624,52 @@
     function startObservers() {
       rig.currentState = (orb.className || 'idle').trim().split(/\s+/)[0] || 'idle';
       rig.targetState = rig.currentState;
+      rig.prevState = rig.currentState;
       var obs = new MutationObserver(function () {
         var cls = (orb.className || '').trim().split(/\s+/);
         // Pick the first known state class.
         var known = ['idle', 'ai-speaking', 'user-speaking', 'thinking'];
         for (var i = 0; i < cls.length; i++) {
           if (known.indexOf(cls[i]) !== -1) {
-            rig.targetState = cls[i];
+            if (rig.targetState !== cls[i]) {
+              rig.prevState = rig.targetState;
+              rig.targetState = cls[i];
+              rig.stateEnteredAt = rig.t;
+              // Wave when we transition INTO ai-speaking from idle (likely greeting/opening line).
+              if (cls[i] === 'ai-speaking' && rig.prevState === 'idle') {
+                rig.greetT = 0;
+              }
+            }
             return;
           }
         }
         rig.targetState = 'idle';
       });
       obs.observe(orb, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    // ── Gesture helpers ───────────────────────────────────────────────────
+    // Each gesture function returns a DELTA euler {x,y,z} that gets ADDED to the
+    // rest rotation of the bone. Keeping them additive means transitions between
+    // gestures just blend with gravity-like smoothing (lerp below).
+    function zero() { return { x: 0, y: 0, z: 0 }; }
+
+    // How the loop applies gestures: we compute target-state per-bone deltas,
+    // then lerp the current applied delta toward them every frame. That gives
+    // smooth hand-off between idle/speaking/waving without the arms popping.
+    var applied = {
+      leftArm:      zero(), leftForeArm:  zero(), leftHand:  zero(),
+      rightArm:     zero(), rightForeArm: zero(), rightHand: zero(),
+      spine:        zero(), neck:         zero()
+    };
+    function lerpApply(key, tx, ty, tz, k) {
+      var a = applied[key];
+      a.x += (tx - a.x) * k;
+      a.y += (ty - a.y) * k;
+      a.z += (tz - a.z) * k;
+      var b = rig.bones[key];
+      var r = rig.rest[key];
+      if (b && r) b.rotation.set(r.x + a.x, r.y + a.y, r.z + a.z);
     }
 
     var clock = new THREE.Clock();
@@ -569,6 +704,97 @@
           }
         }
 
+        // ── Arm + torso gestures ────────────────────────────────────────────
+        // Compute target deltas per-bone for the current state.
+        var t = rig.t;
+        var tgt = {
+          leftArm: zero(), leftForeArm: zero(), leftHand: zero(),
+          rightArm: zero(), rightForeArm: zero(), rightHand: zero(),
+          spine: zero(), neck: zero()
+        };
+
+        // Gesture deltas are ADDITIVE to the rest rotation, so small values keep
+        // motion subtle. With rest.leftArm.x = +1.25 (arm hanging down), negative
+        // X delta lifts the arm forward; positive Y splays outward.
+        if (rig.targetState === 'thinking') {
+          // Quiet head-tilt + a faint hand-up, as if mulling something over.
+          tgt.rightArm      = { x: -0.35, y:  0.15, z:  0.10 };
+          tgt.rightForeArm  = { x:  0.80, y:  0.25, z:  0.00 };
+          tgt.rightHand     = { x:  0.15, y:  0.00, z:  0.00 };
+          tgt.neck          = { x:  0.04, y:  0.06, z:  0.00 };
+        } else if (rig.targetState === 'ai-speaking') {
+          // Teaching gestures: both arms gesture forward (negative X delta lifts
+          // them toward horizontal) with alternating side-to-side splay (Y).
+          // Scale with loudness so louder speech = bigger hand-talking.
+          var l = rig.loudness;
+          var amp = 0.35 + 0.65 * l;
+          var s1 = Math.sin(t * 1.8);
+          var s2 = Math.sin(t * 1.3 + 1.0);
+          var s3 = Math.sin(t * 2.1 + 0.6);
+          // Upper arms: lift 20–60° forward from rest, alternate left/right.
+          tgt.leftArm   = { x: -0.20 - 0.30 * amp * (0.6 + 0.4 * s1),
+                            y:  0.10 * s2 * amp, z:  0.00 };
+          tgt.rightArm  = { x: -0.20 - 0.30 * amp * (0.6 + 0.4 * s2),
+                            y: -0.10 * s1 * amp, z:  0.00 };
+          // Forearms: open outward when speaking emphatically.
+          tgt.leftForeArm  = { x:  0.40 + 0.40 * amp, y:  0.30 * s3 * amp, z:  0.00 };
+          tgt.rightForeArm = { x:  0.40 + 0.40 * amp, y: -0.30 * s1 * amp, z:  0.00 };
+          tgt.leftHand  = { x:  0.05 * s2, y:  0.05 * s3, z:  0.00 };
+          tgt.rightHand = { x:  0.05 * s3, y: -0.05 * s2, z:  0.00 };
+          tgt.spine     = { x:  0.00, y:  0.05 * Math.sin(t * 0.7), z: 0.00 };
+        } else if (rig.targetState === 'user-speaking') {
+          // Attentive listening — very small sway, arms stay at rest.
+          tgt.spine = { x: 0.00, y: 0.03 * Math.sin(t * 0.6), z: 0.00 };
+        } else {
+          // Idle — arms drift with breath, tiny side-to-side sway only.
+          tgt.leftArm  = { x:  0.00, y:  0.02 * Math.sin(t * 0.6),       z: 0.00 };
+          tgt.rightArm = { x:  0.00, y: -0.02 * Math.sin(t * 0.6 + 0.3), z: 0.00 };
+        }
+
+        // Wave gesture: plays for ~2.2s from rig.greetT=0. Right hand raises
+        // up and out, forearm waves left-right. Overrides the right-side gesture
+        // targets while active.
+        if (rig.greetT >= 0) {
+          rig.greetT += dt;
+          var wd = rig.greetT;
+          var env;
+          if (wd < 0.45)       env = wd / 0.45;
+          else if (wd < 1.80)  env = 1.0;
+          else if (wd < 2.25)  env = 1.0 - (wd - 1.80) / 0.45;
+          else { env = 0; rig.greetT = -1; }
+          if (env > 0) {
+            // Raise the right upper arm up and outward:
+            //   -1.05 X delta brings arm from rest (hanging, x=+1.25) up to ~+0.20
+            //   +0.40 Y splays it outward from the torso
+            tgt.rightArm = {
+              x: -1.05 * env,
+              y:  0.40 * env,
+              z:  0.00
+            };
+            // Forearm bent up so hand is overhead, oscillating for the wave.
+            tgt.rightForeArm = {
+              x:  0.80 * env,
+              y:  0.15 * env + 0.55 * Math.sin(wd * 10.0) * env,
+              z:  0.00
+            };
+            tgt.rightHand = {
+              x: 0.00,
+              y: 0.35 * Math.sin(wd * 10.0) * env,
+              z: 0.00
+            };
+            if (rig.head) {
+              rig.head.rotation.z = (rig.head.rotation.z || 0) + 0.08 * env;
+            }
+          }
+        }
+
+        // Smooth-apply every bone delta.
+        var k = Math.min(1, dt * 6.0);        // ~6Hz follow rate
+        Object.keys(tgt).forEach(function (key) {
+          var v = tgt[key];
+          lerpApply(key, v.x, v.y, v.z, k);
+        });
+
         // Lip-sync: drive jaw morph from loudness, but only while speaking.
         // Subtle range — real humans barely open their jaw while talking. Cap ≈0.28 keeps
         // the mouth natural instead of cartoon-wide.
@@ -587,6 +813,9 @@
           m.morphTargetInfluences[idx] = cur + (targetMouth - cur) * 0.35;
         }
 
+        if (rig.controls) {
+          try { rig.controls.update(); } catch (e) {}
+        }
         renderer.render(scene, camera);
       });
     }
@@ -606,11 +835,14 @@
   }
 
   // Expose a tiny debug API.
-  window.AlexAvatar = {
-    version: '0.2.0',
-    isBooted: function (targetId) {
-      var key = targetId || window.ALEX_AVATAR_TARGET_ID || 'alex-orb';
-      return !!(window.__alexAvatarBootedTargets && window.__alexAvatarBootedTargets[key]);
-    }
+  window.AlexAvatar = window.AlexAvatar || {};
+  window.AlexAvatar.version = '0.3.0';
+  window.AlexAvatar.isBooted = function (targetId) {
+    var key = targetId || window.ALEX_AVATAR_TARGET_ID || 'alex-orb';
+    return !!(window.__alexAvatarBootedTargets && window.__alexAvatarBootedTargets[key]);
+  };
+  // Manual wave trigger — useful for testing + welcome moments.
+  window.AlexAvatar.wave = function () {
+    try { if (window.AlexAvatar.__rig) window.AlexAvatar.__rig.greetT = 0; } catch (e) {}
   };
 })();
