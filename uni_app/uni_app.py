@@ -24696,6 +24696,23 @@ def alex_voice_overlay_panel() -> rx.Component:
                 color:rgba(180,205,235,.70); margin:0; text-align:center;
                 min-height:1.4em; transition: color .4s;
             }
+            /* When the transcript has no content yet (early "Connecting…"
+               state, or after the call ends), collapse the panel so users
+               don't see an empty floating rectangle — that always looks
+               unfinished in a SaaS product. The panel re-expands with a
+               soft transition the moment text streams in. */
+            #alex-transcript:empty {
+                min-height:0 !important;
+                max-height:0 !important;
+                padding:0 26px !important;
+                margin:0 12px !important;
+                opacity:0 !important;
+                border-color:transparent !important;
+                box-shadow:none !important;
+                pointer-events:none;
+            }
+            #alex-transcript:empty::before,
+            #alex-transcript:empty::after { display:none !important; }
             /* The WALL — distinct panel that sits clearly BELOW the avatar.
                Body's lower half tucks behind it (thanks to the canvas bottom mask
                and a small -top overlap here). The text reads ON the wall. */

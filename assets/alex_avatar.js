@@ -416,14 +416,15 @@
           node.castShadow = false;
           node.receiveShadow = false;
           node.frustumCulled = false;
-          // ── Retint the shirt to solid black ─────────────────────────────
+          // ── Retint the shirt to a soft mid-gray ─────────────────────────
           // The RPM avatar ships with a dark-blue polo + printed "Alex" logo
           // baked into `Wolf3D_Outfit_Top`. Replace the albedo/roughness/
-          // metalness texture maps with a plain black matte fabric so the
-          // outfit matches the reference photo (black button-up). The mesh
-          // geometry (polo silhouette + short sleeves) is fixed in the GLB
-          // so the wearing style stays polo — but the color and the logo
-          // removal match the target look.
+          // metalness texture maps with a plain matte gray fabric so the
+          // outfit reads as a clean modern gray shirt. The mesh geometry
+          // (polo silhouette + short sleeves) is fixed in the GLB — full
+          // sleeves are added separately below as cylinder meshes parented
+          // to the upper-arm and forearm bones (search for
+          // `addProceduralSleeves`).
           try {
             var mats = Array.isArray(node.material) ? node.material : [node.material];
             for (var mi = 0; mi < mats.length; mi++) {
@@ -433,10 +434,11 @@
                 if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
                 if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
                 if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
-                if (mat.color && mat.color.set) mat.color.set(0x0b0b0d);
-                mat.roughness = 0.55;
+                if (mat.color && mat.color.set) mat.color.set(0x6e7177);
+                mat.roughness = 0.62;
                 mat.metalness = 0.02;
                 mat.needsUpdate = true;
+                rig.shirtColorHex = 0x6e7177;
               }
             }
           } catch (e) { warn('shirt retint failed', e); }
@@ -536,6 +538,94 @@
             y: rig.head.rotation.y,
             z: rig.head.rotation.z
           };
+        }
+      })();
+
+      // ── Procedural full sleeves ─────────────────────────────────────────
+      // The base GLB has a short-sleeve polo. We can't change geometry of
+      // baked vertices, so we attach lightweight tapered cylinders to the
+      // upper-arm and forearm bones. Because they're parented to the bones,
+      // they follow every pose / gesture / breathing animation perfectly.
+      // The cylinders are slightly larger in radius than the underlying skin
+      // arm so the skin is fully covered (looks like a fitted long sleeve).
+      (function addProceduralSleeves() {
+        try {
+          var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0x6e7177;
+          var sleeveMat = new THREE.MeshStandardMaterial({
+            color: shirtCol,
+            roughness: 0.62,
+            metalness: 0.02
+          });
+
+          // Cylinder oriented along the bone's actual "down the bone" axis,
+          // computed from the child bone's local position relative to the
+          // parent. This is robust to whatever local axis convention the
+          // skeleton uses (Mixamo/RPM, Y-up bones, etc.). We translate the
+          // geometry so the cylinder's TOP sits at the bone's origin.
+          function buildSegment(bone, child, length, rTop, rBot) {
+            if (!bone || !(length > 0)) return null;
+            var geom = new THREE.CylinderGeometry(rTop, rBot, length, 18, 1, false);
+            geom.translate(0, length / 2, 0);
+            var mesh = new THREE.Mesh(geom, sleeveMat);
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+            mesh.frustumCulled = false;
+            mesh.name = 'AlexSleeve';
+            if (child && child.position) {
+              var dir = child.position.clone().normalize();
+              var q = new THREE.Quaternion();
+              q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+              mesh.quaternion.copy(q);
+            }
+            bone.add(mesh);
+            return mesh;
+          }
+
+          function lengthToChild(parent, child) {
+            if (!parent || !child) return 0;
+            return child.position.length();
+          }
+
+          // Upper-arm sleeve: from shoulder joint to elbow.
+          var upperLenL = lengthToChild(rig.bones.leftArm,  rig.bones.leftForeArm)  || 0.27;
+          var upperLenR = lengthToChild(rig.bones.rightArm, rig.bones.rightForeArm) || 0.27;
+          // Forearm sleeve: from elbow to wrist (slightly tapered to the wrist).
+          var lowerLenL = lengthToChild(rig.bones.leftForeArm,  rig.bones.leftHand)  || 0.25;
+          var lowerLenR = lengthToChild(rig.bones.rightForeArm, rig.bones.rightHand) || 0.25;
+
+          // Radii in *local bone space* — bones inherit avatar scale, so
+          // these are already in the same units as the other geometry.
+          var R_SHOULDER = 0.052;
+          var R_ELBOW    = 0.044;
+          var R_WRIST    = 0.038;
+
+          buildSegment(rig.bones.leftArm,      rig.bones.leftForeArm,  upperLenL, R_SHOULDER, R_ELBOW);
+          buildSegment(rig.bones.rightArm,     rig.bones.rightForeArm, upperLenR, R_SHOULDER, R_ELBOW);
+          buildSegment(rig.bones.leftForeArm,  rig.bones.leftHand,     lowerLenL, R_ELBOW,    R_WRIST);
+          buildSegment(rig.bones.rightForeArm, rig.bones.rightHand,    lowerLenR, R_ELBOW,    R_WRIST);
+
+          // Small shoulder caps — soften the seam where the shirt's short
+          // sleeve ends and the new long sleeve begins. A flattened sphere
+          // at the shoulder joint blends the two surfaces visually.
+          function buildShoulderCap(bone, radius) {
+            if (!bone) return;
+            var g = new THREE.SphereGeometry(radius, 18, 12);
+            var m = new THREE.Mesh(g, sleeveMat);
+            m.scale.set(1.0, 0.55, 1.0);
+            m.position.set(0, 0, 0);
+            m.castShadow = false;
+            m.receiveShadow = false;
+            m.frustumCulled = false;
+            m.name = 'AlexSleeveCap';
+            bone.add(m);
+          }
+          buildShoulderCap(rig.bones.leftArm,  R_SHOULDER * 1.05);
+          buildShoulderCap(rig.bones.rightArm, R_SHOULDER * 1.05);
+
+          log('procedural sleeves attached — upperL/R:', upperLenL.toFixed(3), upperLenR.toFixed(3),
+              'lowerL/R:', lowerLenL.toFixed(3), lowerLenR.toFixed(3));
+        } catch (eSl) {
+          warn('procedural sleeves failed:', eSl && eSl.message);
         }
       })();
 

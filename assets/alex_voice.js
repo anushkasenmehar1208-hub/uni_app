@@ -409,15 +409,54 @@
         }
       } catch (ePh) {}
     });
-    // When tab comes back into focus: resume a suspended AudioContext so
-    // MediaRecorder can restart cleanly. Browsers suspend audio in bg tabs.
+    // Tab switch policy:
+    //   - Tab hidden  → pause Alex's voice playback so the user doesn't hear
+    //     the AI talking in the background while they're working in another
+    //     tab. We pause (don't dispose) so the clip can resume seamlessly.
+    //   - Tab visible → resume any paused playback and resume a suspended
+    //     AudioContext so MediaRecorder/STT keeps working.
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) return;
+      if (document.hidden) {
+        try {
+          if (currentAudio && !currentAudio.paused) {
+            currentAudio.__alexBgPaused = true;
+            currentAudio.pause();
+          }
+        } catch (eHa) {}
+        try {
+          if (alexStreamActiveAudio && !alexStreamActiveAudio.paused) {
+            alexStreamActiveAudio.__alexBgPaused = true;
+            alexStreamActiveAudio.pause();
+          }
+        } catch (eHb) {}
+        try { setStatus('Paused — return to this tab to keep listening'); } catch (eHs) {}
+        return;
+      }
       try {
         if (audioContext && audioContext.state === 'suspended') {
           audioContext.resume().catch(function () {});
         }
       } catch (eVis) {}
+      try {
+        if (currentAudio && currentAudio.__alexBgPaused) {
+          currentAudio.__alexBgPaused = false;
+          var p1 = currentAudio.play();
+          if (p1 && p1.catch) p1.catch(function () {});
+        }
+      } catch (eRa) {}
+      try {
+        if (alexStreamActiveAudio && alexStreamActiveAudio.__alexBgPaused) {
+          alexStreamActiveAudio.__alexBgPaused = false;
+          var p2 = alexStreamActiveAudio.play();
+          if (p2 && p2.catch) p2.catch(function () {});
+        }
+      } catch (eRb) {}
+      try {
+        if (alexStreamActiveAudio || (currentAudio && !currentAudio.paused)) {
+          setOrbState('ai-speaking');
+          setStatus('Alex is speaking...');
+        }
+      } catch (eRs) {}
     });
   }
   installPageHideEndVoiceOnce();
