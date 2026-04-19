@@ -362,7 +362,10 @@
       prevState: 'idle',
       stateEnteredAt: 0,     // rig.t when the current target state began
       greetT: -1,            // kept for back-compat — unused (old arm wave removed)
-      nodT: -1,              // >=0 while a head-nod greeting is playing
+      waveT: -1,             // >=0 while a hand-wave greeting is playing
+      nodT: -1,              // kept for back-compat with earlier head-only fallback
+      teachT: -1,            // >=0 while an "open-palms teaching" emphasis gesture is playing
+      teachNext: 3.5,        // rig.t at which the next teaching gesture should auto-fire (while ai-speaking)
       loudness: 0,
       t: 0,
       restY: 0               // avatar.position.y after auto-centering; breathing anim adds on top
@@ -418,6 +421,30 @@
           node.castShadow = false;
           node.receiveShadow = false;
           node.frustumCulled = false;
+          // ── Retint the shirt to solid black ─────────────────────────────
+          // The RPM avatar ships with a dark-blue polo + printed "Alex" logo
+          // baked into `Wolf3D_Outfit_Top`. Replace the albedo/roughness/
+          // metalness texture maps with a plain black matte fabric so the
+          // outfit matches the reference photo (black button-up). The mesh
+          // geometry (polo silhouette + short sleeves) is fixed in the GLB
+          // so the wearing style stays polo — but the color and the logo
+          // removal match the target look.
+          try {
+            var mats = Array.isArray(node.material) ? node.material : [node.material];
+            for (var mi = 0; mi < mats.length; mi++) {
+              var mat = mats[mi];
+              if (mat && mat.name === 'Wolf3D_Outfit_Top') {
+                if (mat.map)          { mat.map.dispose();          mat.map = null; }
+                if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
+                if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
+                if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
+                if (mat.color && mat.color.set) mat.color.set(0x0b0b0d);
+                mat.roughness = 0.55;
+                mat.metalness = 0.02;
+                mat.needsUpdate = true;
+              }
+            }
+          } catch (e) { warn('shirt retint failed', e); }
           if (node.morphTargetDictionary && node.morphTargetInfluences) {
             rig.morphMeshes.push(node);
             // Pick best available jaw/open morph by priority.
@@ -658,11 +685,10 @@
       canvas.classList.add('alex-avatar-ready');
       orb.classList.add('alex-avatar-active');
 
-      // Trigger a subtle welcome nod once the avatar is on-screen (pure head
-      // animation, no arm movement — the arm-based wave is intentionally
-      // disabled because the RPM upper-arm bone axes produce a sideways
-      // splay instead of a natural raised-hand wave).
-      rig.nodT = 0;
+      // Trigger a welcome hand-wave once the avatar is on-screen. The wave
+      // uses bone-axis deltas verified empirically against this specific RPM
+      // rig (see the wave block below for axis notes).
+      rig.waveT = 0;
 
       startObservers();
       startLoop();
@@ -686,11 +712,20 @@
               rig.prevState = rig.targetState;
               rig.targetState = cls[i];
               rig.stateEnteredAt = rig.t;
-              // Head-nod greeting when we transition INTO ai-speaking from
-              // idle (likely greeting / opening line). Head-only so it
-              // cannot produce the broken arm-splay the old wave caused.
+              // Hand-wave greeting when we transition INTO ai-speaking from
+              // idle (likely the opening line / hello moment).
               if (cls[i] === 'ai-speaking' && rig.prevState === 'idle') {
-                rig.nodT = 0;
+                rig.waveT = 0;
+              }
+              // Whenever we enter ai-speaking, push the first auto-teaching
+              // gesture a few seconds out so it doesn't overlap the wave
+              // greeting; also clear any stuck in-flight teach timer.
+              if (cls[i] === 'ai-speaking') {
+                rig.teachT = -1;
+                rig.teachNext = rig.t + 4.5;
+              } else {
+                // Leaving ai-speaking: cancel any pending/in-flight teach.
+                rig.teachT = -1;
               }
             }
             return;
@@ -798,19 +833,61 @@
           tgt.leftArm   = { x:  0.00, y:  0.01, z:  0.00 };
           tgt.rightArm  = { x:  0.00, y: -0.01, z:  0.00 };
         } else if (rig.targetState === 'ai-speaking') {
-          // Speaking: torso + shoulder sway that intensifies with loudness.
-          // Arms stay at rest (no elbow bends) — motion comes from the upper
-          // body rocking slightly, which reads as natural "presenter energy".
+          // Speaking: torso + shoulder sway plus a gentle forearm "teaching
+          // gesture" — forearms breathe up and down subtly (small X delta),
+          // scaled with loudness, to mimic a standing presenter emphasising
+          // points with their hands. Magnitudes are tuned to stay BELOW the
+          // akimbo threshold (empirically ~0.7 delta on forearm X = elbow-out
+          // on this RPM rig; we stay at or under 0.30).
           var l = rig.loudness;
-          var amp = 0.4 + 0.6 * l;                  // 0.4 when silent → 1.0 at peak
-          var swayYaw  = Math.sin(t * 0.9) * 0.05 * amp;   // torso yaw (look side to side)
-          var swayRoll = Math.sin(t * 1.4) * 0.02 * amp;   // slight shoulder rock
-          tgt.spine    = { x: 0.00, y: swayYaw,   z: swayRoll };
-          tgt.spine1   = { x: 0.00, y: swayYaw * 0.4, z: swayRoll * 0.3 };
-          // Tiny counter-sway on the shoulders so the arms don't feel rigid —
-          // applied on Y only (outward splay axis), small amplitude.
-          tgt.leftArm  = { x: 0.00, y:  0.03 * Math.sin(t * 1.1) * amp, z: 0.00 };
+          var amp = 0.4 + 0.6 * l;                         // 0.4 silent → 1.0 peak
+          var swayYaw  = Math.sin(t * 0.9) * 0.05 * amp;   // torso yaw
+          var swayRoll = Math.sin(t * 1.4) * 0.02 * amp;   // shoulder rock
+          tgt.spine    = { x: 0.00, y: swayYaw,         z: swayRoll };
+          tgt.spine1   = { x: 0.00, y: swayYaw * 0.4,   z: swayRoll * 0.3 };
+          // Shoulder counter-sway (Y = gentle inward/outward) — keeps arms alive.
+          tgt.leftArm  = { x: 0.00, y:  0.03 * Math.sin(t * 1.1) * amp,       z: 0.00 };
           tgt.rightArm = { x: 0.00, y: -0.03 * Math.sin(t * 1.1 + 0.4) * amp, z: 0.00 };
+          // "Hand talking" — forearm X breathes between rest and ~+0.25.
+          // Both forearms move together in a gentle rise-and-fall; the wrists
+          // end up hovering slightly forward, like a teacher framing an idea.
+          // Bias the range to positive only so we never curl BEHIND rest.
+          var handLift = (0.14 + 0.11 * Math.sin(t * 2.2)) * amp;     // 0.03 .. 0.25
+          var handLiftR = (0.14 + 0.11 * Math.sin(t * 2.2 + 0.6)) * amp;
+          tgt.leftForeArm  = { x: handLift,  y: 0.00, z: 0.00 };
+          tgt.rightForeArm = { x: handLiftR, y: 0.00, z: 0.00 };
+
+          // ── Open-palms "teaching" emphasis (fires occasionally) ─────────
+          // Every 6–10 seconds while speaking, raise both arms outward with
+          // slight elbow bend — the classic "here's the thing, look at this"
+          // professor gesture (matches reference image 1: cartoon prof with
+          // hands raised, palms up). Auto-scheduled via rig.teachNext so the
+          // gesture comes and goes naturally without repeating mechanically.
+          if (rig.teachT < 0 && t >= rig.teachNext) {
+            rig.teachT = 0;
+          }
+          if (rig.teachT >= 0) {
+            rig.teachT += dt;
+            var tt = rig.teachT;
+            var tenv;
+            if      (tt < 0.45) tenv = tt / 0.45;                       // ease in
+            else if (tt < 1.55) tenv = 1.0;                             // hold
+            else if (tt < 2.05) tenv = 1.0 - (tt - 1.55) / 0.50;        // ease out
+            else { tenv = 0; rig.teachT = -1; rig.teachNext = t + 6.0 + Math.random() * 4.0; }
+            if (tenv > 0) {
+              // Upper-arm deltas: raise arms roughly 45° up and slightly
+              // outward. Empirically verified: x=-0.75 delta keeps arms
+              // BELOW the T-pose horizontal while lifting the elbows; y
+              // adds a touch of outward splay so wrists clear the torso.
+              tgt.leftArm  = { x: -0.75 * tenv, y:  0.25 * tenv, z:  0.00 };
+              tgt.rightArm = { x: -0.75 * tenv, y: -0.25 * tenv, z:  0.00 };
+              // Forearm deltas: gentle elbow bend (+0.45 delta max, safely
+              // below the ~0.7 akimbo threshold). Y twist opens the palms
+              // upward/forward for the welcoming look.
+              tgt.leftForeArm  = { x: 0.45 * tenv, y: -0.35 * tenv, z: 0.00 };
+              tgt.rightForeArm = { x: 0.45 * tenv, y:  0.35 * tenv, z: 0.00 };
+            }
+          }
         } else if (rig.targetState === 'user-speaking') {
           // Listening: small attentive spine sway + head nod handled above.
           tgt.spine = { x: 0.00, y: 0.02 * Math.sin(t * 0.6), z: 0.00 };
@@ -821,26 +898,46 @@
           tgt.rightArm = { x: 0.00, y: -0.015 * Math.sin(t * 0.55 + 0.3), z: 0.00 };
         }
 
-        // Greeting: a gentle head-nod + slight spine bow for ~1.2s. Head-only
-        // greeting because the RPM upper-arm bone axes are non-obvious and
-        // any arm-raise "wave" produced a broken sideways-splay arm (the
-        // `rig.greetT` wave was removed for this reason).
-        if (rig.nodT != null && rig.nodT >= 0) {
-          rig.nodT += dt;
-          var nd = rig.nodT;
-          var nenv;
-          if (nd < 0.30)      nenv = nd / 0.30;            // ease in
-          else if (nd < 0.90) nenv = 1.0;                  // hold
-          else if (nd < 1.20) nenv = 1.0 - (nd - 0.90) / 0.30;  // ease out
-          else { nenv = 0; rig.nodT = -1; }
-          if (nenv > 0) {
-            // Chin-down nod on top of the rest rotation.
-            if (rig.head && rig.rest.head) {
-              rig.head.rotation.x = rig.rest.head.x + 0.18 * nenv;
-            }
-            // Matching spine1 bow so the greeting doesn't look like just the
-            // head drooping — the whole upper torso dips forward a touch.
-            tgt.spine1 = { x: 0.05 * nenv, y: 0.00, z: 0.00 };
+        // ── Hand-wave greeting ──────────────────────────────────────────────
+        // Verified axes (empirically probed on this RPM rig, 2026-04):
+        //   rightArm  X:   rest = +1.25 (arm hanging). Delta -2.50 lifts the
+        //                  upper arm to its mirror position (x = -1.25), which
+        //                  renders as arm-up-and-slightly-out — a natural "hi"
+        //                  pose.
+        //   rightForeArm Y (twist): when the upper arm is up, the forearm's
+        //                  local Y axis aligns roughly with the arm length, so
+        //                  oscillating Y rotates the hand side-to-side — the
+        //                  wave motion itself. Rest = +0.10; amplitude ±0.55
+        //                  around rest gives a full wave without snapping the
+        //                  wrist past its natural range.
+        //   rightForeArm X (elbow flex): kept near rest so the elbow stays
+        //                  lightly extended overhead rather than chickening
+        //                  the hand down to the shoulder.
+        //
+        // NOTE: we do NOT touch head rotation here — rig.head is driven by
+        // the head-sway block above and will keep animating naturally.
+        if (rig.waveT != null && rig.waveT >= 0) {
+          rig.waveT += dt;
+          var wt = rig.waveT;
+          var env;
+          if (wt < 0.35)      env = wt / 0.35;                    // ease-in:   raise arm up
+          else if (wt < 1.85) env = 1.0;                          // hold:      wave hand
+          else if (wt < 2.30) env = 1.0 - (wt - 1.85) / 0.45;     // ease-out:  return to rest
+          else { env = 0; rig.waveT = -1; }
+          if (env > 0) {
+            // Upper-arm raise — full delta scaled by envelope.
+            tgt.rightArm = { x: -2.50 * env, y: 0.00, z: 0.00 };
+            // Hand wave oscillation — env² gates the wiggle so ramps stay
+            // smooth, hold phase gets the full swing.
+            var wave = Math.sin(wt * 14.0) * 0.55 * env * env;
+            tgt.rightForeArm = { x: 0.00, y: wave, z: 0.00 };
+            // Subtle spine counter-rotation so the shoulder can follow the
+            // raised arm instead of fighting it (keeps the chest open).
+            tgt.spine1 = {
+              x: (tgt.spine1.x || 0),
+              y: (tgt.spine1.y || 0) + 0.04 * env,
+              z: (tgt.spine1.z || 0) - 0.03 * env
+            };
           }
         }
 
@@ -897,12 +994,12 @@
     var key = targetId || window.ALEX_AVATAR_TARGET_ID || 'alex-orb';
     return !!(window.__alexAvatarBootedTargets && window.__alexAvatarBootedTargets[key]);
   };
-  // Manual greeting trigger — plays the head-nod animation. Named `wave()`
-  // for back-compat; the old arm-based wave was disabled because the RPM
-  // upper-arm bone axes produced a sideways-splay pose instead of a raised
-  // hand. Also exposes `.nod()` as the canonical name.
-  window.AlexAvatar.nod = function () {
-    try { if (window.AlexAvatar.__rig) window.AlexAvatar.__rig.nodT = 0; } catch (e) {}
+  // Manual greeting trigger — plays the 2.3s hand-wave animation. The wave
+  // uses empirically-verified RPM bone-axis deltas (see the wave block in
+  // the render loop for the full axis map).
+  window.AlexAvatar.wave = function () {
+    try { if (window.AlexAvatar.__rig) window.AlexAvatar.__rig.waveT = 0; } catch (e) {}
   };
-  window.AlexAvatar.wave = window.AlexAvatar.nod;
+  // `.nod()` kept as a synonym for back-compat — it just fires the wave.
+  window.AlexAvatar.nod = window.AlexAvatar.wave;
 })();
