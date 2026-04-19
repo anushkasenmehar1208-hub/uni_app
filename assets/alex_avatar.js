@@ -416,12 +416,11 @@
           node.castShadow = false;
           node.receiveShadow = false;
           node.frustumCulled = false;
-          // ── Outfit restyle: normal t-shirt + no visible belt ────────────
+          // ── Outfit restyle: dark formal shirt (reference-inspired) ──────
           // The RPM avatar ships with a dark-blue polo + printed "Alex" logo
           // baked into `Wolf3D_Outfit_Top`. Replace the albedo/roughness/
-          // metalness texture maps with plain materials:
-          // - top: custom t-shirt color (imagined style)
-          // - bottom: flat dark trouser tone so belt details disappear.
+          // metalness texture maps with a plain dark navy fabric so the top
+          // reads as a clean formal shirt. Keep trousers untouched.
           try {
             var mats = Array.isArray(node.material) ? node.material : [node.material];
             for (var mi = 0; mi < mats.length; mi++) {
@@ -432,30 +431,16 @@
                 if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
                 if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
                 if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
-                // Custom "imagination" t-shirt color: modern teal blue.
-                if (mat.color && mat.color.set) mat.color.set(0x2f8fcb);
-                mat.roughness = 0.64;
+                // Custom shirt color: deep navy blue (formal look).
+                if (mat.color && mat.color.set) mat.color.set(0x1e355d);
+                mat.roughness = 0.58;
                 mat.metalness = 0.0;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x111418);
-                mat.emissiveIntensity = 0.06;
-                mat.envMapIntensity = 0.5;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x0a0f18);
+                mat.emissiveIntensity = 0.04;
+                mat.envMapIntensity = 0.35;
                 mat.side = THREE.DoubleSide;
                 mat.needsUpdate = true;
-                rig.shirtColorHex = 0x2f8fcb;
-              } else if (mat.name === 'Wolf3D_Outfit_Bottom') {
-                // Remove belt artifacts by discarding bottom texture maps and
-                // using a flat cloth color for the full trouser mesh.
-                if (mat.map)          { mat.map.dispose();          mat.map = null; }
-                if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
-                if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
-                if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
-                if (mat.color && mat.color.set) mat.color.set(0x1d222b);
-                mat.roughness = 0.78;
-                mat.metalness = 0.0;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x060708);
-                mat.emissiveIntensity = 0.04;
-                mat.envMapIntensity = 0.2;
-                mat.needsUpdate = true;
+                rig.shirtColorHex = 0x1e355d;
               }
             }
           } catch (e) { warn('shirt retint failed', e); }
@@ -567,16 +552,13 @@
       // arm so the skin is fully covered (looks like a fitted long sleeve).
       (function addProceduralSleeves() {
         try {
-          // User requested a normal t-shirt (short sleeves), so disable
-          // procedural long-sleeve geometry entirely.
-          return;
-          var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0xffffff;
+          var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0x1e355d;
           var sleeveMat = new THREE.MeshStandardMaterial({
             color: shirtCol,
-            roughness: 0.54,
+            roughness: 0.58,
             metalness: 0.0,
-            emissive: 0x2a2a2a,
-            emissiveIntensity: 0.10,
+            emissive: 0x0a0f18,
+            emissiveIntensity: 0.04,
             side: THREE.DoubleSide
           });
 
