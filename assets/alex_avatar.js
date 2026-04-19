@@ -416,31 +416,25 @@
           node.castShadow = false;
           node.receiveShadow = false;
           node.frustumCulled = false;
-          // ── Outfit restyle: dark formal shirt (reference-inspired) ──────
-          // The RPM avatar ships with a dark-blue polo + printed "Alex" logo
-          // baked into `Wolf3D_Outfit_Top`. Replace the albedo/roughness/
-          // metalness texture maps with a plain dark navy fabric so the top
-          // reads as a clean formal shirt. Keep trousers untouched.
+          // ── Outfit restyle: clean dark shirt, natural shading ───────────
+          // Keep the original texture maps for realism (folds/seams), but tint
+          // the shirt to a deeper, more premium navy tone.
           try {
             var mats = Array.isArray(node.material) ? node.material : [node.material];
             for (var mi = 0; mi < mats.length; mi++) {
               var mat = mats[mi];
               if (!mat || !mat.name) continue;
               if (mat.name === 'Wolf3D_Outfit_Top') {
-                if (mat.map)          { mat.map.dispose();          mat.map = null; }
-                if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
-                if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
-                if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
                 // Custom shirt color: deep navy blue (formal look).
-                if (mat.color && mat.color.set) mat.color.set(0x1e355d);
-                mat.roughness = 0.58;
+                if (mat.color && mat.color.set) mat.color.set(0x224174);
+                mat.roughness = 0.66;
                 mat.metalness = 0.0;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x0a0f18);
-                mat.emissiveIntensity = 0.04;
-                mat.envMapIntensity = 0.35;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x000000);
+                mat.emissiveIntensity = 0.0;
+                mat.envMapIntensity = 0.25;
                 mat.side = THREE.DoubleSide;
                 mat.needsUpdate = true;
-                rig.shirtColorHex = 0x1e355d;
+                rig.shirtColorHex = 0x224174;
               }
             }
           } catch (e) { warn('shirt retint failed', e); }
@@ -552,125 +546,9 @@
       // arm so the skin is fully covered (looks like a fitted long sleeve).
       (function addProceduralSleeves() {
         try {
-          var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0x1e355d;
-          var sleeveMat = new THREE.MeshStandardMaterial({
-            color: shirtCol,
-            roughness: 0.58,
-            metalness: 0.0,
-            emissive: 0x0a0f18,
-            emissiveIntensity: 0.04,
-            side: THREE.DoubleSide
-          });
-
-          // Segment mesh oriented along the bone's actual "down the bone" axis,
-          // computed from the child bone's local position relative to the
-          // parent. This is robust to whatever local axis convention the
-          // skeleton uses (Mixamo/RPM, Y-up bones, etc.). We deliberately add
-          // overlap at both ends so upper-arm and forearm sleeves blend at
-          // the elbow with no visible gap while bending.
-          function buildSegment(bone, child, length, rTop, rBot, overlapStart, overlapEnd) {
-            if (!bone || !(length > 0)) return null;
-            overlapStart = overlapStart || 0;
-            overlapEnd = overlapEnd || 0;
-            var bodyLen = length + overlapStart + overlapEnd;
-            var capRadius = Math.max(0.002, Math.min(rTop, rBot) * 0.35);
-            var cylLen = Math.max(0.002, bodyLen - capRadius * 2.0);
-            var geom = new THREE.CapsuleGeometry(capRadius, cylLen, 6, 18);
-            // Scale capsule X/Z to create a tapered sleeve profile.
-            var maxR = Math.max(rTop, rBot);
-            var minR = Math.min(rTop, rBot);
-            geom.scale(maxR / capRadius, 1.0, minR / capRadius);
-            geom.translate(0, (length / 2) + (overlapEnd - overlapStart) / 2, 0);
-            var mesh = new THREE.Mesh(geom, sleeveMat);
-            mesh.castShadow = false;
-            mesh.receiveShadow = false;
-            mesh.frustumCulled = false;
-            mesh.name = 'AlexSleeve';
-            if (child && child.position) {
-              var dir = child.position.clone().normalize();
-              var q = new THREE.Quaternion();
-              q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-              mesh.quaternion.copy(q);
-            }
-            bone.add(mesh);
-            return mesh;
-          }
-
-          function lengthToChild(parent, child) {
-            if (!parent || !child) return 0;
-            return child.position.length();
-          }
-
-          // Upper-arm sleeve: from shoulder joint to elbow.
-          var upperLenL = lengthToChild(rig.bones.leftArm,  rig.bones.leftForeArm)  || 0.27;
-          var upperLenR = lengthToChild(rig.bones.rightArm, rig.bones.rightForeArm) || 0.27;
-          // Forearm sleeve: from elbow to wrist (slightly tapered to the wrist).
-          var lowerLenL = lengthToChild(rig.bones.leftForeArm,  rig.bones.leftHand)  || 0.25;
-          var lowerLenR = lengthToChild(rig.bones.rightForeArm, rig.bones.rightHand) || 0.25;
-
-          // Radii in *local bone space* — bones inherit avatar scale, so
-          // these are already in the same units as the other geometry.
-          var R_SHOULDER = 0.060;
-          var R_ELBOW    = 0.051;
-          var R_WRIST    = 0.043;
-          var OVERLAP_SHOULDER = 0.028;
-          var OVERLAP_ELBOW = 0.026;
-          var OVERLAP_WRIST = 0.012;
-
-          buildSegment(
-            rig.bones.leftArm, rig.bones.leftForeArm, upperLenL, R_SHOULDER, R_ELBOW,
-            OVERLAP_SHOULDER, OVERLAP_ELBOW
-          );
-          buildSegment(
-            rig.bones.rightArm, rig.bones.rightForeArm, upperLenR, R_SHOULDER, R_ELBOW,
-            OVERLAP_SHOULDER, OVERLAP_ELBOW
-          );
-          buildSegment(
-            rig.bones.leftForeArm, rig.bones.leftHand, lowerLenL, R_ELBOW, R_WRIST,
-            OVERLAP_ELBOW, OVERLAP_WRIST
-          );
-          buildSegment(
-            rig.bones.rightForeArm, rig.bones.rightHand, lowerLenR, R_ELBOW, R_WRIST,
-            OVERLAP_ELBOW, OVERLAP_WRIST
-          );
-
-          // Small shoulder caps — soften the seam where the shirt's short
-          // sleeve ends and the new long sleeve begins. A flattened sphere
-          // at the shoulder joint blends the two surfaces visually.
-          function buildShoulderCap(bone, radius) {
-            if (!bone) return;
-            var g = new THREE.SphereGeometry(radius, 18, 12);
-            var m = new THREE.Mesh(g, sleeveMat);
-            m.scale.set(1.0, 0.55, 1.0);
-            m.position.set(0, 0, 0);
-            m.castShadow = false;
-            m.receiveShadow = false;
-            m.frustumCulled = false;
-            m.name = 'AlexSleeveCap';
-            bone.add(m);
-          }
-          buildShoulderCap(rig.bones.leftArm,  R_SHOULDER * 1.05);
-          buildShoulderCap(rig.bones.rightArm, R_SHOULDER * 1.05);
-
-          // Elbow blend caps — hide any seam between upper-arm and forearm
-          // sleeves so the full sleeve reads as one continuous garment.
-          function buildElbowBlendCap(bone, radius) {
-            if (!bone) return;
-            var g = new THREE.SphereGeometry(radius, 20, 14);
-            var m = new THREE.Mesh(g, sleeveMat);
-            m.scale.set(1.0, 0.88, 1.0);
-            m.position.set(0, 0, 0);
-            m.castShadow = false;
-            m.receiveShadow = false;
-            m.frustumCulled = false;
-            m.name = 'AlexSleeveElbowCap';
-            bone.add(m);
-          }
-          buildElbowBlendCap(rig.bones.leftForeArm,  R_ELBOW * 1.10);
-          buildElbowBlendCap(rig.bones.rightForeArm, R_ELBOW * 1.10);
-
-          log('procedural sleeves attached — upperL/R:', upperLenL.toFixed(3), upperLenR.toFixed(3),
-              'lowerL/R:', lowerLenL.toFixed(3), lowerLenR.toFixed(3));
+          // Disable synthetic sleeve geometry; it looks unnatural on this rig.
+          // Better visual quality comes from keeping the base mesh silhouette.
+          return;
         } catch (eSl) {
           warn('procedural sleeves failed:', eSl && eSl.message);
         }
