@@ -707,7 +707,7 @@
     var applied = {
       leftArm:      zero(), leftForeArm:  zero(), leftHand:  zero(),
       rightArm:     zero(), rightForeArm: zero(), rightHand: zero(),
-      spine:        zero(), neck:         zero()
+      spine:        zero(), spine1:       zero(), neck: zero()
     };
     function lerpApply(key, tx, ty, tz, k) {
       var a = applied[key];
@@ -775,45 +775,44 @@
         var tgt = {
           leftArm: zero(), leftForeArm: zero(), leftHand: zero(),
           rightArm: zero(), rightForeArm: zero(), rightHand: zero(),
-          spine: zero(), neck: zero()
+          spine: zero(), spine1: zero(), neck: zero()
         };
 
-        // Gesture deltas are ADDITIVE to the rest rotation, so small values keep
-        // motion subtle. With rest.leftArm.x = +1.25 (arm hanging down), negative
-        // X delta lifts the arm forward; positive Y splays outward.
+        // Gesture deltas are ADDITIVE to the rest rotation. All per-state deltas
+        // are intentionally TINY here — the RPM forearm/upper-arm bone axes are
+        // non-obvious (large X deltas produce elbow-out "akimbo" poses instead
+        // of natural forward arm swings), so we keep the arms at rest and let
+        // the torso + head carry the expressive motion. This reads as a calm,
+        // grounded presenter rather than a flailing cartoon.
         if (rig.targetState === 'thinking') {
-          // Quiet head-tilt + a faint hand-up, as if mulling something over.
-          tgt.rightArm      = { x: -0.35, y:  0.15, z:  0.10 };
-          tgt.rightForeArm  = { x:  0.80, y:  0.25, z:  0.00 };
-          tgt.rightHand     = { x:  0.15, y:  0.00, z:  0.00 };
-          tgt.neck          = { x:  0.04, y:  0.06, z:  0.00 };
+          // Contemplative: head tilts + tiny neck adjustment, arms stay at rest.
+          tgt.neck      = { x:  0.03, y:  0.05, z:  0.00 };
+          tgt.spine     = { x:  0.00, y:  0.02, z:  0.00 };
+          // Very subtle shoulder "hold" — barely perceptible, keeps arms still.
+          tgt.leftArm   = { x:  0.00, y:  0.01, z:  0.00 };
+          tgt.rightArm  = { x:  0.00, y: -0.01, z:  0.00 };
         } else if (rig.targetState === 'ai-speaking') {
-          // Teaching gestures: both arms gesture forward (negative X delta lifts
-          // them toward horizontal) with alternating side-to-side splay (Y).
-          // Scale with loudness so louder speech = bigger hand-talking.
+          // Speaking: torso + shoulder sway that intensifies with loudness.
+          // Arms stay at rest (no elbow bends) — motion comes from the upper
+          // body rocking slightly, which reads as natural "presenter energy".
           var l = rig.loudness;
-          var amp = 0.35 + 0.65 * l;
-          var s1 = Math.sin(t * 1.8);
-          var s2 = Math.sin(t * 1.3 + 1.0);
-          var s3 = Math.sin(t * 2.1 + 0.6);
-          // Upper arms: lift 20–60° forward from rest, alternate left/right.
-          tgt.leftArm   = { x: -0.20 - 0.30 * amp * (0.6 + 0.4 * s1),
-                            y:  0.10 * s2 * amp, z:  0.00 };
-          tgt.rightArm  = { x: -0.20 - 0.30 * amp * (0.6 + 0.4 * s2),
-                            y: -0.10 * s1 * amp, z:  0.00 };
-          // Forearms: open outward when speaking emphatically.
-          tgt.leftForeArm  = { x:  0.40 + 0.40 * amp, y:  0.30 * s3 * amp, z:  0.00 };
-          tgt.rightForeArm = { x:  0.40 + 0.40 * amp, y: -0.30 * s1 * amp, z:  0.00 };
-          tgt.leftHand  = { x:  0.05 * s2, y:  0.05 * s3, z:  0.00 };
-          tgt.rightHand = { x:  0.05 * s3, y: -0.05 * s2, z:  0.00 };
-          tgt.spine     = { x:  0.00, y:  0.05 * Math.sin(t * 0.7), z: 0.00 };
+          var amp = 0.4 + 0.6 * l;                  // 0.4 when silent → 1.0 at peak
+          var swayYaw  = Math.sin(t * 0.9) * 0.05 * amp;   // torso yaw (look side to side)
+          var swayRoll = Math.sin(t * 1.4) * 0.02 * amp;   // slight shoulder rock
+          tgt.spine    = { x: 0.00, y: swayYaw,   z: swayRoll };
+          tgt.spine1   = { x: 0.00, y: swayYaw * 0.4, z: swayRoll * 0.3 };
+          // Tiny counter-sway on the shoulders so the arms don't feel rigid —
+          // applied on Y only (outward splay axis), small amplitude.
+          tgt.leftArm  = { x: 0.00, y:  0.03 * Math.sin(t * 1.1) * amp, z: 0.00 };
+          tgt.rightArm = { x: 0.00, y: -0.03 * Math.sin(t * 1.1 + 0.4) * amp, z: 0.00 };
         } else if (rig.targetState === 'user-speaking') {
-          // Attentive listening — very small sway, arms stay at rest.
-          tgt.spine = { x: 0.00, y: 0.03 * Math.sin(t * 0.6), z: 0.00 };
+          // Listening: small attentive spine sway + head nod handled above.
+          tgt.spine = { x: 0.00, y: 0.02 * Math.sin(t * 0.6), z: 0.00 };
         } else {
-          // Idle — arms drift with breath, tiny side-to-side sway only.
-          tgt.leftArm  = { x:  0.00, y:  0.02 * Math.sin(t * 0.6),       z: 0.00 };
-          tgt.rightArm = { x:  0.00, y: -0.02 * Math.sin(t * 0.6 + 0.3), z: 0.00 };
+          // Idle — the breath bob (on rig.root.position.y) does most of the
+          // work. Arms get a barely-there Y drift so they don't look frozen.
+          tgt.leftArm  = { x: 0.00, y:  0.015 * Math.sin(t * 0.55),       z: 0.00 };
+          tgt.rightArm = { x: 0.00, y: -0.015 * Math.sin(t * 0.55 + 0.3), z: 0.00 };
         }
 
         // Wave gesture: plays for ~2.2s from rig.greetT=0. Right hand raises
