@@ -875,17 +875,25 @@
             else if (tt < 2.05) tenv = 1.0 - (tt - 1.55) / 0.50;        // ease out
             else { tenv = 0; rig.teachT = -1; rig.teachNext = t + 6.0 + Math.random() * 4.0; }
             if (tenv > 0) {
-              // Upper-arm deltas: raise arms roughly 45° up and slightly
-              // outward. Empirically verified: x=-0.75 delta keeps arms
-              // BELOW the T-pose horizontal while lifting the elbows; y
-              // adds a touch of outward splay so wrists clear the torso.
-              tgt.leftArm  = { x: -0.75 * tenv, y:  0.25 * tenv, z:  0.00 };
-              tgt.rightArm = { x: -0.75 * tenv, y: -0.25 * tenv, z:  0.00 };
-              // Forearm deltas: gentle elbow bend (+0.45 delta max, safely
-              // below the ~0.7 akimbo threshold). Y twist opens the palms
-              // upward/forward for the welcoming look.
-              tgt.leftForeArm  = { x: 0.45 * tenv, y: -0.35 * tenv, z: 0.00 };
-              tgt.rightForeArm = { x: 0.45 * tenv, y:  0.35 * tenv, z: 0.00 };
+              // Empirically probed "welcoming palms-up" professor pose.
+              // Three bone rotations combine to avoid the akimbo/T-pose
+              // failure modes and produce the image-1 reference look:
+              //   1. Upper-arm X delta -0.80 → lift arms roughly to
+              //      horizontal (rest=1.25 → 0.45 at full envelope).
+              //   2. Upper-arm Z delta ±0.60 → swing the raised arms
+              //      FORWARD out of the T-pose plane, so when the elbow
+              //      bends the hand travels up/forward, not sideways
+              //      into akimbo.
+              //   3. Forearm X delta -1.30 → NEGATIVE-direction elbow
+              //      bend (rest=0.20 → -1.10 at full envelope). This is
+              //      the critical piece: bending the elbow the "other"
+              //      way is what turns the palms upward and extends the
+              //      hands outward in a welcoming "here's the thing"
+              //      posture instead of folding them to the chest/hips.
+              tgt.leftArm  = { x: -0.80 * tenv, y:  0.00, z:  0.60 * tenv };
+              tgt.rightArm = { x: -0.80 * tenv, y:  0.00, z: -0.60 * tenv };
+              tgt.leftForeArm  = { x: -1.30 * tenv, y: 0.00, z: 0.00 };
+              tgt.rightForeArm = { x: -1.30 * tenv, y: 0.00, z: 0.00 };
             }
           }
         } else if (rig.targetState === 'user-speaking') {
