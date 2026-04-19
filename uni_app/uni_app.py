@@ -24556,7 +24556,11 @@ def alex_voice_overlay_panel() -> rx.Component:
                 50%     { transform: translate(-50%,-50%) scale(1.08); }
             }
 
-            #alex-orb { position:relative; width:220px; height:220px; flex-shrink:0; }
+            #alex-orb { position:relative; width:220px; height:220px; flex-shrink:0; z-index:1; }
+            /* When the 3D avatar is mounted we want the character to feel tall — give the orb
+               container more vertical breathing room so the 560px portrait canvas can render
+               without clipping the vstack gap. */
+            #alex-orb.alex-avatar-active { height:420px; margin-bottom:-40px; }
 
             .orb-ring {
                 position:absolute; top:50%; left:50%;
@@ -24647,19 +24651,46 @@ def alex_voice_overlay_panel() -> rx.Component:
                 min-height:1.4em; transition: color .4s;
             }
             #alex-transcript {
-                width:100%; max-width:min(560px, 92vw);
-                max-height:min(42vh, 420px);
+                width:100%; max-width:min(620px, 94vw);
+                min-height:120px;
+                max-height:min(44vh, 440px);
                 overflow-x:hidden; overflow-y:auto;
-                text-align:left; font-size:0.9rem; line-height:1.65;
-                color:rgba(228,232,238,0.92);
-                padding:14px 16px 16px;
-                margin:0 12px;
-                border-radius:16px;
-                background:rgba(255,255,255,0.04);
-                border:1px solid rgba(255,255,255,0.08);
+                text-align:left; font-size:0.92rem; line-height:1.7;
+                color:rgba(228,232,238,0.94);
+                padding:20px 22px 18px;
+                margin:-140px 12px 0;        /* pull up under the avatar so legs fade into it */
+                border-radius:20px 20px 16px 16px;
+                position:relative;
+                z-index:3;                    /* stay in front of the avatar canvas */
+                background:
+                    linear-gradient(to bottom,
+                        rgba(40, 52, 70, 0.86) 0%,
+                        rgba(24, 32, 46, 0.92) 26%,
+                        rgba(18, 24, 34, 0.94) 100%);
+                border:1px solid rgba(255,255,255,0.10);
+                border-top:1px solid rgba(180, 220, 255, 0.22);
+                box-shadow:
+                    inset 0 1px 0 rgba(255,255,255,0.10),
+                    0 -30px 60px -20px rgba(0, 230, 255, 0.08),
+                    0 14px 34px rgba(0,0,0,0.45);
+                -webkit-backdrop-filter: blur(16px) saturate(1.15);
+                        backdrop-filter: blur(16px) saturate(1.15);
                 box-sizing:border-box;
                 -webkit-overflow-scrolling:touch;
                 transition: opacity .4s;
+            }
+            /* Subtle glowing seam on top of the wall — reads as the wall's edge
+               catching light from the avatar above. */
+            #alex-transcript::before {
+                content:"";
+                position:absolute;
+                left:8%; right:8%; top:-1px; height:1px;
+                background:linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(180,220,255,0.55) 50%,
+                    transparent 100%);
+                pointer-events:none;
+                border-radius:2px;
             }
             #alex-transcript .alex-voice-user-line {
                 font-size:0.78rem; color:rgba(255,255,255,0.45);
@@ -24759,7 +24790,7 @@ def alex_voice_overlay_panel() -> rx.Component:
         """),
         rx.center(
             rx.vstack(
-                # Animated orb
+                # Animated orb — hosts the 3D avatar canvas mounted by alex_avatar.js
                 rx.el.div(
                     rx.el.div(class_name="orb-ring r1"),
                     rx.el.div(class_name="orb-ring r2"),
@@ -24768,7 +24799,11 @@ def alex_voice_overlay_panel() -> rx.Component:
                     id="alex-orb",
                     class_name="idle",
                 ),
-                # Status
+                # Reading pane doubles as the "wall" — its negative top margin pulls it up
+                # under the avatar so the character's legs fade into the wall, and the
+                # transcript text is what reads on the wall itself.
+                rx.el.div(id="alex-transcript"),
+                # Status sits below the wall so it isn't hidden by the overlap.
                 rx.el.p("Connecting…", id="alex-status"),
                 rx.el.button(
                     "Mute mic",
@@ -24777,8 +24812,6 @@ def alex_voice_overlay_panel() -> rx.Component:
                     disabled=True,
                     title="Stop auto-listening — type and hear Alex without the mic cutting in",
                 ),
-                # Reading pane (markdown HTML) + optional user line — populated by alex_voice.js
-                rx.el.div(id="alex-transcript"),
                 # Ends call — click handler attached by alex_voice.js
                 rx.el.button(
                     "Connecting…",

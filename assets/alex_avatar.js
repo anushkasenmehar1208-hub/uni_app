@@ -25,10 +25,11 @@
       return '';
     })();
   var AVATAR_URL_BASE = AVATAR_SCRIPT_SRC.replace(/[^/?#]*(\?.*)?(#.*)?$/, '');
-  var LOCAL_AVATAR_URL = AVATAR_URL_BASE + 'models/facecap.glb';
-  // Fallback CDN copy of the same Three.js example model — used only if the local file is missing.
+  // Default avatar: full-body Ready Player Me character (dressed, with hair + ARKit/Oculus visemes).
+  var LOCAL_AVATAR_URL = AVATAR_URL_BASE + 'models/alex_body.glb';
+  // Fallback CDN copy — used only if the local file is missing.
   var REMOTE_AVATAR_URL =
-    'https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/models/gltf/facecap.glb';
+    'https://raw.githubusercontent.com/wass08/r3f-virtual-girlfriend-frontend/main/public/models/64f1a714fe61576b46f27ca2.glb';
   var AVATAR_URL =
     (window.ALEX_AVATAR_URL && typeof window.ALEX_AVATAR_URL === 'string')
       ? window.ALEX_AVATAR_URL
@@ -212,28 +213,32 @@
     var st = document.createElement('style');
     st.id = styleId;
     st.textContent = [
-      // Let the canvas extend outside the 220px orb bounds so avatar can be bigger.
+      // Let the canvas extend well outside the 220px orb bounds so the full body can show.
       '#' + targetId + ' { overflow: visible !important; }',
-      // Avatar canvas sits centered over the orb; pointer-events off so buttons still work.
+      // Portrait-aspect canvas centered on the orb so the avatar reads as a person standing.
+      // Bottom ~25% fades to transparent so the character's legs visually merge into the
+      // transcript "wall" that sits below the orb.
       '#' + canvasId + ' {',
       '  position: absolute;',
-      '  top: 50%; left: 50%;',
-      '  transform: translate(-50%, -50%);',
-      '  width: 380px; height: 380px;',
-      '  max-width: 92vw; max-height: 92vw;',
+      '  left: 50%;',
+      '  top: 50%;',
+      '  transform: translate(-50%, -46%);',
+      '  width: 340px; height: 560px;',
+      '  max-width: 92vw;',
       '  pointer-events: none;',
-      '  border-radius: 50%;',
       '  opacity: 0;',
       '  transition: opacity .6s ease;',
       '  z-index: 2;',
+      '  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 62%, rgba(0,0,0,0.6) 78%, transparent 94%);',
+      '          mask-image: linear-gradient(to bottom, black 0%, black 62%, rgba(0,0,0,0.6) 78%, transparent 94%);',
       '}',
       '#' + canvasId + '.alex-avatar-ready { opacity: 1; }',
-      // Once avatar is ready, fade the old orb core/rings so they act as soft halo only.
-      '#' + targetId + '.alex-avatar-active .orb-core { opacity: .25; }',
+      // Once avatar is ready, strongly dim the old orb core so only a soft halo remains around the avatar.
+      '#' + targetId + '.alex-avatar-active .orb-core { opacity: .15; }',
       '#' + targetId + '.alex-avatar-active.ai-speaking .orb-core,',
-      '#' + targetId + '.alex-avatar-active.user-speaking .orb-core { opacity: .55; }',
+      '#' + targetId + '.alex-avatar-active.user-speaking .orb-core { opacity: .30; }',
       '@media (max-width: 520px) {',
-      '  #' + canvasId + ' { width: 300px; height: 300px; }',
+      '  #' + canvasId + ' { width: 280px; height: 460px; }',
       '}'
     ].join('\n');
     document.head.appendChild(st);
@@ -317,7 +322,8 @@
       currentState: 'idle',
       targetState: 'idle',
       loudness: 0,
-      t: 0
+      t: 0,
+      restY: 0               // avatar.position.y after auto-centering; breathing anim adds on top
     };
 
     function sizeToCanvas() {
@@ -441,10 +447,19 @@
         avatar.position.z -= center.z * scale;
         avatar.updateWorldMatrix(true, true);
 
-        // Full-body rigs have many bones and tall aspect (height >> width). Head-only scans
-        // have few/no bones and are roughly as wide as tall.
+        // Full-body rigs have many bones (skeleton hierarchy). A T-pose full-body's arm
+        // span can be wide (~1.0m) so aspectTall alone is unreliable — bone count is the
+        // stronger signal. Head-only scans typically have 0–2 bones.
         var aspectTall = size.y / Math.max(size.x, size.z);
-        var isFullBody = boneCount > 10 && aspectTall > 1.8;
+        var isFullBody = boneCount >= 20 || (boneCount > 5 && aspectTall > 1.5);
+
+        // Re-measure the avatar AFTER normalization so framing is based on actual world
+        // coordinates (not assumptions about where it landed — the RPM scene root may not
+        // re-center exactly to origin depending on its internal transforms).
+        var postBox = worldBBoxUnion(meshes);
+        if (postBox.isEmpty()) postBox.setFromObject(avatar);
+        var postSize = postBox.getSize(new THREE.Vector3());
+        var postCenter = postBox.getCenter(new THREE.Vector3());
 
         // Find the face mesh (one with visemes) and compute its bbox post-normalization.
         var faceMesh = null;
@@ -452,16 +467,19 @@
           if (rig.viseme[rig.morphMeshes[fi].uuid] != null) { faceMesh = rig.morphMeshes[fi]; break; }
         }
         if (!faceMesh && rig.morphMeshes.length) faceMesh = rig.morphMeshes[0];
-        var faceBox = faceMesh ? worldBBoxUnion([faceMesh]) : fullBox.clone();
-        if (faceBox.isEmpty()) faceBox = fullBox.clone();
+        var faceBox = faceMesh ? worldBBoxUnion([faceMesh]) : postBox.clone();
+        if (faceBox.isEmpty()) faceBox = postBox.clone();
         var faceCenter = faceBox.getCenter(new THREE.Vector3());
         var faceSize = faceBox.getSize(new THREE.Vector3());
 
         var headY, frameHeight;
         if (isFullBody) {
-          // Head-and-shoulders for RPM-style avatars — frame top ~30% of body.
-          headY = faceCenter.y; // face mesh center is usually the head anyway
-          frameHeight = faceSize.y * 1.4 + 0.05;
+          // Full body framing: show the whole character with tiny padding.
+          // Bias camera aim slightly up from body center so the face lands in the
+          // upper third of the canvas (shoulders visible); the character's lower
+          // legs run off the bottom of the frame / fade into the transcript wall.
+          headY = postCenter.y + postSize.y * 0.10;
+          frameHeight = postSize.y * 1.05;
         } else {
           // Head/face scan — frame the face with a bit of padding.
           headY = faceCenter.y;
@@ -475,6 +493,10 @@
         camera.near = Math.max(0.001, dist * 0.02);
         camera.far = dist * 20;
         camera.updateProjectionMatrix();
+
+        // Remember the post-normalization Y so the idle breathing anim can modulate
+        // around it rather than overwriting the centering back to ~0.
+        rig.restY = avatar.position.y;
 
         log('auto-framed — bones:', boneCount, 'aspectTall:', aspectTall.toFixed(2),
             'isFullBody:', isFullBody, 'headY:', headY.toFixed(3),
@@ -524,7 +546,7 @@
         // Idle breathing: subtle vertical bob + head sway.
         if (rig.root) {
           var breath = Math.sin(rig.t * 1.6) * 0.006;
-          rig.root.position.y = breath;
+          rig.root.position.y = rig.restY + breath;
         }
         if (rig.head) {
           var swayX = Math.sin(rig.t * 0.6) * 0.04;
@@ -548,10 +570,12 @@
         }
 
         // Lip-sync: drive jaw morph from loudness, but only while speaking.
+        // Subtle range — real humans barely open their jaw while talking. Cap ≈0.28 keeps
+        // the mouth natural instead of cartoon-wide.
         var targetMouth = 0;
         if (rig.targetState === 'ai-speaking') {
           rig.loudness = rig.loudness * 0.55 + sampleLoudness() * 0.45;
-          targetMouth = Math.min(0.85, rig.loudness * 1.1);
+          targetMouth = Math.min(0.28, rig.loudness * 0.38);
         } else {
           rig.loudness *= 0.9;
         }
