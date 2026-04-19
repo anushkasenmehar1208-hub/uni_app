@@ -933,12 +933,12 @@
           else if (wt < 2.30) env = 1.0 - (wt - 1.85) / 0.45;     // ease-out:  return to rest
           else { env = 0; rig.waveT = -1; }
           if (env > 0) {
-            // Upper-arm raise — full delta scaled by envelope.
-            tgt.rightArm = { x: -2.50 * env, y: 0.00, z: 0.00 };
-            // Hand wave oscillation — env² gates the wiggle so ramps stay
-            // smooth, hold phase gets the full swing.
-            var wave = Math.sin(wt * 14.0) * 0.55 * env * env;
-            tgt.rightForeArm = { x: 0.00, y: wave, z: 0.00 };
+            // Upper-arm raise — delta -1.40 lifts arm to ~head height (total
+            // ≈ -0.15 rad), not straight up like -2.50 did.
+            tgt.rightArm = { x: -1.40 * env, y: 0.00, z: 0.00 };
+            // Slight elbow bend so the forearm angles naturally toward camera.
+            var wave = Math.sin(wt * 10.0) * 0.40 * env * env;
+            tgt.rightForeArm = { x: -0.30 * env, y: wave, z: 0.00 };
             // Subtle spine counter-rotation so the shoulder can follow the
             // raised arm instead of fighting it (keeps the chest open).
             tgt.spine1 = {
