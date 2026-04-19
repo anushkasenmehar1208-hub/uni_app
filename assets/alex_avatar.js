@@ -361,7 +361,8 @@
       targetState: 'idle',
       prevState: 'idle',
       stateEnteredAt: 0,     // rig.t when the current target state began
-      greetT: -1,            // >=0 while a "hi" wave is playing
+      greetT: -1,            // kept for back-compat — unused (old arm wave removed)
+      nodT: -1,              // >=0 while a head-nod greeting is playing
       loudness: 0,
       t: 0,
       restY: 0               // avatar.position.y after auto-centering; breathing anim adds on top
@@ -657,8 +658,11 @@
       canvas.classList.add('alex-avatar-ready');
       orb.classList.add('alex-avatar-active');
 
-      // Trigger a welcome wave once the avatar is on-screen.
-      rig.greetT = 0;
+      // Trigger a subtle welcome nod once the avatar is on-screen (pure head
+      // animation, no arm movement — the arm-based wave is intentionally
+      // disabled because the RPM upper-arm bone axes produce a sideways
+      // splay instead of a natural raised-hand wave).
+      rig.nodT = 0;
 
       startObservers();
       startLoop();
@@ -682,9 +686,11 @@
               rig.prevState = rig.targetState;
               rig.targetState = cls[i];
               rig.stateEnteredAt = rig.t;
-              // Wave when we transition INTO ai-speaking from idle (likely greeting/opening line).
+              // Head-nod greeting when we transition INTO ai-speaking from
+              // idle (likely greeting / opening line). Head-only so it
+              // cannot produce the broken arm-splay the old wave caused.
               if (cls[i] === 'ai-speaking' && rig.prevState === 'idle') {
-                rig.greetT = 0;
+                rig.nodT = 0;
               }
             }
             return;
@@ -815,43 +821,26 @@
           tgt.rightArm = { x: 0.00, y: -0.015 * Math.sin(t * 0.55 + 0.3), z: 0.00 };
         }
 
-        // Wave gesture: plays for ~2.2s from rig.greetT=0. Right hand raises
-        // up and out, forearm waves left-right. Overrides the right-side gesture
-        // targets while active.
-        if (rig.greetT >= 0) {
-          rig.greetT += dt;
-          var wd = rig.greetT;
-          var env;
-          if (wd < 0.45)       env = wd / 0.45;
-          else if (wd < 1.80)  env = 1.0;
-          else if (wd < 2.25)  env = 1.0 - (wd - 1.80) / 0.45;
-          else { env = 0; rig.greetT = -1; }
-          if (env > 0) {
-            // Raise the right upper arm up and outward:
-            //   -1.05 X delta brings arm from rest (hanging, x=+1.25) up to ~+0.20
-            //   +0.40 Y splays it outward from the torso
-            tgt.rightArm = {
-              x: -1.05 * env,
-              y:  0.40 * env,
-              z:  0.00
-            };
-            // Forearm bent up so hand is overhead, oscillating for the wave.
-            tgt.rightForeArm = {
-              x:  0.80 * env,
-              y:  0.15 * env + 0.55 * Math.sin(wd * 10.0) * env,
-              z:  0.00
-            };
-            tgt.rightHand = {
-              x: 0.00,
-              y: 0.35 * Math.sin(wd * 10.0) * env,
-              z: 0.00
-            };
+        // Greeting: a gentle head-nod + slight spine bow for ~1.2s. Head-only
+        // greeting because the RPM upper-arm bone axes are non-obvious and
+        // any arm-raise "wave" produced a broken sideways-splay arm (the
+        // `rig.greetT` wave was removed for this reason).
+        if (rig.nodT != null && rig.nodT >= 0) {
+          rig.nodT += dt;
+          var nd = rig.nodT;
+          var nenv;
+          if (nd < 0.30)      nenv = nd / 0.30;            // ease in
+          else if (nd < 0.90) nenv = 1.0;                  // hold
+          else if (nd < 1.20) nenv = 1.0 - (nd - 0.90) / 0.30;  // ease out
+          else { nenv = 0; rig.nodT = -1; }
+          if (nenv > 0) {
+            // Chin-down nod on top of the rest rotation.
             if (rig.head && rig.rest.head) {
-              // Wave adds a small head-roll on top of the base rest rotation.
-              // Must re-apply AFTER the main head-sway assignment above
-              // (this branch runs within the same frame, after that block).
-              rig.head.rotation.z = rig.rest.head.z + 0.08 * env;
+              rig.head.rotation.x = rig.rest.head.x + 0.18 * nenv;
             }
+            // Matching spine1 bow so the greeting doesn't look like just the
+            // head drooping — the whole upper torso dips forward a touch.
+            tgt.spine1 = { x: 0.05 * nenv, y: 0.00, z: 0.00 };
           }
         }
 
@@ -908,8 +897,12 @@
     var key = targetId || window.ALEX_AVATAR_TARGET_ID || 'alex-orb';
     return !!(window.__alexAvatarBootedTargets && window.__alexAvatarBootedTargets[key]);
   };
-  // Manual wave trigger — useful for testing + welcome moments.
-  window.AlexAvatar.wave = function () {
-    try { if (window.AlexAvatar.__rig) window.AlexAvatar.__rig.greetT = 0; } catch (e) {}
+  // Manual greeting trigger — plays the head-nod animation. Named `wave()`
+  // for back-compat; the old arm-based wave was disabled because the RPM
+  // upper-arm bone axes produced a sideways-splay pose instead of a raised
+  // hand. Also exposes `.nod()` as the canonical name.
+  window.AlexAvatar.nod = function () {
+    try { if (window.AlexAvatar.__rig) window.AlexAvatar.__rig.nodT = 0; } catch (e) {}
   };
+  window.AlexAvatar.wave = window.AlexAvatar.nod;
 })();
