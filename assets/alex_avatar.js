@@ -332,7 +332,7 @@
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.18;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     sizeToCanvas();
 
@@ -340,13 +340,13 @@
     var key = new THREE.DirectionalLight(0xffffff, 2.4);
     key.position.set(1.2, 2.2, 2.5);
     scene.add(key);
-    var fill = new THREE.DirectionalLight(0x88aaff, 0.7);
+    var fill = new THREE.DirectionalLight(0xdbe6ff, 0.9);
     fill.position.set(-2.0, 1.2, 1.5);
     scene.add(fill);
     var rim = new THREE.DirectionalLight(0xffffff, 1.1);
     rim.position.set(0.2, 2.0, -2.0);
     scene.add(rim);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
     // State container.
     var rig = {
@@ -434,11 +434,15 @@
                 if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
                 if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
                 if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
-                if (mat.color && mat.color.set) mat.color.set(0xf3f5f8);
-                mat.roughness = 0.68;
+                if (mat.color && mat.color.set) mat.color.set(0xffffff);
+                mat.roughness = 0.54;
                 mat.metalness = 0.0;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x2a2a2a);
+                mat.emissiveIntensity = 0.12;
+                mat.envMapIntensity = 0.5;
+                mat.side = THREE.DoubleSide;
                 mat.needsUpdate = true;
-                rig.shirtColorHex = 0xf3f5f8;
+                rig.shirtColorHex = 0xffffff;
               }
             }
           } catch (e) { warn('shirt retint failed', e); }
@@ -550,22 +554,35 @@
       // arm so the skin is fully covered (looks like a fitted long sleeve).
       (function addProceduralSleeves() {
         try {
-          var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0xf3f5f8;
+          var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0xffffff;
           var sleeveMat = new THREE.MeshStandardMaterial({
             color: shirtCol,
-            roughness: 0.62,
-            metalness: 0.02
+            roughness: 0.54,
+            metalness: 0.0,
+            emissive: 0x2a2a2a,
+            emissiveIntensity: 0.10,
+            side: THREE.DoubleSide
           });
 
-          // Cylinder oriented along the bone's actual "down the bone" axis,
+          // Segment mesh oriented along the bone's actual "down the bone" axis,
           // computed from the child bone's local position relative to the
           // parent. This is robust to whatever local axis convention the
-          // skeleton uses (Mixamo/RPM, Y-up bones, etc.). We translate the
-          // geometry so the cylinder's TOP sits at the bone's origin.
-          function buildSegment(bone, child, length, rTop, rBot) {
+          // skeleton uses (Mixamo/RPM, Y-up bones, etc.). We deliberately add
+          // overlap at both ends so upper-arm and forearm sleeves blend at
+          // the elbow with no visible gap while bending.
+          function buildSegment(bone, child, length, rTop, rBot, overlapStart, overlapEnd) {
             if (!bone || !(length > 0)) return null;
-            var geom = new THREE.CylinderGeometry(rTop, rBot, length, 18, 1, false);
-            geom.translate(0, length / 2, 0);
+            overlapStart = overlapStart || 0;
+            overlapEnd = overlapEnd || 0;
+            var bodyLen = length + overlapStart + overlapEnd;
+            var capRadius = Math.max(0.002, Math.min(rTop, rBot) * 0.35);
+            var cylLen = Math.max(0.002, bodyLen - capRadius * 2.0);
+            var geom = new THREE.CapsuleGeometry(capRadius, cylLen, 6, 18);
+            // Scale capsule X/Z to create a tapered sleeve profile.
+            var maxR = Math.max(rTop, rBot);
+            var minR = Math.min(rTop, rBot);
+            geom.scale(maxR / capRadius, 1.0, minR / capRadius);
+            geom.translate(0, (length / 2) + (overlapEnd - overlapStart) / 2, 0);
             var mesh = new THREE.Mesh(geom, sleeveMat);
             mesh.castShadow = false;
             mesh.receiveShadow = false;
@@ -595,14 +612,29 @@
 
           // Radii in *local bone space* — bones inherit avatar scale, so
           // these are already in the same units as the other geometry.
-          var R_SHOULDER = 0.056;
-          var R_ELBOW    = 0.048;
-          var R_WRIST    = 0.041;
+          var R_SHOULDER = 0.060;
+          var R_ELBOW    = 0.051;
+          var R_WRIST    = 0.043;
+          var OVERLAP_SHOULDER = 0.028;
+          var OVERLAP_ELBOW = 0.026;
+          var OVERLAP_WRIST = 0.012;
 
-          buildSegment(rig.bones.leftArm,      rig.bones.leftForeArm,  upperLenL, R_SHOULDER, R_ELBOW);
-          buildSegment(rig.bones.rightArm,     rig.bones.rightForeArm, upperLenR, R_SHOULDER, R_ELBOW);
-          buildSegment(rig.bones.leftForeArm,  rig.bones.leftHand,     lowerLenL, R_ELBOW,    R_WRIST);
-          buildSegment(rig.bones.rightForeArm, rig.bones.rightHand,    lowerLenR, R_ELBOW,    R_WRIST);
+          buildSegment(
+            rig.bones.leftArm, rig.bones.leftForeArm, upperLenL, R_SHOULDER, R_ELBOW,
+            OVERLAP_SHOULDER, OVERLAP_ELBOW
+          );
+          buildSegment(
+            rig.bones.rightArm, rig.bones.rightForeArm, upperLenR, R_SHOULDER, R_ELBOW,
+            OVERLAP_SHOULDER, OVERLAP_ELBOW
+          );
+          buildSegment(
+            rig.bones.leftForeArm, rig.bones.leftHand, lowerLenL, R_ELBOW, R_WRIST,
+            OVERLAP_ELBOW, OVERLAP_WRIST
+          );
+          buildSegment(
+            rig.bones.rightForeArm, rig.bones.rightHand, lowerLenR, R_ELBOW, R_WRIST,
+            OVERLAP_ELBOW, OVERLAP_WRIST
+          );
 
           // Small shoulder caps — soften the seam where the shirt's short
           // sleeve ends and the new long sleeve begins. A flattened sphere
@@ -636,8 +668,8 @@
             m.name = 'AlexSleeveElbowCap';
             bone.add(m);
           }
-          buildElbowBlendCap(rig.bones.leftForeArm,  R_ELBOW * 1.04);
-          buildElbowBlendCap(rig.bones.rightForeArm, R_ELBOW * 1.04);
+          buildElbowBlendCap(rig.bones.leftForeArm,  R_ELBOW * 1.10);
+          buildElbowBlendCap(rig.bones.rightForeArm, R_ELBOW * 1.10);
 
           log('procedural sleeves attached — upperL/R:', upperLenL.toFixed(3), upperLenR.toFixed(3),
               'lowerL/R:', lowerLenL.toFixed(3), lowerLenR.toFixed(3));
