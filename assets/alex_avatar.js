@@ -361,8 +361,6 @@
       targetState: 'idle',
       prevState: 'idle',
       stateEnteredAt: 0,     // rig.t when the current target state began
-      teachT: -1,            // >=0 while an "open-palms teaching" emphasis gesture is playing
-      teachNext: 3.5,        // rig.t at which the next teaching gesture should auto-fire (while ai-speaking)
       loudness: 0,
       t: 0,
       restY: 0               // avatar.position.y after auto-centering; breathing anim adds on top
@@ -704,16 +702,6 @@
               rig.prevState = rig.targetState;
               rig.targetState = cls[i];
               rig.stateEnteredAt = rig.t;
-              // Whenever we enter ai-speaking, push the first auto-teaching
-              // gesture a few seconds out; also clear any stuck in-flight
-              // teach timer.
-              if (cls[i] === 'ai-speaking') {
-                rig.teachT = -1;
-                rig.teachNext = rig.t + 4.5;
-              } else {
-                // Leaving ai-speaking: cancel any pending/in-flight teach.
-                rig.teachT = -1;
-              }
             }
             return;
           }
@@ -844,45 +832,6 @@
           tgt.leftForeArm  = { x: handLift,  y: 0.00, z: 0.00 };
           tgt.rightForeArm = { x: handLiftR, y: 0.00, z: 0.00 };
 
-          // ── Open-palms "teaching" emphasis (fires occasionally) ─────────
-          // Every 6–10 seconds while speaking, raise both arms outward with
-          // slight elbow bend — the classic "here's the thing, look at this"
-          // professor gesture (matches reference image 1: cartoon prof with
-          // hands raised, palms up). Auto-scheduled via rig.teachNext so the
-          // gesture comes and goes naturally without repeating mechanically.
-          if (rig.teachT < 0 && t >= rig.teachNext) {
-            rig.teachT = 0;
-          }
-          if (rig.teachT >= 0) {
-            rig.teachT += dt;
-            var tt = rig.teachT;
-            var tenv;
-            if      (tt < 0.45) tenv = tt / 0.45;                       // ease in
-            else if (tt < 1.55) tenv = 1.0;                             // hold
-            else if (tt < 2.05) tenv = 1.0 - (tt - 1.55) / 0.50;        // ease out
-            else { tenv = 0; rig.teachT = -1; rig.teachNext = t + 6.0 + Math.random() * 4.0; }
-            if (tenv > 0) {
-              // Empirically probed "welcoming palms-up" professor pose.
-              // Three bone rotations combine to avoid the akimbo/T-pose
-              // failure modes and produce the image-1 reference look:
-              //   1. Upper-arm X delta -0.80 → lift arms roughly to
-              //      horizontal (rest=1.25 → 0.45 at full envelope).
-              //   2. Upper-arm Z delta ±0.60 → swing the raised arms
-              //      FORWARD out of the T-pose plane, so when the elbow
-              //      bends the hand travels up/forward, not sideways
-              //      into akimbo.
-              //   3. Forearm X delta -1.30 → NEGATIVE-direction elbow
-              //      bend (rest=0.20 → -1.10 at full envelope). This is
-              //      the critical piece: bending the elbow the "other"
-              //      way is what turns the palms upward and extends the
-              //      hands outward in a welcoming "here's the thing"
-              //      posture instead of folding them to the chest/hips.
-              tgt.leftArm  = { x: -0.80 * tenv, y:  0.00, z:  0.60 * tenv };
-              tgt.rightArm = { x: -0.80 * tenv, y:  0.00, z: -0.60 * tenv };
-              tgt.leftForeArm  = { x: -1.30 * tenv, y: 0.00, z: 0.00 };
-              tgt.rightForeArm = { x: -1.30 * tenv, y: 0.00, z: 0.00 };
-            }
-          }
         } else if (rig.targetState === 'user-speaking') {
           // Listening: small attentive spine sway + head nod handled above.
           tgt.spine = { x: 0.00, y: 0.02 * Math.sin(t * 0.6), z: 0.00 };
@@ -901,12 +850,10 @@
         });
 
         // Lip-sync: drive jaw morph from loudness, but only while speaking.
-        // Subtle range — real humans barely open their jaw while talking. Cap ≈0.28 keeps
-        // the mouth natural instead of cartoon-wide.
         var targetMouth = 0;
         if (rig.targetState === 'ai-speaking') {
           rig.loudness = rig.loudness * 0.55 + sampleLoudness() * 0.45;
-          targetMouth = Math.min(0.28, rig.loudness * 0.38);
+          targetMouth = Math.min(0.58, rig.loudness * 0.72);
         } else {
           rig.loudness *= 0.9;
         }

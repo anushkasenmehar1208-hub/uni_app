@@ -401,12 +401,23 @@
   function installPageHideEndVoiceOnce() {
     if (window.__alex_voice_pagehide_installed) return;
     window.__alex_voice_pagehide_installed = true;
+    // Only end on actual navigation/close — NOT on tab-switch (visibilitychange).
     window.addEventListener('pagehide', function () {
       try {
         if (window.__alex_voice_session_active && window.stopAlexVoiceSession) {
           window.stopAlexVoiceSession();
         }
       } catch (ePh) {}
+    });
+    // When tab comes back into focus: resume a suspended AudioContext so
+    // MediaRecorder can restart cleanly. Browsers suspend audio in bg tabs.
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) return;
+      try {
+        if (audioContext && audioContext.state === 'suspended') {
+          audioContext.resume().catch(function () {});
+        }
+      } catch (eVis) {}
     });
   }
   installPageHideEndVoiceOnce();
@@ -774,9 +785,10 @@
     try {
       mediaRecorder = new MediaRecorder(micStream, mimeType ? { mimeType: mimeType } : {});
     } catch (e) {
-      console.error('[AlexVoice] MediaRecorder error:', e);
-      setStatus('Mic recorder error — resetting');
-      stopAlex(true);
+      console.error('[AlexVoice] MediaRecorder error (will retry):', e);
+      setStatus('Mic recovering...');
+      // AudioContext may still be resuming after tab was backgrounded — retry.
+      setTimeout(function () { if (active) startListening(); }, 800);
       return;
     }
 
