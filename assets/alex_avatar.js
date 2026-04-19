@@ -361,9 +361,6 @@
       targetState: 'idle',
       prevState: 'idle',
       stateEnteredAt: 0,     // rig.t when the current target state began
-      greetT: -1,            // kept for back-compat — unused (old arm wave removed)
-      waveT: -1,             // >=0 while a hand-wave greeting is playing
-      nodT: -1,              // kept for back-compat with earlier head-only fallback
       teachT: -1,            // >=0 while an "open-palms teaching" emphasis gesture is playing
       teachNext: 3.5,        // rig.t at which the next teaching gesture should auto-fire (while ai-speaking)
       loudness: 0,
@@ -685,11 +682,6 @@
       canvas.classList.add('alex-avatar-ready');
       orb.classList.add('alex-avatar-active');
 
-      // Trigger a welcome hand-wave once the avatar is on-screen. The wave
-      // uses bone-axis deltas verified empirically against this specific RPM
-      // rig (see the wave block below for axis notes).
-      rig.waveT = 0;
-
       startObservers();
       startLoop();
     }
@@ -712,14 +704,9 @@
               rig.prevState = rig.targetState;
               rig.targetState = cls[i];
               rig.stateEnteredAt = rig.t;
-              // Hand-wave greeting when we transition INTO ai-speaking from
-              // idle (likely the opening line / hello moment).
-              if (cls[i] === 'ai-speaking' && rig.prevState === 'idle') {
-                rig.waveT = 0;
-              }
               // Whenever we enter ai-speaking, push the first auto-teaching
-              // gesture a few seconds out so it doesn't overlap the wave
-              // greeting; also clear any stuck in-flight teach timer.
+              // gesture a few seconds out; also clear any stuck in-flight
+              // teach timer.
               if (cls[i] === 'ai-speaking') {
                 rig.teachT = -1;
                 rig.teachNext = rig.t + 4.5;
@@ -906,52 +893,6 @@
           tgt.rightArm = { x: 0.00, y: -0.015 * Math.sin(t * 0.55 + 0.3), z: 0.00 };
         }
 
-        // ── Hand-wave greeting (natural human biomechanics) ─────────────────
-        // Humans don't wave by raising a stiff straight arm overhead. They
-        // raise the upper arm moderately (~40°), BEND THE ELBOW sharply so
-        // the hand comes up next to the face, and oscillate the wrist/forearm
-        // side-to-side. Built on top of the proven teaching-pose bone deltas
-        // (line ~894) which already render naturally on this rig.
-        //
-        // Rest pose (post-normalization, see setRot block line ~516):
-        //   rightArm     = (+1.25,  -0.10,  0.00)  → arm hanging at side
-        //   rightForeArm = (+0.20,  +0.10,  0.00)  → slight relaxed bend
-        //
-        // Target wave pose (total after delta):
-        //   rightArm     ≈ (+0.35,  -0.10, -0.40)  → upper arm raised ~50°
-        //                                             out-and-forward, NOT up
-        //   rightForeArm ≈ (-1.50,  +0.10, +0.20)  → elbow flexed ~85°, hand
-        //                                             ends up at head height
-        //   rightForeArm Y oscillates → the actual wave motion (hand sweeps
-        //                                 side to side)
-        if (rig.waveT != null && rig.waveT >= 0) {
-          rig.waveT += dt;
-          var wt = rig.waveT;
-          var env;
-          if (wt < 0.45)      env = wt / 0.45;                    // ease-in:   raise arm + bend elbow
-          else if (wt < 1.70) env = 1.0;                          // hold:      wave
-          else if (wt < 2.20) env = 1.0 - (wt - 1.70) / 0.50;     // ease-out:  relax back to rest
-          else { env = 0; rig.waveT = -1; }
-          if (env > 0) {
-            // Upper arm: moderate raise + outward rotation. Same vector family
-            // as the teaching pose (which looks human), just slightly higher.
-            tgt.rightArm = { x: -0.90 * env, y: 0.00, z: -0.40 * env };
-            // Elbow: strong flex — this is what brings the HAND up to head
-            // height while the upper arm stays moderate. The wrist wave rides
-            // on the forearm's Y (twist along its length) so the palm sweeps
-            // left-right without the whole arm swinging.
-            var wave = Math.sin(wt * 8.5) * 0.45 * env * env;
-            tgt.rightForeArm = { x: -1.70 * env, y: wave, z: 0.20 * env };
-            // Subtle spine counter-rotation so the shoulder can follow the
-            // raised arm instead of fighting it (keeps the chest open).
-            tgt.spine1 = {
-              x: (tgt.spine1.x || 0),
-              y: (tgt.spine1.y || 0) + 0.05 * env,
-              z: (tgt.spine1.z || 0) - 0.04 * env
-            };
-          }
-        }
-
         // Smooth-apply every bone delta.
         var k = Math.min(1, dt * 6.0);        // ~6Hz follow rate
         Object.keys(tgt).forEach(function (key) {
@@ -1005,12 +946,7 @@
     var key = targetId || window.ALEX_AVATAR_TARGET_ID || 'alex-orb';
     return !!(window.__alexAvatarBootedTargets && window.__alexAvatarBootedTargets[key]);
   };
-  // Manual greeting trigger — plays the 2.3s hand-wave animation. The wave
-  // uses empirically-verified RPM bone-axis deltas (see the wave block in
-  // the render loop for the full axis map).
-  window.AlexAvatar.wave = function () {
-    try { if (window.AlexAvatar.__rig) window.AlexAvatar.__rig.waveT = 0; } catch (e) {}
-  };
-  // `.nod()` kept as a synonym for back-compat — it just fires the wave.
-  window.AlexAvatar.nod = window.AlexAvatar.wave;
+  // No-op stubs kept so older call sites (AlexAvatar.wave(), .nod()) don't throw.
+  window.AlexAvatar.wave = function () {};
+  window.AlexAvatar.nod  = function () {};
 })();
