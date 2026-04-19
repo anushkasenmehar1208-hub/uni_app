@@ -24937,7 +24937,7 @@ def alex_voice_overlay_panel() -> rx.Component:
                 rx.el.div(id="alex-transcript"),
                 # Status sits below the wall so it isn't hidden by the overlap.
                 rx.el.p("Connecting…", id="alex-status"),
-                rx.el.hstack(
+                rx.hstack(
                     rx.el.button(
                         "Mute mic",
                         id="alex-mic-toggle",
