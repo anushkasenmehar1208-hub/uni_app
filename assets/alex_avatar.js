@@ -416,11 +416,11 @@
           node.castShadow = false;
           node.receiveShadow = false;
           node.frustumCulled = false;
-          // ── Retint the shirt to a soft mid-gray ─────────────────────────
+          // ── Retint the shirt to clean white ─────────────────────────────
           // The RPM avatar ships with a dark-blue polo + printed "Alex" logo
           // baked into `Wolf3D_Outfit_Top`. Replace the albedo/roughness/
-          // metalness texture maps with a plain matte gray fabric so the
-          // outfit reads as a clean modern gray shirt. The mesh geometry
+          // metalness texture maps with a plain matte white fabric so the
+          // outfit reads as a clean modern white shirt. The mesh geometry
           // (polo silhouette + short sleeves) is fixed in the GLB — full
           // sleeves are added separately below as cylinder meshes parented
           // to the upper-arm and forearm bones (search for
@@ -434,11 +434,11 @@
                 if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
                 if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
                 if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
-                if (mat.color && mat.color.set) mat.color.set(0x6e7177);
-                mat.roughness = 0.62;
-                mat.metalness = 0.02;
+                if (mat.color && mat.color.set) mat.color.set(0xf3f5f8);
+                mat.roughness = 0.68;
+                mat.metalness = 0.0;
                 mat.needsUpdate = true;
-                rig.shirtColorHex = 0x6e7177;
+                rig.shirtColorHex = 0xf3f5f8;
               }
             }
           } catch (e) { warn('shirt retint failed', e); }
@@ -550,7 +550,7 @@
       // arm so the skin is fully covered (looks like a fitted long sleeve).
       (function addProceduralSleeves() {
         try {
-          var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0x6e7177;
+          var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0xf3f5f8;
           var sleeveMat = new THREE.MeshStandardMaterial({
             color: shirtCol,
             roughness: 0.62,
@@ -595,9 +595,9 @@
 
           // Radii in *local bone space* — bones inherit avatar scale, so
           // these are already in the same units as the other geometry.
-          var R_SHOULDER = 0.052;
-          var R_ELBOW    = 0.044;
-          var R_WRIST    = 0.038;
+          var R_SHOULDER = 0.056;
+          var R_ELBOW    = 0.048;
+          var R_WRIST    = 0.041;
 
           buildSegment(rig.bones.leftArm,      rig.bones.leftForeArm,  upperLenL, R_SHOULDER, R_ELBOW);
           buildSegment(rig.bones.rightArm,     rig.bones.rightForeArm, upperLenR, R_SHOULDER, R_ELBOW);
@@ -621,6 +621,23 @@
           }
           buildShoulderCap(rig.bones.leftArm,  R_SHOULDER * 1.05);
           buildShoulderCap(rig.bones.rightArm, R_SHOULDER * 1.05);
+
+          // Elbow blend caps — hide any seam between upper-arm and forearm
+          // sleeves so the full sleeve reads as one continuous garment.
+          function buildElbowBlendCap(bone, radius) {
+            if (!bone) return;
+            var g = new THREE.SphereGeometry(radius, 20, 14);
+            var m = new THREE.Mesh(g, sleeveMat);
+            m.scale.set(1.0, 0.88, 1.0);
+            m.position.set(0, 0, 0);
+            m.castShadow = false;
+            m.receiveShadow = false;
+            m.frustumCulled = false;
+            m.name = 'AlexSleeveElbowCap';
+            bone.add(m);
+          }
+          buildElbowBlendCap(rig.bones.leftForeArm,  R_ELBOW * 1.04);
+          buildElbowBlendCap(rig.bones.rightForeArm, R_ELBOW * 1.04);
 
           log('procedural sleeves attached — upperL/R:', upperLenL.toFixed(3), upperLenR.toFixed(3),
               'lowerL/R:', lowerLenL.toFixed(3), lowerLenR.toFixed(3));
