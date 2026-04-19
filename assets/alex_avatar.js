@@ -416,33 +416,46 @@
           node.castShadow = false;
           node.receiveShadow = false;
           node.frustumCulled = false;
-          // ── Retint the shirt to clean white ─────────────────────────────
+          // ── Outfit restyle: normal t-shirt + no visible belt ────────────
           // The RPM avatar ships with a dark-blue polo + printed "Alex" logo
           // baked into `Wolf3D_Outfit_Top`. Replace the albedo/roughness/
-          // metalness texture maps with a plain matte white fabric so the
-          // outfit reads as a clean modern white shirt. The mesh geometry
-          // (polo silhouette + short sleeves) is fixed in the GLB — full
-          // sleeves are added separately below as cylinder meshes parented
-          // to the upper-arm and forearm bones (search for
-          // `addProceduralSleeves`).
+          // metalness texture maps with plain materials:
+          // - top: custom t-shirt color (imagined style)
+          // - bottom: flat dark trouser tone so belt details disappear.
           try {
             var mats = Array.isArray(node.material) ? node.material : [node.material];
             for (var mi = 0; mi < mats.length; mi++) {
               var mat = mats[mi];
-              if (mat && mat.name === 'Wolf3D_Outfit_Top') {
+              if (!mat || !mat.name) continue;
+              if (mat.name === 'Wolf3D_Outfit_Top') {
                 if (mat.map)          { mat.map.dispose();          mat.map = null; }
                 if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
                 if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
                 if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
-                if (mat.color && mat.color.set) mat.color.set(0xffffff);
-                mat.roughness = 0.54;
+                // Custom "imagination" t-shirt color: modern teal blue.
+                if (mat.color && mat.color.set) mat.color.set(0x2f8fcb);
+                mat.roughness = 0.64;
                 mat.metalness = 0.0;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x2a2a2a);
-                mat.emissiveIntensity = 0.12;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x111418);
+                mat.emissiveIntensity = 0.06;
                 mat.envMapIntensity = 0.5;
                 mat.side = THREE.DoubleSide;
                 mat.needsUpdate = true;
-                rig.shirtColorHex = 0xffffff;
+                rig.shirtColorHex = 0x2f8fcb;
+              } else if (mat.name === 'Wolf3D_Outfit_Bottom') {
+                // Remove belt artifacts by discarding bottom texture maps and
+                // using a flat cloth color for the full trouser mesh.
+                if (mat.map)          { mat.map.dispose();          mat.map = null; }
+                if (mat.roughnessMap) { mat.roughnessMap.dispose(); mat.roughnessMap = null; }
+                if (mat.metalnessMap) { mat.metalnessMap.dispose(); mat.metalnessMap = null; }
+                if (mat.normalMap)    { mat.normalMap.dispose();    mat.normalMap = null; }
+                if (mat.color && mat.color.set) mat.color.set(0x1d222b);
+                mat.roughness = 0.78;
+                mat.metalness = 0.0;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x060708);
+                mat.emissiveIntensity = 0.04;
+                mat.envMapIntensity = 0.2;
+                mat.needsUpdate = true;
               }
             }
           } catch (e) { warn('shirt retint failed', e); }
@@ -554,6 +567,9 @@
       // arm so the skin is fully covered (looks like a fitted long sleeve).
       (function addProceduralSleeves() {
         try {
+          // User requested a normal t-shirt (short sleeves), so disable
+          // procedural long-sleeve geometry entirely.
+          return;
           var shirtCol = (typeof rig.shirtColorHex === 'number') ? rig.shirtColorHex : 0xffffff;
           var sleeveMat = new THREE.MeshStandardMaterial({
             color: shirtCol,
