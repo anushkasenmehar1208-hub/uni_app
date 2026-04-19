@@ -253,22 +253,32 @@
   // ── Main boot ─────────────────────────────────────────────────────────────
   function boot(targetId) {
     targetId = targetId || 'alex-orb';
-    if (window.__alexAvatarBootedTargets[targetId]) {
-      log('already booted for target', targetId);
-      return;
-    }
-    window.__alexAvatarBootedTargets[targetId] = true;
     var canvasId = targetId + '-avatar-canvas';
+
+    // Re-entrant-safe: if a previous boot ran but the canvas was removed from the
+    // DOM (Reflex closes and reopens the voice overlay → destroys the old orb element),
+    // clear the stale flag so we re-initialise into the fresh orb.
+    if (window.__alexAvatarBootedTargets[targetId]) {
+      if (document.getElementById(canvasId)) {
+        log('already booted and canvas present for', targetId);
+        return;
+      }
+      log('canvas missing — orb was re-created; re-initialising', targetId);
+      window.__alexAvatarBootedTargets[targetId] = false;
+    }
+
+    window.__alexAvatarBootedTargets[targetId] = true;
     injectStyleOnce(targetId, canvasId);
 
     waitForOrb(targetId).then(function (orb) {
+      // Guard: canvas might have been injected by a racing call.
       if (document.getElementById(canvasId)) return;
       var canvas = document.createElement('canvas');
       canvas.id = canvasId;
       orb.appendChild(canvas);
 
       loadThreeModules()
-        .then(function (mods) { return initScene(mods, canvas, orb); })
+        .then(function (mods) { return initScene(mods, canvas, orb, targetId); })
         .catch(function (err) {
           warn('3D init failed, keeping orb fallback:', err && err.message);
           try { canvas.remove(); } catch (e) {}
@@ -280,7 +290,26 @@
     });
   }
 
-  function initScene(mods, canvas, orb) {
+  // Watch the whole document for the orb element being (re-)added to the DOM.
+  // Reflex's SPA navigation and show_voice_overlay toggling recreates #alex-orb
+  // without reloading the page, so this observer ensures the avatar re-mounts.
+  (function installPersistentObserver() {
+    var obsTargetId = window.ALEX_AVATAR_TARGET_ID || 'alex-orb';
+    var docObs = new MutationObserver(function () {
+      var orb = document.getElementById(obsTargetId);
+      if (!orb) return;
+      var canvasId = obsTargetId + '-avatar-canvas';
+      // Only act when the orb exists but canvas is absent (fresh mount).
+      if (!document.getElementById(canvasId)) {
+        log('persistent observer: orb re-appeared, triggering boot');
+        boot(obsTargetId);
+      }
+    });
+    docObs.observe(document.documentElement, { childList: true, subtree: true });
+  })();
+
+  function initScene(mods, canvas, orb, targetId) {
+    targetId = targetId || 'alex-orb';
     var THREE = mods.THREE;
     var GLTFLoader = mods.GLTFLoader;
     var KTX2Loader = mods.KTX2Loader;
@@ -675,6 +704,16 @@
     var clock = new THREE.Clock();
     function startLoop() {
       renderer.setAnimationLoop(function () {
+        // If the canvas was removed from the DOM (Reflex closed the voice overlay),
+        // stop the render loop and clear the boot flag so the next open re-inits cleanly.
+        if (!canvas.isConnected) {
+          renderer.setAnimationLoop(null);
+          try { renderer.dispose(); } catch (e) {}
+          delete window.__alexAvatarBootedTargets[targetId];
+          log('canvas detached — render loop stopped, boot flag cleared');
+          return;
+        }
+
         var dt = Math.min(0.05, clock.getDelta());
         rig.t += dt;
 
