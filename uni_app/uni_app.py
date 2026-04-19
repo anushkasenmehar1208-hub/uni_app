@@ -24917,6 +24917,34 @@ def alex_voice_overlay_panel() -> rx.Component:
                 box-shadow: 0 0 0 3px rgba(255,120,100,0.08);
             }
         """),
+        # Persistent avatar loader — guarantees the 3D avatar mounts whenever
+        # the voice overlay is rendered, INCLUDING after a hard page refresh
+        # (open_voice_chat's rx.call_script hook doesn't re-fire on refresh,
+        # so we need a DOM-embedded boot path here). Idempotent: if
+        # AlexAvatarMount is already defined, it just re-mounts; otherwise
+        # it injects /alex_avatar.js and mounts on load.
+        rx.script(
+            "(function(){"
+            "window.ALEX_AVATAR_TARGET_ID='alex-orb';"
+            "function mount(){try{if(window.AlexAvatarMount)window.AlexAvatarMount('alex-orb');}catch(e){}}"
+            "function poll(){"
+              "var tries=0;"
+              "var iv=setInterval(function(){"
+                "if(document.getElementById('alex-orb')&&window.AlexAvatarMount){mount();clearInterval(iv);return;}"
+                "if(++tries>60)clearInterval(iv);"
+              "},250);"
+            "}"
+            "if(window.AlexAvatarMount){mount();poll();return;}"
+            "var existing=document.getElementById('_alex_avatar_script');"
+            "if(existing){existing.addEventListener('load',function(){mount();poll();});return;}"
+            "var av=document.createElement('script');"
+            "av.id='_alex_avatar_script';"
+            "av.src='/alex_avatar.js?v=1';"
+            "av.onload=function(){mount();poll();};"
+            "av.onerror=function(){console.warn('[AlexAvatar] failed to load /alex_avatar.js');};"
+            "document.head.appendChild(av);"
+            "})();"
+        ),
         rx.center(
             # Painted backdrop (gradients + subtle grid + vignette). Absolutely
             # positioned so it doesn't participate in flex centering.

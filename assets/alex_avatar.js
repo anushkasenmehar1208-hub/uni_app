@@ -502,6 +502,18 @@
           if (!b) return;
           rig.rest[k] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
         });
+        // Head + neck rest capture — CRITICAL. RPM avatars ship with a small
+        // non-zero head bind rotation (chin-down a few degrees) and any
+        // absolute overwrite on rig.head.rotation in the render loop would
+        // snap the neck to a broken angle. Record the bind values here so
+        // all head animation can be applied as a delta on top of them.
+        if (rig.head) {
+          rig.rest.head = {
+            x: rig.head.rotation.x,
+            y: rig.head.rotation.y,
+            z: rig.head.rotation.z
+          };
+        }
       })();
 
       // Auto-frame: normalize the avatar to a known scale, then frame the face tightly.
@@ -571,12 +583,18 @@
 
         var headY, frameHeight;
         if (isFullBody) {
-          // Full body framing: show the whole character with tiny padding.
-          // Bias camera aim slightly up from body center so the face lands in the
-          // upper third of the canvas (shoulders visible); the character's lower
-          // legs run off the bottom of the frame / fade into the transcript wall.
-          headY = postCenter.y + postSize.y * 0.10;
-          frameHeight = postSize.y * 1.05;
+          // Full body framing: prefer to aim at the ACTUAL face mesh center so the
+          // camera's gaze is horizontal with the eyes (no perspective foreshortening
+          // that would make the character look like they're craning their neck).
+          // faceCenter.y was measured above from the face mesh's world bbox.
+          // Fallback: 82% up from the body's vertical span (upper chest/face line).
+          var faceYBias = postBox.min.y + postSize.y * 0.82;
+          headY = (faceCenter && isFinite(faceCenter.y))
+            ? faceCenter.y
+            : faceYBias;
+          // Frame a touch taller than the full body so the shoulders sit in
+          // the upper third and the legs fade into the wall below.
+          frameHeight = postSize.y * 1.15;
         } else {
           // Head/face scan — frame the face with a bit of padding.
           headY = faceCenter.y;
@@ -722,25 +740,33 @@
           var breath = Math.sin(rig.t * 1.6) * 0.006;
           rig.root.position.y = rig.restY + breath;
         }
-        if (rig.head) {
-          var swayX = Math.sin(rig.t * 0.6) * 0.04;
-          var swayY = Math.sin(rig.t * 0.4 + 1.2) * 0.03;
-          // Only add gentle sway when not actively speaking loudly (don't fight lipsync/head nod).
-          rig.head.rotation.y = swayX;
-          rig.head.rotation.x = swayY;
+        if (rig.head && rig.rest.head) {
+          // Apply head animation ADDITIVELY around the captured rest rotation.
+          // Overwriting .x/.y directly (as earlier revisions did) would discard
+          // the avatar's bind-pose head tilt and produce a broken-neck look.
+          var rh = rig.rest.head;
+          var swayY = Math.sin(rig.t * 0.6) * 0.04;       // subtle left/right head shake
+          var swayX = Math.sin(rig.t * 0.4 + 1.2) * 0.025; // very subtle up/down nod
+          var headDX = swayX;
+          var headDY = swayY;
+          var headDZ = 0;
 
           if (rig.targetState === 'thinking') {
-            rig.head.rotation.y = Math.sin(rig.t * 1.5) * 0.12;
-            rig.head.rotation.x = -0.05 + Math.sin(rig.t * 2.3) * 0.04;
+            headDY = Math.sin(rig.t * 1.5) * 0.12;
+            headDX = -0.05 + Math.sin(rig.t * 2.3) * 0.04;
           } else if (rig.targetState === 'user-speaking') {
-            // Listening: small attentive nod.
-            rig.head.rotation.x = -0.02 + Math.sin(rig.t * 0.9) * 0.02;
+            // Listening: small attentive nod (slight chin-down + tiny oscillation).
+            headDX = -0.02 + Math.sin(rig.t * 0.9) * 0.02;
+            headDY = swayY * 0.5;
           } else if (rig.targetState === 'ai-speaking') {
-            // Speaking: livelier movement driven partly by audio loudness.
+            // Speaking: livelier movement, scaled with audio loudness.
             var l = rig.loudness;
-            rig.head.rotation.y = swayX + Math.sin(rig.t * 2.1) * 0.04 * l;
-            rig.head.rotation.x = swayY + Math.sin(rig.t * 2.8) * 0.03 * l;
+            headDY = swayY + Math.sin(rig.t * 2.1) * 0.04 * l;
+            headDX = swayX + Math.sin(rig.t * 2.8) * 0.03 * l;
           }
+          rig.head.rotation.x = rh.x + headDX;
+          rig.head.rotation.y = rh.y + headDY;
+          rig.head.rotation.z = rh.z + headDZ;
         }
 
         // ── Arm + torso gestures ────────────────────────────────────────────
@@ -821,8 +847,11 @@
               y: 0.35 * Math.sin(wd * 10.0) * env,
               z: 0.00
             };
-            if (rig.head) {
-              rig.head.rotation.z = (rig.head.rotation.z || 0) + 0.08 * env;
+            if (rig.head && rig.rest.head) {
+              // Wave adds a small head-roll on top of the base rest rotation.
+              // Must re-apply AFTER the main head-sway assignment above
+              // (this branch runs within the same frame, after that block).
+              rig.head.rotation.z = rig.rest.head.z + 0.08 * env;
             }
           }
         }
