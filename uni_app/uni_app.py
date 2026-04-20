@@ -4300,6 +4300,18 @@ class AuthThrottle(rx.Model, table=True):  # type: ignore
     )
 
 
+class TodoTracker(rx.Model, table=True):  # type: ignore
+    """Per-user day-challenge tracker (stores todos + check grid as JSON)."""
+    user_id: int = Field(index=True, nullable=False)
+    title: str = Field(default="100 Day Tracker", nullable=False)
+    days: int = Field(default=100, nullable=False)
+    todos_json: str = Field(default="[]", nullable=False)   # JSON list[str]
+    checks_json: str = Field(default="{}", nullable=False)  # JSON dict[str, list[bool]]
+    updated_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    )
+
+
 # ----------------------------
 # Payment webhooks
 # ----------------------------
@@ -20395,6 +20407,7 @@ def nav_rail() -> rx.Component:
         ),
         _nav_rail_btn("search", AppState.toggle_global_search),
         _nav_rail_btn("notebook", AppState.toggle_notes_panel),
+        _nav_rail_btn("list_checks", rx.redirect("/tracker")),
         rx.spacer(),
         # ── Bottom group ──
         _nav_rail_btn("settings", rx.redirect("/settings")),
@@ -22888,6 +22901,462 @@ def settings_learn_more_tab() -> rx.Component:
     )
 
 
+# ──────────────────────────────────────────────────────────────
+# Todo Tracker — state + page
+# ──────────────────────────────────────────────────────────────
+
+class _CheckCell(rx.Base):
+    day: int
+    checked: bool
+
+
+class _TrackerRow(rx.Base):
+    name: str
+    cells: list[_CheckCell]
+    done_count: int
+
+
+class TrackerState(AppState):
+    tracker_title: str = "100 Day Tracker"
+    tracker_days: int = 100
+    tracker_todos: list[str] = []
+    tracker_checks: dict[str, list[bool]] = {}
+    tracker_new_todo: str = ""
+    tracker_editing_title: bool = False
+    tracker_title_draft: str = ""
+
+    @rx.var
+    def tracker_rows(self) -> list[_TrackerRow]:
+        rows = []
+        for name in self.tracker_todos:
+            checks = list(self.tracker_checks.get(name, [False] * self.tracker_days))
+            # Pad / trim to current days count
+            if len(checks) < self.tracker_days:
+                checks.extend([False] * (self.tracker_days - len(checks)))
+            elif len(checks) > self.tracker_days:
+                checks = checks[:self.tracker_days]
+            rows.append(_TrackerRow(
+                name=name,
+                cells=[_CheckCell(day=i, checked=c) for i, c in enumerate(checks)],
+                done_count=sum(1 for c in checks if c),
+            ))
+        return rows
+
+    @rx.var
+    def day_columns(self) -> list[int]:
+        return list(range(1, self.tracker_days + 1))
+
+    def on_load_tracker(self):
+        uid = self._cached_uid
+        if uid < 0:
+            return rx.redirect("/login")
+        with rx.session() as session:
+            tracker = session.exec(
+                select(TodoTracker).where(TodoTracker.user_id == uid)
+            ).first()
+            if tracker:
+                self.tracker_title = tracker.title
+                self.tracker_days = tracker.days
+                todos = json.loads(tracker.todos_json)
+                raw = json.loads(tracker.checks_json)
+                self.tracker_todos = todos
+                checks = {}
+                for name in todos:
+                    row = list(raw.get(name, []))
+                    if len(row) < self.tracker_days:
+                        row.extend([False] * (self.tracker_days - len(row)))
+                    checks[name] = row[:self.tracker_days]
+                self.tracker_checks = checks
+
+    def _save(self):
+        uid = self._cached_uid
+        if uid < 0:
+            return
+        with rx.session() as session:
+            tracker = session.exec(
+                select(TodoTracker).where(TodoTracker.user_id == uid)
+            ).first()
+            if not tracker:
+                tracker = TodoTracker(user_id=uid)
+                session.add(tracker)
+            tracker.title = self.tracker_title
+            tracker.days = self.tracker_days
+            tracker.todos_json = json.dumps(self.tracker_todos)
+            tracker.checks_json = json.dumps({k: list(v) for k, v in self.tracker_checks.items()})
+            session.commit()
+
+    def set_tracker_new_todo(self, val: str):
+        self.tracker_new_todo = val
+
+    def add_todo(self):
+        name = self.tracker_new_todo.strip()
+        if not name or name in self.tracker_todos:
+            self.tracker_new_todo = ""
+            return
+        self.tracker_todos = self.tracker_todos + [name]
+        checks = dict(self.tracker_checks)
+        checks[name] = [False] * self.tracker_days
+        self.tracker_checks = checks
+        self.tracker_new_todo = ""
+        self._save()
+
+    def handle_new_todo_key(self, key: str):
+        if key == "Enter":
+            return TrackerState.add_todo
+
+    def remove_todo(self, name: str):
+        self.tracker_todos = [t for t in self.tracker_todos if t != name]
+        self.tracker_checks = {k: v for k, v in self.tracker_checks.items() if k != name}
+        self._save()
+
+    def toggle_check(self, todo: str, day: int):
+        checks = dict(self.tracker_checks)
+        if todo in checks:
+            row = list(checks[todo])
+            if day < len(row):
+                row[day] = not row[day]
+                checks[todo] = row
+                self.tracker_checks = checks
+        self._save()
+
+    def set_tracker_days(self, val: str):
+        try:
+            days = max(1, min(365, int(val)))
+        except (ValueError, TypeError):
+            return
+        self.tracker_days = days
+        checks = dict(self.tracker_checks)
+        for name in self.tracker_todos:
+            row = list(checks.get(name, []))
+            if len(row) < days:
+                row.extend([False] * (days - len(row)))
+            checks[name] = row[:days]
+        self.tracker_checks = checks
+        self._save()
+
+    def start_edit_title(self):
+        self.tracker_title_draft = self.tracker_title
+        self.tracker_editing_title = True
+
+    def set_title_draft(self, val: str):
+        self.tracker_title_draft = val
+
+    def commit_title(self):
+        title = self.tracker_title_draft.strip()
+        if title:
+            self.tracker_title = title
+        self.tracker_editing_title = False
+        self._save()
+
+    def handle_title_key(self, key: str):
+        if key == "Enter":
+            return TrackerState.commit_title
+
+
+def _tracker_cell(row: _TrackerRow, cell: _CheckCell) -> rx.Component:
+    return rx.el.td(
+        rx.box(
+            rx.cond(
+                cell.checked,
+                rx.icon(tag="check_square_2", size=16, color="#3b9eff"),
+                rx.icon(tag="square", size=16, color="rgba(255,255,255,0.15)"),
+            ),
+            on_click=TrackerState.toggle_check(row.name, cell.day),
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            cursor="pointer",
+            width="100%",
+            padding="4px",
+            style={
+                "_hover": {"opacity": "0.75"},
+            },
+        ),
+        style={
+            "text_align": "center",
+            "padding": "0",
+            "min_width": "44px",
+        },
+    )
+
+
+def _tracker_row(row: _TrackerRow) -> rx.Component:
+    return rx.el.tr(
+        # Sticky todo name cell
+        rx.el.td(
+            rx.hstack(
+                rx.text(
+                    row.name,
+                    font_size="0.85rem",
+                    color="rgba(220,230,240,0.92)",
+                    font_weight="500",
+                    white_space="nowrap",
+                ),
+                rx.box(
+                    rx.text(
+                        row.done_count,
+                        font_size="0.68rem",
+                        color="rgba(59,158,255,0.85)",
+                        font_weight="600",
+                    ),
+                    background="rgba(59,158,255,0.10)",
+                    border_radius="99px",
+                    padding="1px 6px",
+                ),
+                rx.icon_button(
+                    rx.icon(tag="x", size=10),
+                    on_click=TrackerState.remove_todo(row.name),
+                    variant="ghost",
+                    size="1",
+                    style={
+                        "color": "rgba(255,255,255,0.2)",
+                        "opacity": "0",
+                        "_groupHover": {"opacity": "1"},
+                        "transition": "opacity .15s",
+                    },
+                ),
+                spacing="2",
+                align="center",
+            ),
+            style={
+                "padding": "8px 14px",
+                "position": "sticky",
+                "left": "0",
+                "background": "#0d0d10",
+                "z_index": "2",
+                "border_right": "1px solid rgba(255,255,255,0.06)",
+            },
+            class_name="group",
+        ),
+        rx.foreach(
+            row.cells,
+            lambda cell: _tracker_cell(row, cell),
+        ),
+        style={
+            "_hover": {"background": "rgba(255,255,255,0.02)"},
+        },
+    )
+
+
+def tracker_page_content() -> rx.Component:
+    return rx.box(
+        # ── Header ──
+        rx.hstack(
+            rx.icon_button(
+                rx.icon(tag="arrow_left", size=16),
+                on_click=rx.redirect("/app"),
+                variant="ghost",
+                size="2",
+                color="rgba(255,255,255,0.45)",
+                style={"_hover": {"color": "white"}},
+            ),
+            rx.cond(
+                TrackerState.tracker_editing_title,
+                rx.el.input(
+                    value=TrackerState.tracker_title_draft,
+                    on_change=TrackerState.set_title_draft,
+                    on_key_down=TrackerState.handle_title_key,
+                    on_blur=TrackerState.commit_title,
+                    auto_focus=True,
+                    style={
+                        "background": "transparent",
+                        "border": "none",
+                        "border_bottom": "1px solid rgba(59,158,255,0.5)",
+                        "color": "white",
+                        "font_size": "1.3rem",
+                        "font_weight": "700",
+                        "outline": "none",
+                        "width": "300px",
+                        "padding": "2px 0",
+                    },
+                ),
+                rx.text(
+                    TrackerState.tracker_title,
+                    font_size="1.3rem",
+                    font_weight="700",
+                    color="white",
+                    cursor="pointer",
+                    on_click=TrackerState.start_edit_title,
+                    style={"_hover": {"opacity": "0.75"}},
+                ),
+            ),
+            rx.spacer(),
+            # Days selector
+            rx.hstack(
+                rx.text("Days:", font_size="0.82rem", color="rgba(180,190,200,0.55)"),
+                rx.el.input(
+                    type="number",
+                    value=TrackerState.tracker_days,
+                    on_change=TrackerState.set_tracker_days,
+                    style={
+                        "width": "64px",
+                        "background": "rgba(255,255,255,0.05)",
+                        "border": "1px solid rgba(255,255,255,0.10)",
+                        "border_radius": "8px",
+                        "color": "white",
+                        "font_size": "0.85rem",
+                        "padding": "5px 10px",
+                        "text_align": "center",
+                        "outline": "none",
+                    },
+                ),
+                spacing="2",
+                align="center",
+            ),
+            align="center",
+            width="100%",
+            padding="24px 28px 16px",
+        ),
+        # ── Add todo input ──
+        rx.hstack(
+            rx.el.input(
+                placeholder="Add a habit or task…",
+                value=TrackerState.tracker_new_todo,
+                on_change=TrackerState.set_tracker_new_todo,
+                on_key_down=TrackerState.handle_new_todo_key,
+                style={
+                    "flex": "1",
+                    "background": "rgba(255,255,255,0.04)",
+                    "border": "1px solid rgba(255,255,255,0.10)",
+                    "border_radius": "10px",
+                    "color": "rgba(230,235,242,0.92)",
+                    "font_size": "0.88rem",
+                    "padding": "10px 14px",
+                    "outline": "none",
+                    "transition": "border-color .15s",
+                    "_focus": {"border_color": "rgba(59,158,255,0.45)"},
+                    "_placeholder": {"color": "rgba(180,190,200,0.35)"},
+                },
+            ),
+            rx.button(
+                rx.icon(tag="plus", size=16),
+                "Add",
+                on_click=TrackerState.add_todo,
+                size="2",
+                variant="solid",
+                style={
+                    "background": "rgba(59,158,255,0.15)",
+                    "border": "1px solid rgba(59,158,255,0.30)",
+                    "color": "rgba(59,158,255,0.95)",
+                    "border_radius": "10px",
+                    "padding": "10px 18px",
+                    "font_size": "0.85rem",
+                    "font_weight": "600",
+                    "cursor": "pointer",
+                    "gap": "6px",
+                    "_hover": {"background": "rgba(59,158,255,0.25)"},
+                },
+            ),
+            padding="0 28px 18px",
+            spacing="3",
+        ),
+        # ── Table ──
+        rx.cond(
+            TrackerState.tracker_todos.length() == 0,
+            rx.box(
+                rx.vstack(
+                    rx.icon(tag="clipboard_list", size=40, color="rgba(255,255,255,0.12)"),
+                    rx.text(
+                        "Add your first habit above to get started",
+                        color="rgba(180,190,200,0.35)",
+                        font_size="0.9rem",
+                    ),
+                    spacing="3",
+                    align="center",
+                ),
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                height="200px",
+            ),
+            rx.box(
+                rx.el.table(
+                    rx.el.thead(
+                        rx.el.tr(
+                            # Sticky "Todo" header
+                            rx.el.th(
+                                rx.text("Todo", font_size="0.72rem", color="rgba(180,190,200,0.5)", font_weight="600", letter_spacing="0.08em", text_transform="uppercase"),
+                                style={
+                                    "position": "sticky",
+                                    "left": "0",
+                                    "background": "#0d0d10",
+                                    "z_index": "3",
+                                    "padding": "8px 14px",
+                                    "text_align": "left",
+                                    "border_right": "1px solid rgba(255,255,255,0.06)",
+                                    "border_bottom": "1px solid rgba(255,255,255,0.06)",
+                                    "min_width": "160px",
+                                },
+                            ),
+                            rx.foreach(
+                                TrackerState.day_columns,
+                                lambda d: rx.el.th(
+                                    rx.text(d, font_size="0.65rem", color="rgba(180,190,200,0.45)", font_weight="500"),
+                                    style={
+                                        "min_width": "44px",
+                                        "padding": "8px 4px",
+                                        "text_align": "center",
+                                        "border_bottom": "1px solid rgba(255,255,255,0.06)",
+                                        "white_space": "nowrap",
+                                    },
+                                ),
+                            ),
+                        ),
+                    ),
+                    rx.el.tbody(
+                        rx.foreach(TrackerState.tracker_rows, _tracker_row),
+                    ),
+                    style={
+                        "width": "max-content",
+                        "min_width": "100%",
+                        "border_collapse": "collapse",
+                        "table_layout": "fixed",
+                    },
+                ),
+                overflow_x="auto",
+                overflow_y="auto",
+                width="100%",
+                flex="1",
+                style={"scrollbar_width": "thin", "scrollbar_color": "rgba(255,255,255,0.10) transparent"},
+            ),
+        ),
+        display="flex",
+        flex_direction="column",
+        height="100vh",
+        overflow="hidden",
+        background="#0d0d10",
+        flex="1",
+        min_width="0",
+    )
+
+
+@rx.page(
+    route="/tracker",
+    title="Tracker — Alex AI",
+    image=FAVICON_32,
+    on_load=TrackerState.on_load_tracker,
+)
+@require_app_login
+def tracker_page():
+    return rx.box(
+        rx.hstack(
+            rx.box(
+                nav_rail(),
+                display=rx.breakpoints(initial="none", md="flex"),
+            ),
+            tracker_page_content(),
+            width="100%",
+            height="100vh",
+            spacing="0",
+            align="stretch",
+        ),
+        background="#0d0d10",
+        width="100%",
+        height="100vh",
+        overflow="hidden",
+    )
+
+
 @rx.page(
     route="/settings",
     title="Settings — Alex AI",
@@ -23366,6 +23835,34 @@ def _ensure_studentnote_attachments_json() -> None:
 
 
 _ensure_studentnote_attachments_json()
+
+
+def _ensure_todo_tracker_table() -> None:
+    """Create todotracker table columns if they don't exist yet (SQLite safe)."""
+    try:
+        with rx.session() as session:
+            conn = session.connection()
+            if conn.dialect.name != "sqlite":
+                return
+            tables = {row[0] for row in conn.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            if "todotracker" not in tables:
+                conn.exec_driver_sql(
+                    "CREATE TABLE IF NOT EXISTS todotracker ("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    "user_id INTEGER NOT NULL, "
+                    "title VARCHAR NOT NULL DEFAULT '100 Day Tracker', "
+                    "days INTEGER NOT NULL DEFAULT 100, "
+                    "todos_json VARCHAR NOT NULL DEFAULT '[]', "
+                    "checks_json VARCHAR NOT NULL DEFAULT '{}', "
+                    "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+                )
+                conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_todotracker_user_id ON todotracker (user_id)")
+            session.commit()
+    except Exception as e:
+        print(f"ERROR _ensure_todo_tracker_table: {e}")
+
+
+_ensure_todo_tracker_table()
 
 
 def _generate_unique_id() -> str:
