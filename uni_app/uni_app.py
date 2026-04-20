@@ -23481,7 +23481,7 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                         align_items="stretch",
                     ),
                     position="absolute",
-                    top="100%",
+                    bottom="calc(100% + 4px)",
                     right="0",
                     background="#2a2a2a",
                     border="1px solid rgba(255,255,255,0.10)",
