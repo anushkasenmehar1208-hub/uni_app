@@ -24934,6 +24934,55 @@ def alex_voice_overlay_panel() -> rx.Component:
                 background:rgba(255,80,60,0.10);
                 box-shadow: 0 0 0 3px rgba(255,120,100,0.08);
             }
+
+            /* ── Right-side chat history panel ───────────────────── */
+            #alex-chat-panel {
+                position:absolute; right:0; top:0; bottom:0;
+                width:320px;
+                display:flex; flex-direction:column;
+                gap:10px;
+                padding:24px 16px 100px;
+                overflow-y:auto; overflow-x:hidden;
+                box-sizing:border-box;
+                z-index:2;
+                scrollbar-width:thin;
+                scrollbar-color:rgba(255,255,255,0.10) transparent;
+            }
+            #alex-chat-panel::-webkit-scrollbar { width:4px; }
+            #alex-chat-panel::-webkit-scrollbar-thumb {
+                background:rgba(255,255,255,0.10); border-radius:4px;
+            }
+            .alex-chat-bubble {
+                max-width:88%; padding:11px 15px;
+                border-radius:16px; font-size:0.88rem; line-height:1.55;
+                word-break:break-word;
+                animation: chat-in .2s ease;
+            }
+            @keyframes chat-in {
+                from { opacity:0; transform:translateY(6px); }
+                to   { opacity:1; transform:translateY(0); }
+            }
+            .alex-chat-user {
+                align-self:flex-end;
+                background:rgba(0,200,255,0.15);
+                border:1px solid rgba(0,200,255,0.25);
+                color:rgba(220,240,255,0.95);
+                border-bottom-right-radius:4px;
+            }
+            .alex-chat-alex {
+                align-self:flex-start;
+                background:rgba(255,255,255,0.05);
+                border:1px solid rgba(255,255,255,0.09);
+                color:rgba(210,220,235,0.92);
+                border-bottom-left-radius:4px;
+            }
+            .alex-chat-alex p { margin:0 0 6px; }
+            .alex-chat-alex p:last-child { margin-bottom:0; }
+            .alex-chat-alex ul,.alex-chat-alex ol { margin:4px 0 4px 18px; padding:0; }
+            .alex-chat-alex li { margin-bottom:3px; }
+            @media (max-width:900px) {
+                #alex-chat-panel { display:none; }
+            }
         """),
         # Persistent avatar loader — guarantees the 3D avatar mounts whenever
         # the voice overlay is rendered, INCLUDING after a hard page refresh
@@ -24967,6 +25016,8 @@ def alex_voice_overlay_panel() -> rx.Component:
             # Painted backdrop (gradients + subtle grid + vignette). Absolutely
             # positioned so it doesn't participate in flex centering.
             rx.el.div(class_name="alex-voice-stage"),
+            # Right-side chat history panel — appended by alex_voice.js
+            rx.el.div(id="alex-chat-panel"),
             rx.vstack(
                 # Animated orb — hosts the 3D avatar canvas mounted by alex_avatar.js
                 rx.el.div(

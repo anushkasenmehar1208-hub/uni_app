@@ -626,27 +626,25 @@
     el.appendChild(wrap);
   }
 
+  function appendChatBubble(role, html, plain) {
+    var panel = document.getElementById('alex-chat-panel');
+    if (!panel) return;
+    var bubble = document.createElement('div');
+    bubble.className = 'alex-chat-bubble alex-chat-' + role;
+    if (role === 'alex' && html) {
+      bubble.innerHTML = html;
+    } else {
+      bubble.textContent = plain || '';
+    }
+    panel.appendChild(bubble);
+    panel.scrollTop = panel.scrollHeight;
+  }
+
   function renderVoiceTranscriptBlock(userLinePlain, alexData) {
     var el = document.getElementById('alex-transcript');
-    if (!el) return;
-    el.innerHTML = '';
-    if (userLinePlain) {
-      var uw = document.createElement('div');
-      uw.className = 'alex-voice-user-line';
-      uw.textContent = userLinePlain;
-      el.appendChild(uw);
-    }
+    if (el) el.innerHTML = '';
     if (alexData && (alexData.display_html || alexData.text)) {
-      var box = document.createElement('div');
-      box.className = 'claude-md alex-voice-md-pane';
-      if (alexData.display_html) {
-        box.innerHTML = alexData.display_html;
-      } else {
-        var p = document.createElement('p');
-        p.textContent = alexData.text || '';
-        box.appendChild(p);
-      }
-      el.appendChild(box);
+      appendChatBubble('alex', alexData.display_html || null, alexData.text || '');
     }
   }
 
@@ -738,7 +736,7 @@
     active = true;
     try {
       window.__alex_voice_session_active = true;
-      window.__alex_mic_muted = false;
+      window.__alex_mic_muted = true;
     } catch (eSess) {}
     syncMicToggleButton();
     voiceStartedAt = Date.now();
@@ -1068,6 +1066,7 @@
     setOrbState('thinking');
     setStatus('Alex is thinking...');
     window.__voiceLastUserLine = 'You: ' + text;
+    appendChatBubble('user', null, text);
     setTranscript('');
 
     await fetchVoiceReplyAndPlay(text);
@@ -1250,7 +1249,10 @@
       var sttData = await sttResp.json();
       transcript = (sttData.text || '').trim();
       console.log('[AlexVoice] transcript:', transcript);
-      if (transcript) window.__voiceLastUserLine = 'You: ' + transcript;
+      if (transcript) {
+        window.__voiceLastUserLine = 'You: ' + transcript;
+        appendChatBubble('user', null, transcript);
+      }
       setTranscript('');
     } catch (e) {
       console.error('[AlexVoice] STT error:', e);
