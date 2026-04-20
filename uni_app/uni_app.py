@@ -23214,6 +23214,10 @@ class TrackerState(AppState):
     def hide_ctx(self):
         self.ctx_row = ""
 
+    def toggle_ctx(self, name: str):
+        self.ctx_row = "" if self.ctx_row == name else name
+        self.renaming_row = ""
+
     def start_rename(self, name: str):
         self.renaming_row = name
         self.rename_draft = name
@@ -23413,7 +23417,7 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                 # ── Kebab / context trigger — always subtly visible for mobile ──
                 rx.box(
                     rx.icon(tag="ellipsis", size=14, color="rgba(255,255,255,0.35)"),
-                    on_click=rx.cond(is_ctx, TrackerState.hide_ctx, TrackerState.show_ctx(row.name)),
+                    on_click=TrackerState.toggle_ctx(row.name),
                     cursor="pointer",
                     opacity="0.35",
                     flex_shrink="0",
@@ -23429,6 +23433,28 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                 is_ctx,
                 rx.box(
                     rx.vstack(
+                        rx.hstack(
+                            rx.icon(tag="chevron_up", size=13, color="rgba(220,230,240,0.7)"),
+                            rx.text("Move up", font_size="0.83rem", color="rgba(220,230,240,0.85)"),
+                            spacing="2", align="center",
+                            on_click=[TrackerState.move_up(row.name), TrackerState.hide_ctx],
+                            cursor="pointer",
+                            width="100%",
+                            padding="6px 10px",
+                            border_radius="6px",
+                            style={"_hover": {"background": "rgba(255,255,255,0.06)"}},
+                        ),
+                        rx.hstack(
+                            rx.icon(tag="chevron_down", size=13, color="rgba(220,230,240,0.7)"),
+                            rx.text("Move down", font_size="0.83rem", color="rgba(220,230,240,0.85)"),
+                            spacing="2", align="center",
+                            on_click=[TrackerState.move_down(row.name), TrackerState.hide_ctx],
+                            cursor="pointer",
+                            width="100%",
+                            padding="6px 10px",
+                            border_radius="6px",
+                            style={"_hover": {"background": "rgba(255,255,255,0.06)"}},
+                        ),
                         rx.hstack(
                             rx.icon(tag="pencil", size=13, color="rgba(220,230,240,0.7)"),
                             rx.text("Rename", font_size="0.83rem", color="rgba(220,230,240,0.85)"),
