@@ -23137,14 +23137,10 @@ class TrackerState(AppState):
         self.create_days_preset = val
 
     def set_create_custom_days(self, val: str):
-        # Keep typing responsive: sanitize once, limit length, and cap to 100.
+        # Keep typing responsive: only sanitize digits while typing.
         digits = "".join(ch for ch in str(val or "") if ch.isdigit())[:3]
-        if not digits:
-            self.create_custom_days = ""
-            return
-        capped = str(min(100, int(digits)))
-        if capped != self.create_custom_days:
-            self.create_custom_days = capped
+        if digits != self.create_custom_days:
+            self.create_custom_days = digits
 
     def confirm_create_tracker(self):
         title = self.create_title.strip() or "My Tracker"
@@ -23576,7 +23572,7 @@ def _tracker_create_modal() -> rx.Component:
                         rx.text("Title", font_size="0.78rem", color="rgba(180,190,200,0.60)", font_weight="500"),
                         rx.el.input(
                             placeholder="e.g. Morning Routine",
-                            value=TrackerState.create_title,
+                            default_value=TrackerState.create_title,
                             on_change=TrackerState.set_create_title,
                             on_key_down=TrackerState.handle_create_title_key,
                             auto_focus=True,
@@ -23615,7 +23611,7 @@ def _tracker_create_modal() -> rx.Component:
                                 rx.el.input(
                                     type="text",
                                     placeholder="e.g. 365",
-                                    value=TrackerState.create_custom_days,
+                                    default_value=TrackerState.create_custom_days,
                                     on_change=TrackerState.set_create_custom_days,
                                     input_mode="numeric",
                                     pattern="[0-9]*",
