@@ -22981,7 +22981,7 @@ class TrackerState(AppState):
         if self.create_days_preset in m:
             return m[self.create_days_preset]
         try:
-            return max(1, min(3650, int(self.create_custom_days or "1")))
+            return max(1, min(100, int(self.create_custom_days or "1")))
         except (ValueError, TypeError):
             return 1
 
@@ -23137,8 +23137,14 @@ class TrackerState(AppState):
         self.create_days_preset = val
 
     def set_create_custom_days(self, val: str):
-        # Keep only digits so custom duration accepts numbers only.
-        self.create_custom_days = "".join(ch for ch in str(val or "") if ch.isdigit())
+        # Keep typing responsive: sanitize once, limit length, and cap to 100.
+        digits = "".join(ch for ch in str(val or "") if ch.isdigit())[:3]
+        if not digits:
+            self.create_custom_days = ""
+            return
+        capped = str(min(100, int(digits)))
+        if capped != self.create_custom_days:
+            self.create_custom_days = capped
 
     def confirm_create_tracker(self):
         title = self.create_title.strip() or "My Tracker"
@@ -23613,6 +23619,7 @@ def _tracker_create_modal() -> rx.Component:
                                     on_change=TrackerState.set_create_custom_days,
                                     input_mode="numeric",
                                     pattern="[0-9]*",
+                                    max_length=3,
                                     style={
                                         "width": "120px",
                                         "background": "rgba(255,255,255,0.05)",
