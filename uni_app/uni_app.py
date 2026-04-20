@@ -24556,40 +24556,55 @@ def alex_voice_overlay_panel() -> rx.Component:
                 50%     { transform: translate(-50%,-50%) scale(1.08); }
             }
 
-            @keyframes grid-wave {
-                0%   { background-position: 0px 0px; }
-                100% { background-position: 60px 60px; }
+            @keyframes grid-3d-scroll {
+                0%   { background-position: center 0px; }
+                100% { background-position: center 80px; }
             }
-            @keyframes grid-pulse {
-                0%,100% { opacity: 0.55; }
-                50%     { opacity: 0.85; }
+            @keyframes grid-glow-pulse {
+                0%,100% { opacity: 0.7; }
+                50%     { opacity: 1.0; }
+            }
+            @keyframes horizon-glow {
+                0%,100% { opacity: 0.35; }
+                50%     { opacity: 0.60; }
             }
 
             .alex-voice-stage {
                 position:absolute; inset:0; pointer-events:none; overflow:hidden;
                 z-index:0;
             }
+            /* Base: pure black + right side white key light */
             .alex-voice-stage::before {
                 content:"";
                 position:absolute; inset:0;
                 background:
                     radial-gradient(1100px 900px at 100% 50%,
-                        rgba(255,255,255,0.22) 0%,
-                        rgba(255,255,255,0.10) 25%,
-                        rgba(255,255,255,0.03) 50%,
-                        transparent 75%),
+                        rgba(255,255,255,0.18) 0%,
+                        rgba(255,255,255,0.07) 35%,
+                        transparent 70%),
                     #000000;
             }
+            /* 3-D perspective floor grid scrolling toward the viewer */
             .alex-voice-stage::after {
                 content:"";
-                position:absolute; inset:-120px;
+                position:absolute;
+                left:-80%; right:-80%;
+                top:48%; bottom:-30%;
                 background-image:
-                    linear-gradient(90deg, rgba(255,255,255,0.10) 1px, transparent 1px),
-                    linear-gradient(0deg,  rgba(255,255,255,0.10) 1px, transparent 1px);
-                background-size: 60px 60px;
+                    linear-gradient(0deg,   rgba(255,255,255,0.18) 1px, transparent 1px),
+                    linear-gradient(90deg,  rgba(255,255,255,0.18) 1px, transparent 1px);
+                background-size: 80px 80px;
+                transform: perspective(480px) rotateX(62deg);
+                transform-origin: 50% 0%;
                 animation:
-                    grid-wave  10s linear infinite,
-                    grid-pulse 4s ease-in-out infinite;
+                    grid-3d-scroll  3.5s linear infinite,
+                    grid-glow-pulse 5s ease-in-out infinite;
+                mask-image: linear-gradient(to bottom,
+                    transparent 0%, rgba(0,0,0,0.6) 15%,
+                    black 40%, black 75%, transparent 100%);
+                -webkit-mask-image: linear-gradient(to bottom,
+                    transparent 0%, rgba(0,0,0,0.6) 15%,
+                    black 40%, black 75%, transparent 100%);
             }
 
             #alex-orb { position:relative; width:220px; height:220px; flex-shrink:0; z-index:1; }
