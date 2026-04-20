@@ -23345,33 +23345,34 @@ def _tracker_cell_fn(row: _TrackerRow, cell: _CheckCell) -> rx.Component:
 
 
 def _tracker_row(row: _TrackerRow) -> rx.Component:
-    """Row with up/down move buttons, hover context menu (rename / delete)."""
+    """Row with hover/long-press context menu (rename / delete) on the name cell."""
     is_renaming = TrackerState.renaming_row == row.name
     return rx.el.tr(
         rx.el.td(
             rx.hstack(
-                # ── Up / Down reorder buttons ──
-                rx.vstack(
+                # ── Rename / Delete action buttons ──
+                rx.hstack(
                     rx.box(
-                        rx.icon(tag="chevron_up", size=11, color="rgba(255,255,255,0.30)"),
-                        on_click=TrackerState.move_up(row.name),
+                        rx.icon(tag="pencil", size=12, color="rgba(255,255,255,0.55)"),
+                        on_click=TrackerState.start_rename(row.name),
                         cursor="pointer",
-                        opacity="0",
+                        padding="3px",
+                        border_radius="4px",
                         flex_shrink="0",
-                        style={"_groupHover": {"opacity": "1"}, "transition": "opacity .12s",
-                               "_hover": {"color": "rgba(255,255,255,0.8)"}},
+                        style={"_hover": {"background": "rgba(255,255,255,0.10)", "color": "white"}},
                     ),
                     rx.box(
-                        rx.icon(tag="chevron_down", size=11, color="rgba(255,255,255,0.30)"),
-                        on_click=TrackerState.move_down(row.name),
+                        rx.icon(tag="trash_2", size=12, color="rgba(255,100,100,0.70)"),
+                        on_click=TrackerState.remove_todo(row.name),
                         cursor="pointer",
-                        opacity="0",
+                        padding="3px",
+                        border_radius="4px",
                         flex_shrink="0",
-                        style={"_groupHover": {"opacity": "1"}, "transition": "opacity .12s",
-                               "_hover": {"color": "rgba(255,255,255,0.8)"}},
+                        style={"_hover": {"background": "rgba(255,80,80,0.15)", "color": "rgba(255,80,80,1)"}},
                     ),
                     spacing="0",
                     flex_shrink="0",
+                    class_name="tracker-ctx-btns",
                 ),
                 # ── Document icon ──
                 rx.icon(tag="file_text", size=14, color="rgba(180,190,200,0.40)", flex_shrink="0"),
@@ -23427,7 +23428,12 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                 "min_width": "240px",
                 "overflow": "visible",
             },
-            class_name="group",
+            class_name=rx.cond(
+                TrackerState.ctx_row == row.name,
+                "group tracker-ctx-active",
+                "group",
+            ),
+            on_context_menu=TrackerState.toggle_ctx(row.name),
             position="relative",
             z_index="2",
             overflow="visible",
@@ -23827,6 +23833,19 @@ def _tracker_lists_panel() -> rx.Component:
 
 def tracker_page_content() -> rx.Component:
     return rx.box(
+        rx.html("""<style>
+.tracker-ctx-btns{opacity:0;transition:opacity .12s;}
+.group:hover .tracker-ctx-btns{opacity:1;}
+.tracker-ctx-active .tracker-ctx-btns{opacity:1;}
+td.group{-webkit-touch-callout:none;user-select:none;}
+</style>
+<script>
+(function(){
+  document.addEventListener('contextmenu',function(e){
+    if(e.target.closest('td.group')){e.preventDefault();}
+  });
+})();
+</script>"""),
         # ── Create modal + Lists panel (overlays) ──
         _tracker_create_modal(),
         _tracker_lists_panel(),
