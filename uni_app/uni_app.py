@@ -23359,17 +23359,18 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
     return rx.el.tr(
         rx.el.td(
             rx.hstack(
-                # ── Drag handle + Rename / Delete buttons (show on hover) ──
+                # ── Drag handle (always present, visible on hover / touch) ──
+                rx.box(
+                    rx.icon(tag="grip_vertical", size=15, color="rgba(255,255,255,0.35)"),
+                    class_name="tracker-drag-handle",
+                    cursor="grab",
+                    padding="3px",
+                    border_radius="4px",
+                    flex_shrink="0",
+                    style={"_hover": {"color": "rgba(255,255,255,0.75)"}},
+                ),
+                # ── Rename / Delete buttons (show on hover / long-press) ──
                 rx.hstack(
-                    rx.box(
-                        rx.icon(tag="grip_vertical", size=15, color="rgba(255,255,255,0.35)"),
-                        class_name="tracker-drag-handle",
-                        cursor="grab",
-                        padding="3px",
-                        border_radius="4px",
-                        flex_shrink="0",
-                        style={"_hover": {"color": "rgba(255,255,255,0.75)"}},
-                    ),
                     rx.box(
                         rx.icon(tag="pencil", size=15, color="rgba(255,255,255,0.55)"),
                         on_click=TrackerState.start_rename(row.name),
@@ -23857,8 +23858,12 @@ def tracker_page_content() -> rx.Component:
 .group:hover .tracker-ctx-btns{opacity:1;}
 .tracker-ctx-active .tracker-ctx-btns{opacity:1;}
 td.group{-webkit-touch-callout:none;user-select:none;}
-.tracker-drag-ghost{opacity:0.4;background:rgba(35,131,226,0.15)!important;}
-.tracker-drag-chosen{background:rgba(255,255,255,0.04)!important;}
+.tracker-drag-ghost td{background:rgba(35,131,226,0.10)!important;opacity:0.5;}
+.tracker-drag-chosen td{background:rgba(255,255,255,0.04)!important;}
+/* grip handle: hidden on desktop until hover, always faintly visible on touch screens */
+.tracker-drag-handle{opacity:0;transition:opacity .12s;}
+.group:hover .tracker-drag-handle{opacity:1;}
+@media(hover:none){.tracker-drag-handle{opacity:0.35;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
 <script>
@@ -23873,17 +23878,22 @@ td.group{-webkit-touch-callout:none;user-select:none;}
     setter.call(el,csv);
     el.dispatchEvent(new Event('input',{bubbles:true}));
   }
+  var _sortableInst=null;
   function initSortable(){
     var tbody=document.getElementById('tracker-tbody');
-    if(!tbody||tbody.__sortable){return;}
-    if(typeof Sortable==='undefined'){setTimeout(initSortable,300);return;}
-    tbody.__sortable=true;
-    new Sortable(tbody,{
+    if(!tbody){setTimeout(initSortable,400);return;}
+    if(typeof Sortable==='undefined'){setTimeout(initSortable,400);return;}
+    if(_sortableInst&&_sortableInst.el===tbody)return;
+    if(_sortableInst){try{_sortableInst.destroy();}catch(e){}}
+    _sortableInst=new Sortable(tbody,{
       animation:150,
       handle:'.tracker-drag-handle',
       ghostClass:'tracker-drag-ghost',
       chosenClass:'tracker-drag-chosen',
-      filter:'.tracker-add-row',
+      forceFallback:false,
+      delay:100,
+      delayOnTouchOnly:true,
+      touchStartThreshold:4,
       onEnd:function(){
         var rows=tbody.querySelectorAll('tr[data-todo-name]');
         var order=Array.from(rows).map(function(r){return r.getAttribute('data-todo-name');}).join(',');
@@ -23891,12 +23901,12 @@ td.group{-webkit-touch-callout:none;user-select:none;}
       }
     });
   }
-  setTimeout(initSortable,800);
-  var obs=new MutationObserver(function(){initSortable();});
-  document.addEventListener('DOMContentLoaded',function(){
-    obs.observe(document.body,{childList:true,subtree:true});
-    initSortable();
-  });
+  setTimeout(initSortable,1000);
+  new MutationObserver(function(muts){
+    for(var i=0;i<muts.length;i++){
+      if(muts[i].addedNodes.length){initSortable();break;}
+    }
+  }).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>"""),
         rx.el.input(
