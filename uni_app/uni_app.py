@@ -22988,23 +22988,57 @@ class TrackerState(AppState):
     def tracker_progress(self) -> list[_ProgressItem]:
         result = []
         for name in self.tracker_todos:
-            checks = self.tracker_checks.get(name, [])
-            done = sum(1 for c in checks if c)
+            raw = self.tracker_checks.get(name, [])
+            checks = list(raw) + [False] * max(0, self.tracker_days - len(raw))
+            checks = checks[:self.tracker_days]
             total = self.tracker_days
-            pct = done / total if total > 0 else 0.0
-            pct_int = int(round(pct * 100))
-            if pct_int <= 0:
-                conic = "conic-gradient(#ef4444 100%)"
-            elif pct_int >= 100:
-                conic = "conic-gradient(#22c55e 100%)"
+
+            # Find the last checked day index
+            last_idx = -1
+            for i in range(len(checks) - 1, -1, -1):
+                if checks[i]:
+                    last_idx = i
+                    break
+
+            if last_idx == -1:
+                # No activity yet — all white
+                done = 0
+                missed = 0
+                active = 0
             else:
-                conic = f"conic-gradient(#22c55e {pct_int}%, #ef4444 {pct_int}% 100%)"
+                active = last_idx + 1          # days up to and including last check
+                done = sum(1 for c in checks[:active] if c)
+                missed = active - done
+
+            remaining = total - active         # days after the last check
+
+            # Arc sizes as % of full circle
+            g = round(done     / total * 100, 3) if total > 0 else 0.0
+            r = round(missed   / total * 100, 3) if total > 0 else 0.0
+            gr = round(g + r, 3)
+
+            # Build conic-gradient: green → red → white/gray
+            if active == 0:
+                conic = "conic-gradient(rgba(255,255,255,0.13) 100%)"
+            elif remaining == 0:
+                conic = f"conic-gradient(#22c55e {g}%, #ef4444 {g}% 100%)"
+            elif missed == 0:
+                conic = f"conic-gradient(#22c55e {g}%, rgba(255,255,255,0.13) {g}% 100%)"
+            else:
+                conic = (
+                    f"conic-gradient(#22c55e {g}%, "
+                    f"#ef4444 {g}% {gr}%, "
+                    f"rgba(255,255,255,0.13) {gr}% 100%)"
+                )
+
+            # Centre label: consistency within active period
+            consistency = int(round(done / active * 100)) if active > 0 else 0
             result.append(_ProgressItem(
                 name=name,
                 done=done,
                 total=total,
-                pct_label=f"{pct_int}%",
-                count_label=f"{done}/{total}",
+                pct_label=f"{consistency}%",
+                count_label=f"{done}✓  {missed}✗  {remaining} left",
                 conic_style=conic,
             ))
         return result
@@ -23920,9 +23954,10 @@ def _tracker_progress_circle(item: _ProgressItem) -> rx.Component:
         ),
         rx.text(
             item.count_label,
-            font_size="0.65rem",
-            color="rgba(150,160,170,0.50)",
+            font_size="0.63rem",
+            color="rgba(150,160,170,0.55)",
             text_align="center",
+            letter_spacing="-0.01em",
         ),
         align="center",
         spacing="1",
