@@ -24556,8 +24556,15 @@ def alex_voice_overlay_panel() -> rx.Component:
                 50%     { transform: translate(-50%,-50%) scale(1.08); }
             }
 
-            /* SaaS-style backdrop: layered radial glows + soft grid + vignette.
-               The outer container is #090c10; these pseudo-elements paint on top. */
+            @keyframes grid-wave {
+                0%   { background-position: 0px 0px; }
+                100% { background-position: 60px 60px; }
+            }
+            @keyframes grid-pulse {
+                0%,100% { opacity: 0.55; }
+                50%     { opacity: 0.85; }
+            }
+
             .alex-voice-stage {
                 position:absolute; inset:0; pointer-events:none; overflow:hidden;
                 z-index:0;
@@ -24575,14 +24582,14 @@ def alex_voice_overlay_panel() -> rx.Component:
             }
             .alex-voice-stage::after {
                 content:"";
-                position:absolute; inset:0;
+                position:absolute; inset:-120px;
                 background-image:
-                    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
-                    linear-gradient(0deg,  rgba(255,255,255,0.018) 1px, transparent 1px);
-                background-size: 48px 48px;
-                mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 40%, transparent 90%);
-                -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 40%, transparent 90%);
-                opacity:.55;
+                    linear-gradient(90deg, rgba(255,255,255,0.10) 1px, transparent 1px),
+                    linear-gradient(0deg,  rgba(255,255,255,0.10) 1px, transparent 1px);
+                background-size: 60px 60px;
+                animation:
+                    grid-wave  10s linear infinite,
+                    grid-pulse 4s ease-in-out infinite;
             }
 
             #alex-orb { position:relative; width:220px; height:220px; flex-shrink:0; z-index:1; }
