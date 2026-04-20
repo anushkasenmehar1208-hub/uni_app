@@ -22923,6 +22923,15 @@ class _TrackerListMeta(rx.Base):
     todo_count: int
 
 
+class _ProgressItem(rx.Base):
+    name: str
+    done: int
+    total: int
+    pct_label: str
+    count_label: str
+    conic_style: str
+
+
 class TrackerState(AppState):
     # ── Multi-list management ──
     tracker_lists: list[_TrackerListMeta] = []
@@ -22974,6 +22983,31 @@ class TrackerState(AppState):
     @rx.var
     def day_columns(self) -> list[int]:
         return list(range(1, self.tracker_days + 1))
+
+    @rx.var
+    def tracker_progress(self) -> list[_ProgressItem]:
+        result = []
+        for name in self.tracker_todos:
+            checks = self.tracker_checks.get(name, [])
+            done = sum(1 for c in checks if c)
+            total = self.tracker_days
+            pct = done / total if total > 0 else 0.0
+            pct_int = int(round(pct * 100))
+            if pct_int <= 0:
+                conic = "conic-gradient(#ef4444 100%)"
+            elif pct_int >= 100:
+                conic = "conic-gradient(#22c55e 100%)"
+            else:
+                conic = f"conic-gradient(#22c55e {pct_int}%, #ef4444 {pct_int}% 100%)"
+            result.append(_ProgressItem(
+                name=name,
+                done=done,
+                total=total,
+                pct_label=f"{pct_int}%",
+                count_label=f"{done}/{total}",
+                conic_style=conic,
+            ))
+        return result
 
     @rx.var
     def create_days_value(self) -> int:
@@ -23851,6 +23885,51 @@ def _tracker_lists_panel() -> rx.Component:
     )
 
 
+def _tracker_progress_circle(item: _ProgressItem) -> rx.Component:
+    return rx.vstack(
+        rx.box(
+            rx.box(
+                rx.text(item.pct_label, font_size="0.82rem", font_weight="700", color="white"),
+                width="58px",
+                height="58px",
+                border_radius="50%",
+                background="#191919",
+                display="flex",
+                align_items="center",
+                justify_content="center",
+            ),
+            width="82px",
+            height="82px",
+            border_radius="50%",
+            background=item.conic_style,
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            flex_shrink="0",
+        ),
+        rx.text(
+            item.name,
+            font_size="0.72rem",
+            color="rgba(210,220,230,0.80)",
+            font_weight="500",
+            max_width="82px",
+            overflow="hidden",
+            text_overflow="ellipsis",
+            white_space="nowrap",
+            text_align="center",
+        ),
+        rx.text(
+            item.count_label,
+            font_size="0.65rem",
+            color="rgba(150,160,170,0.50)",
+            text_align="center",
+        ),
+        align="center",
+        spacing="1",
+        flex_shrink="0",
+    )
+
+
 def tracker_page_content() -> rx.Component:
     return rx.box(
         rx.html("""<style>
@@ -24030,6 +24109,21 @@ td.group{-webkit-touch-callout:none;user-select:none;}
                 padding="0 28px 16px",
             ),
             rx.fragment(),
+        ),
+        # ── Progress circles ──
+        rx.cond(
+            (TrackerState.current_tracker_id >= 0) & (TrackerState.tracker_todos.length() > 0),
+            rx.box(
+                rx.foreach(TrackerState.tracker_progress, _tracker_progress_circle),
+                display="flex",
+                flex_direction="row",
+                gap="20px",
+                padding="16px 28px",
+                overflow_x="auto",
+                flex_shrink="0",
+                border_bottom="1px solid rgba(255,255,255,0.05)",
+                style={"scrollbar_width": "thin", "scrollbar_color": "rgba(255,255,255,0.10) transparent"},
+            ),
         ),
         # ── Table ──
         rx.cond(
