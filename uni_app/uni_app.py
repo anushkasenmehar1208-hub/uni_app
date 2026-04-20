@@ -23890,9 +23890,10 @@ td.group{-webkit-touch-callout:none;user-select:none;}
       handle:'.tracker-drag-handle',
       ghostClass:'tracker-drag-ghost',
       chosenClass:'tracker-drag-chosen',
-      forceFallback:false,
-      delay:100,
-      delayOnTouchOnly:true,
+      forceFallback:true,
+      fallbackTolerance:3,
+      delay:150,
+      delayOnTouchOnly:false,
       touchStartThreshold:4,
       onEnd:function(){
         var rows=tbody.querySelectorAll('tr[data-todo-name]');
