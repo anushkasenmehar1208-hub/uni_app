@@ -23999,7 +23999,7 @@ def tracker_page_content() -> rx.Component:
                                 TrackerState.day_columns,
                                 lambda d: rx.el.th(
                                     rx.hstack(
-                                        rx.text(d, font_size="0.70rem", color="rgba(180,190,200,0.55)",
+                                        rx.text("Day ", d, font_size="0.70rem", color="rgba(180,190,200,0.55)",
                                                 font_weight="500", white_space="nowrap"),
                                         spacing="1", align="center", justify="center",
                                     ),
