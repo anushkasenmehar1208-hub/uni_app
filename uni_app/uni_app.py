@@ -22919,11 +22919,13 @@ class _TrackerRow(rx.Base):
 class TrackerState(AppState):
     tracker_title: str = "100 Day Tracker"
     tracker_days: int = 100
+    tracker_days_draft: str = "100"
     tracker_todos: list[str] = []
     tracker_checks: dict[str, list[bool]] = {}
-    tracker_new_todo: str = ""
     tracker_editing_title: bool = False
     tracker_title_draft: str = ""
+    tracker_adding: bool = False
+    tracker_adding_draft: str = ""
 
     @rx.var
     def tracker_rows(self) -> list[_TrackerRow]:
@@ -22957,6 +22959,7 @@ class TrackerState(AppState):
             if tracker:
                 self.tracker_title = tracker.title
                 self.tracker_days = tracker.days
+                self.tracker_days_draft = str(tracker.days)
                 todos = json.loads(tracker.todos_json)
                 raw = json.loads(tracker.checks_json)
                 self.tracker_todos = todos
@@ -22967,6 +22970,8 @@ class TrackerState(AppState):
                         row.extend([False] * (self.tracker_days - len(row)))
                     checks[name] = row[:self.tracker_days]
                 self.tracker_checks = checks
+            else:
+                self.tracker_days_draft = str(self.tracker_days)
 
     def _save(self):
         uid = self._cached_uid
@@ -22985,24 +22990,34 @@ class TrackerState(AppState):
             tracker.checks_json = json.dumps({k: list(v) for k, v in self.tracker_checks.items()})
             session.commit()
 
-    def set_tracker_new_todo(self, val: str):
-        self.tracker_new_todo = val
+    # ── Inline add-row flow (Notion-style "+ New") ──
+    def start_add_row(self):
+        self.tracker_adding = True
+        self.tracker_adding_draft = ""
 
-    def add_todo(self):
-        name = self.tracker_new_todo.strip()
-        if not name or name in self.tracker_todos:
-            self.tracker_new_todo = ""
-            return
-        self.tracker_todos = self.tracker_todos + [name]
-        checks = dict(self.tracker_checks)
-        checks[name] = [False] * self.tracker_days
-        self.tracker_checks = checks
-        self.tracker_new_todo = ""
-        self._save()
+    def set_adding_draft(self, val: str):
+        self.tracker_adding_draft = val
 
-    def handle_new_todo_key(self, key: str):
+    def commit_add_row(self):
+        name = self.tracker_adding_draft.strip()
+        if name and name not in self.tracker_todos:
+            self.tracker_todos = self.tracker_todos + [name]
+            checks = dict(self.tracker_checks)
+            checks[name] = [False] * self.tracker_days
+            self.tracker_checks = checks
+            self._save()
+        self.tracker_adding_draft = ""
+        self.tracker_adding = False
+
+    def cancel_add_row(self):
+        self.tracker_adding_draft = ""
+        self.tracker_adding = False
+
+    def handle_add_row_key(self, key: str):
         if key == "Enter":
-            return TrackerState.add_todo
+            return TrackerState.commit_add_row
+        if key == "Escape":
+            return TrackerState.cancel_add_row
 
     def remove_todo(self, name: str):
         self.tracker_todos = [t for t in self.tracker_todos if t != name]
@@ -23019,12 +23034,24 @@ class TrackerState(AppState):
                 self.tracker_checks = checks
         self._save()
 
-    def set_tracker_days(self, val: str):
+    # ── Days input: decoupled draft + commit on blur ──
+    def set_tracker_days_draft(self, val: str):
+        # Allow anything while typing (including empty) — don't clamp yet.
+        self.tracker_days_draft = val
+
+    def commit_tracker_days(self):
+        raw = (self.tracker_days_draft or "").strip()
         try:
-            days = max(1, min(365, int(val)))
+            days = max(1, min(365, int(raw)))
         except (ValueError, TypeError):
+            # Restore previous value in the input box
+            self.tracker_days_draft = str(self.tracker_days)
+            return
+        if days == self.tracker_days:
+            self.tracker_days_draft = str(days)
             return
         self.tracker_days = days
+        self.tracker_days_draft = str(days)
         checks = dict(self.tracker_checks)
         for name in self.tracker_todos:
             row = list(checks.get(name, []))
@@ -23033,6 +23060,10 @@ class TrackerState(AppState):
             checks[name] = row[:days]
         self.tracker_checks = checks
         self._save()
+
+    def handle_days_key(self, key: str):
+        if key == "Enter":
+            return TrackerState.commit_tracker_days
 
     def start_edit_title(self):
         self.tracker_title_draft = self.tracker_title
@@ -23058,8 +23089,23 @@ def _tracker_cell(row: _TrackerRow, cell: _CheckCell) -> rx.Component:
         rx.box(
             rx.cond(
                 cell.checked,
-                rx.icon(tag="check_square_2", size=16, color="#3b9eff"),
-                rx.icon(tag="square", size=16, color="rgba(255,255,255,0.15)"),
+                rx.box(
+                    rx.icon(tag="check", size=12, color="white"),
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    width="16px",
+                    height="16px",
+                    border_radius="4px",
+                    background="#2383e2",
+                ),
+                rx.box(
+                    width="16px",
+                    height="16px",
+                    border_radius="4px",
+                    border="1.5px solid rgba(255,255,255,0.12)",
+                    background="transparent",
+                ),
             ),
             on_click=TrackerState.toggle_check(row.name, cell.day),
             display="flex",
@@ -23067,49 +23113,57 @@ def _tracker_cell(row: _TrackerRow, cell: _CheckCell) -> rx.Component:
             justify_content="center",
             cursor="pointer",
             width="100%",
-            padding="4px",
+            height="36px",
             style={
-                "_hover": {"opacity": "0.75"},
+                "_hover": {"background": "rgba(255,255,255,0.025)"},
             },
         ),
         style={
             "text_align": "center",
             "padding": "0",
-            "min_width": "44px",
+            "min_width": "40px",
+            "border_right": "1px solid rgba(255,255,255,0.04)",
+            "border_bottom": "1px solid rgba(255,255,255,0.04)",
         },
     )
 
 
 def _tracker_row(row: _TrackerRow) -> rx.Component:
     return rx.el.tr(
-        # Sticky todo name cell
+        # Sticky todo name cell — Notion-style row with document icon prefix
         rx.el.td(
             rx.hstack(
+                rx.icon(
+                    tag="file_text",
+                    size=15,
+                    color="rgba(180,190,200,0.45)",
+                ),
                 rx.text(
                     row.name,
-                    font_size="0.85rem",
-                    color="rgba(220,230,240,0.92)",
-                    font_weight="500",
+                    font_size="0.88rem",
+                    color="rgba(230,235,242,0.92)",
+                    font_weight="400",
                     white_space="nowrap",
+                    flex="1",
                 ),
                 rx.box(
                     rx.text(
                         row.done_count,
                         font_size="0.68rem",
-                        color="rgba(59,158,255,0.85)",
+                        color="rgba(35,131,226,0.9)",
                         font_weight="600",
                     ),
-                    background="rgba(59,158,255,0.10)",
+                    background="rgba(35,131,226,0.10)",
                     border_radius="99px",
-                    padding="1px 6px",
+                    padding="1px 7px",
                 ),
                 rx.icon_button(
-                    rx.icon(tag="x", size=10),
+                    rx.icon(tag="x", size=11),
                     on_click=TrackerState.remove_todo(row.name),
                     variant="ghost",
                     size="1",
                     style={
-                        "color": "rgba(255,255,255,0.2)",
+                        "color": "rgba(255,255,255,0.3)",
                         "opacity": "0",
                         "_groupHover": {"opacity": "1"},
                         "transition": "opacity .15s",
@@ -23122,9 +23176,11 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                 "padding": "8px 14px",
                 "position": "sticky",
                 "left": "0",
-                "background": "#0d0d10",
+                "background": "#191919",
                 "z_index": "2",
                 "border_right": "1px solid rgba(255,255,255,0.06)",
+                "border_bottom": "1px solid rgba(255,255,255,0.04)",
+                "min_width": "240px",
             },
             class_name="group",
         ),
@@ -23133,7 +23189,81 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
             lambda cell: _tracker_cell(row, cell),
         ),
         style={
-            "_hover": {"background": "rgba(255,255,255,0.02)"},
+            "_hover": {"background": "rgba(255,255,255,0.015)"},
+        },
+    )
+
+
+def _tracker_add_row() -> rx.Component:
+    """Notion-style inline '+ New' row at the bottom of the table."""
+    return rx.el.tr(
+        rx.el.td(
+            rx.cond(
+                TrackerState.tracker_adding,
+                # ── Editing state: inline input ──
+                rx.hstack(
+                    rx.icon(
+                        tag="file_text",
+                        size=15,
+                        color="rgba(180,190,200,0.45)",
+                    ),
+                    rx.el.input(
+                        placeholder="Untitled",
+                        value=TrackerState.tracker_adding_draft,
+                        on_change=TrackerState.set_adding_draft,
+                        on_key_down=TrackerState.handle_add_row_key,
+                        on_blur=TrackerState.commit_add_row,
+                        auto_focus=True,
+                        style={
+                            "flex": "1",
+                            "background": "transparent",
+                            "border": "none",
+                            "color": "rgba(230,235,242,0.95)",
+                            "font_size": "0.88rem",
+                            "font_weight": "400",
+                            "outline": "none",
+                            "padding": "0",
+                            "_placeholder": {"color": "rgba(180,190,200,0.30)"},
+                        },
+                    ),
+                    spacing="2",
+                    align="center",
+                    width="100%",
+                ),
+                # ── Idle state: "+ New" button ──
+                rx.hstack(
+                    rx.icon(
+                        tag="plus",
+                        size=14,
+                        color="rgba(180,190,200,0.55)",
+                    ),
+                    rx.text(
+                        "New",
+                        font_size="0.85rem",
+                        color="rgba(180,190,200,0.55)",
+                        font_weight="400",
+                    ),
+                    spacing="2",
+                    align="center",
+                    width="100%",
+                    on_click=TrackerState.start_add_row,
+                    style={"cursor": "pointer"},
+                ),
+            ),
+            col_span=TrackerState.tracker_days + 1,
+            style={
+                "padding": "10px 14px",
+                "position": "sticky",
+                "left": "0",
+                "background": "#191919",
+                "z_index": "2",
+                "cursor": "pointer",
+                "_hover": {"background": "rgba(255,255,255,0.03)"},
+                "transition": "background .12s",
+            },
+        ),
+        style={
+            "border_top": "1px solid rgba(255,255,255,0.04)",
         },
     )
 
@@ -23161,18 +23291,18 @@ def tracker_page_content() -> rx.Component:
                     style={
                         "background": "transparent",
                         "border": "none",
-                        "border_bottom": "1px solid rgba(59,158,255,0.5)",
+                        "border_bottom": "1px solid rgba(35,131,226,0.5)",
                         "color": "white",
-                        "font_size": "1.3rem",
+                        "font_size": "1.5rem",
                         "font_weight": "700",
                         "outline": "none",
-                        "width": "300px",
+                        "width": "400px",
                         "padding": "2px 0",
                     },
                 ),
                 rx.text(
                     TrackerState.tracker_title,
-                    font_size="1.3rem",
+                    font_size="1.5rem",
                     font_weight="700",
                     color="white",
                     cursor="pointer",
@@ -23181,23 +23311,28 @@ def tracker_page_content() -> rx.Component:
                 ),
             ),
             rx.spacer(),
-            # Days selector
+            # Days selector — decoupled draft so user can clear the field
             rx.hstack(
-                rx.text("Days:", font_size="0.82rem", color="rgba(180,190,200,0.55)"),
+                rx.text("Days", font_size="0.82rem", color="rgba(180,190,200,0.55)"),
                 rx.el.input(
-                    type="number",
-                    value=TrackerState.tracker_days,
-                    on_change=TrackerState.set_tracker_days,
+                    type="text",
+                    value=TrackerState.tracker_days_draft,
+                    on_change=TrackerState.set_tracker_days_draft,
+                    on_blur=TrackerState.commit_tracker_days,
+                    on_key_down=TrackerState.handle_days_key,
+                    input_mode="numeric",
                     style={
-                        "width": "64px",
-                        "background": "rgba(255,255,255,0.05)",
-                        "border": "1px solid rgba(255,255,255,0.10)",
-                        "border_radius": "8px",
+                        "width": "60px",
+                        "background": "transparent",
+                        "border": "1px solid rgba(255,255,255,0.08)",
+                        "border_radius": "6px",
                         "color": "white",
                         "font_size": "0.85rem",
                         "padding": "5px 10px",
                         "text_align": "center",
                         "outline": "none",
+                        "transition": "border-color .15s",
+                        "_focus": {"border_color": "rgba(35,131,226,0.45)"},
                     },
                 ),
                 spacing="2",
@@ -23205,126 +23340,105 @@ def tracker_page_content() -> rx.Component:
             ),
             align="center",
             width="100%",
-            padding="24px 28px 16px",
-        ),
-        # ── Add todo input ──
-        rx.hstack(
-            rx.el.input(
-                placeholder="Add a habit or task…",
-                value=TrackerState.tracker_new_todo,
-                on_change=TrackerState.set_tracker_new_todo,
-                on_key_down=TrackerState.handle_new_todo_key,
-                style={
-                    "flex": "1",
-                    "background": "rgba(255,255,255,0.04)",
-                    "border": "1px solid rgba(255,255,255,0.10)",
-                    "border_radius": "10px",
-                    "color": "rgba(230,235,242,0.92)",
-                    "font_size": "0.88rem",
-                    "padding": "10px 14px",
-                    "outline": "none",
-                    "transition": "border-color .15s",
-                    "_focus": {"border_color": "rgba(59,158,255,0.45)"},
-                    "_placeholder": {"color": "rgba(180,190,200,0.35)"},
-                },
-            ),
-            rx.button(
-                rx.icon(tag="plus", size=16),
-                "Add",
-                on_click=TrackerState.add_todo,
-                size="2",
-                variant="solid",
-                style={
-                    "background": "rgba(59,158,255,0.15)",
-                    "border": "1px solid rgba(59,158,255,0.30)",
-                    "color": "rgba(59,158,255,0.95)",
-                    "border_radius": "10px",
-                    "padding": "10px 18px",
-                    "font_size": "0.85rem",
-                    "font_weight": "600",
-                    "cursor": "pointer",
-                    "gap": "6px",
-                    "_hover": {"background": "rgba(59,158,255,0.25)"},
-                },
-            ),
-            padding="0 28px 18px",
-            spacing="3",
+            padding="28px 32px 20px",
         ),
         # ── Table ──
-        rx.cond(
-            TrackerState.tracker_todos.length() == 0,
-            rx.box(
-                rx.vstack(
-                    rx.icon(tag="clipboard_list", size=40, color="rgba(255,255,255,0.12)"),
-                    rx.text(
-                        "Add your first habit above to get started",
-                        color="rgba(180,190,200,0.35)",
-                        font_size="0.9rem",
-                    ),
-                    spacing="3",
-                    align="center",
-                ),
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                height="200px",
-            ),
-            rx.box(
-                rx.el.table(
-                    rx.el.thead(
-                        rx.el.tr(
-                            # Sticky "Todo" header
-                            rx.el.th(
-                                rx.text("Todo", font_size="0.72rem", color="rgba(180,190,200,0.5)", font_weight="600", letter_spacing="0.08em", text_transform="uppercase"),
-                                style={
-                                    "position": "sticky",
-                                    "left": "0",
-                                    "background": "#0d0d10",
-                                    "z_index": "3",
-                                    "padding": "8px 14px",
-                                    "text_align": "left",
-                                    "border_right": "1px solid rgba(255,255,255,0.06)",
-                                    "border_bottom": "1px solid rgba(255,255,255,0.06)",
-                                    "min_width": "160px",
-                                },
-                            ),
-                            rx.foreach(
-                                TrackerState.day_columns,
-                                lambda d: rx.el.th(
-                                    rx.text(d, font_size="0.65rem", color="rgba(180,190,200,0.45)", font_weight="500"),
-                                    style={
-                                        "min_width": "44px",
-                                        "padding": "8px 4px",
-                                        "text_align": "center",
-                                        "border_bottom": "1px solid rgba(255,255,255,0.06)",
-                                        "white_space": "nowrap",
-                                    },
+        rx.box(
+            rx.el.table(
+                rx.el.thead(
+                    rx.el.tr(
+                        # Sticky "Name" header
+                        rx.el.th(
+                            rx.hstack(
+                                rx.icon(
+                                    tag="align_left",
+                                    size=13,
+                                    color="rgba(180,190,200,0.45)",
                                 ),
+                                rx.text(
+                                    "Name",
+                                    font_size="0.78rem",
+                                    color="rgba(180,190,200,0.55)",
+                                    font_weight="500",
+                                ),
+                                spacing="2",
+                                align="center",
+                            ),
+                            style={
+                                "position": "sticky",
+                                "left": "0",
+                                "background": "#191919",
+                                "z_index": "3",
+                                "padding": "10px 14px",
+                                "text_align": "left",
+                                "border_right": "1px solid rgba(255,255,255,0.06)",
+                                "border_bottom": "1px solid rgba(255,255,255,0.06)",
+                                "min_width": "240px",
+                            },
+                        ),
+                        # Day columns with checkbox icon prefix, Notion-style
+                        rx.foreach(
+                            TrackerState.day_columns,
+                            lambda d: rx.el.th(
+                                rx.hstack(
+                                    rx.box(
+                                        rx.icon(tag="check", size=8, color="white"),
+                                        display="flex",
+                                        align_items="center",
+                                        justify_content="center",
+                                        width="12px",
+                                        height="12px",
+                                        border_radius="3px",
+                                        background="#2383e2",
+                                        flex_shrink="0",
+                                    ),
+                                    rx.text(
+                                        "Day ",
+                                        d.to_string(),
+                                        font_size="0.72rem",
+                                        color="rgba(180,190,200,0.55)",
+                                        font_weight="500",
+                                        white_space="nowrap",
+                                    ),
+                                    spacing="1",
+                                    align="center",
+                                    justify="center",
+                                ),
+                                style={
+                                    "min_width": "72px",
+                                    "padding": "10px 8px",
+                                    "text_align": "center",
+                                    "border_bottom": "1px solid rgba(255,255,255,0.06)",
+                                    "border_right": "1px solid rgba(255,255,255,0.04)",
+                                    "white_space": "nowrap",
+                                },
                             ),
                         ),
                     ),
-                    rx.el.tbody(
-                        rx.foreach(TrackerState.tracker_rows, _tracker_row),
-                    ),
-                    style={
-                        "width": "max-content",
-                        "min_width": "100%",
-                        "border_collapse": "collapse",
-                        "table_layout": "fixed",
-                    },
                 ),
-                overflow_x="auto",
-                overflow_y="auto",
-                width="100%",
-                flex="1",
-                style={"scrollbar_width": "thin", "scrollbar_color": "rgba(255,255,255,0.10) transparent"},
+                rx.el.tbody(
+                    rx.foreach(TrackerState.tracker_rows, _tracker_row),
+                    _tracker_add_row(),
+                ),
+                style={
+                    "width": "max-content",
+                    "min_width": "100%",
+                    "border_collapse": "collapse",
+                    "table_layout": "fixed",
+                },
             ),
+            overflow_x="auto",
+            overflow_y="auto",
+            width="100%",
+            flex="1",
+            padding="0 32px 32px",
+            style={"scrollbar_width": "thin", "scrollbar_color": "rgba(255,255,255,0.10) transparent"},
         ),
         display="flex",
         flex_direction="column",
         height="100vh",
         overflow="hidden",
-        background="#0d0d10",
+        background="#191919",
         flex="1",
         min_width="0",
     )
@@ -23350,7 +23464,7 @@ def tracker_page():
             spacing="0",
             align="stretch",
         ),
-        background="#0d0d10",
+        background="#191919",
         width="100%",
         height="100vh",
         overflow="hidden",
