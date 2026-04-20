@@ -425,16 +425,20 @@
               var mat = mats[mi];
               if (!mat || !mat.name) continue;
               if (mat.name === 'Wolf3D_Outfit_Top') {
-                // Custom shirt color: deep navy blue (formal look).
-                if (mat.color && mat.color.set) mat.color.set(0x224174);
-                mat.roughness = 0.66;
+                // Strip baked textures so the plain color isn't blended dark.
+                ['map','roughnessMap','metalnessMap','normalMap','aoMap','emissiveMap'].forEach(function(k){
+                  if (mat[k]) { try { mat[k].dispose(); } catch(e){} mat[k] = null; }
+                });
+                // Custom shirt color: clean white.
+                if (mat.color && mat.color.set) mat.color.set(0xeef0f2);
+                mat.roughness = 0.72;
                 mat.metalness = 0.0;
                 if (mat.emissive && mat.emissive.set) mat.emissive.set(0x000000);
                 mat.emissiveIntensity = 0.0;
-                mat.envMapIntensity = 0.25;
+                mat.envMapIntensity = 0.20;
                 mat.side = THREE.DoubleSide;
                 mat.needsUpdate = true;
-                rig.shirtColorHex = 0x224174;
+                rig.shirtColorHex = 0xeef0f2;
               }
             }
           } catch (e) { warn('shirt retint failed', e); }
