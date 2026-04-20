@@ -23332,19 +23332,17 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
     """Row with drag handle, hover context menu (rename / delete)."""
     is_ctx = TrackerState.ctx_row == row.name
     is_renaming = TrackerState.renaming_row == row.name
+    # rx.el.tr supports all HTML drag events; rx.box does NOT
     return rx.el.tr(
         rx.el.td(
             rx.hstack(
-                # ── Drag handle ──
+                # ── Drag handle (visual only — drag is on the <tr>) ──
                 rx.box(
                     rx.icon(tag="grip_vertical", size=13, color="rgba(255,255,255,0.20)"),
                     cursor="grab",
                     opacity="0",
-                    class_name="drag-handle",
                     flex_shrink="0",
                     style={"_groupHover": {"opacity": "1"}, "transition": "opacity .12s"},
-                    draggable=True,
-                    on_drag_start=TrackerState.drag_start(row.name),
                 ),
                 # ── Document icon ──
                 rx.icon(tag="file_text", size=14, color="rgba(180,190,200,0.40)", flex_shrink="0"),
@@ -23393,7 +23391,6 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                     cursor="pointer",
                     opacity="0.35",
                     flex_shrink="0",
-                    class_name="ctx-btn",
                     style={"_groupHover": {"opacity": "1"}, "transition": "opacity .12s"},
                     position="relative",
                 ),
@@ -23453,15 +23450,20 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                 "border_right": "1px solid rgba(255,255,255,0.06)",
                 "border_bottom": "1px solid rgba(255,255,255,0.04)",
                 "min_width": "240px",
-                "position_relative": "true",
             },
             class_name="group",
             position="relative",
-            on_drag_over=rx.prevent_default,
-            on_drop=TrackerState.drop_on(row.name),
         ),
         rx.foreach(row.cells, lambda cell: _tracker_cell_fn(row, cell)),
-        style={"_hover": {"background": "rgba(255,255,255,0.015)"}},
+        # ── Drag events live on <tr> (rx.el.tr supports all HTML events) ──
+        draggable=True,
+        on_drag_start=TrackerState.drag_start(row.name),
+        on_drag_over=rx.prevent_default,
+        on_drop=TrackerState.drop_on(row.name),
+        style={
+            "_hover": {"background": "rgba(255,255,255,0.015)"},
+            "cursor": "grab",
+        },
     )
 
 
