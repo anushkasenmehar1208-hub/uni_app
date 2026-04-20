@@ -23346,7 +23346,6 @@ def _tracker_cell_fn(row: _TrackerRow, cell: _CheckCell) -> rx.Component:
 
 def _tracker_row(row: _TrackerRow) -> rx.Component:
     """Row with up/down move buttons, hover context menu (rename / delete)."""
-    is_ctx = TrackerState.ctx_row == row.name
     is_renaming = TrackerState.renaming_row == row.name
     return rx.el.tr(
         rx.el.td(
@@ -23414,84 +23413,9 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                     padding="1px 7px",
                     flex_shrink="0",
                 ),
-                # ── Kebab / context trigger — always subtly visible for mobile ──
-                rx.box(
-                    rx.icon(tag="ellipsis", size=14, color="rgba(255,255,255,0.35)"),
-                    on_click=TrackerState.toggle_ctx(row.name),
-                    cursor="pointer",
-                    opacity="0.35",
-                    flex_shrink="0",
-                    style={"_groupHover": {"opacity": "1"}, "transition": "opacity .12s"},
-                    position="relative",
-                ),
                 spacing="2",
                 align="center",
                 width="100%",
-            ),
-            # ── Context menu dropdown ──
-            rx.cond(
-                is_ctx,
-                rx.box(
-                    rx.vstack(
-                        rx.hstack(
-                            rx.icon(tag="chevron_up", size=13, color="rgba(220,230,240,0.7)"),
-                            rx.text("Move up", font_size="0.83rem", color="rgba(220,230,240,0.85)"),
-                            spacing="2", align="center",
-                            on_click=[TrackerState.move_up(row.name), TrackerState.hide_ctx],
-                            cursor="pointer",
-                            width="100%",
-                            padding="6px 10px",
-                            border_radius="6px",
-                            style={"_hover": {"background": "rgba(255,255,255,0.06)"}},
-                        ),
-                        rx.hstack(
-                            rx.icon(tag="chevron_down", size=13, color="rgba(220,230,240,0.7)"),
-                            rx.text("Move down", font_size="0.83rem", color="rgba(220,230,240,0.85)"),
-                            spacing="2", align="center",
-                            on_click=[TrackerState.move_down(row.name), TrackerState.hide_ctx],
-                            cursor="pointer",
-                            width="100%",
-                            padding="6px 10px",
-                            border_radius="6px",
-                            style={"_hover": {"background": "rgba(255,255,255,0.06)"}},
-                        ),
-                        rx.hstack(
-                            rx.icon(tag="pencil", size=13, color="rgba(220,230,240,0.7)"),
-                            rx.text("Rename", font_size="0.83rem", color="rgba(220,230,240,0.85)"),
-                            spacing="2", align="center",
-                            on_click=TrackerState.start_rename(row.name),
-                            cursor="pointer",
-                            width="100%",
-                            padding="6px 10px",
-                            border_radius="6px",
-                            style={"_hover": {"background": "rgba(255,255,255,0.06)"}},
-                        ),
-                        rx.hstack(
-                            rx.icon(tag="trash_2", size=13, color="rgba(255,80,80,0.7)"),
-                            rx.text("Delete", font_size="0.83rem", color="rgba(255,80,80,0.85)"),
-                            spacing="2", align="center",
-                            on_click=TrackerState.remove_todo(row.name),
-                            cursor="pointer",
-                            width="100%",
-                            padding="6px 10px",
-                            border_radius="6px",
-                            style={"_hover": {"background": "rgba(255,80,80,0.08)"}},
-                        ),
-                        spacing="0",
-                        align_items="stretch",
-                    ),
-                    position="absolute",
-                    bottom="calc(100% + 4px)",
-                    right="0",
-                    background="#2a2a2a",
-                    border="1px solid rgba(255,255,255,0.10)",
-                    border_radius="8px",
-                    padding="4px",
-                    z_index="200",
-                    min_width="130px",
-                    box_shadow="0 8px 24px rgba(0,0,0,0.4)",
-                ),
-                rx.fragment(),
             ),
             style={
                 "padding": "6px 12px",
@@ -23505,7 +23429,7 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
             },
             class_name="group",
             position="relative",
-            z_index=rx.cond(is_ctx, "30", "2"),
+            z_index="2",
             overflow="visible",
         ),
         rx.foreach(row.cells, lambda cell: _tracker_cell_fn(row, cell)),
@@ -23513,7 +23437,7 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
             "_hover": {"background": "rgba(255,255,255,0.015)"},
             "position": "relative",
         },
-        z_index=rx.cond(is_ctx, "20", "1"),
+        z_index="1",
     )
 
 
