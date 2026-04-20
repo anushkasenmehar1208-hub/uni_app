@@ -23880,7 +23880,9 @@ def tracker_page_content() -> rx.Component:
         rx.hstack(
             rx.icon_button(
                 rx.icon(tag="arrow_left", size=16),
-                on_click=rx.redirect("/app"),
+                on_click=rx.call_script(
+                    "if (window.history.length > 1) { window.history.back(); } else { window.location.assign('/app'); }"
+                ),
                 variant="ghost", size="2",
                 color="rgba(255,255,255,0.45)",
                 style={"_hover": {"color": "white"}},
