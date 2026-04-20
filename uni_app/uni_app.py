@@ -23860,39 +23860,52 @@ def tracker_page_content() -> rx.Component:
 td.group{-webkit-touch-callout:none;user-select:none;}
 .tracker-drag-ghost td{background:rgba(35,131,226,0.10)!important;opacity:0.5;}
 .tracker-drag-chosen td{background:rgba(255,255,255,0.04)!important;}
-/* grip handle: hidden on desktop until hover, always faintly visible on touch screens */
 .tracker-drag-handle{opacity:0;transition:opacity .12s;}
 .group:hover .tracker-drag-handle{opacity:1;}
 @media(hover:none){.tracker-drag-handle{opacity:0.35;}}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
-<script>
+</style>"""),
+        rx.script("""
 (function(){
+  if(window.__trackerSortableInit)return;
+  window.__trackerSortableInit=true;
+
+  function loadSortable(cb){
+    if(typeof window.Sortable!=='undefined'){cb();return;}
+    var s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js';
+    s.onload=cb;
+    s.onerror=function(){console.error('[tracker] SortableJS failed to load');};
+    document.head.appendChild(s);
+  }
+
   document.addEventListener('contextmenu',function(e){
-    if(e.target.closest('td.group')){e.preventDefault();}
+    if(e.target.closest&&e.target.closest('td.group')){e.preventDefault();}
   });
+
   function triggerReflexSignal(csv){
     var el=document.getElementById('__tracker_drag_signal');
-    if(!el)return;
+    if(!el){console.warn('[tracker] signal input missing');return;}
     var setter=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;
     setter.call(el,csv);
     el.dispatchEvent(new Event('input',{bubbles:true}));
   }
-  var _sortableInst=null;
+
+  var _inst=null;
   function initSortable(){
     var tbody=document.getElementById('tracker-tbody');
-    if(!tbody){setTimeout(initSortable,400);return;}
-    if(typeof Sortable==='undefined'){setTimeout(initSortable,400);return;}
-    if(_sortableInst&&_sortableInst.el===tbody)return;
-    if(_sortableInst){try{_sortableInst.destroy();}catch(e){}}
-    _sortableInst=new Sortable(tbody,{
+    if(!tbody)return;
+    if(typeof window.Sortable==='undefined')return;
+    if(_inst&&_inst.el===tbody)return;
+    if(_inst){try{_inst.destroy();}catch(e){}}
+    _inst=new window.Sortable(tbody,{
       animation:150,
       handle:'.tracker-drag-handle',
+      draggable:'tr[data-todo-name]',
       ghostClass:'tracker-drag-ghost',
       chosenClass:'tracker-drag-chosen',
       forceFallback:true,
       fallbackTolerance:3,
-      delay:150,
+      delay:120,
       delayOnTouchOnly:false,
       touchStartThreshold:4,
       onEnd:function(){
@@ -23901,15 +23914,15 @@ td.group{-webkit-touch-callout:none;user-select:none;}
         triggerReflexSignal(order);
       }
     });
+    console.log('[tracker] sortable initialized');
   }
-  setTimeout(initSortable,1000);
-  new MutationObserver(function(muts){
-    for(var i=0;i<muts.length;i++){
-      if(muts[i].addedNodes.length){initSortable();break;}
-    }
-  }).observe(document.documentElement,{childList:true,subtree:true});
+
+  loadSortable(function(){
+    initSortable();
+    new MutationObserver(function(){initSortable();}).observe(document.documentElement,{childList:true,subtree:true});
+  });
 })();
-</script>"""),
+"""),
         rx.el.input(
             id="__tracker_drag_signal",
             on_change=TrackerState.apply_drag_order,
