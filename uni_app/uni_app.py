@@ -22981,9 +22981,13 @@ class TrackerState(AppState):
         if self.create_days_preset in m:
             return m[self.create_days_preset]
         try:
-            return max(1, min(100, int(self.create_custom_days or "1")))
+            return max(0, min(100, int(self.create_custom_days or "0")))
         except (ValueError, TypeError):
-            return 1
+            return 0
+
+    @rx.var
+    def can_create_tracker(self) -> bool:
+        return self.create_days_value > 0
 
     # ── Internal helpers ──
     def _load_lists(self, session):
@@ -23137,14 +23141,20 @@ class TrackerState(AppState):
         self.create_days_preset = val
 
     def set_create_custom_days(self, val: str):
-        # Keep typing responsive: only sanitize digits while typing.
+        # Keep only digits and hard-cap visible value at 100.
         digits = "".join(ch for ch in str(val or "") if ch.isdigit())[:3]
-        if digits != self.create_custom_days:
-            self.create_custom_days = digits
+        if not digits:
+            next_value = ""
+        else:
+            next_value = str(min(100, int(digits)))
+        if next_value != self.create_custom_days:
+            self.create_custom_days = next_value
 
     def confirm_create_tracker(self):
         title = self.create_title.strip() or "My Tracker"
         days = self.create_days_value
+        if days <= 0:
+            return
         uid = self._cached_uid
         if uid < 0:
             return
@@ -23610,8 +23620,8 @@ def _tracker_create_modal() -> rx.Component:
                                 rx.text("Days:", font_size="0.85rem", color="rgba(180,190,200,0.55)"),
                                 rx.el.input(
                                     type="text",
-                                    placeholder="e.g. 365",
-                                    default_value=TrackerState.create_custom_days,
+                                    placeholder="max 100 days",
+                                    value=TrackerState.create_custom_days,
                                     on_change=TrackerState.set_create_custom_days,
                                     input_mode="numeric",
                                     pattern="[0-9]*",
@@ -23645,16 +23655,16 @@ def _tracker_create_modal() -> rx.Component:
                             rx.cond(TrackerState.create_days_value == 1, "", "s"),
                             font_size="0.9rem",
                             font_weight="600",
-                            color="white",
+                            color=rx.cond(TrackerState.can_create_tracker, "white", "rgba(255,255,255,0.55)"),
                         ),
                         on_click=TrackerState.confirm_create_tracker,
-                        cursor="pointer",
+                        cursor=rx.cond(TrackerState.can_create_tracker, "pointer", "not-allowed"),
                         width="100%",
                         text_align="center",
                         padding="11px",
                         border_radius="9px",
-                        background="#2383e2",
-                        style={"_hover": {"background": "#1a6fc4"}},
+                        background=rx.cond(TrackerState.can_create_tracker, "#2383e2", "rgba(255,255,255,0.16)"),
+                        style={"_hover": {"background": rx.cond(TrackerState.can_create_tracker, "#1a6fc4", "rgba(255,255,255,0.16)")}},
                         transition="background .15s",
                     ),
                     spacing="5",
