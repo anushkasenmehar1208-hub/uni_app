@@ -23487,7 +23487,7 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                     border="1px solid rgba(255,255,255,0.10)",
                     border_radius="8px",
                     padding="4px",
-                    z_index="100",
+                    z_index="200",
                     min_width="130px",
                     box_shadow="0 8px 24px rgba(0,0,0,0.4)",
                 ),
@@ -23498,18 +23498,22 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                 "position": "sticky",
                 "left": "0",
                 "background": "#191919",
-                "z_index": "2",
                 "border_right": "1px solid rgba(255,255,255,0.06)",
                 "border_bottom": "1px solid rgba(255,255,255,0.04)",
                 "min_width": "240px",
+                "overflow": "visible",
             },
             class_name="group",
             position="relative",
+            z_index=rx.cond(is_ctx, "30", "2"),
+            overflow="visible",
         ),
         rx.foreach(row.cells, lambda cell: _tracker_cell_fn(row, cell)),
         style={
             "_hover": {"background": "rgba(255,255,255,0.015)"},
+            "position": "relative",
         },
+        z_index=rx.cond(is_ctx, "20", "1"),
     )
 
 
