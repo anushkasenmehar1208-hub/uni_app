@@ -22926,9 +22926,13 @@ class _TrackerListMeta(rx.Base):
 class _ProgressItem(rx.Base):
     name: str
     done: int
+    missed: int
+    remaining: int
     total: int
-    pct_label: str
-    count_label: str
+    pct_label: str        # consistency % within active window
+    done_label: str       # "5 days"
+    missed_label: str     # "2 days"
+    remaining_label: str  # "23 days"
     conic_style: str
 
 
@@ -22959,6 +22963,12 @@ class TrackerState(AppState):
     renaming_row: str = ""
     rename_draft: str = ""
     drag_src: str = ""
+
+    # ── Progress circle tooltip ──
+    tooltip_circle: str = ""
+
+    def toggle_circle_tooltip(self, name: str):
+        self.tooltip_circle = "" if self.tooltip_circle == name else name
 
     # ── Lists panel – increase days ──
     increase_days_id: int = -1
@@ -23033,12 +23043,17 @@ class TrackerState(AppState):
 
             # Centre label: consistency within active period
             consistency = int(round(done / active * 100)) if active > 0 else 0
+            day = lambda n: f"{n} day" + ("s" if n != 1 else "")
             result.append(_ProgressItem(
                 name=name,
                 done=done,
+                missed=missed,
+                remaining=remaining,
                 total=total,
                 pct_label=f"{consistency}%",
-                count_label=f"{done}✓  {missed}✗  {remaining} left",
+                done_label=day(done),
+                missed_label=day(missed),
+                remaining_label=day(remaining),
                 conic_style=conic,
             ))
         return result
@@ -23919,8 +23934,21 @@ def _tracker_lists_panel() -> rx.Component:
     )
 
 
+def _tooltip_row(dot_color: str, label: str, value: str) -> rx.Component:
+    return rx.hstack(
+        rx.box(width="9px", height="9px", border_radius="2px", background=dot_color, flex_shrink="0"),
+        rx.text(label, font_size="0.72rem", color="rgba(190,200,210,0.80)", flex="1"),
+        rx.text(value, font_size="0.72rem", color="white", font_weight="600", white_space="nowrap"),
+        spacing="2",
+        align="center",
+        width="100%",
+    )
+
+
 def _tracker_progress_circle(item: _ProgressItem) -> rx.Component:
-    return rx.vstack(
+    is_open = TrackerState.tooltip_circle == item.name
+    return rx.box(
+        # ── Donut ring ──
         rx.box(
             rx.box(
                 rx.text(item.pct_label, font_size="0.82rem", font_weight="700", color="white"),
@@ -23940,27 +23968,49 @@ def _tracker_progress_circle(item: _ProgressItem) -> rx.Component:
             align_items="center",
             justify_content="center",
             flex_shrink="0",
+            cursor="pointer",
+            on_click=TrackerState.toggle_circle_tooltip(item.name),
         ),
+        # ── Label below ──
         rx.text(
             item.name,
             font_size="0.72rem",
             color="rgba(210,220,230,0.80)",
             font_weight="500",
-            max_width="82px",
+            max_width="90px",
             overflow="hidden",
             text_overflow="ellipsis",
             white_space="nowrap",
             text_align="center",
+            margin_top="6px",
         ),
-        rx.text(
-            item.count_label,
-            font_size="0.63rem",
-            color="rgba(150,160,170,0.55)",
-            text_align="center",
-            letter_spacing="-0.01em",
+        # ── Tooltip popover ──
+        rx.cond(
+            is_open,
+            rx.box(
+                _tooltip_row("#22c55e",              "Completed",  item.done_label),
+                _tooltip_row("#ef4444",              "Missed",     item.missed_label),
+                _tooltip_row("rgba(255,255,255,0.18)", "Remaining", item.remaining_label),
+                display="flex",
+                flex_direction="column",
+                gap="8px",
+                padding="11px 14px",
+                background="rgba(22,22,26,0.97)",
+                border="1px solid rgba(255,255,255,0.11)",
+                border_radius="10px",
+                box_shadow="0 8px 28px rgba(0,0,0,0.55)",
+                position="absolute",
+                top="96px",
+                left="50%",
+                transform="translateX(-50%)",
+                z_index="200",
+                white_space="nowrap",
+            ),
         ),
-        align="center",
-        spacing="1",
+        position="relative",
+        display="flex",
+        flex_direction="column",
+        align_items="center",
         flex_shrink="0",
     )
 
