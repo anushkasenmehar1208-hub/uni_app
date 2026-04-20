@@ -23237,24 +23237,22 @@ class TrackerState(AppState):
         self.tracker_checks = {k: v for k, v in self.tracker_checks.items() if k != name}
         self._save()
 
-    # ── Drag to reorder ──
-    def drag_start(self, name: str):
-        self.drag_src = name
-
-    def drop_on(self, target_name: str):
-        src = self.drag_src
-        self.drag_src = ""
-        if not src or src == target_name:
-            return
+    # ── Reorder (up / down buttons) ──
+    def move_up(self, name: str):
         todos = list(self.tracker_todos)
-        if src not in todos or target_name not in todos:
-            return
-        src_idx = todos.index(src)
-        tgt_idx = todos.index(target_name)
-        todos.pop(src_idx)
-        todos.insert(tgt_idx, src)
-        self.tracker_todos = todos
-        self._save()
+        idx = todos.index(name) if name in todos else -1
+        if idx > 0:
+            todos[idx], todos[idx - 1] = todos[idx - 1], todos[idx]
+            self.tracker_todos = todos
+            self._save()
+
+    def move_down(self, name: str):
+        todos = list(self.tracker_todos)
+        idx = todos.index(name) if name in todos else -1
+        if idx >= 0 and idx < len(todos) - 1:
+            todos[idx], todos[idx + 1] = todos[idx + 1], todos[idx]
+            self.tracker_todos = todos
+            self._save()
 
     def toggle_check(self, todo: str, day: int):
         checks = dict(self.tracker_checks)
@@ -23329,20 +23327,34 @@ def _tracker_cell_fn(row: _TrackerRow, cell: _CheckCell) -> rx.Component:
 
 
 def _tracker_row(row: _TrackerRow) -> rx.Component:
-    """Row with drag handle, hover context menu (rename / delete)."""
+    """Row with up/down move buttons, hover context menu (rename / delete)."""
     is_ctx = TrackerState.ctx_row == row.name
     is_renaming = TrackerState.renaming_row == row.name
-    # rx.el.tr supports all HTML drag events; rx.box does NOT
     return rx.el.tr(
         rx.el.td(
             rx.hstack(
-                # ── Drag handle (visual only — drag is on the <tr>) ──
-                rx.box(
-                    rx.icon(tag="grip_vertical", size=13, color="rgba(255,255,255,0.20)"),
-                    cursor="grab",
-                    opacity="0",
+                # ── Up / Down reorder buttons ──
+                rx.vstack(
+                    rx.box(
+                        rx.icon(tag="chevron_up", size=11, color="rgba(255,255,255,0.30)"),
+                        on_click=TrackerState.move_up(row.name),
+                        cursor="pointer",
+                        opacity="0",
+                        flex_shrink="0",
+                        style={"_groupHover": {"opacity": "1"}, "transition": "opacity .12s",
+                               "_hover": {"color": "rgba(255,255,255,0.8)"}},
+                    ),
+                    rx.box(
+                        rx.icon(tag="chevron_down", size=11, color="rgba(255,255,255,0.30)"),
+                        on_click=TrackerState.move_down(row.name),
+                        cursor="pointer",
+                        opacity="0",
+                        flex_shrink="0",
+                        style={"_groupHover": {"opacity": "1"}, "transition": "opacity .12s",
+                               "_hover": {"color": "rgba(255,255,255,0.8)"}},
+                    ),
+                    spacing="0",
                     flex_shrink="0",
-                    style={"_groupHover": {"opacity": "1"}, "transition": "opacity .12s"},
                 ),
                 # ── Document icon ──
                 rx.icon(tag="file_text", size=14, color="rgba(180,190,200,0.40)", flex_shrink="0"),
@@ -23455,14 +23467,8 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
             position="relative",
         ),
         rx.foreach(row.cells, lambda cell: _tracker_cell_fn(row, cell)),
-        # ── Drag events live on <tr> (rx.el.tr supports all HTML events) ──
-        draggable=True,
-        on_drag_start=TrackerState.drag_start(row.name),
-        on_drag_over=rx.prevent_default,
-        on_drop=TrackerState.drop_on(row.name),
         style={
             "_hover": {"background": "rgba(255,255,255,0.015)"},
-            "cursor": "grab",
         },
     )
 
