@@ -22950,6 +22950,7 @@ class TrackerState(AppState):
     renaming_row: str = ""
     rename_draft: str = ""
     drag_src: str = ""
+    drag_over: str = ""
 
     # ── Lists panel – increase days ──
     increase_days_id: int = -1
@@ -23272,6 +23273,33 @@ class TrackerState(AppState):
             self.tracker_todos = todos
             self._save()
 
+    # ── Drag-to-reorder ──
+    def start_drag(self, name: str):
+        self.drag_src = name
+        self.drag_over = ""
+
+    def set_drag_over(self, name: str):
+        self.drag_over = name
+
+    def end_drag(self):
+        self.drag_src = ""
+        self.drag_over = ""
+
+    def drop_row(self, target: str):
+        src = self.drag_src
+        self.drag_src = ""
+        self.drag_over = ""
+        if not src or src == target:
+            return
+        todos = list(self.tracker_todos)
+        if src not in todos or target not in todos:
+            return
+        todos.remove(src)
+        target_idx = todos.index(target)
+        todos.insert(target_idx, src)
+        self.tracker_todos = todos
+        self._save()
+
     def toggle_check(self, todo: str, day: int):
         checks = dict(self.tracker_checks)
         if todo in checks:
@@ -23345,15 +23373,23 @@ def _tracker_cell_fn(row: _TrackerRow, cell: _CheckCell) -> rx.Component:
 
 
 def _tracker_row(row: _TrackerRow) -> rx.Component:
-    """Row with hover/long-press context menu (rename / delete) on the name cell."""
+    """Row with hover/long-press context menu (rename / delete) and drag-to-reorder."""
     is_renaming = TrackerState.renaming_row == row.name
     return rx.el.tr(
         rx.el.td(
             rx.hstack(
-                # ── Rename / Delete action buttons ──
+                # ── Drag handle + Rename / Delete buttons (show on hover) ──
                 rx.hstack(
                     rx.box(
-                        rx.icon(tag="pencil", size=12, color="rgba(255,255,255,0.55)"),
+                        rx.icon(tag="grip_vertical", size=15, color="rgba(255,255,255,0.35)"),
+                        cursor="grab",
+                        padding="3px",
+                        border_radius="4px",
+                        flex_shrink="0",
+                        style={"_hover": {"color": "rgba(255,255,255,0.75)"}},
+                    ),
+                    rx.box(
+                        rx.icon(tag="pencil", size=15, color="rgba(255,255,255,0.55)"),
                         on_click=TrackerState.start_rename(row.name),
                         cursor="pointer",
                         padding="3px",
@@ -23362,7 +23398,7 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                         style={"_hover": {"background": "rgba(255,255,255,0.10)", "color": "white"}},
                     ),
                     rx.box(
-                        rx.icon(tag="trash_2", size=12, color="rgba(255,100,100,0.70)"),
+                        rx.icon(tag="trash_2", size=15, color="rgba(255,100,100,0.70)"),
                         on_click=TrackerState.remove_todo(row.name),
                         cursor="pointer",
                         padding="3px",
@@ -23439,9 +23475,21 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
             overflow="visible",
         ),
         rx.foreach(row.cells, lambda cell: _tracker_cell_fn(row, cell)),
+        draggable=True,
+        on_drag_start=TrackerState.start_drag(row.name),
+        on_drag_over=TrackerState.set_drag_over(row.name),
+        on_drag_end=TrackerState.end_drag,
+        on_drop=TrackerState.drop_row(row.name),
         style={
             "_hover": {"background": "rgba(255,255,255,0.015)"},
             "position": "relative",
+            "border_top": rx.cond(
+                TrackerState.drag_over == row.name,
+                "2px solid rgba(35,131,226,0.8)",
+                "2px solid transparent",
+            ),
+            "transition": "border-top .08s",
+            "cursor": rx.cond(TrackerState.drag_src != "", "grabbing", "default"),
         },
         z_index="1",
     )
@@ -23843,6 +23891,9 @@ td.group{-webkit-touch-callout:none;user-select:none;}
 (function(){
   document.addEventListener('contextmenu',function(e){
     if(e.target.closest('td.group')){e.preventDefault();}
+  });
+  document.addEventListener('dragover',function(e){
+    if(e.target.closest('tr[draggable]')){e.preventDefault();e.dataTransfer.dropEffect='move';}
   });
 })();
 </script>"""),
