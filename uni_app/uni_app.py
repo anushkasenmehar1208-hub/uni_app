@@ -23086,7 +23086,8 @@ class TrackerState(AppState):
         self.increase_days_draft = ""
 
     def set_increase_days_draft(self, val: str):
-        self.increase_days_draft = val
+        # Keep only digits so "add days" stays strictly numeric.
+        self.increase_days_draft = "".join(ch for ch in str(val or "") if ch.isdigit())
 
     def confirm_increase_days(self, tracker_id: int):
         try:
@@ -23136,7 +23137,8 @@ class TrackerState(AppState):
         self.create_days_preset = val
 
     def set_create_custom_days(self, val: str):
-        self.create_custom_days = val
+        # Keep only digits so custom duration accepts numbers only.
+        self.create_custom_days = "".join(ch for ch in str(val or "") if ch.isdigit())
 
     def confirm_create_tracker(self):
         title = self.create_title.strip() or "My Tracker"
@@ -23610,15 +23612,16 @@ def _tracker_create_modal() -> rx.Component:
                                     value=TrackerState.create_custom_days,
                                     on_change=TrackerState.set_create_custom_days,
                                     input_mode="numeric",
+                                    pattern="[0-9]*",
                                     style={
-                                        "width": "90px",
+                                        "width": "120px",
                                         "background": "rgba(255,255,255,0.05)",
                                         "border": "1px solid rgba(255,255,255,0.12)",
                                         "border_radius": "8px",
                                         "color": "white",
-                                        "font_size": "0.88rem",
-                                        "padding": "8px 12px",
-                                        "text_align": "center",
+                                        "font_size": "0.95rem",
+                                        "padding": "9px 12px",
+                                        "text_align": "left",
                                         "outline": "none",
                                         "_focus": {"border_color": "rgba(35,131,226,0.45)"},
                                         "_placeholder": {"color": "rgba(180,190,200,0.30)"},
@@ -23706,17 +23709,33 @@ def _tracker_lists_panel() -> rx.Component:
                     # Right: action buttons (separate click zone — no propagation to switch)
                     rx.hstack(
                         rx.icon_button(
-                            rx.icon(tag="calendar_plus", size=13),
+                            rx.icon(tag="calendar_plus", size=16),
                             on_click=TrackerState.set_increase_days_id(meta.id),
-                            variant="ghost", size="1",
-                            style={"color": "rgba(255,255,255,0.3)", "_hover": {"color": "rgba(35,131,226,0.9)"}},
+                            variant="ghost",
+                            size="2",
+                            radius="full",
+                            style={
+                                "color": "rgba(255,255,255,0.45)",
+                                "_hover": {
+                                    "color": "rgba(35,131,226,0.95)",
+                                    "background": "rgba(35,131,226,0.12)",
+                                },
+                            },
                             title="Add more days",
                         ),
                         rx.icon_button(
-                            rx.icon(tag="trash_2", size=13),
+                            rx.icon(tag="trash_2", size=16),
                             on_click=TrackerState.delete_tracker(meta.id),
-                            variant="ghost", size="1",
-                            style={"color": "rgba(255,80,80,0.30)", "_hover": {"color": "rgba(255,80,80,0.9)"}},
+                            variant="ghost",
+                            size="2",
+                            radius="full",
+                            style={
+                                "color": "rgba(255,80,80,0.45)",
+                                "_hover": {
+                                    "color": "rgba(255,80,80,0.95)",
+                                    "background": "rgba(255,80,80,0.12)",
+                                },
+                            },
                         ),
                         spacing="1", align="center",
                     ),
@@ -23732,6 +23751,7 @@ def _tracker_lists_panel() -> rx.Component:
                             value=TrackerState.increase_days_draft,
                             on_change=TrackerState.set_increase_days_draft,
                             input_mode="numeric",
+                            pattern="[0-9]*",
                             auto_focus=True,
                             style={
                                 "flex": "1",
@@ -23833,7 +23853,6 @@ def _tracker_lists_panel() -> rx.Component:
                 overflow_y="auto",
             ),
             position="fixed", top="0", left="0", right="0", bottom="0", z_index="50",
-            pointer_events="none",
         ),
         rx.fragment(),
     )
@@ -23967,12 +23986,6 @@ def tracker_page_content() -> rx.Component:
                                 TrackerState.day_columns,
                                 lambda d: rx.el.th(
                                     rx.hstack(
-                                        rx.box(
-                                            rx.icon(tag="check", size=8, color="white"),
-                                            display="flex", align_items="center", justify_content="center",
-                                            width="12px", height="12px",
-                                            border_radius="3px", background="#2383e2", flex_shrink="0",
-                                        ),
                                         rx.text(d, font_size="0.70rem", color="rgba(180,190,200,0.55)",
                                                 font_weight="500", white_space="nowrap"),
                                         spacing="1", align="center", justify="center",
