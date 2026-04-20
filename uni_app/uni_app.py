@@ -24566,11 +24566,12 @@ def alex_voice_overlay_panel() -> rx.Component:
                 content:"";
                 position:absolute; inset:0;
                 background:
-                    radial-gradient(1200px 700px at 50% -10%,
-                        rgba(0,140,210,0.18) 0%, rgba(0,140,210,0.05) 35%, transparent 70%),
-                    radial-gradient(900px 600px at 50% 120%,
-                        rgba(80,40,200,0.10) 0%, transparent 60%),
-                    linear-gradient(180deg, #070b13 0%, #0a0f18 50%, #060910 100%);
+                    radial-gradient(1100px 900px at 100% 50%,
+                        rgba(255,255,255,0.22) 0%,
+                        rgba(255,255,255,0.10) 25%,
+                        rgba(255,255,255,0.03) 50%,
+                        transparent 75%),
+                    #000000;
             }
             .alex-voice-stage::after {
                 content:"";
@@ -25031,7 +25032,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             width="100%",
             height="100%",
             min_height="100%",
-            background="#070a12",
+            background="#000000",
             position="relative",
         ),
                 width="100%",
