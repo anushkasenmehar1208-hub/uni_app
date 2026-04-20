@@ -22950,7 +22950,6 @@ class TrackerState(AppState):
     renaming_row: str = ""
     rename_draft: str = ""
     drag_src: str = ""
-    drag_over: str = ""
 
     # ── Lists panel – increase days ──
     increase_days_id: int = -1
@@ -23273,31 +23272,13 @@ class TrackerState(AppState):
             self.tracker_todos = todos
             self._save()
 
-    # ── Drag-to-reorder ──
-    def start_drag(self, name: str):
-        self.drag_src = name
-        self.drag_over = ""
-
-    def set_drag_over(self, name: str):
-        self.drag_over = name
-
-    def end_drag(self):
-        self.drag_src = ""
-        self.drag_over = ""
-
-    def drop_row(self, target: str):
-        src = self.drag_src
-        self.drag_src = ""
-        self.drag_over = ""
-        if not src or src == target:
-            return
-        todos = list(self.tracker_todos)
-        if src not in todos or target not in todos:
-            return
-        todos.remove(src)
-        target_idx = todos.index(target)
-        todos.insert(target_idx, src)
-        self.tracker_todos = todos
+    # ── Drag-to-reorder (via SortableJS signal) ──
+    def apply_drag_order(self, csv: str):
+        names = [n for n in csv.split(",") if n]
+        existing = set(self.tracker_todos)
+        ordered = [n for n in names if n in existing]
+        rest = [n for n in self.tracker_todos if n not in set(ordered)]
+        self.tracker_todos = ordered + rest
         self._save()
 
     def toggle_check(self, todo: str, day: int):
@@ -23382,6 +23363,7 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
                 rx.hstack(
                     rx.box(
                         rx.icon(tag="grip_vertical", size=15, color="rgba(255,255,255,0.35)"),
+                        class_name="tracker-drag-handle",
                         cursor="grab",
                         padding="3px",
                         border_radius="4px",
@@ -23475,21 +23457,10 @@ def _tracker_row(row: _TrackerRow) -> rx.Component:
             overflow="visible",
         ),
         rx.foreach(row.cells, lambda cell: _tracker_cell_fn(row, cell)),
-        draggable=True,
-        on_drag_start=TrackerState.start_drag(row.name),
-        on_drag_over=TrackerState.set_drag_over(row.name),
-        on_drag_end=TrackerState.end_drag,
-        on_drop=TrackerState.drop_row(row.name),
+        data_todo_name=row.name,
         style={
             "_hover": {"background": "rgba(255,255,255,0.015)"},
             "position": "relative",
-            "border_top": rx.cond(
-                TrackerState.drag_over == row.name,
-                "2px solid rgba(35,131,226,0.8)",
-                "2px solid transparent",
-            ),
-            "transition": "border-top .08s",
-            "cursor": rx.cond(TrackerState.drag_src != "", "grabbing", "default"),
         },
         z_index="1",
     )
@@ -23886,17 +23857,54 @@ def tracker_page_content() -> rx.Component:
 .group:hover .tracker-ctx-btns{opacity:1;}
 .tracker-ctx-active .tracker-ctx-btns{opacity:1;}
 td.group{-webkit-touch-callout:none;user-select:none;}
+.tracker-drag-ghost{opacity:0.4;background:rgba(35,131,226,0.15)!important;}
+.tracker-drag-chosen{background:rgba(255,255,255,0.04)!important;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
 <script>
 (function(){
   document.addEventListener('contextmenu',function(e){
     if(e.target.closest('td.group')){e.preventDefault();}
   });
-  document.addEventListener('dragover',function(e){
-    if(e.target.closest('tr[draggable]')){e.preventDefault();e.dataTransfer.dropEffect='move';}
+  function triggerReflexSignal(csv){
+    var el=document.getElementById('__tracker_drag_signal');
+    if(!el)return;
+    var setter=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;
+    setter.call(el,csv);
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  function initSortable(){
+    var tbody=document.getElementById('tracker-tbody');
+    if(!tbody||tbody.__sortable){return;}
+    if(typeof Sortable==='undefined'){setTimeout(initSortable,300);return;}
+    tbody.__sortable=true;
+    new Sortable(tbody,{
+      animation:150,
+      handle:'.tracker-drag-handle',
+      ghostClass:'tracker-drag-ghost',
+      chosenClass:'tracker-drag-chosen',
+      filter:'.tracker-add-row',
+      onEnd:function(){
+        var rows=tbody.querySelectorAll('tr[data-todo-name]');
+        var order=Array.from(rows).map(function(r){return r.getAttribute('data-todo-name');}).join(',');
+        triggerReflexSignal(order);
+      }
+    });
+  }
+  setTimeout(initSortable,800);
+  var obs=new MutationObserver(function(){initSortable();});
+  document.addEventListener('DOMContentLoaded',function(){
+    obs.observe(document.body,{childList:true,subtree:true});
+    initSortable();
   });
 })();
 </script>"""),
+        rx.el.input(
+            id="__tracker_drag_signal",
+            on_change=TrackerState.apply_drag_order,
+            default_value="",
+            style={"position":"absolute","opacity":"0","pointer_events":"none","width":"0","height":"0"},
+        ),
         # ── Create modal + Lists panel (overlays) ──
         _tracker_create_modal(),
         _tracker_lists_panel(),
@@ -24043,6 +24051,7 @@ td.group{-webkit-touch-callout:none;user-select:none;}
                     rx.el.tbody(
                         rx.foreach(TrackerState.tracker_rows, _tracker_row),
                         _tracker_add_row(),
+                        id="tracker-tbody",
                     ),
                     style={
                         "width": "max-content",
