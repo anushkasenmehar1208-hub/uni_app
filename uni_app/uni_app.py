@@ -21760,22 +21760,23 @@ def landing_page():
       padding: 14px;
     }
     #landing-live-chat-demo .landing-live-chat-demo__core span {
-      font-size: 0.8rem;
-      line-height: 1.35;
-      color: rgba(255,255,255,0.78);
-      letter-spacing: -0.02em;
+      font-size: 0.95rem;
+      line-height: 1;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: -0.04em;
+      font-weight: 700;
     }
     #landing-live-chat-demo .landing-live-chat-demo__orbit-path {
       position: absolute;
       inset: 0;
-      animation: landingModelOrbit 14s linear infinite;
+      animation: landingModelOrbit 7s linear infinite;
     }
     #landing-live-chat-demo .landing-live-chat-demo__orbit-path--2 {
-      animation-duration: 18s;
+      animation-duration: 9s;
       animation-direction: reverse;
     }
     #landing-live-chat-demo .landing-live-chat-demo__orbit-path--3 {
-      animation-duration: 16s;
+      animation-duration: 8s;
     }
     #landing-live-chat-demo .landing-live-chat-demo__badge {
       position: absolute;
@@ -21817,6 +21818,19 @@ def landing_page():
       flex-direction: column;
       justify-content: center;
       gap: 18px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__panel {
+      width: 100%;
+      max-width: 560px;
+      padding: 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
     #landing-live-chat-demo .landing-live-chat-demo__eyebrow {
       font-size: 0.76rem;
@@ -21876,7 +21890,6 @@ def landing_page():
       align-items: center;
       gap: 10px;
       width: 100%;
-      max-width: 520px;
       padding: 10px;
       border-radius: 999px;
       background: rgba(255,255,255,0.04);
@@ -21924,7 +21937,7 @@ def landing_page():
       flex-wrap: wrap;
       color: rgba(255,255,255,0.36);
       font-size: 0.82rem;
-      max-width: 520px;
+      width: 100%;
     }
     @keyframes landingModelOrbit {
       from { transform: rotate(0deg); }
@@ -21953,7 +21966,7 @@ def landing_page():
     <div class="landing-live-chat-demo__orbit-wrap">
       <div class="landing-live-chat-demo__orbit" aria-hidden="true">
         <div class="landing-live-chat-demo__ring"></div>
-        <div class="landing-live-chat-demo__core"><span>Teaching models in live rotation</span></div>
+        <div class="landing-live-chat-demo__core"><span>Alex AI</span></div>
         <div class="landing-live-chat-demo__orbit-path landing-live-chat-demo__orbit-path--1">
           <div class="landing-live-chat-demo__badge">
             <img src="/landing-model-deepseek.png" alt="DeepSeek model" />
@@ -21978,26 +21991,27 @@ def landing_page():
     <div class="landing-live-chat-demo__chat">
       <div>
         <div class="landing-live-chat-demo__eyebrow">Live chat demo</div>
-        <h3 class="landing-live-chat-demo__title">Try a floating chat that explains the website in real time</h3>
+        <h3 class="landing-live-chat-demo__title">Try a demo chat</h3>
         <p class="landing-live-chat-demo__sub">
-          Ask about Alex AI, semester planning, voice teaching, pricing, notes, or tasks. This demo answers in short website-focused replies and allows up to 5 messages.
+          Ask about Alex AI, semester planning, voice teaching, pricing, notes, or tasks and preview how the assistant responds.
         </p>
       </div>
 
-      <div id="landing-live-chat-demo-messages" class="landing-live-chat-demo__messages">
-        <div class="landing-live-chat-demo__bubble landing-live-chat-demo__bubble--assistant">
-          Hi. Ask about Alex AI, semester planning, voice teaching, or pricing.
+      <div class="landing-live-chat-demo__panel">
+        <div id="landing-live-chat-demo-messages" class="landing-live-chat-demo__messages">
+          <div class="landing-live-chat-demo__bubble landing-live-chat-demo__bubble--assistant">
+            Hello. Ask about Alex AI, semester planning, voice teaching, or pricing.
+          </div>
         </div>
-      </div>
 
-      <div class="landing-live-chat-demo__composer">
-        <input id="landing-live-chat-demo-input" class="landing-live-chat-demo__input" type="text" maxlength="120" placeholder="Say hi..." />
-        <button id="landing-live-chat-demo-send" class="landing-live-chat-demo__send" type="button">Send</button>
-      </div>
+        <div class="landing-live-chat-demo__composer">
+          <input id="landing-live-chat-demo-input" class="landing-live-chat-demo__input" type="text" maxlength="120" placeholder="Ask Alex AI..." />
+          <button id="landing-live-chat-demo-send" class="landing-live-chat-demo__send" type="button">Send</button>
+        </div>
 
-      <div class="landing-live-chat-demo__meta">
-        <span id="landing-live-chat-demo-count">0 / 5 messages</span>
-        <span>Short replies about the Alex AI website</span>
+        <div class="landing-live-chat-demo__meta">
+          <span>Instant preview responses from the Alex AI website assistant</span>
+        </div>
       </div>
     </div>
   </div>
@@ -22011,7 +22025,6 @@ def landing_page():
       const messagesEl = document.getElementById('landing-live-chat-demo-messages');
       const inputEl = document.getElementById('landing-live-chat-demo-input');
       const sendEl = document.getElementById('landing-live-chat-demo-send');
-      const countEl = document.getElementById('landing-live-chat-demo-count');
       const limit = 5;
       let sentCount = 0;
 
@@ -22038,7 +22051,7 @@ def landing_page():
       const lockDemo = () => {
         inputEl.disabled = true;
         sendEl.disabled = true;
-        inputEl.placeholder = 'Demo limit reached';
+        inputEl.placeholder = 'Open Alex AI to continue';
       };
 
       const sendMessage = () => {
@@ -22047,7 +22060,6 @@ def landing_page():
 
         appendBubble(value, 'user');
         sentCount += 1;
-        countEl.textContent = `${sentCount} / ${limit} messages`;
         inputEl.value = '';
 
         window.setTimeout(() => {
