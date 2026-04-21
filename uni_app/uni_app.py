@@ -22564,29 +22564,11 @@ def landing_page():
     )
 
     voice_section = rx.box(
+        rx.script(
+            src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js",
+            type_="module",
+        ),
         rx.hstack(
-            rx.box(
-                rx.image(
-                    src="/landing-voice-demo.gif",
-                    alt="Alex AI live voice mentor",
-                    style={
-                        "width": "100%",
-                        "height": "100%",
-                        "objectFit": "contain",
-                        "display": "block",
-                        "background": "transparent",
-                        "filter": "drop-shadow(0 32px 80px rgba(0,0,0,0.45))",
-                        "pointerEvents": "none",
-                    },
-                ),
-                width="100%",
-                max_width=rx.breakpoints(initial="100%", md="420px"),
-                height=rx.breakpoints(initial="320px", md="460px"),
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                background="transparent",
-            ),
             rx.vstack(
                 rx.text(
                     "Voice study space that feels alive",
@@ -22615,6 +22597,44 @@ def landing_page():
                 spacing="5",
                 align_items="flex-start",
                 width=rx.breakpoints(initial="100%", md="440px"),
+            ),
+            rx.box(
+                rx.html(
+                    """
+                    <model-viewer
+                        src="/models/teacher_naoki.glb"
+                        alt="Alex AI 3D mentor"
+                        camera-controls
+                        touch-action="pan-y"
+                        auto-rotate
+                        auto-rotate-delay="1500"
+                        rotation-per-second="18deg"
+                        interaction-prompt="auto"
+                        interaction-prompt-threshold="2500"
+                        shadow-intensity="0.6"
+                        exposure="1.05"
+                        camera-orbit="0deg 80deg 2.4m"
+                        min-camera-orbit="auto auto 1.6m"
+                        max-camera-orbit="auto auto 3.6m"
+                        style="
+                            width: 100%;
+                            height: 100%;
+                            background: transparent;
+                            --poster-color: transparent;
+                            filter: drop-shadow(0 32px 80px rgba(0,0,0,0.45));
+                        "
+                    >
+                        <div slot="progress-bar"></div>
+                    </model-viewer>
+                    """
+                ),
+                width="100%",
+                max_width=rx.breakpoints(initial="100%", md="460px"),
+                height=rx.breakpoints(initial="360px", md="520px"),
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                background="transparent",
             ),
             spacing="6",
             align="center",
