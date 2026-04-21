@@ -22037,78 +22037,79 @@ def landing_page():
         '''),
             rx.script("""
                 (() => {
-                    const setupLandingDemo = () => {
-                        const root = document.getElementById('landing-live-chat-demo');
-                        if (!root) {
-                            window.requestAnimationFrame(setupLandingDemo);
-                            return;
-                        }
-                        if (root.dataset.bound === 'true') return;
-                        root.dataset.bound = 'true';
+                    if (window.__landingLiveChatDemoBound) return;
+                    window.__landingLiveChatDemoBound = true;
 
+                    const state = { sentCount: 0, limit: 5 };
+
+                    const respond = (text) => {
+                        const t = (text || '').trim().toLowerCase();
+                        if (!t) return "Ask about planning, pricing, voice teaching, or study tools.";
+                        if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students turn syllabi into guided semester plans.";
+                        if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3.17/month, and Max is $25/month.";
+                        if (/(voice|speak|talk|mentor|call)/.test(t)) return "Alex AI offers live voice teaching with a 3D mentor and typed chat.";
+                        if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Upload your syllabus and Alex AI organizes your semester automatically.";
+                        if (/(notes|tasks|todo|to-do)/.test(t)) return "Students can save notes, manage tasks, and keep study flow in one place.";
+                        if (/(models|deepseek|claude|chatgpt|teach)/.test(t)) return "Alex AI uses multiple models for teaching, explanations, and faster answers.";
+                        return "Alex AI is an academic mentor with planning, voice learning, notes, and study visuals.";
+                    };
+
+                    const appendBubble = (messagesEl, text, kind) => {
+                        if (!messagesEl) return;
+                        const bubble = document.createElement('div');
+                        bubble.className = 'landing-live-chat-demo__bubble landing-live-chat-demo__bubble--' + kind;
+                        bubble.textContent = text;
+                        messagesEl.appendChild(bubble);
+                        messagesEl.scrollTop = messagesEl.scrollHeight;
+                    };
+
+                    const sendMessage = () => {
                         const messagesEl = document.getElementById('landing-live-chat-demo-messages');
                         const inputEl = document.getElementById('landing-live-chat-demo-input');
                         const sendEl = document.getElementById('landing-live-chat-demo-send');
                         if (!messagesEl || !inputEl || !sendEl) return;
 
-                        const limit = 5;
-                        let sentCount = 0;
+                        const value = (inputEl.value || '').trim();
+                        if (!value || state.sentCount >= state.limit) return;
 
-                        const respond = (text) => {
-                            const t = (text || '').trim().toLowerCase();
-                            if (!t) return "Ask about planning, pricing, voice teaching, or study tools.";
-                            if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students turn syllabi into guided semester plans.";
-                            if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3.17/month, and Max is $25/month.";
-                            if (/(voice|speak|talk|mentor|call)/.test(t)) return "Alex AI offers live voice teaching with a 3D mentor and typed chat.";
-                            if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Upload your syllabus and Alex AI organizes your semester automatically.";
-                            if (/(notes|tasks|todo|to-do)/.test(t)) return "Students can save notes, manage tasks, and keep study flow in one place.";
-                            if (/(models|deepseek|claude|chatgpt|teach)/.test(t)) return "Alex AI uses multiple models for teaching, explanations, and faster answers.";
-                            return "Alex AI is an academic mentor with planning, voice learning, notes, and study visuals.";
-                        };
+                        appendBubble(messagesEl, value, 'user');
+                        state.sentCount += 1;
+                        inputEl.value = '';
 
-                        const appendBubble = (text, kind) => {
-                            const bubble = document.createElement('div');
-                            bubble.className = `landing-live-chat-demo__bubble landing-live-chat-demo__bubble--${kind}`;
-                            bubble.textContent = text;
-                            messagesEl.appendChild(bubble);
-                            messagesEl.scrollTop = messagesEl.scrollHeight;
-                        };
-
-                        const lockDemo = () => {
-                            inputEl.disabled = true;
-                            sendEl.disabled = true;
-                            inputEl.placeholder = 'Open Alex AI to continue';
-                        };
-
-                        const sendMessage = () => {
-                            const value = (inputEl.value || '').trim();
-                            if (!value || sentCount >= limit) return;
-
-                            appendBubble(value, 'user');
-                            sentCount += 1;
-                            inputEl.value = '';
-
-                            window.setTimeout(() => {
-                                appendBubble(
-                                    sentCount >= limit
-                                        ? "Hello again. Demo limit reached, but the full Alex AI chat lives inside the app."
-                                        : respond(value),
-                                    'assistant'
-                                );
-                                if (sentCount >= limit) lockDemo();
-                            }, 260);
-                        };
-
-                        sendEl.addEventListener('click', sendMessage);
-                        inputEl.addEventListener('keydown', (event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault();
-                                sendMessage();
+                        window.setTimeout(() => {
+                            const reachedLimit = state.sentCount >= state.limit;
+                            appendBubble(
+                                messagesEl,
+                                reachedLimit
+                                    ? "Hello again. Demo limit reached, but the full Alex AI chat lives inside the app."
+                                    : respond(value),
+                                'assistant'
+                            );
+                            if (reachedLimit) {
+                                inputEl.disabled = true;
+                                sendEl.disabled = true;
+                                inputEl.placeholder = 'Open Alex AI to continue';
                             }
-                        });
+                        }, 260);
                     };
 
-                    setupLandingDemo();
+                    document.addEventListener('click', (event) => {
+                        const target = event.target;
+                        if (!target || !target.closest) return;
+                        if (target.closest('#landing-live-chat-demo-send')) {
+                            event.preventDefault();
+                            sendMessage();
+                        }
+                    });
+
+                    document.addEventListener('keydown', (event) => {
+                        const target = event.target;
+                        if (!target || !target.closest) return;
+                        if (event.key === 'Enter' && target.closest('#landing-live-chat-demo-input')) {
+                            event.preventDefault();
+                            sendMessage();
+                        }
+                    });
                 })();
             """),
         )
