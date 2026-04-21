@@ -24519,6 +24519,17 @@ gtag('config', 'G-H5G0QBSY2M');
         rx.el.link(rel="manifest", href=SITE_WEBMANIFEST),
         rx.el.meta(name="theme-color", content="#050506"),
         rx.el.meta(name="referrer", content="no-referrer"),
+        # Make the layout viewport shrink with the on-screen keyboard so
+        # fixed/absolute elements stay anchored to the *visible* area
+        # instead of being scrolled up by the browser. Supported on Android
+        # Chrome 108+ / modern WebViews; harmless elsewhere.
+        rx.el.meta(
+            name="viewport",
+            content=(
+                "width=device-width, initial-scale=1, maximum-scale=1, "
+                "viewport-fit=cover, interactive-widget=resizes-content"
+            ),
+        ),
         rx.el.link(rel="preconnect", href="https://fonts.googleapis.com"),
         rx.el.link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin=""),
         rx.el.link(
@@ -26475,17 +26486,26 @@ def alex_voice_overlay_panel() -> rx.Component:
                 overscroll-behavior: none !important;
             }
             @media (max-width:768px) {
+                /* On mobile the voice overlay is size-locked by JS to the
+                   current visualViewport (top = offsetTop, height = height),
+                   so anything positioned absolutely relative to the overlay
+                   automatically stays inside the visible area — even when
+                   the soft keyboard opens. No "page scroll up" effect. */
                 #alex-voice-main {
-                    position: fixed !important;
+                    position: absolute !important;
                     top: var(--alex-main-fixed-top, 54px) !important;
                     left: 0 !important;
                     right: 0 !important;
+                    bottom: 0 !important;
                     width: 100% !important;
                     margin: 0 !important;
                     padding-bottom: 86px !important;
+                    box-sizing: border-box !important;
+                    overflow: hidden !important;
+                    z-index: 1 !important;
                 }
                 #alex-type-row {
-                    position: fixed !important;
+                    position: absolute !important;
                     bottom: 0 !important;
                     left: 0 !important;
                     right: 0 !important;
@@ -26496,15 +26516,10 @@ def alex_voice_overlay_panel() -> rx.Component:
                     background: linear-gradient(to top, rgba(0,0,0,0.97) 68%, transparent) !important;
                     z-index: 2200 !important;
                     box-sizing: border-box !important;
-                    transition: bottom 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
                 }
-                .alex-voice-overlay-root.alex-kb-open #alex-call-row,
                 .alex-voice-overlay-root.alex-input-focus #alex-call-row {
                     opacity: 0 !important;
                     pointer-events: none !important;
-                }
-                .alex-voice-overlay-root.alex-kb-open #alex-type-row {
-                    bottom: var(--alex-kb-target-bottom, 96px) !important;
                 }
                 #alex-voice-footer { display: none !important; }
             }
@@ -26538,86 +26553,89 @@ def alex_voice_overlay_panel() -> rx.Component:
             "})();"
         ),
         rx.script(
+            # Keep the voice overlay perfectly frozen in place when the
+            # mobile soft keyboard opens. Strategy:
+            #   1. Hard-lock the overlay to the current visualViewport by
+            #      setting its top = offsetTop and height = height. Any
+            #      children positioned absolutely inside the overlay (the
+            #      avatar column and the input row) therefore stay pinned
+            #      to the visible area — nothing appears to "scroll up".
+            #   2. Aggressively cancel any window/body scroll the browser
+            #      tries to apply when the input receives focus (Android
+            #      Chrome's built-in "scroll into view" behaviour).
+            # This approach works regardless of whether the browser
+            # supports interactive-widget=resizes-content — we just pin
+            # off whatever the visualViewport reports.
             "(function(){"
-            "var _alexInputFocused=false;"
-            "var _alexBaseH=0;"
+            "var _alexFocused=false;"
             "function _alexRoot(){return document.querySelector('.alex-voice-overlay-root');}"
-            "function _alexCaptureBase(){"
+            "function _alexKillScroll(){"
+            "try{if(window.scrollY!==0)window.scrollTo(0,0);}catch(e){}"
+            "try{if(document.documentElement&&document.documentElement.scrollTop!==0)document.documentElement.scrollTop=0;}catch(e){}"
+            "try{if(document.body&&document.body.scrollTop!==0)document.body.scrollTop=0;}catch(e){}"
+            "}"
+            "function _alexPin(){"
+            "var root=_alexRoot();if(!root)return;"
             "var vv=window.visualViewport;"
-            "var h=Math.max(window.innerHeight,document.documentElement.clientHeight||0,vv?(vv.height+vv.offsetTop):0);"
-            "if(!_alexInputFocused&&(!_alexBaseH||h>_alexBaseH-24))_alexBaseH=Math.max(_alexBaseH,h);"
-            "return _alexBaseH||h;"
+            "if(vv){"
+            "root.style.setProperty('top',vv.offsetTop+'px','important');"
+            "root.style.setProperty('height',vv.height+'px','important');"
+            "}else{"
+            "root.style.setProperty('top','0px','important');"
+            "root.style.setProperty('height','100vh','important');"
             "}"
-            "function _alexResetRow(){"
-            "var row=document.getElementById('alex-type-row');"
-            "var root=_alexRoot();"
-            "if(row)row.style.setProperty('bottom','0px','important');"
-            "if(root){"
-            "root.classList.remove('alex-kb-open');"
-            "root.classList.remove('alex-input-focus');"
-            "root.style.removeProperty('--alex-kb-target-bottom');"
-            "}"
-            "}"
-            "function _alexKbHeight(){"
-            "var vv=window.visualViewport;"
-            "if(!vv)return 0;"
-            "var base=_alexCaptureBase();"
-            "return Math.max(0,base-vv.offsetTop-vv.height);"
             "}"
             "function _alexAdj(){"
-            "var row=document.getElementById('alex-type-row');"
-            "var root=_alexRoot();"
-            "if(!row||!root)return;"
-            "var kb=_alexKbHeight();"
-            "if(!_alexInputFocused||kb<=110){_alexResetRow();return;}"
-            "root.classList.add('alex-kb-open');"
-            "root.classList.add('alex-input-focus');"
-            "root.style.setProperty('--alex-kb-target-bottom',kb+'px');"
-            "row.style.setProperty('bottom',kb+'px','important');"
+            "var root=_alexRoot();if(!root)return;"
+            "if(_alexFocused)_alexKillScroll();"
+            "_alexPin();"
             "}"
             "function _alexWireInput(){"
             "var inp=document.getElementById('alex-type-input');"
             "if(!inp||inp._alexWired)return;"
             "inp._alexWired=true;"
             "inp.addEventListener('focus',function(){"
-            "_alexInputFocused=true;"
+            "_alexFocused=true;"
             "var root=_alexRoot();if(root)root.classList.add('alex-input-focus');"
-            "_alexCaptureBase();"
+            "_alexKillScroll();"
             "requestAnimationFrame(_alexAdj);"
-            "setTimeout(_alexAdj,120);"
-            "setTimeout(_alexAdj,260);"
-            "});"
-            "inp.addEventListener('blur',function(){"
-            "_alexInputFocused=false;"
-            "_alexResetRow();"
             "setTimeout(_alexAdj,60);"
-            "});"
+            "setTimeout(_alexAdj,150);"
+            "setTimeout(_alexAdj,320);"
+            "setTimeout(_alexAdj,600);"
+            "},{passive:true});"
+            "inp.addEventListener('blur',function(){"
+            "_alexFocused=false;"
+            "var root=_alexRoot();if(root)root.classList.remove('alex-input-focus');"
+            "setTimeout(_alexAdj,30);"
+            "setTimeout(_alexAdj,180);"
+            "setTimeout(_alexAdj,400);"
+            "},{passive:true});"
             "}"
             "var _t=0;"
             "var _iv=setInterval(function(){"
-            "_alexCaptureBase();"
             "_alexWireInput();"
             "_alexAdj();"
-            "if(++_t>60)clearInterval(_iv);"
-            "},50);"
+            "if(++_t>80)clearInterval(_iv);"
+            "},40);"
             "if(window.visualViewport){"
             "window.visualViewport.addEventListener('resize',_alexAdj);"
             "window.visualViewport.addEventListener('scroll',_alexAdj);"
             "}"
             "window.addEventListener('resize',_alexAdj);"
-            "window.addEventListener('orientationchange',function(){setTimeout(_alexAdj,150);});"
+            "window.addEventListener('scroll',function(){"
+            "if(_alexFocused){_alexKillScroll();_alexPin();}"
+            "},{passive:true});"
+            "window.addEventListener('orientationchange',function(){"
+            "setTimeout(_alexAdj,120);setTimeout(_alexAdj,360);"
+            "});"
             "document.addEventListener('visibilitychange',function(){"
             "if(document.visibilityState==='visible'){"
-            "setTimeout(_alexAdj,50);"
-            "setTimeout(_alexAdj,300);"
-            "}else{"
-            "_alexInputFocused=false;"
-            "_alexResetRow();"
+            "setTimeout(_alexAdj,50);setTimeout(_alexAdj,260);"
             "}"
             "});"
             "document.addEventListener('touchend',function(ev){"
-            "var t=ev.target;"
-            "if(!t||!t.closest)return;"
+            "var t=ev.target;if(!t||!t.closest)return;"
             "if(t.closest('#alex-type-row'))return;"
             "var inp=document.getElementById('alex-type-input');"
             "if(inp&&document.activeElement===inp){try{inp.blur();}catch(e){}}"
@@ -26625,7 +26643,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             "var _g=setInterval(function(){"
             "if(!document.querySelector('.alex-voice-overlay-root')){clearInterval(_g);return;}"
             "_alexAdj();"
-            "},80);"
+            "},100);"
             "})();"
         ),
         rx.center(
