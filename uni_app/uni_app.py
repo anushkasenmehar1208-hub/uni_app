@@ -26416,6 +26416,9 @@ def alex_voice_overlay_panel() -> rx.Component:
                 background:rgba(255,80,60,0.10);
                 box-shadow: 0 0 0 3px rgba(255,120,100,0.08);
             }
+            #alex-call-row {
+                transition: opacity .18s ease;
+            }
 
             /* ── Right-side chat history panel ───────────────────── */
             #alex-chat-panel {
@@ -26495,6 +26498,13 @@ def alex_voice_overlay_panel() -> rx.Component:
                     box-sizing: border-box !important;
                     transition: bottom 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
                 }
+                .alex-voice-overlay-root.alex-kb-open #alex-call-row {
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                }
+                .alex-voice-overlay-root.alex-kb-open #alex-type-row {
+                    bottom: var(--alex-kb-target-bottom, 96px) !important;
+                }
                 #alex-voice-footer { display: none !important; }
             }
         """),
@@ -26553,12 +26563,28 @@ def alex_voice_overlay_panel() -> rx.Component:
             # Slide just the input bar to sit right above the keyboard.
             "function _alexAdj(){"
             "var row=document.getElementById('alex-type-row');"
-            "if(!row)return;"
+            "var root=document.querySelector('.alex-voice-overlay-root');"
+            "if(!row||!root)return;"
             "var vv=window.visualViewport;"
             "var base=_alexH||window.innerHeight;"
-            "if(!vv){row.style.bottom='0px';return;}"
-            "var off=Math.max(0,base-vv.offsetTop-vv.height);"
-            "row.style.bottom=off+'px';"
+            "if(!vv){root.classList.remove('alex-kb-open');row.style.bottom='0px';return;}"
+            "var kb=Math.max(0,base-vv.offsetTop-vv.height);"
+            "var open=kb>120;"
+            "if(!open){"
+            "root.classList.remove('alex-kb-open');"
+            "root.style.removeProperty('--alex-kb-target-bottom');"
+            "row.style.bottom='0px';"
+            "return;"
+            "}"
+            "var target=96;"
+            "var call=document.getElementById('alex-call-row');"
+            "if(call){"
+            "var r=call.getBoundingClientRect();"
+            "target=Math.max(0,Math.round(base-r.bottom));"
+            "}"
+            "root.classList.add('alex-kb-open');"
+            "root.style.setProperty('--alex-kb-target-bottom',target+'px');"
+            "row.style.bottom=target+'px';"
             "}"
             # Kill any stray scroll on the document (Chrome auto-scrolls to
             # bring a focused input into view — this is the root cause of the
@@ -26641,6 +26667,7 @@ def alex_voice_overlay_panel() -> rx.Component:
                     ),
                     spacing="3",
                     align="center",
+                    id="alex-call-row",
                 ),
                 rx.el.div(
                     rx.el.input(
