@@ -21878,15 +21878,6 @@ def landing_page():
 
     logo_video = rx.center(
         rx.vstack(
-            rx.hstack(
-                proof_chip("Semester planner demo"),
-                proof_chip("Voice + typed study chat"),
-                proof_chip("Used by 100+ students"),
-                spacing="3",
-                justify="center",
-                flex_wrap="wrap",
-                width="100%",
-            ),
             rx.box(
                 rx.hstack(
                     rx.vstack(
@@ -21918,8 +21909,8 @@ def landing_page():
                     ),
                     rx.box(
                         rx.image(
-                            src="/landing-semester-demo.png",
-                            alt="Alex AI semester planner demo",
+                            src="/landing-hero-demo.png",
+                            alt="Alex AI hero demo",
                             width="100%",
                             height="100%",
                             object_fit="cover",
