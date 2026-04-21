@@ -26482,6 +26482,12 @@ def alex_voice_overlay_panel() -> rx.Component:
             }
             @media (max-width:768px) {
                 #alex-voice-main {
+                    position: fixed !important;
+                    top: var(--alex-main-fixed-top, 54px) !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 100% !important;
+                    margin: 0 !important;
                     padding-bottom: 86px !important;
                 }
                 #alex-type-row {
@@ -26543,6 +26549,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             "var _alexH=0;"
             "var _alexInputFocused=false;"
             "var _alexCallTargetBottom=96;"
+            "var _alexMainTop=54;"
             # Freeze overlay at initial viewport pixel height AND force body/html
             # scroll lock with inline !important (don't trust CSS :has() timing).
             "function _alexLock(){"
@@ -26560,6 +26567,12 @@ def alex_voice_overlay_panel() -> rx.Component:
             "body.style.setProperty('height','100%','important');"
             "body.style.setProperty('top','0','important');"
             "body.style.setProperty('left','0','important');"
+            "var main=document.getElementById('alex-voice-main');"
+            "if(main){"
+            "var mr=main.getBoundingClientRect();"
+            "if(!_alexInputFocused&&mr&&mr.top>8){_alexMainTop=Math.round(mr.top);}"
+            "main.style.setProperty('--alex-main-fixed-top',_alexMainTop+'px');"
+            "}"
             "return true;"
             "}"
             # Slide just the input bar to sit right above the keyboard.
