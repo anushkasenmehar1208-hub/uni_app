@@ -26548,14 +26548,29 @@ def alex_voice_overlay_panel() -> rx.Component:
             "var body=document.body;"
             "var _alexH=0;"
             "var _alexInputFocused=false;"
-            "var _alexCallTargetBottom=96;"
             "var _alexMainTop=54;"
-            # Freeze overlay at initial viewport pixel height AND force body/html
-            # scroll lock with inline !important (don't trust CSS :has() timing).
+            # Hard reset the input row back to the bottom. Used whenever the
+            # keyboard is (or should be) closed — independent of any CSS class
+            # so it works even if state got out of sync.
+            "function _alexResetRow(){"
+            "var row=document.getElementById('alex-type-row');"
+            "var root=document.querySelector('.alex-voice-overlay-root');"
+            "if(row)row.style.setProperty('bottom','0px','important');"
+            "if(root){"
+            "root.classList.remove('alex-kb-open');"
+            "root.style.removeProperty('--alex-kb-target-bottom');"
+            "}"
+            "}"
+            # Freeze overlay at viewport pixel height AND force body/html
+            # scroll lock with inline !important. _alexH is re-captured
+            # whenever the real viewport grows (device rotation, address bar
+            # hide/show, PiP exit) so we never pin the overlay to a stale
+            # small height after the keyboard closes.
             "function _alexLock(){"
             "var el=document.querySelector('.alex-voice-overlay-root');"
             "if(!el)return false;"
-            "if(!_alexH)_alexH=window.innerHeight;"
+            "var ih=window.innerHeight;"
+            "if(!_alexH||ih>_alexH+40)_alexH=ih;"
             "el.style.setProperty('height',_alexH+'px','important');"
             "el.style.setProperty('max-height',_alexH+'px','important');"
             "el.style.setProperty('top','0','important');"
@@ -26575,41 +26590,40 @@ def alex_voice_overlay_panel() -> rx.Component:
             "}"
             "return true;"
             "}"
-            # Slide just the input bar to sit right above the keyboard.
+            # Position the text input row.
+            # "Keyboard is up" requires BOTH visualViewport shrinkage AND the
+            # input being focused. Trusting vv alone caused the bar to stay
+            # stranded mid-screen when the keyboard closed via back button /
+            # tab switch / visibilitychange (vv values can be stale for a few
+            # frames). Trusting focus alone had the opposite bug. Requiring
+            # both makes every "closed" state reset the bar.
             "function _alexAdj(){"
             "var row=document.getElementById('alex-type-row');"
             "var root=document.querySelector('.alex-voice-overlay-root');"
             "if(!row||!root)return;"
             "var vv=window.visualViewport;"
-            "var base=_alexH||window.innerHeight;"
+            "var ih=window.innerHeight;"
+            "if(ih>_alexH+40)_alexH=ih;"
+            "var base=_alexH||ih;"
             "var kb=0;"
             "if(vv)kb=Math.max(0,base-vv.offsetTop-vv.height);"
-            "var open=_alexInputFocused||kb>120;"
-            "if(!open){"
-            "root.classList.remove('alex-kb-open');"
-            "root.style.removeProperty('--alex-kb-target-bottom');"
-            "row.style.bottom='0px';"
-            "return;"
-            "}"
-            "var target=_alexCallTargetBottom||96;"
-            "var call=document.getElementById('alex-call-row');"
-            "if(call){"
-            "var r=call.getBoundingClientRect();"
-            "target=Math.max(0,Math.round(base-r.bottom));"
-            "_alexCallTargetBottom=target;"
-            "}"
+            "var open=(kb>120)&&_alexInputFocused;"
+            "if(!open){_alexResetRow();return;}"
             "root.classList.add('alex-kb-open');"
-            "root.style.setProperty('--alex-kb-target-bottom',target+'px');"
-            "row.style.bottom=target+'px';"
+            "root.style.setProperty('--alex-kb-target-bottom',kb+'px');"
+            "row.style.setProperty('bottom',kb+'px','important');"
             "}"
-            # Kill any stray scroll on the document (Chrome auto-scrolls to
-            # bring a focused input into view — this is the root cause of the
-            # whole page shifting up).
+            # Kill any stray scroll on the document. Chrome's auto
+            # scroll-into-view on focus runs on the next frame, so we install
+            # both a live scroll listener (snaps back in the same event loop)
+            # and a timed sweep after focus.
             "function _alexKill(){"
             "if(window.scrollY!==0||window.scrollX!==0)window.scrollTo(0,0);"
             "if(html.scrollTop!==0)html.scrollTop=0;"
             "if(body.scrollTop!==0)body.scrollTop=0;"
             "}"
+            "window.addEventListener('scroll',_alexKill,{passive:true,capture:true});"
+            "document.addEventListener('scroll',_alexKill,{passive:true,capture:true});"
             # Disable the browser's scroll-into-view on the text input itself.
             "function _alexWireInput(){"
             "var inp=document.getElementById('alex-type-input');"
@@ -26618,6 +26632,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             "try{inp.scrollIntoView=function(){};inp.scrollIntoViewIfNeeded=function(){};}catch(e){}"
             "inp.addEventListener('focus',function(){"
             "_alexInputFocused=true;"
+            "_alexKill();"
             "setTimeout(_alexKill,0);"
             "setTimeout(_alexKill,30);"
             "setTimeout(function(){_alexKill();_alexAdj();},120);"
@@ -26625,7 +26640,10 @@ def alex_voice_overlay_panel() -> rx.Component:
             "});"
             "inp.addEventListener('blur',function(){"
             "_alexInputFocused=false;"
+            # Reset instantly — don't wait for vv resize, which may race.
+            "_alexResetRow();_alexKill();"
             "setTimeout(function(){_alexKill();_alexAdj();},60);"
+            "setTimeout(function(){_alexKill();_alexAdj();},220);"
             "});"
             "}"
             # Poll briefly for the overlay + input, then lock everything.
@@ -26637,13 +26655,56 @@ def alex_voice_overlay_panel() -> rx.Component:
             "},50);"
             "if(window.visualViewport){"
             "window.visualViewport.addEventListener('resize',function(){_alexLock();_alexAdj();_alexKill();});"
-            "window.visualViewport.addEventListener('scroll',_alexAdj);"
+            "window.visualViewport.addEventListener('scroll',function(){_alexAdj();_alexKill();});"
             "}"
-            # Continuous guard: any window-scroll attempt while the overlay is
-            # open gets snapped back to 0 immediately.
+            # Window resize is another reliable signal on Android when the
+            # keyboard closes via the back button (vv doesn't always fire).
+            "window.addEventListener('resize',function(){_alexLock();_alexAdj();_alexKill();});"
+            "window.addEventListener('orientationchange',function(){"
+            "_alexH=0;setTimeout(function(){_alexLock();_alexAdj();_alexKill();},150);"
+            "});"
+            # When the tab is backgrounded (mobile Chrome pauses audio and
+            # shows the "Paused — return to this tab" status), force the
+            # input bar back to the bottom so it isn't stranded mid-page
+            # when the user comes back.
+            "document.addEventListener('visibilitychange',function(){"
+            "if(document.visibilityState==='visible'){"
+            # Assume focus was dropped while we were hidden.
+            "_alexInputFocused=false;_alexResetRow();"
+            "setTimeout(function(){_alexLock();_alexAdj();_alexKill();},50);"
+            "setTimeout(function(){_alexLock();_alexAdj();_alexKill();},300);"
+            "}else{"
+            "_alexInputFocused=false;_alexResetRow();"
+            "}"
+            "});"
+            # Tap anywhere outside the input/send button blurs the input,
+            # which on Android also triggers keyboard dismissal reliably.
+            "document.addEventListener('touchend',function(ev){"
+            "var t=ev.target;"
+            "if(!t||!t.closest)return;"
+            "if(t.closest('#alex-type-row'))return;"
+            "var inp=document.getElementById('alex-type-input');"
+            "if(inp&&document.activeElement===inp){try{inp.blur();}catch(e){}}"
+            "},{passive:true});"
+            # Continuous guard: forces scroll back to 0 and un-strands the
+            # input row whenever focus is gone OR keyboard is closed — no
+            # longer gated on the alex-kb-open class, so out-of-sync states
+            # always self-heal.
             "var _g=setInterval(function(){"
             "if(!document.querySelector('.alex-voice-overlay-root')){clearInterval(_g);return;}"
             "_alexKill();"
+            "var vv=window.visualViewport;"
+            "var ih=window.innerHeight;"
+            "if(ih>_alexH+40){_alexH=ih;_alexLock();}"
+            "var base=_alexH||ih;"
+            "var kb=vv?Math.max(0,base-vv.offsetTop-vv.height):0;"
+            "var row=document.getElementById('alex-type-row');"
+            "if(!_alexInputFocused||kb<=120){"
+            "if(row&&row.style.bottom&&row.style.bottom!=='0px'){_alexResetRow();}"
+            "}else{"
+            "var want=kb+'px';"
+            "if(row&&row.style.bottom!==want){_alexAdj();}"
+            "}"
             "},40);"
             "})();"
         ),
