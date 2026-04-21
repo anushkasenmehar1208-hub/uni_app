@@ -26538,7 +26538,6 @@ def alex_voice_overlay_panel() -> rx.Component:
             # Right-side chat history panel — appended by alex_voice.js
             rx.el.div(id="alex-chat-panel"),
             rx.vstack(
-                id="alex-voice-main",
                 # Animated orb — hosts the 3D avatar canvas mounted by alex_avatar.js
                 rx.el.div(
                     rx.el.div(class_name="orb-ring r1"),
@@ -26599,6 +26598,7 @@ def alex_voice_overlay_panel() -> rx.Component:
                 spacing="4",
                 align="center",
                 padding_y="0",
+                id="alex-voice-main",
                 style={"gap": "18px", "position": "relative", "z_index": "1"},
             ),
             width="100%",
