@@ -26465,6 +26465,18 @@ def alex_voice_overlay_panel() -> rx.Component:
             @media (max-width:900px) {
                 #alex-chat-panel { display:none; }
             }
+            /* Lock html/body scroll whenever the voice overlay is mounted —
+               prevents Chrome from auto-scrolling the document when the text
+               input gains focus (which previously made the whole avatar shift up). */
+            html:has(.alex-voice-overlay-root),
+            body:has(.alex-voice-overlay-root) {
+                overflow: hidden !important;
+                height: 100% !important;
+                position: fixed !important;
+                width: 100% !important;
+                top: 0 !important;
+                left: 0 !important;
+            }
             @media (max-width:768px) {
                 #alex-voice-main {
                     padding-bottom: 86px !important;
@@ -26516,19 +26528,37 @@ def alex_voice_overlay_panel() -> rx.Component:
         ),
         rx.script(
             "(function(){"
+            # Lock the overlay height at the initial viewport pixel value so
+            # neither 100vh quirks nor keyboard resizes can shrink it.
+            "var _alexLockedH=0;"
+            "function _alexLockOverlay(){"
+            "var el=document.querySelector('.alex-voice-overlay-root');"
+            "if(!el)return false;"
+            "if(!_alexLockedH)_alexLockedH=window.innerHeight;"
+            "el.style.height=_alexLockedH+'px';"
+            "return true;"
+            "}"
             "function _alexAdjustInput(){"
             "var row=document.getElementById('alex-type-row');"
             "if(!row)return;"
             "var vv=window.visualViewport;"
+            "var baseH=_alexLockedH||window.innerHeight;"
             "if(!vv){row.style.bottom='0px';return;}"
-            "var offset=Math.max(0,window.innerHeight-vv.offsetTop-vv.height);"
+            "var offset=Math.max(0,baseH-vv.offsetTop-vv.height);"
             "row.style.bottom=offset+'px';"
             "}"
+            # Poll briefly until the overlay element is mounted, then lock + position.
+            "var _tries=0;"
+            "var _iv=setInterval(function(){"
+            "if(_alexLockOverlay()){_alexAdjustInput();clearInterval(_iv);return;}"
+            "if(++_tries>40)clearInterval(_iv);"
+            "},80);"
             "if(window.visualViewport){"
-            "window.visualViewport.addEventListener('resize',_alexAdjustInput);"
+            "window.visualViewport.addEventListener('resize',function(){_alexAdjustInput();window.scrollTo(0,0);});"
             "window.visualViewport.addEventListener('scroll',_alexAdjustInput);"
             "}"
-            "_alexAdjustInput();"
+            # Kill any document scroll attempt (browser auto-scroll on input focus).
+            "window.addEventListener('scroll',function(){if(document.querySelector('.alex-voice-overlay-root'))window.scrollTo(0,0);},{passive:true});"
             "})();"
         ),
         rx.center(
@@ -26621,6 +26651,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             overflow="hidden",
             z_index="2100",
             background="#090c10",
+            class_name="alex-voice-overlay-root",
         ),
         rx.fragment(),
     )
