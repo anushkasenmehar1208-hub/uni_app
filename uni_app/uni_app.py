@@ -26465,6 +26465,26 @@ def alex_voice_overlay_panel() -> rx.Component:
             @media (max-width:900px) {
                 #alex-chat-panel { display:none; }
             }
+            @media (max-width:768px) {
+                #alex-voice-main {
+                    padding-bottom: 86px !important;
+                }
+                #alex-type-row {
+                    position: fixed !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    max-width: 100% !important;
+                    margin-top: 0 !important;
+                    padding: 10px 14px !important;
+                    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)) !important;
+                    background: linear-gradient(to top, rgba(0,0,0,0.97) 68%, transparent) !important;
+                    z-index: 2200 !important;
+                    box-sizing: border-box !important;
+                    transition: bottom 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+                }
+                #alex-voice-footer { display: none !important; }
+            }
         """),
         # Persistent avatar loader — guarantees the 3D avatar mounts whenever
         # the voice overlay is rendered, INCLUDING after a hard page refresh
@@ -26494,6 +26514,23 @@ def alex_voice_overlay_panel() -> rx.Component:
             "document.head.appendChild(av);"
             "})();"
         ),
+        rx.script(
+            "(function(){"
+            "function _alexAdjustInput(){"
+            "var row=document.getElementById('alex-type-row');"
+            "if(!row)return;"
+            "var vv=window.visualViewport;"
+            "if(!vv){row.style.bottom='0px';return;}"
+            "var offset=Math.max(0,window.innerHeight-vv.offsetTop-vv.height);"
+            "row.style.bottom=offset+'px';"
+            "}"
+            "if(window.visualViewport){"
+            "window.visualViewport.addEventListener('resize',_alexAdjustInput);"
+            "window.visualViewport.addEventListener('scroll',_alexAdjustInput);"
+            "}"
+            "_alexAdjustInput();"
+            "})();"
+        ),
         rx.center(
             # Painted backdrop (gradients + subtle grid + vignette). Absolutely
             # positioned so it doesn't participate in flex centering.
@@ -26501,6 +26538,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             # Right-side chat history panel — appended by alex_voice.js
             rx.el.div(id="alex-chat-panel"),
             rx.vstack(
+                id="alex-voice-main",
                 # Animated orb — hosts the 3D avatar canvas mounted by alex_avatar.js
                 rx.el.div(
                     rx.el.div(class_name="orb-ring r1"),
@@ -26546,6 +26584,7 @@ def alex_voice_overlay_panel() -> rx.Component:
                 ),
                 rx.el.p(
                     f"{BUSINESS_NAME} — your voice study space.",
+                    id="alex-voice-footer",
                     style={
                         "color": "rgba(180,200,225,0.38)",
                         "font-size": ".72rem",
