@@ -26468,6 +26468,12 @@ def alex_voice_overlay_panel() -> rx.Component:
             @media (max-width:900px) {
                 #alex-chat-panel { display:none; }
             }
+            html:has(.alex-voice-overlay-root),
+            body:has(.alex-voice-overlay-root) {
+                overflow: hidden !important;
+                height: 100% !important;
+                overscroll-behavior: none !important;
+            }
             @media (max-width:768px) {
                 #alex-voice-main {
                     position: fixed !important;
@@ -26492,7 +26498,8 @@ def alex_voice_overlay_panel() -> rx.Component:
                     box-sizing: border-box !important;
                     transition: bottom 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
                 }
-                .alex-voice-overlay-root.alex-kb-open #alex-call-row {
+                .alex-voice-overlay-root.alex-kb-open #alex-call-row,
+                .alex-voice-overlay-root.alex-input-focus #alex-call-row {
                     opacity: 0 !important;
                     pointer-events: none !important;
                 }
@@ -26533,28 +26540,38 @@ def alex_voice_overlay_panel() -> rx.Component:
         rx.script(
             "(function(){"
             "var _alexInputFocused=false;"
+            "var _alexBaseH=0;"
+            "function _alexRoot(){return document.querySelector('.alex-voice-overlay-root');}"
+            "function _alexCaptureBase(){"
+            "var vv=window.visualViewport;"
+            "var h=Math.max(window.innerHeight,document.documentElement.clientHeight||0,vv?(vv.height+vv.offsetTop):0);"
+            "if(!_alexInputFocused&&(!_alexBaseH||h>_alexBaseH-24))_alexBaseH=Math.max(_alexBaseH,h);"
+            "return _alexBaseH||h;"
+            "}"
             "function _alexResetRow(){"
             "var row=document.getElementById('alex-type-row');"
-            "var root=document.querySelector('.alex-voice-overlay-root');"
+            "var root=_alexRoot();"
             "if(row)row.style.setProperty('bottom','0px','important');"
             "if(root){"
             "root.classList.remove('alex-kb-open');"
+            "root.classList.remove('alex-input-focus');"
             "root.style.removeProperty('--alex-kb-target-bottom');"
             "}"
             "}"
             "function _alexKbHeight(){"
             "var vv=window.visualViewport;"
             "if(!vv)return 0;"
-            "var base=Math.max(window.innerHeight,document.documentElement.clientHeight||0);"
+            "var base=_alexCaptureBase();"
             "return Math.max(0,base-vv.offsetTop-vv.height);"
             "}"
             "function _alexAdj(){"
             "var row=document.getElementById('alex-type-row');"
-            "var root=document.querySelector('.alex-voice-overlay-root');"
+            "var root=_alexRoot();"
             "if(!row||!root)return;"
             "var kb=_alexKbHeight();"
             "if(!_alexInputFocused||kb<=110){_alexResetRow();return;}"
             "root.classList.add('alex-kb-open');"
+            "root.classList.add('alex-input-focus');"
             "root.style.setProperty('--alex-kb-target-bottom',kb+'px');"
             "row.style.setProperty('bottom',kb+'px','important');"
             "}"
@@ -26564,6 +26581,8 @@ def alex_voice_overlay_panel() -> rx.Component:
             "inp._alexWired=true;"
             "inp.addEventListener('focus',function(){"
             "_alexInputFocused=true;"
+            "var root=_alexRoot();if(root)root.classList.add('alex-input-focus');"
+            "_alexCaptureBase();"
             "requestAnimationFrame(_alexAdj);"
             "setTimeout(_alexAdj,120);"
             "setTimeout(_alexAdj,260);"
@@ -26576,6 +26595,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             "}"
             "var _t=0;"
             "var _iv=setInterval(function(){"
+            "_alexCaptureBase();"
             "_alexWireInput();"
             "_alexAdj();"
             "if(++_t>60)clearInterval(_iv);"
