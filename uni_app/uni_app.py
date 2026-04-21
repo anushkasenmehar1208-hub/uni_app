@@ -26482,17 +26482,16 @@ def alex_voice_overlay_panel() -> rx.Component:
             }
             @media (max-width:768px) {
                 #alex-voice-main {
-                    position: absolute !important;
+                    position: fixed !important;
                     top: var(--alex-main-fixed-top, 54px) !important;
                     left: 0 !important;
                     right: 0 !important;
                     width: 100% !important;
-                    height: 100% !important;
                     margin: 0 !important;
                     padding-bottom: 86px !important;
                 }
                 #alex-type-row {
-                    position: absolute !important;
+                    position: fixed !important;
                     bottom: 0 !important;
                     left: 0 !important;
                     right: 0 !important;
@@ -26503,10 +26502,14 @@ def alex_voice_overlay_panel() -> rx.Component:
                     background: linear-gradient(to top, rgba(0,0,0,0.97) 68%, transparent) !important;
                     z-index: 2200 !important;
                     box-sizing: border-box !important;
+                    transition: bottom 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
                 }
                 .alex-voice-overlay-root.alex-kb-open #alex-call-row {
                     opacity: 0 !important;
                     pointer-events: none !important;
+                }
+                .alex-voice-overlay-root.alex-kb-open #alex-type-row {
+                    bottom: var(--alex-kb-target-bottom, 96px) !important;
                 }
                 #alex-voice-footer { display: none !important; }
             }
@@ -26543,23 +26546,35 @@ def alex_voice_overlay_panel() -> rx.Component:
             "(function(){"
             "var html=document.documentElement;"
             "var body=document.body;"
+            "var _alexH=0;"
             "var _alexInputFocused=false;"
             "var _alexMainTop=54;"
-            # Kill any stray document scroll.
-            "function _alexKill(){"
-            "if(window.scrollY!==0||window.scrollX!==0)window.scrollTo(0,0);"
-            "if(html.scrollTop!==0)html.scrollTop=0;"
-            "if(body.scrollTop!==0)body.scrollTop=0;"
+            "function _alexResetRow(){"
+            "var row=document.getElementById('alex-type-row');"
+            "var root=document.querySelector('.alex-voice-overlay-root');"
+            "if(row)row.style.setProperty('bottom','0px','important');"
+            "if(root){"
+            "root.classList.remove('alex-kb-open');"
+            "root.style.removeProperty('--alex-kb-target-bottom');"
             "}"
-            "window.addEventListener('scroll',_alexKill,{passive:true,capture:true});"
-            "document.addEventListener('scroll',_alexKill,{passive:true,capture:true});"
-            # Exact visualViewport tracking. The overlay root matches the visual
-            # viewport exactly (via fixed position + offsetTop).
-            # The #alex-voice-main and #alex-type-row elements are absolute inside
-            # it, so they perfectly follow the user's screen without sliding bugs.
-            "function _alexTrack(){"
+            "}"
+            # Keep the overlay pinned to the full viewport; only the input row moves.
+            "function _alexLock(){"
             "var root=document.querySelector('.alex-voice-overlay-root');"
             "if(!root)return false;"
+            "var ih=window.innerHeight;"
+            "if(!_alexH||ih>_alexH+40)_alexH=ih;"
+            "root.style.setProperty('top','0','important');"
+            "root.style.setProperty('left','0','important');"
+            "root.style.setProperty('width','100%','important');"
+            "root.style.setProperty('height',_alexH+'px','important');"
+            "root.style.setProperty('max-height',_alexH+'px','important');"
+            "var main=document.getElementById('alex-voice-main');"
+            "if(main){"
+            "var mr=main.getBoundingClientRect();"
+            "if(!_alexInputFocused&&mr&&mr.top>8){_alexMainTop=Math.round(mr.top);}"
+            "main.style.setProperty('--alex-main-fixed-top',_alexMainTop+'px');"
+            "}"
             "html.style.setProperty('overflow','hidden','important');"
             "html.style.setProperty('height','100%','important');"
             "body.style.setProperty('overflow','hidden','important');"
@@ -26568,30 +26583,31 @@ def alex_voice_overlay_panel() -> rx.Component:
             "body.style.setProperty('height','100%','important');"
             "body.style.setProperty('top','0','important');"
             "body.style.setProperty('left','0','important');"
-            "var vv=window.visualViewport;"
-            "if(vv){"
-            "root.style.setProperty('top',vv.offsetTop+'px','important');"
-            "root.style.setProperty('left',vv.offsetLeft+'px','important');"
-            "root.style.setProperty('width',vv.width+'px','important');"
-            "root.style.setProperty('height',vv.height+'px','important');"
-            "var isKbUp=vv.height<window.innerHeight*0.85;"
-            "if(isKbUp&&_alexInputFocused)root.classList.add('alex-kb-open');"
-            "else root.classList.remove('alex-kb-open');"
-            "}else{"
-            "root.style.setProperty('top','0','important');"
-            "root.style.setProperty('left','0','important');"
-            "root.style.setProperty('width','100%','important');"
-            "root.style.setProperty('height',window.innerHeight+'px','important');"
-            "root.classList.remove('alex-kb-open');"
-            "}"
-            "var main=document.getElementById('alex-voice-main');"
-            "if(main){"
-            "var mr=main.getBoundingClientRect();"
-            "if(!_alexInputFocused&&mr&&mr.top>8){_alexMainTop=Math.round(mr.top);}"
-            "main.style.setProperty('--alex-main-fixed-top',_alexMainTop+'px');"
-            "}"
             "return true;"
             "}"
+            "function _alexAdj(){"
+            "var row=document.getElementById('alex-type-row');"
+            "var root=document.querySelector('.alex-voice-overlay-root');"
+            "if(!row||!root)return;"
+            "var vv=window.visualViewport;"
+            "var ih=window.innerHeight;"
+            "if(ih>_alexH+40)_alexH=ih;"
+            "var base=_alexH||ih;"
+            "var kb=0;"
+            "if(vv)kb=Math.max(0,base-vv.offsetTop-vv.height);"
+            "if(kb<=120){_alexResetRow();return;}"
+            "root.classList.add('alex-kb-open');"
+            "root.style.setProperty('--alex-kb-target-bottom',kb+'px');"
+            "row.style.setProperty('bottom',kb+'px','important');"
+            "}"
+            # Kill any stray document scroll.
+            "function _alexKill(){"
+            "if(window.scrollY!==0||window.scrollX!==0)window.scrollTo(0,0);"
+            "if(html.scrollTop!==0)html.scrollTop=0;"
+            "if(body.scrollTop!==0)body.scrollTop=0;"
+            "}"
+            "window.addEventListener('scroll',_alexKill,{passive:true,capture:true});"
+            "document.addEventListener('scroll',_alexKill,{passive:true,capture:true});"
             "function _alexWireInput(){"
             "var inp=document.getElementById('alex-type-input');"
             "if(!inp||inp._alexWired)return;"
@@ -26602,33 +26618,36 @@ def alex_voice_overlay_panel() -> rx.Component:
             "_alexKill();"
             "setTimeout(_alexKill,0);"
             "setTimeout(_alexKill,30);"
-            "setTimeout(function(){_alexKill();_alexTrack();},120);"
+            "setTimeout(function(){_alexKill();_alexAdj();},120);"
+            "setTimeout(function(){_alexKill();_alexAdj();},260);"
             "});"
             "inp.addEventListener('blur',function(){"
             "_alexInputFocused=false;"
-            "_alexKill();_alexTrack();"
+            "_alexResetRow();_alexKill();"
+            "setTimeout(function(){_alexKill();_alexAdj();},60);"
             "});"
             "}"
             "var _t=0;"
             "var _iv=setInterval(function(){"
-            "var ok=_alexTrack();"
-            "if(ok){_alexWireInput();}"
+            "var ok=_alexLock();"
+            "if(ok){_alexWireInput();_alexAdj();}"
             "if(++_t>60)clearInterval(_iv);"
             "},50);"
             "if(window.visualViewport){"
-            "window.visualViewport.addEventListener('resize',function(){_alexTrack();_alexKill();});"
-            "window.visualViewport.addEventListener('scroll',function(){_alexTrack();_alexKill();});"
+            "window.visualViewport.addEventListener('resize',function(){_alexLock();_alexAdj();_alexKill();});"
+            "window.visualViewport.addEventListener('scroll',function(){_alexAdj();_alexKill();});"
             "}"
-            "window.addEventListener('resize',function(){_alexTrack();_alexKill();});"
+            "window.addEventListener('resize',function(){_alexLock();_alexAdj();_alexKill();});"
             "window.addEventListener('orientationchange',function(){"
-            "setTimeout(function(){_alexTrack();_alexKill();},150);"
+            "_alexH=0;setTimeout(function(){_alexLock();_alexAdj();_alexKill();},150);"
             "});"
             "document.addEventListener('visibilitychange',function(){"
             "if(document.visibilityState==='visible'){"
-            "_alexInputFocused=false;_alexTrack();"
-            "setTimeout(function(){_alexTrack();_alexKill();},50);"
+            "_alexInputFocused=false;_alexResetRow();"
+            "setTimeout(function(){_alexLock();_alexAdj();_alexKill();},50);"
+            "setTimeout(function(){_alexLock();_alexAdj();_alexKill();},300);"
             "}else{"
-            "_alexInputFocused=false;_alexTrack();"
+            "_alexInputFocused=false;_alexResetRow();"
             "}"
             "});"
             "document.addEventListener('touchend',function(ev){"
@@ -26641,9 +26660,17 @@ def alex_voice_overlay_panel() -> rx.Component:
             "var _g=setInterval(function(){"
             "if(!document.querySelector('.alex-voice-overlay-root')){clearInterval(_g);return;}"
             "_alexKill();"
+            "var vv=window.visualViewport;"
+            "var ih=window.innerHeight;"
+            "if(ih>_alexH+40){_alexH=ih;_alexLock();}"
+            "var base=_alexH||ih;"
+            "var kb=vv?Math.max(0,base-vv.offsetTop-vv.height):0;"
             "var row=document.getElementById('alex-type-row');"
-            "if(row&&row.style.bottom&&row.style.bottom!=='0px'){row.style.removeProperty('bottom');}"
-            "_alexTrack();"
+            "if(!_alexInputFocused||kb<=120){"
+            "if(row&&row.style.bottom&&row.style.bottom!=='0px'){_alexResetRow();}"
+            "}else{"
+            "_alexAdj();"
+            "}"
             "},40);"
             "})();"
         ),
