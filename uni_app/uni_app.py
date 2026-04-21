@@ -22566,20 +22566,31 @@ def landing_page():
     voice_section = rx.box(
         rx.hstack(
             rx.box(
-                rx.image(
-                    src="/landing-voice-demo.png",
-                    alt="Alex AI live voice mentor",
-                    width="100%",
-                    height="100%",
-                    object_fit="cover",
+                rx.html(
+                    """
+                    <video
+                        src="/landing-voice-demo.mov"
+                        autoplay
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                        style="
+                            width: 100%;
+                            height: 100%;
+                            object-fit: contain;
+                            display: block;
+                            background: transparent;
+                            filter: drop-shadow(0 32px 80px rgba(0,0,0,0.45));
+                            pointer-events: none;
+                        "
+                    ></video>
+                    """
                 ),
                 width="100%",
                 max_width=rx.breakpoints(initial="100%", md="720px"),
                 height=rx.breakpoints(initial="240px", md="430px"),
-                overflow="hidden",
-                border_radius="28px",
-                border="1px solid rgba(255,255,255,0.08)",
-                box_shadow="0 32px 80px rgba(0,0,0,0.42)",
+                background="transparent",
             ),
             rx.vstack(
                 rx.text(
