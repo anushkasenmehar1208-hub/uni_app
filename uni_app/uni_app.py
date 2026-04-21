@@ -21698,6 +21698,381 @@ def landing_page():
             box_shadow="0 24px 60px rgba(0,0,0,0.34)",
         )
 
+    def landing_live_chat_demo() -> rx.Component:
+        return rx.html('''
+<section id="landing-live-chat-demo" class="landing-live-chat-demo">
+  <style>
+    #landing-live-chat-demo {
+      width: 100%;
+      position: relative;
+      color: rgba(255,255,255,0.92);
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) minmax(320px, 1fr);
+      gap: 48px;
+      align-items: center;
+      width: 100%;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__orbit-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      min-height: 340px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__orbit {
+      position: relative;
+      width: 230px;
+      height: 230px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__ring {
+      position: absolute;
+      inset: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 0 40px rgba(255,255,255,0.03) inset;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__ring::after {
+      content: "";
+      position: absolute;
+      inset: 22px;
+      border-radius: 999px;
+      border: 1px dashed rgba(255,255,255,0.08);
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 104px;
+      height: 104px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.04) 58%, transparent 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      text-align: center;
+      padding: 14px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__core span {
+      font-size: 0.8rem;
+      line-height: 1.35;
+      color: rgba(255,255,255,0.78);
+      letter-spacing: -0.02em;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__orbit-path {
+      position: absolute;
+      inset: 0;
+      animation: landingModelOrbit 14s linear infinite;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__orbit-path--2 {
+      animation-duration: 18s;
+      animation-direction: reverse;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__orbit-path--3 {
+      animation-duration: 16s;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__badge {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 72px;
+      height: 72px;
+      margin-left: -36px;
+      margin-top: -36px;
+      transform: translateY(-102px);
+      border-radius: 999px;
+      padding: 8px;
+      background: rgba(10,12,16,0.92);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 16px 38px rgba(0,0,0,0.38);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 999px;
+      display: block;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__orbit-note {
+      max-width: 300px;
+      text-align: center;
+      color: rgba(255,255,255,0.54);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__chat {
+      position: relative;
+      min-height: 340px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__eyebrow {
+      font-size: 0.76rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.42);
+      margin-bottom: 2px;
+      font-weight: 700;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__title {
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      color: rgba(255,255,255,0.95);
+      margin: 0 0 12px 0;
+      font-weight: 600;
+      max-width: 580px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__sub {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: rgba(255,255,255,0.56);
+      margin: 0;
+      max-width: 560px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__messages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 132px;
+      max-width: 520px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__bubble {
+      width: fit-content;
+      max-width: min(100%, 420px);
+      padding: 12px 16px;
+      border-radius: 20px;
+      font-size: 0.96rem;
+      line-height: 1.5;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 20px 44px rgba(0,0,0,0.22);
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__bubble--assistant {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.92);
+      align-self: flex-start;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__bubble--user {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.95);
+      align-self: flex-end;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__composer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 520px;
+      padding: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 22px 60px rgba(0,0,0,0.26);
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: rgba(255,255,255,0.92);
+      font-size: 0.96rem;
+      padding: 0 8px;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__input::placeholder {
+      color: rgba(255,255,255,0.34);
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__send {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 11px 18px;
+      color: #09090b;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__send:hover {
+      transform: translateY(-1px);
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__send:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: rgba(255,255,255,0.36);
+      font-size: 0.82rem;
+      max-width: 520px;
+    }
+    @keyframes landingModelOrbit {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @media (max-width: 920px) {
+      #landing-live-chat-demo .landing-live-chat-demo__layout {
+        grid-template-columns: 1fr;
+        gap: 22px;
+      }
+      #landing-live-chat-demo .landing-live-chat-demo__orbit-wrap,
+      #landing-live-chat-demo .landing-live-chat-demo__chat {
+        min-height: auto;
+      }
+      #landing-live-chat-demo .landing-live-chat-demo__orbit {
+        width: 210px;
+        height: 210px;
+      }
+      #landing-live-chat-demo .landing-live-chat-demo__title {
+        max-width: none;
+      }
+    }
+  </style>
+
+  <div class="landing-live-chat-demo__layout">
+    <div class="landing-live-chat-demo__orbit-wrap">
+      <div class="landing-live-chat-demo__orbit" aria-hidden="true">
+        <div class="landing-live-chat-demo__ring"></div>
+        <div class="landing-live-chat-demo__core"><span>Teaching models in live rotation</span></div>
+        <div class="landing-live-chat-demo__orbit-path landing-live-chat-demo__orbit-path--1">
+          <div class="landing-live-chat-demo__badge">
+            <img src="/landing-model-deepseek.png" alt="DeepSeek model" />
+          </div>
+        </div>
+        <div class="landing-live-chat-demo__orbit-path landing-live-chat-demo__orbit-path--2" style="transform: rotate(120deg);">
+          <div class="landing-live-chat-demo__badge">
+            <img src="/landing-model-claude.png" alt="Claude model" />
+          </div>
+        </div>
+        <div class="landing-live-chat-demo__orbit-path landing-live-chat-demo__orbit-path--3" style="transform: rotate(240deg);">
+          <div class="landing-live-chat-demo__badge">
+            <img src="/landing-model-chatgpt.png" alt="ChatGPT model" />
+          </div>
+        </div>
+      </div>
+      <p class="landing-live-chat-demo__orbit-note">
+        We use these models for teaching, clearer explanations, and faster study help inside Alex AI.
+      </p>
+    </div>
+
+    <div class="landing-live-chat-demo__chat">
+      <div>
+        <div class="landing-live-chat-demo__eyebrow">Live chat demo</div>
+        <h3 class="landing-live-chat-demo__title">Try a floating chat that explains the website in real time</h3>
+        <p class="landing-live-chat-demo__sub">
+          Ask about Alex AI, semester planning, voice teaching, pricing, notes, or tasks. This demo answers in short website-focused replies and allows up to 5 messages.
+        </p>
+      </div>
+
+      <div id="landing-live-chat-demo-messages" class="landing-live-chat-demo__messages">
+        <div class="landing-live-chat-demo__bubble landing-live-chat-demo__bubble--assistant">
+          Hi. Ask about Alex AI, semester planning, voice teaching, or pricing.
+        </div>
+      </div>
+
+      <div class="landing-live-chat-demo__composer">
+        <input id="landing-live-chat-demo-input" class="landing-live-chat-demo__input" type="text" maxlength="120" placeholder="Say hi..." />
+        <button id="landing-live-chat-demo-send" class="landing-live-chat-demo__send" type="button">Send</button>
+      </div>
+
+      <div class="landing-live-chat-demo__meta">
+        <span id="landing-live-chat-demo-count">0 / 5 messages</span>
+        <span>Short replies about the Alex AI website</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.getElementById('landing-live-chat-demo');
+      if (!root || root.dataset.bound === 'true') return;
+      root.dataset.bound = 'true';
+
+      const messagesEl = document.getElementById('landing-live-chat-demo-messages');
+      const inputEl = document.getElementById('landing-live-chat-demo-input');
+      const sendEl = document.getElementById('landing-live-chat-demo-send');
+      const countEl = document.getElementById('landing-live-chat-demo-count');
+      const limit = 5;
+      let sentCount = 0;
+
+      const respond = (text) => {
+        const t = (text || '').trim().toLowerCase();
+        if (!t) return "Ask about planning, pricing, voice teaching, or study tools.";
+        if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students turn syllabi into guided semester plans.";
+        if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3.17/month, and Max is $25/month.";
+        if (/(voice|speak|talk|mentor|call)/.test(t)) return "Alex AI offers live voice teaching with a 3D mentor and typed chat.";
+        if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Upload your syllabus and Alex AI organizes your semester automatically.";
+        if (/(notes|tasks|todo|to-do)/.test(t)) return "Students can save notes, manage tasks, and keep study flow in one place.";
+        if (/(models|deepseek|claude|chatgpt|teach)/.test(t)) return "Alex AI uses multiple models for teaching, explanations, and faster answers.";
+        return "Alex AI is an academic mentor with planning, voice learning, notes, and study visuals.";
+      };
+
+      const appendBubble = (text, kind) => {
+        const bubble = document.createElement('div');
+        bubble.className = `landing-live-chat-demo__bubble landing-live-chat-demo__bubble--${kind}`;
+        bubble.textContent = text;
+        messagesEl.appendChild(bubble);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      };
+
+      const lockDemo = () => {
+        inputEl.disabled = true;
+        sendEl.disabled = true;
+        inputEl.placeholder = 'Demo limit reached';
+      };
+
+      const sendMessage = () => {
+        const value = (inputEl.value || '').trim();
+        if (!value || sentCount >= limit) return;
+
+        appendBubble(value, 'user');
+        sentCount += 1;
+        countEl.textContent = `${sentCount} / ${limit} messages`;
+        inputEl.value = '';
+
+        window.setTimeout(() => {
+          appendBubble(
+            sentCount >= limit
+              ? "Hello again. Demo limit reached, but the full Alex AI chat lives inside the app."
+              : respond(value),
+            'assistant'
+          );
+          if (sentCount >= limit) lockDemo();
+        }, 260);
+      };
+
+      sendEl.addEventListener('click', sendMessage);
+      inputEl.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+    })();
+  </script>
+</section>
+        ''')
+
     hero_header = rx.hstack(
         rx.hstack(
             rx.image(
@@ -22131,29 +22506,8 @@ def landing_page():
                 padding_top=rx.breakpoints(initial="40px", md="48px"),
                 border_top="1px solid rgba(255,255,255,0.09)",
             ),
-            rx.hstack(
-                feature_card(
-                    "Semester planner that feels real",
-                    "Show students the exact planner view they get after Alex AI turns a syllabus into a full semester path.",
-                    "/landing-semester-demo.png",
-                    "Planner proof",
-                ),
-                feature_card(
-                    "Voice mentor with typed chat",
-                    "Students can talk with the 3D mentor live, then type in the same session when they want faster answers or quieter study.",
-                    "/landing-voice-demo.png",
-                    "Live teaching",
-                ),
-                feature_card(
-                    "AI models, visuals, and study support",
-                    "Alex AI can teach with different models, diagrams, notes, and study visuals instead of leaving students inside a blank chat box.",
-                    "/landing-models-demo.png",
-                    "Learning system",
-                ),
-                spacing="5",
-                align="stretch",
-                justify="between",
-                flex_wrap="wrap",
+            rx.box(
+                landing_live_chat_demo(),
                 width="100%",
                 padding_top=rx.breakpoints(initial="24px", md="32px"),
             ),
