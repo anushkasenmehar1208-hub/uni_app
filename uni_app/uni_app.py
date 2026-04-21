@@ -26528,37 +26528,79 @@ def alex_voice_overlay_panel() -> rx.Component:
         ),
         rx.script(
             "(function(){"
-            # Lock the overlay height at the initial viewport pixel value so
-            # neither 100vh quirks nor keyboard resizes can shrink it.
-            "var _alexLockedH=0;"
-            "function _alexLockOverlay(){"
+            "var html=document.documentElement;"
+            "var body=document.body;"
+            "var _alexH=0;"
+            # Freeze overlay at initial viewport pixel height AND force body/html
+            # scroll lock with inline !important (don't trust CSS :has() timing).
+            "function _alexLock(){"
             "var el=document.querySelector('.alex-voice-overlay-root');"
             "if(!el)return false;"
-            "if(!_alexLockedH)_alexLockedH=window.innerHeight;"
-            "el.style.height=_alexLockedH+'px';"
+            "if(!_alexH)_alexH=window.innerHeight;"
+            "el.style.setProperty('height',_alexH+'px','important');"
+            "el.style.setProperty('max-height',_alexH+'px','important');"
+            "el.style.setProperty('top','0','important');"
+            "html.style.setProperty('overflow','hidden','important');"
+            "html.style.setProperty('height','100%','important');"
+            "body.style.setProperty('overflow','hidden','important');"
+            "body.style.setProperty('position','fixed','important');"
+            "body.style.setProperty('width','100%','important');"
+            "body.style.setProperty('height','100%','important');"
+            "body.style.setProperty('top','0','important');"
+            "body.style.setProperty('left','0','important');"
             "return true;"
             "}"
-            "function _alexAdjustInput(){"
+            # Slide just the input bar to sit right above the keyboard.
+            "function _alexAdj(){"
             "var row=document.getElementById('alex-type-row');"
             "if(!row)return;"
             "var vv=window.visualViewport;"
-            "var baseH=_alexLockedH||window.innerHeight;"
+            "var base=_alexH||window.innerHeight;"
             "if(!vv){row.style.bottom='0px';return;}"
-            "var offset=Math.max(0,baseH-vv.offsetTop-vv.height);"
-            "row.style.bottom=offset+'px';"
+            "var off=Math.max(0,base-vv.offsetTop-vv.height);"
+            "row.style.bottom=off+'px';"
             "}"
-            # Poll briefly until the overlay element is mounted, then lock + position.
-            "var _tries=0;"
+            # Kill any stray scroll on the document (Chrome auto-scrolls to
+            # bring a focused input into view — this is the root cause of the
+            # whole page shifting up).
+            "function _alexKill(){"
+            "if(window.scrollY!==0||window.scrollX!==0)window.scrollTo(0,0);"
+            "if(html.scrollTop!==0)html.scrollTop=0;"
+            "if(body.scrollTop!==0)body.scrollTop=0;"
+            "}"
+            # Disable the browser's scroll-into-view on the text input itself.
+            "function _alexWireInput(){"
+            "var inp=document.getElementById('alex-type-input');"
+            "if(!inp||inp._alexWired)return;"
+            "inp._alexWired=true;"
+            "try{inp.scrollIntoView=function(){};inp.scrollIntoViewIfNeeded=function(){};}catch(e){}"
+            "inp.addEventListener('focus',function(){"
+            "setTimeout(_alexKill,0);"
+            "setTimeout(_alexKill,30);"
+            "setTimeout(function(){_alexKill();_alexAdj();},120);"
+            "setTimeout(function(){_alexKill();_alexAdj();},260);"
+            "});"
+            "inp.addEventListener('blur',function(){"
+            "setTimeout(function(){_alexKill();_alexAdj();},60);"
+            "});"
+            "}"
+            # Poll briefly for the overlay + input, then lock everything.
+            "var _t=0;"
             "var _iv=setInterval(function(){"
-            "if(_alexLockOverlay()){_alexAdjustInput();clearInterval(_iv);return;}"
-            "if(++_tries>40)clearInterval(_iv);"
-            "},80);"
+            "var ok=_alexLock();"
+            "if(ok){_alexWireInput();_alexAdj();}"
+            "if(++_t>60)clearInterval(_iv);"
+            "},50);"
             "if(window.visualViewport){"
-            "window.visualViewport.addEventListener('resize',function(){_alexAdjustInput();window.scrollTo(0,0);});"
-            "window.visualViewport.addEventListener('scroll',_alexAdjustInput);"
+            "window.visualViewport.addEventListener('resize',function(){_alexLock();_alexAdj();_alexKill();});"
+            "window.visualViewport.addEventListener('scroll',_alexAdj);"
             "}"
-            # Kill any document scroll attempt (browser auto-scroll on input focus).
-            "window.addEventListener('scroll',function(){if(document.querySelector('.alex-voice-overlay-root'))window.scrollTo(0,0);},{passive:true});"
+            # Continuous guard: any window-scroll attempt while the overlay is
+            # open gets snapped back to 0 immediately.
+            "var _g=setInterval(function(){"
+            "if(!document.querySelector('.alex-voice-overlay-root')){clearInterval(_g);return;}"
+            "_alexKill();"
+            "},40);"
             "})();"
         ),
         rx.center(
