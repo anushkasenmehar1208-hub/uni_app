@@ -14062,14 +14062,14 @@ def pricing_modal() -> rx.Component:
                 ),
                 rx.hstack(
                     rx.vstack(
-                        rx.text("Alex AI Premium", font_size="1.1rem", font_weight="700", color="white"),
+                        rx.text("Alex AI Pro", font_size="1.1rem", font_weight="700", color="white"),
                         rx.text("USD 3.17", font_size="2.1rem", font_weight="800", color="white"),
                         rx.text("per month", color="rgba(255,255,255,0.55)", font_size="0.85rem"),
                         rx.box(height="8px"),
                         rx.text("• Unlimited daily messages", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
-                        rx.text("• Same premium AI routing, no daily cap", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
-                        rx.text("• Full semester access", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
-                        rx.text("• Chat history saved", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
+                        rx.text("• Full semester planner access", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
+                        rx.text("• Voice mentor plus typed chat", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
+                        rx.text("• Notes, tasks, and saved chat history", color="rgba(255,255,255,0.82)", font_size="0.9rem"),
                         spacing="2",
                         align="start",
                         width="48%",
@@ -14116,9 +14116,9 @@ def pricing_modal() -> rx.Component:
                             justify_content="center",
                             style={"background": "transparent"},
                         ),
-                        rx.text("Upgrade Alex AI", font_size="1.55rem", font_weight="800", color="white"),
+                        rx.text("Upgrade to Alex AI Pro", font_size="1.55rem", font_weight="800", color="white"),
                         rx.text(
-                            "New users get 3 days trial with unlimited messages. After trial, free mode is 5 messages/day.",
+                            "New users get a 3-day trial with unlimited messages. Pro unlocks the full semester planner, premium study chat, and more consistent daily teaching.",
                             color="rgba(255,255,255,0.6)",
                             font_size="0.88rem",
                             text_align="center",
@@ -14135,7 +14135,7 @@ def pricing_modal() -> rx.Component:
                         rx.cond(
                             AppState.has_premium_access,
                             rx.box(
-                                rx.text("✓ Premium is already active", color="#86efac", font_weight="700", text_align="center"),
+                                rx.text("✓ Pro is already active", color="#86efac", font_weight="700", text_align="center"),
                                 width="100%",
                                 padding="12px",
                                 border_radius="12px",
@@ -14157,6 +14157,12 @@ def pricing_modal() -> rx.Component:
                                     "_hover": {"filter": "brightness(1.08)"},
                                 },
                             ),
+                        ),
+                        rx.text(
+                            "Need Max at USD 25/month? Contact support for priority access.",
+                            color="rgba(255,255,255,0.48)",
+                            font_size="0.78rem",
+                            text_align="center",
                         ),
                         rx.text(
                             "Secure checkout via Dodo Payments",
@@ -21545,14 +21551,14 @@ def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
 
 @rx.page(
     route="/",
-    title="Alex AI | AI Study Assistant for University Students",
-    description="Alex analyzes your degree, organizes each semester, and guides you day by day with a structured 110-day learning plan.",
+    title="Alex AI | AI Academic Mentor for University Students",
+    description="Upload your syllabus and let Alex AI organize your semester with planning, voice teaching, notes, tasks, and AI-powered study visuals.",
     image=FAVICON_32,
     on_load=AppState.on_load_public_landing,
     meta=[
-        {"name": "keywords", "content": "AI study assistant, university students, semester learning, guided study plan"},
+        {"name": "keywords", "content": "AI academic mentor, semester planner, university students, voice study assistant, syllabus planning"},
         {"name": "robots", "content": "index, follow"},
-        {"property": "og:title", "content": "Alex AI | AI Study Assistant for University Students"},
+        {"property": "og:title", "content": "Alex AI | AI Academic Mentor for University Students"},
         {"property": "og:url", "content": "https://alexstudies.com"},
         {"property": "og:type", "content": "website"},
     ],
@@ -21620,6 +21626,78 @@ def landing_page():
             text_decoration="none",
         )
 
+    def proof_chip(label: str) -> rx.Component:
+        return rx.box(
+            rx.text(
+                label,
+                color="rgba(255,255,255,0.82)",
+                font_size="0.84rem",
+                font_weight="600",
+                letter_spacing="-0.02em",
+            ),
+            padding="10px 14px",
+            border="1px solid rgba(255,255,255,0.08)",
+            border_radius="999px",
+            background="rgba(255,255,255,0.04)",
+            backdrop_filter="blur(16px)",
+        )
+
+    def feature_card(title: str, description: str, image_src: str, eyebrow: str) -> rx.Component:
+        return rx.box(
+            rx.vstack(
+                rx.box(
+                    rx.image(
+                        src=image_src,
+                        width="100%",
+                        height="100%",
+                        object_fit="cover",
+                    ),
+                    width="100%",
+                    height=rx.breakpoints(initial="200px", md="220px"),
+                    overflow="hidden",
+                    border_radius="18px",
+                    border="1px solid rgba(255,255,255,0.08)",
+                    background="rgba(255,255,255,0.02)",
+                ),
+                rx.vstack(
+                    rx.text(
+                        eyebrow,
+                        color="rgba(255,255,255,0.44)",
+                        font_size="0.74rem",
+                        font_weight="700",
+                        letter_spacing="0.18em",
+                        text_transform="uppercase",
+                    ),
+                    rx.text(
+                        title,
+                        color="rgba(255,255,255,0.94)",
+                        font_size="1.15rem",
+                        font_weight="650",
+                        letter_spacing="-0.03em",
+                    ),
+                    rx.text(
+                        description,
+                        color="rgba(255,255,255,0.56)",
+                        font_size="0.95rem",
+                        line_height="1.7",
+                    ),
+                    spacing="2",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                spacing="4",
+                align_items="flex-start",
+                width="100%",
+            ),
+            width=rx.breakpoints(initial="100%", md="calc(33.333% - 16px)"),
+            min_width=rx.breakpoints(initial="100%", md="280px"),
+            padding="18px",
+            border="1px solid rgba(255,255,255,0.08)",
+            border_radius="24px",
+            background="linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
+            box_shadow="0 24px 60px rgba(0,0,0,0.34)",
+        )
+
     hero_header = rx.hstack(
         rx.hstack(
             rx.image(
@@ -21674,11 +21752,27 @@ def landing_page():
     )
 
     hero_headline = rx.vstack(
+        rx.box(
+            rx.text(
+                "Alex AI, your academic mentor",
+                color="rgba(255,255,255,0.74)",
+                font_size="0.82rem",
+                font_weight="700",
+                letter_spacing="0.18em",
+                text_transform="uppercase",
+            ),
+            padding="10px 16px",
+            border="1px solid rgba(255,255,255,0.08)",
+            border_radius="999px",
+            background="rgba(255,255,255,0.03)",
+            box_shadow="0 18px 44px rgba(0,0,0,0.24)",
+            custom_attrs={"data-landing-animate": "sub"},
+        ),
         rx.vstack(
             rx.hstack(
                 rx.hstack(
                     rx.text(
-                        "Experience the next-generation",
+                        "AI that organizes your",
                         color="rgba(255,255,255,0.96)",
                         font_size=rx.breakpoints(initial="clamp(1.92rem, 6.8vw, 3rem)", md="clamp(2.55rem, 4.1vw, 3.6rem)"),
                         font_weight="500",
@@ -21714,7 +21808,7 @@ def landing_page():
             rx.hstack(
                 rx.hstack(
                     rx.text(
-                        "academic automation",
+                        "entire semester automatically",
                         color="rgba(255,255,255,0.96)",
                         font_size=rx.breakpoints(initial="clamp(1.92rem, 6.8vw, 3rem)", md="clamp(2.55rem, 4.1vw, 3.6rem)"),
                         font_weight="500",
@@ -21756,7 +21850,7 @@ def landing_page():
             custom_attrs={"data-landing-animate": "headline-box"},
         ),
         rx.text(
-            "A next-generation study system for degree students, built to turn each semester into a focused academic runway.",
+            "Upload your syllabus, generate a personalized semester plan, and study with voice, notes, tasks, and AI visuals in one place.",
             color="rgba(255,255,255,0.48)",
             font_size=rx.breakpoints(initial="0.98rem", md="1.06rem"),
             line_height="1.7",
@@ -21765,7 +21859,7 @@ def landing_page():
             custom_attrs={"data-landing-animate": "sub"},
         ),
         rx.hstack(
-            hero_button("Start Learning", auth_routes.LOGIN_ROUTE, "solid"),
+            hero_button("Generate My Plan", auth_routes.LOGIN_ROUTE, "solid"),
             hero_button("Contact Support", "/support", "secondary"),
             spacing="4",
             justify="center",
@@ -21783,29 +21877,82 @@ def landing_page():
     )
 
     logo_video = rx.center(
-        rx.box(
-            rx.image(
-                src="/logo_preview.gif",
-                alt="Alex AI logo",
-                style={
-                    "width": "100%",
-                    "height": "100%",
-                    "objectFit": "contain",
-                    "objectPosition": "center",
-                    "display": "block",
-                    "pointerEvents": "none",
-                    "mixBlendMode": "screen",
-                },
+        rx.vstack(
+            rx.hstack(
+                proof_chip("Semester planner demo"),
+                proof_chip("Voice + typed study chat"),
+                proof_chip("Used by 100+ students"),
+                spacing="3",
+                justify="center",
+                flex_wrap="wrap",
+                width="100%",
             ),
-            width="100%",
-            max_width="280px",
-            height="160px",
-            display="flex",
+            rx.box(
+                rx.hstack(
+                    rx.vstack(
+                        rx.text(
+                            "See Alex AI in action",
+                            color="rgba(255,255,255,0.96)",
+                            font_size=rx.breakpoints(initial="1.3rem", md="1.55rem"),
+                            font_weight="650",
+                            letter_spacing="-0.04em",
+                        ),
+                        rx.text(
+                            "Real planner output for a university semester, plus the live AI mentor students can talk to or type with.",
+                            color="rgba(255,255,255,0.58)",
+                            font_size="0.98rem",
+                            line_height="1.75",
+                            max_width="360px",
+                        ),
+                        rx.vstack(
+                            proof_chip("Upload syllabus -> get a semester system"),
+                            proof_chip("Learn with diagrams, notes, and to-dos"),
+                            proof_chip("Switch between planner, chat, and live mentor"),
+                            spacing="3",
+                            align_items="flex-start",
+                            width="100%",
+                        ),
+                        spacing="4",
+                        align_items="flex-start",
+                        width=rx.breakpoints(initial="100%", md="340px"),
+                    ),
+                    rx.box(
+                        rx.image(
+                            src="/landing-semester-demo.png",
+                            alt="Alex AI semester planner demo",
+                            width="100%",
+                            height="100%",
+                            object_fit="cover",
+                        ),
+                        width="100%",
+                        max_width=rx.breakpoints(initial="100%", md="760px"),
+                        height=rx.breakpoints(initial="240px", md="430px"),
+                        overflow="hidden",
+                        border_radius="24px",
+                        border="1px solid rgba(255,255,255,0.08)",
+                        box_shadow="0 32px 80px rgba(0,0,0,0.42)",
+                        background="rgba(255,255,255,0.02)",
+                    ),
+                    spacing="6",
+                    align="center",
+                    justify="between",
+                    width="100%",
+                    flex_wrap="wrap",
+                ),
+                width="100%",
+                max_width="1240px",
+                padding=rx.breakpoints(initial="20px", md="26px"),
+                border="1px solid rgba(255,255,255,0.08)",
+                border_radius="32px",
+                background="linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
+                box_shadow="0 32px 90px rgba(0,0,0,0.36)",
+            ),
+            spacing="5",
             align_items="center",
-            justify_content="center",
+            width="100%",
         ),
         width="100%",
-        padding_top="120px",
+        padding_top="96px",
         padding_bottom="32px",
         custom_attrs={"data-landing-animate": "logo-video"},
     )
@@ -21816,7 +21963,7 @@ def landing_page():
                 rx.hstack(
                     rx.hstack(
                         rx.text(
-                            "Alex AI is your next-generation study engine,",
+                            "Upload your syllabus and build a study system,",
                             color="rgba(255,255,255,0.95)",
                             font_size=rx.breakpoints(initial="clamp(2rem, 5.8vw, 3.1rem)", md="clamp(2.7rem, 4.15vw, 4rem)"),
                             font_weight="500",
@@ -21851,7 +21998,7 @@ def landing_page():
                 rx.hstack(
                     rx.hstack(
                         rx.text(
-                            "built to automate your degree.",
+                            "planned for your real semester workload.",
                             color="rgba(255,255,255,0.95)",
                             font_size=rx.breakpoints(initial="clamp(2rem, 5.8vw, 3.1rem)", md="clamp(2.7rem, 4.15vw, 4rem)"),
                             font_weight="500",
@@ -21886,7 +22033,7 @@ def landing_page():
                 rx.hstack(
                     rx.hstack(
                         rx.text(
-                            "Select your Degree, get a custom daily teaching with AI, and stop wasting time.",
+                            "Alex AI organizes tasks, teaches with live voice chat, saves notes, and keeps your semester moving with visuals and to-dos.",
                             color="rgba(255,255,255,0.52)",
                             font_size=rx.breakpoints(initial="clamp(1.12rem, 3.2vw, 1.38rem)", md="clamp(1.18rem, 1.65vw, 1.5rem)"),
                             font_weight="450",
@@ -21925,7 +22072,7 @@ def landing_page():
                 rx.box(
                     rx.vstack(
                         rx.text(
-                            "Select your degree",
+                            "Upload your syllabus",
                             color="rgba(255,255,255,0.9)",
                             font_size=rx.breakpoints(initial="clamp(1.2rem, 3.4vw, 1.55rem)", md="clamp(1.28rem, 1.9vw, 1.65rem)"),
                             font_weight="500",
@@ -21947,7 +22094,7 @@ def landing_page():
                             custom_attrs={"data-landing-journey-item": "2"},
                         ),
                         rx.text(
-                            "Choose your semester",
+                            "Alex AI analyzes your semester",
                             color="rgba(255,255,255,0.9)",
                             font_size=rx.breakpoints(initial="clamp(1.2rem, 3.4vw, 1.55rem)", md="clamp(1.28rem, 1.9vw, 1.65rem)"),
                             font_weight="500",
@@ -21969,7 +22116,7 @@ def landing_page():
                             custom_attrs={"data-landing-journey-item": "4"},
                         ),
                         rx.text(
-                            "Activate your system",
+                            "Get your personalized study system",
                             color="rgba(255,255,255,0.9)",
                             font_size=rx.breakpoints(initial="clamp(1.2rem, 3.4vw, 1.55rem)", md="clamp(1.28rem, 1.9vw, 1.65rem)"),
                             font_weight="500",
@@ -21993,6 +22140,32 @@ def landing_page():
                 padding_top=rx.breakpoints(initial="40px", md="48px"),
                 border_top="1px solid rgba(255,255,255,0.09)",
             ),
+            rx.hstack(
+                feature_card(
+                    "Semester planner that feels real",
+                    "Show students the exact planner view they get after Alex AI turns a syllabus into a full semester path.",
+                    "/landing-semester-demo.png",
+                    "Planner proof",
+                ),
+                feature_card(
+                    "Voice mentor with typed chat",
+                    "Students can talk with the 3D mentor live, then type in the same session when they want faster answers or quieter study.",
+                    "/landing-voice-demo.png",
+                    "Live teaching",
+                ),
+                feature_card(
+                    "AI models, visuals, and study support",
+                    "Alex AI can teach with different models, diagrams, notes, and study visuals instead of leaving students inside a blank chat box.",
+                    "/landing-models-demo.png",
+                    "Learning system",
+                ),
+                spacing="5",
+                align="stretch",
+                justify="between",
+                flex_wrap="wrap",
+                width="100%",
+                padding_top=rx.breakpoints(initial="24px", md="32px"),
+            ),
             spacing="5",
             align_items="flex-start",
             width="100%",
@@ -22004,11 +22177,194 @@ def landing_page():
         background="transparent",
     )
 
+    voice_section = rx.box(
+        rx.hstack(
+            rx.box(
+                rx.image(
+                    src="/landing-voice-demo.png",
+                    alt="Alex AI live voice mentor",
+                    width="100%",
+                    height="100%",
+                    object_fit="cover",
+                ),
+                width="100%",
+                max_width=rx.breakpoints(initial="100%", md="720px"),
+                height=rx.breakpoints(initial="240px", md="430px"),
+                overflow="hidden",
+                border_radius="28px",
+                border="1px solid rgba(255,255,255,0.08)",
+                box_shadow="0 32px 80px rgba(0,0,0,0.42)",
+            ),
+            rx.vstack(
+                rx.text(
+                    "Voice study space that feels alive",
+                    color="rgba(255,255,255,0.95)",
+                    font_size=rx.breakpoints(initial="clamp(1.9rem, 5vw, 2.8rem)", md="clamp(2.4rem, 3.1vw, 3.4rem)"),
+                    font_weight="600",
+                    letter_spacing="-0.05em",
+                    line_height="1.04",
+                ),
+                rx.text(
+                    "Alex AI is more than a planner. Students can learn with a live 3D mentor, speak naturally, type into the same session, and keep building notes and tasks without breaking focus.",
+                    color="rgba(255,255,255,0.56)",
+                    font_size="1rem",
+                    line_height="1.8",
+                    max_width="480px",
+                ),
+                rx.vstack(
+                    proof_chip("Live voice teaching"),
+                    proof_chip("Type during voice chat"),
+                    proof_chip("Study visuals and diagrams"),
+                    proof_chip("Notes + to-do list in the same system"),
+                    spacing="3",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                spacing="5",
+                align_items="flex-start",
+                width=rx.breakpoints(initial="100%", md="440px"),
+            ),
+            spacing="6",
+            align="center",
+            justify="between",
+            width="100%",
+            max_width="1280px",
+            margin="0 auto",
+            flex_wrap="wrap",
+        ),
+        padding=rx.breakpoints(initial="72px 16px 0", md="96px 28px 0"),
+        background="transparent",
+    )
+
+    pricing_section = rx.box(
+        rx.vstack(
+            rx.vstack(
+                rx.text(
+                    "Pricing",
+                    color="rgba(255,255,255,0.44)",
+                    font_size="0.78rem",
+                    font_weight="700",
+                    letter_spacing="0.2em",
+                    text_transform="uppercase",
+                ),
+                rx.text(
+                    "Choose the upgrade path that fits your semester",
+                    color="rgba(255,255,255,0.95)",
+                    font_size=rx.breakpoints(initial="clamp(2rem, 5.6vw, 2.8rem)", md="clamp(2.55rem, 3vw, 3.5rem)"),
+                    font_weight="600",
+                    letter_spacing="-0.05em",
+                    text_align="center",
+                ),
+                rx.text(
+                    "Built for university students who want a smarter way to plan and study.",
+                    color="rgba(255,255,255,0.54)",
+                    font_size="1rem",
+                    line_height="1.75",
+                    text_align="center",
+                    max_width="700px",
+                ),
+                spacing="3",
+                align_items="center",
+                width="100%",
+            ),
+            rx.hstack(
+                rx.box(
+                    rx.vstack(
+                        rx.text("Free", color="rgba(255,255,255,0.94)", font_size="1.15rem", font_weight="650"),
+                        rx.text("USD 0", color="rgba(255,255,255,0.98)", font_size="2rem", font_weight="750", letter_spacing="-0.05em"),
+                        rx.text("for getting started", color="rgba(255,255,255,0.44)", font_size="0.88rem"),
+                        rx.text("Explore the planner, test the academic mentor, and see how Alex AI fits your semester workflow.", color="rgba(255,255,255,0.56)", font_size="0.95rem", line_height="1.7"),
+                        rx.text("• Basic planner access", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
+                        rx.text("• Trial access to study chat", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
+                        rx.text("• Start building your semester system", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
+                        hero_button("Start Free", auth_routes.LOGIN_ROUTE, "secondary"),
+                        spacing="3",
+                        align_items="flex-start",
+                        width="100%",
+                    ),
+                    width=rx.breakpoints(initial="100%", md="calc(33.333% - 16px)"),
+                    min_width=rx.breakpoints(initial="100%", md="280px"),
+                    padding="24px",
+                    border="1px solid rgba(255,255,255,0.08)",
+                    border_radius="24px",
+                    background="linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)",
+                ),
+                rx.box(
+                    rx.vstack(
+                        rx.text("Pro", color="rgba(255,255,255,0.98)", font_size="1.15rem", font_weight="700"),
+                        rx.text("USD 3.17", color="rgba(255,255,255,0.98)", font_size="2.2rem", font_weight="800", letter_spacing="-0.05em"),
+                        rx.text("per month", color="rgba(255,255,255,0.48)", font_size="0.88rem"),
+                        rx.text("Unlock the full semester planner, stronger daily teaching, and the premium study flow for serious students.", color="rgba(255,255,255,0.62)", font_size="0.96rem", line_height="1.72"),
+                        rx.text("• Full semester automation", color="rgba(255,255,255,0.82)", font_size="0.92rem"),
+                        rx.text("• Voice mentor + typed chat", color="rgba(255,255,255,0.82)", font_size="0.92rem"),
+                        rx.text("• Notes, tasks, and visual study support", color="rgba(255,255,255,0.82)", font_size="0.92rem"),
+                        rx.button(
+                            "Upgrade to Pro",
+                            on_click=AppState.open_pricing_modal,
+                            width="100%",
+                            height="52px",
+                            border_radius="999px",
+                            background="linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%)",
+                            color="#09090b",
+                            font_weight="700",
+                            border="1px solid rgba(255,255,255,0.08)",
+                            box_shadow="0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset",
+                            _hover={"background": "#ffffff", "transform": "translateY(-1px)"},
+                        ),
+                        spacing="3",
+                        align_items="flex-start",
+                        width="100%",
+                    ),
+                    width=rx.breakpoints(initial="100%", md="calc(33.333% - 16px)"),
+                    min_width=rx.breakpoints(initial="100%", md="280px"),
+                    padding="24px",
+                    border="1px solid rgba(255,255,255,0.12)",
+                    border_radius="24px",
+                    background="linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
+                    box_shadow="0 28px 72px rgba(0,0,0,0.36)",
+                ),
+                rx.box(
+                    rx.vstack(
+                        rx.text("Max", color="rgba(255,255,255,0.94)", font_size="1.15rem", font_weight="650"),
+                        rx.text("USD 25", color="rgba(255,255,255,0.98)", font_size="2rem", font_weight="750", letter_spacing="-0.05em"),
+                        rx.text("per month", color="rgba(255,255,255,0.44)", font_size="0.88rem"),
+                        rx.text("For students who want the most advanced Alex AI experience and priority guidance as the platform expands.", color="rgba(255,255,255,0.56)", font_size="0.95rem", line_height="1.7"),
+                        rx.text("• Priority support", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
+                        rx.text("• Access to future live study experiences", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
+                        rx.text("• Best fit for power users and early adopters", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
+                        hero_button("Talk to Support", "/support", "secondary"),
+                        spacing="3",
+                        align_items="flex-start",
+                        width="100%",
+                    ),
+                    width=rx.breakpoints(initial="100%", md="calc(33.333% - 16px)"),
+                    min_width=rx.breakpoints(initial="100%", md="280px"),
+                    padding="24px",
+                    border="1px solid rgba(255,255,255,0.08)",
+                    border_radius="24px",
+                    background="linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)",
+                ),
+                spacing="5",
+                align="stretch",
+                justify="between",
+                flex_wrap="wrap",
+                width="100%",
+            ),
+            spacing="6",
+            align_items="center",
+            width="100%",
+            max_width="1280px",
+            margin="0 auto",
+        ),
+        padding=rx.breakpoints(initial="80px 16px 0", md="104px 28px 0"),
+        background="transparent",
+    )
+
     footer_section = rx.box(
         rx.vstack(
             rx.hstack(
                 rx.text(
-                    "Experience a calmer academic system.",
+                    "Built for university students who want a smarter way to plan and study.",
                     color="rgba(255,255,255,0.62)",
                     font_size=rx.breakpoints(initial="1.1rem", md="1.45rem"),
                     font_weight="500",
@@ -22017,6 +22373,14 @@ def landing_page():
                 ),
                 width="100%",
                 justify="start",
+            ),
+            rx.hstack(
+                proof_chip("Used by 100+ students"),
+                proof_chip("support.alexstudies@gmail.com"),
+                proof_chip("AI academic mentor with planning included"),
+                spacing="3",
+                flex_wrap="wrap",
+                width="100%",
             ),
             rx.box(height=rx.breakpoints(initial="24px", md="32px")),
             rx.text(
@@ -22065,6 +22429,13 @@ def landing_page():
                 align="center",
                 spacing="4",
                 flex_wrap="wrap",
+            ),
+            rx.text(
+                "Contact: support.alexstudies@gmail.com",
+                color="rgba(255,255,255,0.36)",
+                font_size="0.9rem",
+                width="100%",
+                text_align=rx.breakpoints(initial="left", md="right"),
             ),
             spacing="0",
             align_items="stretch",
@@ -22145,6 +22516,8 @@ def landing_page():
                 overflow="hidden",
             ),
             story_section,
+            voice_section,
+            pricing_section,
             footer_section,
             width="100%",
             position="relative",
@@ -22165,23 +22538,23 @@ def landing_page():
             }
             @keyframes landingTypeLine1 {
                 from { width: 0; }
-                to { width: 30.2ch; }
+                to { width: 22ch; }
             }
             @keyframes landingTypeLine2 {
                 from { width: 0; }
-                to { width: 19.2ch; }
+                to { width: 31ch; }
             }
             @keyframes landingStoryLine1 {
                 from { width: 0; }
-                to { width: 46.5ch; }
+                to { width: 47ch; }
             }
             @keyframes landingStoryLine2 {
                 from { width: 0; }
-                to { width: 30.5ch; }
+                to { width: 41ch; }
             }
             @keyframes landingStoryLine3 {
                 from { width: 0; }
-                to { width: 77.5ch; }
+                to { width: 110ch; }
             }
             @keyframes landingCursorBlink {
                 0%, 45% { opacity: 0; }
