@@ -21699,7 +21699,8 @@ def landing_page():
         )
 
     def landing_live_chat_demo() -> rx.Component:
-        return rx.html('''
+        return rx.fragment(
+            rx.html('''
 <section id="landing-live-chat-demo" class="landing-live-chat-demo">
   <style>
     #landing-live-chat-demo {
@@ -21758,8 +21759,21 @@ def landing_page():
       box-shadow: 0 20px 60px rgba(0,0,0,0.35);
       text-align: center;
       padding: 14px;
+      overflow: hidden;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__core-logo {
+      position: absolute;
+      inset: 18px;
+      width: calc(100% - 36px);
+      height: calc(100% - 36px);
+      object-fit: contain;
+      opacity: 0.14;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.12));
+      pointer-events: none;
     }
     #landing-live-chat-demo .landing-live-chat-demo__core span {
+      position: relative;
+      z-index: 1;
       font-size: 0.95rem;
       line-height: 1;
       color: rgba(255,255,255,0.9);
@@ -21769,14 +21783,14 @@ def landing_page():
     #landing-live-chat-demo .landing-live-chat-demo__orbit-path {
       position: absolute;
       inset: 0;
-      animation: landingModelOrbit 7s linear infinite;
+      animation: landingModelOrbit 4.2s linear infinite;
     }
     #landing-live-chat-demo .landing-live-chat-demo__orbit-path--2 {
-      animation-duration: 9s;
+      animation-duration: 5.4s;
       animation-direction: reverse;
     }
     #landing-live-chat-demo .landing-live-chat-demo__orbit-path--3 {
-      animation-duration: 8s;
+      animation-duration: 4.8s;
     }
     #landing-live-chat-demo .landing-live-chat-demo__badge {
       position: absolute;
@@ -21966,7 +21980,10 @@ def landing_page():
     <div class="landing-live-chat-demo__orbit-wrap">
       <div class="landing-live-chat-demo__orbit" aria-hidden="true">
         <div class="landing-live-chat-demo__ring"></div>
-        <div class="landing-live-chat-demo__core"><span>Alex AI</span></div>
+        <div class="landing-live-chat-demo__core">
+          <img class="landing-live-chat-demo__core-logo" src="/a_logo.png" alt="" />
+          <span>Alex AI</span>
+        </div>
         <div class="landing-live-chat-demo__orbit-path landing-live-chat-demo__orbit-path--1">
           <div class="landing-live-chat-demo__badge">
             <img src="/landing-model-deepseek.png" alt="DeepSeek model" />
@@ -22016,74 +22033,85 @@ def landing_page():
     </div>
   </div>
 
-  <script>
-    (() => {
-      const root = document.getElementById('landing-live-chat-demo');
-      if (!root || root.dataset.bound === 'true') return;
-      root.dataset.bound = 'true';
-
-      const messagesEl = document.getElementById('landing-live-chat-demo-messages');
-      const inputEl = document.getElementById('landing-live-chat-demo-input');
-      const sendEl = document.getElementById('landing-live-chat-demo-send');
-      const limit = 5;
-      let sentCount = 0;
-
-      const respond = (text) => {
-        const t = (text || '').trim().toLowerCase();
-        if (!t) return "Ask about planning, pricing, voice teaching, or study tools.";
-        if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students turn syllabi into guided semester plans.";
-        if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3.17/month, and Max is $25/month.";
-        if (/(voice|speak|talk|mentor|call)/.test(t)) return "Alex AI offers live voice teaching with a 3D mentor and typed chat.";
-        if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Upload your syllabus and Alex AI organizes your semester automatically.";
-        if (/(notes|tasks|todo|to-do)/.test(t)) return "Students can save notes, manage tasks, and keep study flow in one place.";
-        if (/(models|deepseek|claude|chatgpt|teach)/.test(t)) return "Alex AI uses multiple models for teaching, explanations, and faster answers.";
-        return "Alex AI is an academic mentor with planning, voice learning, notes, and study visuals.";
-      };
-
-      const appendBubble = (text, kind) => {
-        const bubble = document.createElement('div');
-        bubble.className = `landing-live-chat-demo__bubble landing-live-chat-demo__bubble--${kind}`;
-        bubble.textContent = text;
-        messagesEl.appendChild(bubble);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-      };
-
-      const lockDemo = () => {
-        inputEl.disabled = true;
-        sendEl.disabled = true;
-        inputEl.placeholder = 'Open Alex AI to continue';
-      };
-
-      const sendMessage = () => {
-        const value = (inputEl.value || '').trim();
-        if (!value || sentCount >= limit) return;
-
-        appendBubble(value, 'user');
-        sentCount += 1;
-        inputEl.value = '';
-
-        window.setTimeout(() => {
-          appendBubble(
-            sentCount >= limit
-              ? "Hello again. Demo limit reached, but the full Alex AI chat lives inside the app."
-              : respond(value),
-            'assistant'
-          );
-          if (sentCount >= limit) lockDemo();
-        }, 260);
-      };
-
-      sendEl.addEventListener('click', sendMessage);
-      inputEl.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          sendMessage();
-        }
-      });
-    })();
-  </script>
 </section>
-        ''')
+        '''),
+            rx.script("""
+                (() => {
+                    const setupLandingDemo = () => {
+                        const root = document.getElementById('landing-live-chat-demo');
+                        if (!root) {
+                            window.requestAnimationFrame(setupLandingDemo);
+                            return;
+                        }
+                        if (root.dataset.bound === 'true') return;
+                        root.dataset.bound = 'true';
+
+                        const messagesEl = document.getElementById('landing-live-chat-demo-messages');
+                        const inputEl = document.getElementById('landing-live-chat-demo-input');
+                        const sendEl = document.getElementById('landing-live-chat-demo-send');
+                        if (!messagesEl || !inputEl || !sendEl) return;
+
+                        const limit = 5;
+                        let sentCount = 0;
+
+                        const respond = (text) => {
+                            const t = (text || '').trim().toLowerCase();
+                            if (!t) return "Ask about planning, pricing, voice teaching, or study tools.";
+                            if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students turn syllabi into guided semester plans.";
+                            if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3.17/month, and Max is $25/month.";
+                            if (/(voice|speak|talk|mentor|call)/.test(t)) return "Alex AI offers live voice teaching with a 3D mentor and typed chat.";
+                            if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Upload your syllabus and Alex AI organizes your semester automatically.";
+                            if (/(notes|tasks|todo|to-do)/.test(t)) return "Students can save notes, manage tasks, and keep study flow in one place.";
+                            if (/(models|deepseek|claude|chatgpt|teach)/.test(t)) return "Alex AI uses multiple models for teaching, explanations, and faster answers.";
+                            return "Alex AI is an academic mentor with planning, voice learning, notes, and study visuals.";
+                        };
+
+                        const appendBubble = (text, kind) => {
+                            const bubble = document.createElement('div');
+                            bubble.className = `landing-live-chat-demo__bubble landing-live-chat-demo__bubble--${kind}`;
+                            bubble.textContent = text;
+                            messagesEl.appendChild(bubble);
+                            messagesEl.scrollTop = messagesEl.scrollHeight;
+                        };
+
+                        const lockDemo = () => {
+                            inputEl.disabled = true;
+                            sendEl.disabled = true;
+                            inputEl.placeholder = 'Open Alex AI to continue';
+                        };
+
+                        const sendMessage = () => {
+                            const value = (inputEl.value || '').trim();
+                            if (!value || sentCount >= limit) return;
+
+                            appendBubble(value, 'user');
+                            sentCount += 1;
+                            inputEl.value = '';
+
+                            window.setTimeout(() => {
+                                appendBubble(
+                                    sentCount >= limit
+                                        ? "Hello again. Demo limit reached, but the full Alex AI chat lives inside the app."
+                                        : respond(value),
+                                    'assistant'
+                                );
+                                if (sentCount >= limit) lockDemo();
+                            }, 260);
+                        };
+
+                        sendEl.addEventListener('click', sendMessage);
+                        inputEl.addEventListener('keydown', (event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                sendMessage();
+                            }
+                        });
+                    };
+
+                    setupLandingDemo();
+                })();
+            """),
+        )
 
     hero_header = rx.hstack(
         rx.hstack(
