@@ -26478,6 +26478,14 @@ def alex_voice_overlay_panel() -> rx.Component:
                 left: 0 !important;
             }
             @media (max-width:768px) {
+                .alex-voice-overlay-root {
+                    height: var(--alex-overlay-lock-h, 100vh) !important;
+                    max-height: var(--alex-overlay-lock-h, 100vh) !important;
+                }
+                #alex-voice-main {
+                    width: 100% !important;
+                    min-height: 100% !important;
+                }
                 #alex-voice-main {
                     padding-bottom: 86px !important;
                 }
@@ -26528,6 +26536,19 @@ def alex_voice_overlay_panel() -> rx.Component:
         ),
         rx.script(
             "(function(){"
+            # On Android Chrome, keyboard can resize/recenter the entire layout.
+            # Force overlay keyboard mode where possible so only our bottom input
+            # row is repositioned by visualViewport math.
+            "var _vp=document.querySelector('meta[name=viewport]');"
+            "if(_vp){"
+            "var c=String(_vp.getAttribute('content')||'');"
+            "if(c.indexOf('interactive-widget=overlays-content')===-1){"
+            "c=c.replace(/\\s+/g,' ').trim();"
+            "if(c&&c.slice(-1)!==',')c+=', ';"
+            "c+='interactive-widget=overlays-content';"
+            "_vp.setAttribute('content',c);"
+            "}"
+            "}"
             "var html=document.documentElement;"
             "var body=document.body;"
             "var _alexH=0;"
@@ -26537,6 +26558,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             "var el=document.querySelector('.alex-voice-overlay-root');"
             "if(!el)return false;"
             "if(!_alexH)_alexH=window.innerHeight;"
+            "html.style.setProperty('--alex-overlay-lock-h',_alexH+'px');"
             "el.style.setProperty('height',_alexH+'px','important');"
             "el.style.setProperty('max-height',_alexH+'px','important');"
             "el.style.setProperty('top','0','important');"
