@@ -22624,8 +22624,8 @@ def landing_page():
                 rx.el.style("""
                     #landing-teacher-orb-wrap {
                         width: 100%;
-                        max-width: 260px;
-                        height: 300px;
+                        max-width: 280px;
+                        height: 360px;
                         display: flex;
                         align-items: flex-start;
                         justify-content: center;
@@ -22635,17 +22635,17 @@ def landing_page():
                         position: relative;
                         width: 100%;
                         height: 100%;
-                        max-width: 260px;
+                        max-width: 280px;
                         overflow: hidden !important;
                         border-radius: 28px;
                     }
                     #landing-teacher-orb-avatar-canvas {
                         position: absolute !important;
                         left: 50% !important;
-                        top: 38% !important;
+                        top: 45% !important;
                         transform: translate(-50%, -50%) !important;
-                        width: 220px !important;
-                        height: 340px !important;
+                        width: 255px !important;
+                        height: 390px !important;
                         max-width: none !important;
                         opacity: 1 !important;
                         z-index: 2 !important;
@@ -22692,12 +22692,12 @@ def landing_page():
                     @media (max-width: 768px) {
                         #landing-teacher-orb-wrap {
                             max-width: 260px;
-                            height: 280px;
+                            height: 320px;
                         }
                         #landing-teacher-orb-avatar-canvas {
-                            width: 200px !important;
-                            height: 310px !important;
-                            top: 38% !important;
+                            width: 220px !important;
+                            height: 340px !important;
+                            top: 43% !important;
                         }
                     }
                 """),
@@ -22718,13 +22718,13 @@ def landing_page():
                     "  var s=existing||document.createElement('style');"
                     "  s.id='landing-avatar-crop';"
                     "  s.textContent=["
-                    "    '#landing-teacher-orb-wrap { overflow: hidden !important; height: 340px !important; }',"
-                    "    '#landing-teacher-orb { overflow: hidden !important; max-height: 340px !important; }',"
+                    "    '#landing-teacher-orb-wrap { overflow: hidden !important; height: 360px !important; max-width: 280px !important; }',"
+                    "    '#landing-teacher-orb { overflow: hidden !important; max-height: 360px !important; max-width: 280px !important; }',"
                     "    '#landing-teacher-orb-avatar-canvas {',"
-                    "    '  width: 230px !important; height: 360px !important;',"
-                    "    '  top: 44% !important; transform: translate(-50%,-50%) !important;',"
+                    "    '  width: 255px !important; height: 390px !important;',"
+                    "    '  top: 45% !important; transform: translate(-50%,-50%) !important;',"
                     "    '  -webkit-mask-image: none !important; mask-image: none !important;',"
-                    "    '  clip-path: inset(0 0 14% 0) !important;',"
+                    "    '  clip-path: inset(0 0 8% 0) !important;',"
                     "    '}'"
                     "  ].join('\\n');"
                     "  document.head.appendChild(s);"
@@ -22748,9 +22748,9 @@ def landing_page():
                     "})();"
                 ),
                 id="landing-teacher-orb-wrap",
-                width=rx.breakpoints(initial="100%", md="260px"),
+                width=rx.breakpoints(initial="100%", md="280px"),
                 flex_shrink="0",
-                height=rx.breakpoints(initial="300px", md="340px"),
+                height=rx.breakpoints(initial="320px", md="360px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
