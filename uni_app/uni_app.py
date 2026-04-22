@@ -1360,6 +1360,24 @@ def _render_visual_html(visual_type: str, visual_json: str) -> str:
 
     if visual_type == "illustration":
         image_url = str(data.get("image_url", "") or data.get("data_url", "")).strip()
+        focus_points = data.get("focus_points", [])
+        if not isinstance(focus_points, list):
+            focus_points = []
+        focus_points = [str(point).strip() for point in focus_points[:4] if str(point).strip()]
+        focus_html = ""
+        if focus_points:
+            items = "".join(
+                f"<li style='margin:0 0 8px 0;color:rgba(226,232,240,0.92);line-height:1.45;'>{_esc_html(point)}</li>"
+                for point in focus_points
+            )
+            focus_html = (
+                "<div style='margin-top:14px;padding:14px 16px;border-radius:14px;"
+                "background:rgba(15,23,42,0.64);border:1px solid rgba(148,163,184,0.14);'>"
+                "<div style='font-size:0.72rem;font-weight:700;letter-spacing:.10em;text-transform:uppercase;"
+                "color:rgba(148,163,184,0.9);margin-bottom:10px;'>What to Notice</div>"
+                f"<ul style='margin:0;padding-left:18px;'>{items}</ul>"
+                "</div>"
+            )
         if image_url:
             safe_url = _esc_html(_visual_asset_src(_signed_media_url(image_url)))
             if safe_url:
@@ -1369,6 +1387,7 @@ def _render_visual_html(visual_type: str, visual_json: str) -> str:
                     f"<img src='{safe_url}' alt='generated illustration' "
                     "style='width:100%;height:auto;display:block;border-radius:10px;' "
                     "loading='lazy' decoding='async' referrerpolicy='no-referrer' />"
+                    f"{focus_html}"
                     "</div>"
                 )
         ext_url = str(data.get("url", "")).strip()
@@ -1380,6 +1399,7 @@ def _render_visual_html(visual_type: str, visual_json: str) -> str:
                 f"<img src='{safe_url}' alt='generated illustration' "
                 "style='width:100%;height:auto;display:block;border-radius:10px;' "
                 "loading='lazy' decoding='async' referrerpolicy='no-referrer' />"
+                f"{focus_html}"
                 "</div>"
             )
         svg_clean = _sanitize_svg_markup(str(data.get("svg", "")))
@@ -1393,6 +1413,7 @@ def _render_visual_html(visual_type: str, visual_json: str) -> str:
             f"<img src='{svg_data_uri}' alt='generated illustration' "
             "style='width:100%;height:auto;display:block;border-radius:10px;' "
             "loading='lazy' decoding='async' />"
+            f"{focus_html}"
             "</div>"
         )
 
@@ -8562,15 +8583,11 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         lower = f"{text}\n{response_text}".lower()
         if any(k in lower for k in ("blueprint", "technical drawing", "schematic", "annotated", "callout")):
             return "blueprint"
-        if any(k in lower for k in ("relativity", "spacetime", "space-time", "tensor", "field equation", "einstein", "physics")):
-            return "blueprint"
         if any(k in lower for k in ("realistic", "photorealistic", "photo-realistic", "photo real")):
             return "realistic"
         if any(k in lower for k in ("anime", "manga", "illustration poster", "concept art")):
             return "concept"
-        if any(k in lower for k in ("high detail", "high-detail", "detailed", "high quality", "premium quality")):
-            return "blueprint"
-        return "concept"
+        return "teaching"
 
     def _high_detail_image_size(self, text: str, response_text: str = "") -> str:
         lower = f"{text}\n{response_text}".lower()
@@ -8591,6 +8608,33 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             return "1024x1536"
         return "1536x1024"
 
+    def _high_detail_focus_points(self, user_msg: str, response_text: str = "") -> list[str]:
+        raw = (response_text or "").strip()
+        if not raw:
+            phrases = self._extract_subject_phrases(user_msg)
+            return [p.strip().rstrip(".") for p in phrases[:3] if p.strip()]
+
+        cleaned = re.sub(r"\[[^\]]+\]\([^)]+\)", "", raw)
+        cleaned = re.sub(r"[*_`#>-]", " ", cleaned)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        parts = re.split(r"(?<=[.!?])\s+|\n+", cleaned)
+
+        points: list[str] = []
+        for part in parts:
+            sentence = re.sub(r"^\d+\.\s*", "", (part or "").strip())
+            if not sentence:
+                continue
+            if len(sentence) < 28:
+                continue
+            if len(sentence) > 140:
+                sentence = re.split(r"[;:]", sentence, maxsplit=1)[0].strip()
+            sentence = sentence.rstrip(".")
+            if 20 <= len(sentence) <= 110 and sentence not in points:
+                points.append(sentence)
+            if len(points) >= 4:
+                break
+        return points[:4]
+
     def _high_detail_image_prompt(self, user_msg: str, response_text: str = "") -> tuple[str, str]:
         combined = f"{user_msg}\n{response_text}".strip()
         subject = self._extract_subject_keyword(combined).strip() or "Detailed visual"
@@ -8600,33 +8644,45 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         title_base = subject.title()
         context_excerpt = re.sub(r"\s+", " ", (response_text or "").strip())[:900]
         common = (
-            f"Create one premium-quality visual for an interactive canvas based on this request: {user_msg.strip() or subject}. "
+            f"Create one educational visual for an interactive learning canvas based on this request: {user_msg.strip() or subject}. "
             f"Keep the subject unmistakably recognizable as {subject}. Relevant subject hints: {subject_hint}. "
-            f"Use this teaching context when deciding the composition and labels: {context_excerpt or 'No extra context available.'} "
-            "The result should feel like a premium educational visual, not a simple diagram card. "
-            "Use very high detail, crisp edges, strong composition, accurate proportions, layered materials, and clean professional finishing. "
+            f"Use this teaching context when deciding the composition: {context_excerpt or 'No extra context available.'} "
+            "The purpose is to help a student understand the topic quickly and clearly at first glance. "
+            "Prioritize conceptual clarity over cinematic style. Use large shapes, one main idea, and 3 to 5 clearly separated components. "
+            "Avoid dense poster layouts, decorative blueprint backgrounds, tiny labels, paragraphs, handwriting, and small unreadable text. "
+            "If labels are used, keep them extremely short, large, and high-contrast. "
+            "Use crisp edges, clean spacing, clear hierarchy, and a textbook-quality educational composition. "
             "No watermark, no UI chrome, no browser frame, no fake app screenshot, no logos unless explicitly requested."
         )
         if style == "blueprint":
             prompt = (
                 common
-                + " Render it as a dark navy technical blueprint plate with precise white and pale-cyan linework, subtle grid paper, "
-                "measurement ticks, engineering-style callouts, labeled components, explanatory arrows, sectional contour lines, mini labels, and dense schematic details similar to a premium AI-generated technical poster. "
-                "Show multiple visual layers: a main hero object or phenomenon, secondary supporting shapes, and short educational callouts. "
-                "Use dramatic clarity, elegant spacing, museum-grade presentation, and infographic-quality annotation density."
+                + " Render it as a clean technical teaching diagram with a restrained blueprint feel, but keep the layout simple and readable. "
+                "Use a dark navy background only if contrast stays excellent. Show one main system with a few large arrows and no dense grid clutter. "
+                "Use at most 4 short labels."
             )
             return prompt, f"{title_base} Blueprint"
         if style == "realistic":
             prompt = (
                 common
                 + " Render it as a polished high-end realistic concept image with rich materials, cinematic lighting, "
-                "sharp details, subtle depth, premium commercial art direction, and short educational callouts integrated into the composition."
+                "sharp details, subtle depth, and only a few large educational callouts."
             )
             return prompt, f"{title_base} Detailed Render"
+        if style == "teaching":
+            prompt = (
+                common
+                + " Render it as a simple teaching infographic: one central concept, big readable objects, strong arrows or grouping, "
+                "minimal clutter, and a friendly modern educational look. "
+                "Do not make it look like a poster, vintage blueprint, or busy collage. "
+                "If the topic is a process, show the flow clearly from left to right or top to bottom. "
+                "If the topic is a structure, show the main parts with visual separation."
+            )
+            return prompt, f"{title_base} Concept Visual"
         prompt = (
             common
             + " Render it as a polished editorial infographic illustration with exceptional detail, fine texture work, "
-            "clear silhouette, premium lighting, layered composition, and several short labels or callouts that help explain the topic."
+            "clear silhouette, premium lighting, layered composition, and only a few short labels or callouts that help explain the topic."
         )
         return prompt, f"{title_base} Concept Illustration"
 
@@ -8653,12 +8709,14 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             f"canvas-{_safe_filename_fragment(title.lower())}{ext}",
             image_bytes,
         )
+        focus_points = self._high_detail_focus_points(user_msg, response_text)
         block = (
             "[VISUAL:type=illustration]\n"
             + json.dumps(
                 {
                     "title": title,
                     "image_url": media_path,
+                    "focus_points": focus_points,
                 },
                 ensure_ascii=False,
             )
