@@ -22566,29 +22566,29 @@ def landing_page():
     voice_section = rx.box(
         rx.script(_CHAT_TEACHER_AVATAR_JS),
         rx.hstack(
-            rx.box(
-                rx.image(
-                    src="/landing-voice-demo.gif",
-                    alt="Alex AI live voice mentor",
-                    style={
-                        "width": "100%",
-                        "height": "100%",
-                        "objectFit": "contain",
-                        "display": "block",
-                        "background": "transparent",
-                        "filter": "drop-shadow(0 32px 80px rgba(0,0,0,0.45))",
-                        "pointerEvents": "none",
-                    },
-                ),
-                width="100%",
-                max_width=rx.breakpoints(initial="100%", md="380px"),
-                height=rx.breakpoints(initial="320px", md="440px"),
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                background="transparent",
-            ),
+            # ── LEFT COLUMN: gif + text ──────────────────────────────────────
             rx.vstack(
+                rx.box(
+                    rx.image(
+                        src="/landing-voice-demo.gif",
+                        alt="Alex AI live voice mentor",
+                        style={
+                            "width": "100%",
+                            "height": "100%",
+                            "objectFit": "contain",
+                            "display": "block",
+                            "background": "transparent",
+                            "filter": "drop-shadow(0 32px 80px rgba(0,0,0,0.45))",
+                            "pointerEvents": "none",
+                        },
+                    ),
+                    width="100%",
+                    height=rx.breakpoints(initial="280px", md="340px"),
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    background="transparent",
+                ),
                 rx.text(
                     "Voice study space that feels alive",
                     color="rgba(255,255,255,0.95)",
@@ -22615,8 +22615,10 @@ def landing_page():
                 ),
                 spacing="5",
                 align_items="flex-start",
-                width=rx.breakpoints(initial="100%", md="420px"),
+                flex="1",
+                min_width="0",
             ),
+            # ── RIGHT COLUMN: 3-D model ──────────────────────────────────────
             rx.box(
                 rx.el.style("""
                     #landing-teacher-orb-wrap {
@@ -22729,21 +22731,21 @@ def landing_page():
                     "})();"
                 ),
                 id="landing-teacher-orb-wrap",
-                width="100%",
-                max_width=rx.breakpoints(initial="100%", md="380px"),
-                height=rx.breakpoints(initial="340px", md="480px"),
+                width=rx.breakpoints(initial="100%", md="420px"),
+                flex_shrink="0",
+                height=rx.breakpoints(initial="340px", md="520px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
                 background="transparent",
             ),
-            spacing="6",
+            spacing="8",
             align="center",
-            justify="between",
             width="100%",
             max_width="1280px",
             margin="0 auto",
-            flex_wrap="wrap",
+            flex_wrap=rx.breakpoints(initial="wrap", md="nowrap"),
+            flex_direction=rx.breakpoints(initial="column", md="row"),
         ),
         padding=rx.breakpoints(initial="72px 16px 0", md="96px 28px 0"),
         background="transparent",
