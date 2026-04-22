@@ -7492,7 +7492,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                 del msg[k]
         msg.update(self._assistant_content_meta(content))
         if msg.get("visual_html"):
-            self._sync_canvas_from_message(index, open_panel=True)
+            self._sync_canvas_from_message(index, open_panel=False)
 
     def _load_messages(self, uid: int, scope: str = "", *, _trusted: bool = False) -> None:
         effective_scope = scope or self.active_scope
@@ -16739,66 +16739,26 @@ def active_chat_panel() -> rx.Component:
                                 rx.cond(
                                     msg.contains("visual_html"),
                                     rx.box(
-                                        rx.hstack(
-                                            rx.vstack(
-                                                rx.text(
-                                                    "Interactive Canvas",
-                                                    color="rgba(160,190,220,0.78)",
-                                                    font_size="0.68rem",
-                                                    font_weight="700",
-                                                    letter_spacing="0.12em",
-                                                    text_transform="uppercase",
-                                                ),
-                                                rx.text(
-                                                    rx.cond(
-                                                        msg.contains("visual_title") & (msg["visual_title"].to(str) != ""),
-                                                        msg["visual_title"],
-                                                        "Visual preview ready",
-                                                    ),
-                                                    color="rgba(236,242,248,0.94)",
-                                                    font_size="0.94rem",
-                                                    font_weight="600",
-                                                    line_height="1.35",
-                                                ),
-                                                rx.text(
-                                                    "The generated visual has been moved into a dedicated canvas so it stays out of the chat flow.",
-                                                    color="rgba(172,184,198,0.62)",
-                                                    font_size="0.78rem",
-                                                    line_height="1.55",
-                                                ),
-                                                spacing="1",
-                                                align_items="start",
-                                                min_width="0",
-                                                flex="1",
-                                            ),
-                                            rx.button(
-                                                "Visual",
-                                                on_click=AppState.open_visual_canvas(idx),
-                                                type="button",
-                                                size="2",
-                                                border_radius="999px",
-                                                cursor="pointer",
-                                                style={
-                                                    "background": "linear-gradient(135deg, rgba(96,165,250,0.28), rgba(34,211,238,0.22))",
-                                                    "border": "1px solid rgba(125,211,252,0.22)",
-                                                    "color": "rgba(236,244,252,0.96)",
-                                                    "box_shadow": "0 0 24px rgba(56,189,248,0.12)",
-                                                    "_hover": {
-                                                        "background": "linear-gradient(135deg, rgba(96,165,250,0.38), rgba(34,211,238,0.32))",
-                                                        "box_shadow": "0 0 34px rgba(56,189,248,0.18)",
-                                                    },
-                                                },
-                                            ),
-                                            spacing="4",
-                                            align="center",
-                                            width="100%",
-                                        ),
+                                        rx.html(msg["visual_html"].to(str)),
                                         margin_top=rx.cond(msg["content"].to(str) != "", "14px", "4px"),
-                                        padding="14px 16px",
-                                        border_radius="18px",
-                                        border="1px solid rgba(125,211,252,0.12)",
-                                        background="linear-gradient(180deg, rgba(7,12,20,0.82), rgba(5,9,16,0.92))",
-                                        box_shadow="0 18px 44px rgba(2,6,23,0.22)",
+                                        width="100%",
+                                        max_width="min(100%, 860px)",
+                                        overflow="hidden",
+                                        style={
+                                            "& img": {
+                                                "maxWidth": "100%",
+                                                "height": "auto",
+                                                "display": "block",
+                                            },
+                                            "& svg": {
+                                                "maxWidth": "100%",
+                                                "height": "auto",
+                                                "display": "block",
+                                            },
+                                            "& canvas": {
+                                                "maxWidth": "100%",
+                                            },
+                                        },
                                     ),
                                     rx.fragment(),
                                 ),
@@ -17428,24 +17388,10 @@ def chat_panel():
     # so history is never hidden behind a separate component tree (Reflex reactivity).
     return rx.box(
         active_chat_panel(),
-        rx.cond(
-            AppState.is_canvas_open & AppState.canvas_has_content,
-            interactive_canvas_panel(),
-            rx.fragment(),
-        ),
         width="100%",
         height="100%",
         position="relative",
         overflow="hidden",
-        padding_right=rx.breakpoints(
-            initial="0px",
-            md=rx.cond(
-                AppState.is_canvas_open & AppState.canvas_has_content,
-                "min(42vw, 720px)",
-                "0px",
-            ),
-        ),
-        transition="padding-right 220ms ease",
     )
 
 
