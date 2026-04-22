@@ -22581,9 +22581,9 @@ def landing_page():
                         "pointerEvents": "none",
                     },
                 ),
-                width=rx.breakpoints(initial="100%", md="30%"),
+                width=rx.breakpoints(initial="100%", md="240px"),
                 flex_shrink="0",
-                height=rx.breakpoints(initial="280px", md="440px"),
+                height=rx.breakpoints(initial="280px", md="400px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
@@ -22624,8 +22624,8 @@ def landing_page():
                 rx.el.style("""
                     #landing-teacher-orb-wrap {
                         width: 100%;
-                        max-width: 100%;
-                        height: 440px;
+                        max-width: 260px;
+                        height: 400px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -22635,7 +22635,7 @@ def landing_page():
                         position: relative;
                         width: 100%;
                         height: 100%;
-                        max-width: 100%;
+                        max-width: 260px;
                         overflow: hidden !important;
                         border-radius: 28px;
                     }
@@ -22644,8 +22644,8 @@ def landing_page():
                         left: 50% !important;
                         top: 54% !important;
                         transform: translate(-50%, -50%) !important;
-                        width: 300px !important;
-                        height: 420px !important;
+                        width: 220px !important;
+                        height: 340px !important;
                         max-width: none !important;
                         opacity: 1 !important;
                         z-index: 2 !important;
@@ -22732,9 +22732,9 @@ def landing_page():
                     "})();"
                 ),
                 id="landing-teacher-orb-wrap",
-                width=rx.breakpoints(initial="100%", md="30%"),
+                width=rx.breakpoints(initial="100%", md="260px"),
                 flex_shrink="0",
-                height=rx.breakpoints(initial="340px", md="440px"),
+                height=rx.breakpoints(initial="340px", md="400px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
