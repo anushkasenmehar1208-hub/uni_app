@@ -10042,6 +10042,45 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
 
     def _teaching_illustration_template(self, user_msg: str) -> str:
         lower = (user_msg or "").lower()
+        is_string_theory = (
+            "string theory" in lower
+            or ("string" in lower and any(k in lower for k in ("brane", "extra dimension", "dimensions", "quantum gravity", "spacetime", "space-time")))
+        )
+        if is_string_theory:
+            svg = (
+                "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 420'>"
+                "<rect width='640' height='420' fill='#f8fafc'/>"
+                "<text x='320' y='34' text-anchor='middle' font-family='sans-serif' font-size='22' font-weight='700' fill='#0f172a'>String Theory Core Idea</text>"
+                "<rect x='40' y='86' width='170' height='118' rx='18' fill='#dbeafe' stroke='#1d4ed8' stroke-width='3'/>"
+                "<text x='125' y='122' text-anchor='middle' font-family='sans-serif' font-size='18' font-weight='700' fill='#1e3a8a'>Point Particle</text>"
+                "<circle cx='125' cy='158' r='12' fill='#2563eb'/>"
+                "<text x='125' y='186' text-anchor='middle' font-family='sans-serif' font-size='13' fill='#1e3a8a'>Single point</text>"
+                "<rect x='236' y='86' width='170' height='118' rx='18' fill='#dcfce7' stroke='#16a34a' stroke-width='3'/>"
+                "<text x='321' y='122' text-anchor='middle' font-family='sans-serif' font-size='18' font-weight='700' fill='#14532d'>Tiny String</text>"
+                "<path d='M270 161 C292 126 350 198 372 154' fill='none' stroke='#16a34a' stroke-width='7' stroke-linecap='round'/>"
+                "<text x='321' y='186' text-anchor='middle' font-family='sans-serif' font-size='13' fill='#166534'>Vibrates in modes</text>"
+                "<rect x='432' y='86' width='168' height='118' rx='18' fill='#fae8ff' stroke='#9333ea' stroke-width='3'/>"
+                "<text x='516' y='122' text-anchor='middle' font-family='sans-serif' font-size='18' font-weight='700' fill='#6b21a8'>Observed Particle</text>"
+                "<circle cx='484' cy='160' r='10' fill='#a855f7'/>"
+                "<circle cx='516' cy='148' r='10' fill='#f59e0b'/>"
+                "<circle cx='548' cy='162' r='10' fill='#06b6d4'/>"
+                "<text x='516' y='186' text-anchor='middle' font-family='sans-serif' font-size='13' fill='#6b21a8'>Mode looks different</text>"
+                "<line x1='210' y1='145' x2='236' y2='145' stroke='#475569' stroke-width='4' stroke-linecap='round'/>"
+                "<polygon points='236,145 222,137 222,153' fill='#475569'/>"
+                "<line x1='406' y1='145' x2='432' y2='145' stroke='#475569' stroke-width='4' stroke-linecap='round'/>"
+                "<polygon points='432,145 418,137 418,153' fill='#475569'/>"
+                "<rect x='72' y='258' width='230' height='112' rx='20' fill='#e0f2fe' stroke='#0284c7' stroke-width='3'/>"
+                "<text x='187' y='292' text-anchor='middle' font-family='sans-serif' font-size='18' font-weight='700' fill='#0c4a6e'>Extra Dimensions</text>"
+                "<path d='M112 328 C132 294 168 294 188 328 C208 362 244 362 264 328' fill='none' stroke='#0891b2' stroke-width='6' stroke-linecap='round'/>"
+                "<text x='187' y='350' text-anchor='middle' font-family='sans-serif' font-size='13' fill='#0c4a6e'>Curled up beyond everyday space</text>"
+                "<rect x='338' y='258' width='232' height='112' rx='20' fill='#fef3c7' stroke='#d97706' stroke-width='3'/>"
+                "<text x='454' y='292' text-anchor='middle' font-family='sans-serif' font-size='18' font-weight='700' fill='#92400e'>Main Goal</text>"
+                "<text x='454' y='324' text-anchor='middle' font-family='sans-serif' font-size='15' fill='#92400e'>Link quantum physics</text>"
+                "<text x='454' y='346' text-anchor='middle' font-family='sans-serif' font-size='15' fill='#92400e'>with gravity in one framework</text>"
+                "</svg>"
+            )
+            return f"[VISUAL:type=illustration]\n{json.dumps({'title': 'String Theory Concept Visual', 'svg': svg}, ensure_ascii=False)}"
+
         is_newton_third = (
             "newton" in lower
             and (
@@ -10077,6 +10116,22 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         title = "Newton's 3rd Law"
         return f"[VISUAL:type=illustration]\n{json.dumps({'title': title, 'svg': svg}, ensure_ascii=False)}"
 
+    def _teaching_diagram_template(self, user_msg: str) -> str:
+        lower = (user_msg or "").lower()
+        if "string theory" in lower or ("string" in lower and any(k in lower for k in ("brane", "extra dimension", "dimensions", "spacetime", "space-time"))):
+            data = {
+                "title": "How String Theory Builds the Idea",
+                "description": "One concept shown as a simple teaching flow",
+                "steps": [
+                    "Replace point particles with tiny vibrating strings",
+                    "Different vibration patterns appear as different particles",
+                    "Extra hidden dimensions help the mathematics stay consistent",
+                    "The framework aims to unify quantum physics with gravity",
+                ],
+            }
+            return f"[VISUAL:type=diagram]\n{json.dumps(data, ensure_ascii=False)}"
+        return ""
+
     def _maybe_auto_teaching_illustration(self, user_msg: str, response_text: str) -> str:
         """Append extra illustrations only in narrow cases — not after every teaching reply."""
         cleaned_text, visual_blocks = _extract_all_visual_blocks(response_text)
@@ -10097,6 +10152,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             if isinstance(vdata, dict) and str(vdata.get("image_url", "") or vdata.get("data_url", "")).strip():
                 has_generated_image = True
                 break
+        fallback_diagram = self._teaching_diagram_template(user_msg)
+        fallback_illustration = self._teaching_illustration_template(user_msg)
 
         if (user_msg or "").strip() == FOLLOWUP_DEEPEN_PROMPT:
             if not self._should_use_high_detail_image(user_msg, response_text):
@@ -10107,6 +10164,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             if detailed:
                 if not existing_visuals and self._is_rich_teaching_request(user_msg, prompt_context):
                     topic = self._extract_subject_keyword(user_msg) or "Concept"
+                    if fallback_diagram:
+                        existing_visuals.append(fallback_diagram)
                     teach_svg = _openrouter_generate_teaching_svg(
                         user_msg.strip()[:240],
                         prompt_context[:1400],
@@ -10116,6 +10175,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                             f"[VISUAL:type=illustration]\n"
                             f"{json.dumps({'title': topic.title(), 'svg': teach_svg}, ensure_ascii=False)}"
                         )
+                    elif fallback_illustration:
+                        existing_visuals.append(fallback_illustration)
                 if not has_generated_image:
                     existing_visuals.append(detailed)
                 parts = [base_text] if base_text else []
@@ -10123,16 +10184,26 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                 return "\n".join(part for part in parts if part).strip()
             # If premium image generation was intended but failed, do not fall
             # through into lightweight SVG generation for the same rich topic.
-            return "\n".join(part for part in ([base_text] + existing_visuals) if part).strip()
+            fallback_visuals = list(existing_visuals)
+            if not fallback_visuals and self._is_rich_teaching_request(user_msg, prompt_context):
+                if fallback_diagram:
+                    fallback_visuals.append(fallback_diagram)
+                if fallback_illustration:
+                    fallback_visuals.append(fallback_illustration)
+            return "\n".join(part for part in ([base_text] + fallback_visuals) if part).strip()
 
         if visual_blocks:
             return response_text
         if self._is_3d_model_request(user_msg):
             return response_text + "\n" + self._model3d_visual_block(user_msg)
-        templated = self._teaching_illustration_template(user_msg)
+        templated = fallback_illustration
         if templated:
             logger.info("Auto-teaching: using deterministic teaching template")
-            return response_text + "\n" + templated
+            extras = [response_text]
+            if fallback_diagram:
+                extras.append(fallback_diagram)
+            extras.append(templated)
+            return "\n".join(part for part in extras if part)
 
         parametric = try_parametric_teaching_svg(user_msg)
         if parametric:
@@ -15768,7 +15839,6 @@ def chat_input_field() -> rx.Component:
                 placeholder="Learn with Alex...",
                 value=AppState.chat_input,
                 on_change=AppState.set_chat_input,
-                auto_complete="off",
                 color="rgba(236,240,244,0.92)",
                 flex="1",
                 min_height="52px",
