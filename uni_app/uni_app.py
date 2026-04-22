@@ -22564,10 +22564,6 @@ def landing_page():
     )
 
     voice_section = rx.box(
-        rx.script(
-            src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js",
-            custom_attrs={"type": "module"},
-        ),
         rx.hstack(
             rx.box(
                 rx.image(
@@ -22623,14 +22619,16 @@ def landing_page():
             rx.box(
                 rx.html(
                     """
+                    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
                     <model-viewer
-                        src="/models/teacher_naoki.glb"
+                        id="alex-landing-3d-mentor"
+                        src="/models/alex_body.glb"
                         alt="Alex AI 3D mentor"
                         camera-controls
                         touch-action="pan-y"
                         auto-rotate
                         auto-rotate-delay="1500"
-                        rotation-per-second="18deg"
+                        rotation-per-second="20deg"
                         interaction-prompt="auto"
                         interaction-prompt-threshold="2500"
                         shadow-intensity="0.6"
@@ -22652,7 +22650,7 @@ def landing_page():
                 ),
                 width="100%",
                 max_width=rx.breakpoints(initial="100%", md="380px"),
-                height=rx.breakpoints(initial="320px", md="460px"),
+                height=rx.breakpoints(initial="340px", md="480px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
