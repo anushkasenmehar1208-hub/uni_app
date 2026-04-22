@@ -12413,6 +12413,64 @@ Course units to cover:\n{courses_text}"""
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             return
 
+        # ── EXPLICIT IMAGE GENERATION PATH (gpt-image-2) ──────────────────────────
+        # When the user asks for a real image/picture/drawing and OPENAI_API_KEY is
+        # present, bypass the LLM entirely and call gpt-image-2 directly so the SVG
+        # fallback path is never entered.
+        if (
+            not has_image_attached
+            and not has_document_attached
+            and OPENAI_API_KEY
+            and self.current_session_id
+            and self._is_visual_drawing_request(typed_user_msg)
+        ):
+            self.chat_history.append({"role": "assistant", **self._assistant_content_meta("")})
+            _img_assistant_index = len(self.chat_history) - 1
+            yield
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+
+            try:
+                image_block = await asyncio.to_thread(
+                    self._high_detail_image_block, typed_user_msg, ""
+                )
+            except Exception as _img_err:
+                print(f"ERROR gpt-image-2: {_img_err}")
+                image_block = ""
+
+            if image_block:
+                _img_caption = f"Here is a generated image for: **{typed_user_msg.strip()}**"
+                _img_full = f"{_img_caption}\n{image_block}"
+                self._set_assistant_content(_img_assistant_index, _img_full)
+                self._save_message(uid, "assistant", _img_full)
+            else:
+                _img_fail = (
+                    "I wasn't able to generate that image right now. "
+                    "This could be a temporary issue — please try again in a moment."
+                )
+                self._set_assistant_content(_img_assistant_index, _img_fail)
+                self._save_message(uid, "assistant", _img_fail)
+
+            alex_routing.log_request(
+                {
+                    "user_id": uid,
+                    "request_type": "image_gen",
+                    "model_used": OPENAI_IMAGE_MODEL,
+                    "cache_status": "none",
+                    "tokens_estimated": 0,
+                    "premium_used": False,
+                    "response_quality_flag": "good" if image_block else "degraded",
+                    "note": "gpt_image_direct",
+                    "scope": self.active_scope or "home",
+                }
+            )
+            self.is_processing = False
+            await self._maybe_auto_update_scope_summary(uid, self.active_scope)
+            await self._maybe_auto_update_global_memory(uid)
+            await self._maybe_auto_update_adaptive_profile(uid)
+            yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+            return
+        # ───────────────────────────────────────────────────────────────────────────
+
         document_context_block = ""
         if has_document_attached:
             try:
