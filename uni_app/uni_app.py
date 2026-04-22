@@ -22625,11 +22625,11 @@ def landing_page():
                     #landing-teacher-orb-wrap {
                         width: 100%;
                         max-width: 260px;
-                        height: 400px;
+                        height: 300px;
                         display: flex;
-                        align-items: center;
+                        align-items: flex-start;
                         justify-content: center;
-                        overflow: visible;
+                        overflow: hidden;
                     }
                     #landing-teacher-orb {
                         position: relative;
@@ -22642,7 +22642,7 @@ def landing_page():
                     #landing-teacher-orb-avatar-canvas {
                         position: absolute !important;
                         left: 50% !important;
-                        top: 54% !important;
+                        top: 38% !important;
                         transform: translate(-50%, -50%) !important;
                         width: 220px !important;
                         height: 340px !important;
@@ -22691,13 +22691,13 @@ def landing_page():
                     }
                     @media (max-width: 768px) {
                         #landing-teacher-orb-wrap {
-                            max-width: 320px;
-                            height: 400px;
+                            max-width: 260px;
+                            height: 280px;
                         }
                         #landing-teacher-orb-avatar-canvas {
-                            width: 250px !important;
-                            height: 360px !important;
-                            top: 55% !important;
+                            width: 200px !important;
+                            height: 310px !important;
+                            top: 38% !important;
                         }
                     }
                 """),
@@ -22734,7 +22734,7 @@ def landing_page():
                 id="landing-teacher-orb-wrap",
                 width=rx.breakpoints(initial="100%", md="260px"),
                 flex_shrink="0",
-                height=rx.breakpoints(initial="340px", md="400px"),
+                height=rx.breakpoints(initial="280px", md="300px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
