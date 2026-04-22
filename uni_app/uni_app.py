@@ -5006,6 +5006,9 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def canvas_mode_label(self) -> str:
+        html = (self.canvas_content or "").lower()
+        if "<img" in html and "data:image/svg+xml" not in html:
+            return "Image preview"
         labels = {
             "graph": "Graph preview",
             "chart": "Chart preview",
@@ -9902,12 +9905,18 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         if (user_msg or "").strip() == FOLLOWUP_DEEPEN_PROMPT:
             if not self._should_use_high_detail_image(user_msg, response_text):
                 return response_text
+        if self._should_use_high_detail_image(user_msg, response_text):
+            cleaned_text, _visual_blocks = _extract_all_visual_blocks(response_text)
+            prompt_context = cleaned_text if _visual_blocks else response_text
+            detailed = self._high_detail_image_block(user_msg, prompt_context)
+            if detailed:
+                prefix = (cleaned_text or "").strip() if _visual_blocks else (response_text or "").strip()
+                return f"{prefix}\n{detailed}".strip() if prefix else detailed
+            # If premium image generation was intended but failed, do not fall
+            # through into lightweight SVG generation for the same rich topic.
+            return (cleaned_text or response_text).strip()
         if _response_contains_visual_block(response_text):
             return response_text
-        if self._should_use_high_detail_image(user_msg, response_text):
-            detailed = self._high_detail_image_block(user_msg, response_text)
-            if detailed:
-                return response_text + "\n" + detailed
         if self._is_3d_model_request(user_msg):
             return response_text + "\n" + self._model3d_visual_block(user_msg)
         templated = self._teaching_illustration_template(user_msg)
