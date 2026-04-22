@@ -8408,9 +8408,12 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             "cell", "organelle", "mitochondria", "chloroplast", "dna", "molecule", "atom", "protein",
             "flower", "leaf", "root", "plant", "photosynthesis",
             "engine", "turbine", "gear", "machine", "robot", "circuit", "motherboard", "chip",
-            "architecture", "building", "bridge", "network", "topology", "server rack",
-            "solar system", "planet", "volcano", "rock layer", "map", "ecosystem",
-            "blueprint", "schematic", "cross section", "cross-section", "internal structure",
+            "architecture", "building", "bridge", "network", "topology", "server rack", "system design",
+            "solar system", "planet", "volcano", "rock layer", "map", "ecosystem", "orbit",
+            "physics", "relativity", "general relativity", "spacetime", "space-time", "gravity", "gravitational",
+            "curvature", "geodesic", "tensor", "field equation", "einstein", "quantum", "wave", "electric field",
+            "magnetic field", "free body", "free-body", "force diagram",
+            "blueprint", "schematic", "cross section", "cross-section", "internal structure", "callout", "annotated",
         )
         return any(keyword in combined for keyword in keywords)
 
@@ -8493,9 +8496,11 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             "clean spacing, and low visual clutter."
         )
 
-    def _high_detail_visual_style(self, text: str) -> str:
-        lower = (text or "").lower()
+    def _high_detail_visual_style(self, text: str, response_text: str = "") -> str:
+        lower = f"{text}\n{response_text}".lower()
         if any(k in lower for k in ("blueprint", "technical drawing", "schematic", "annotated", "callout")):
+            return "blueprint"
+        if any(k in lower for k in ("relativity", "spacetime", "space-time", "tensor", "field equation", "einstein", "physics")):
             return "blueprint"
         if any(k in lower for k in ("realistic", "photorealistic", "photo-realistic", "photo real")):
             return "realistic"
@@ -8505,8 +8510,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             return "blueprint"
         return "concept"
 
-    def _high_detail_image_size(self, text: str) -> str:
-        lower = (text or "").lower()
+    def _high_detail_image_size(self, text: str, response_text: str = "") -> str:
+        lower = f"{text}\n{response_text}".lower()
         portrait_terms = (
             "portrait",
             "poster",
@@ -8524,13 +8529,19 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             return "1024x1536"
         return "1536x1024"
 
-    def _high_detail_image_prompt(self, user_msg: str) -> tuple[str, str]:
-        subject = self._extract_subject_keyword(user_msg).strip() or "Detailed visual"
-        style = self._high_detail_visual_style(user_msg)
+    def _high_detail_image_prompt(self, user_msg: str, response_text: str = "") -> tuple[str, str]:
+        combined = f"{user_msg}\n{response_text}".strip()
+        subject = self._extract_subject_keyword(combined).strip() or "Detailed visual"
+        subject_phrases = self._extract_subject_phrases(combined)
+        subject_hint = ", ".join(subject_phrases[:4]) if subject_phrases else subject
+        style = self._high_detail_visual_style(user_msg, response_text)
         title_base = subject.title()
+        context_excerpt = re.sub(r"\s+", " ", (response_text or "").strip())[:900]
         common = (
             f"Create one premium-quality visual for an interactive canvas based on this request: {user_msg.strip() or subject}. "
-            f"Keep the subject unmistakably recognizable as {subject}. "
+            f"Keep the subject unmistakably recognizable as {subject}. Relevant subject hints: {subject_hint}. "
+            f"Use this teaching context when deciding the composition and labels: {context_excerpt or 'No extra context available.'} "
+            "The result should feel like a premium educational visual, not a simple diagram card. "
             "Use very high detail, crisp edges, strong composition, accurate proportions, layered materials, and clean professional finishing. "
             "No watermark, no UI chrome, no browser frame, no fake app screenshot, no logos unless explicitly requested."
         )
@@ -8538,30 +8549,31 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             prompt = (
                 common
                 + " Render it as a dark navy technical blueprint plate with precise white and pale-cyan linework, subtle grid paper, "
-                "measurement ticks, engineering-style callouts, micro annotations, sectional contour lines, and dense schematic details similar to a premium AI-generated technical poster. "
-                "Use dramatic clarity, elegant spacing, and museum-grade presentation."
+                "measurement ticks, engineering-style callouts, labeled components, explanatory arrows, sectional contour lines, mini labels, and dense schematic details similar to a premium AI-generated technical poster. "
+                "Show multiple visual layers: a main hero object or phenomenon, secondary supporting shapes, and short educational callouts. "
+                "Use dramatic clarity, elegant spacing, museum-grade presentation, and infographic-quality annotation density."
             )
             return prompt, f"{title_base} Blueprint"
         if style == "realistic":
             prompt = (
                 common
                 + " Render it as a polished high-end realistic concept image with rich materials, cinematic lighting, "
-                "sharp details, subtle depth, and premium commercial art direction."
+                "sharp details, subtle depth, premium commercial art direction, and short educational callouts integrated into the composition."
             )
             return prompt, f"{title_base} Detailed Render"
         prompt = (
             common
-            + " Render it as a polished concept-art illustration with exceptional detail, fine texture work, "
-            "clear silhouette, premium lighting, and modern editorial quality."
+            + " Render it as a polished editorial infographic illustration with exceptional detail, fine texture work, "
+            "clear silhouette, premium lighting, layered composition, and several short labels or callouts that help explain the topic."
         )
         return prompt, f"{title_base} Concept Illustration"
 
-    def _high_detail_image_block(self, user_msg: str) -> str:
+    def _high_detail_image_block(self, user_msg: str, response_text: str = "") -> str:
         uid = self._uid()
         if uid < 0 or not self.current_session_id or not OPENAI_API_KEY:
             return ""
-        prompt, title = self._high_detail_image_prompt(user_msg)
-        size = self._high_detail_image_size(user_msg)
+        prompt, title = self._high_detail_image_prompt(user_msg, response_text)
+        size = self._high_detail_image_size(user_msg, response_text)
         image_bytes, mime = _openai_generate_image_bytes(prompt, size=size, quality="high")
         if not image_bytes:
             return ""
@@ -9893,7 +9905,7 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         if _response_contains_visual_block(response_text):
             return response_text
         if self._should_use_high_detail_image(user_msg, response_text):
-            detailed = self._high_detail_image_block(user_msg)
+            detailed = self._high_detail_image_block(user_msg, response_text)
             if detailed:
                 return response_text + "\n" + detailed
         if self._is_3d_model_request(user_msg):
@@ -10002,7 +10014,7 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
     def _enforce_visual_only_response(self, content: str, user_msg: str) -> str:
         if self._is_3d_model_request(user_msg):
             return self._model3d_visual_block(user_msg)
-        detailed = self._high_detail_image_block(user_msg) if self._should_use_high_detail_image(user_msg, content, visual_only=True) else ""
+        detailed = self._high_detail_image_block(user_msg, content) if self._should_use_high_detail_image(user_msg, content, visual_only=True) else ""
         if detailed:
             return detailed
         forced = self._template_illustration_block(user_msg)
