@@ -3022,7 +3022,7 @@ async def _openrouter_stream_async(model: str, messages: list[dict], max_tokens:
         yield friendly_llm_error(e)
 
 
-FREE_DAILY_LIMIT = 9999  # TEMP: unlimited for testing — revert to 5
+FREE_DAILY_LIMIT = 5  # 5 messages/day free (first 3 days fully free via trial)
 TRIAL_DAYS       = 3
 ADAPTIVE_PROFILE_SCOPE = "__adaptive_profile__"
 PLAN_GENERATION_STATUS_IDLE = "idle"
@@ -10716,11 +10716,7 @@ Quality rules:
             is_premium = self.has_premium_access
             is_home = (self.active_scope or "home") == "home"
 
-            if is_premium:
-                voice_allowed = True
-                remaining_sec = -1
-                block_reason = ""
-            elif is_home:
+            if is_home and not is_premium:
                 voice_allowed = False
                 remaining_sec = 0
                 block_reason = "home_blocked"
@@ -26858,7 +26854,7 @@ _ALEX_VOICE_SYSTEM = (
     "No [VISUAL] blocks. Teach one clear layer per turn, warmly."
 )
 
-VOICE_FREE_LIMIT_SEC = 600  # 10 minutes per day for non-premium users
+VOICE_FREE_LIMIT_SEC = 720  # 12 minutes per day for all users (free and pro)
 _VOICE_DAILY_SCOPE = "__voice_daily__"
 
 # When false: voice works everywhere (incl. home) with no daily cap UI, no upgrade CTAs.
