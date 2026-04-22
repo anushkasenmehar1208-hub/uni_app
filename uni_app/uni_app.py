@@ -119,7 +119,7 @@ OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe").strip
 # If you want the older fixed voice stack, set OPENAI_TTS_MODEL=tts-1-hd or tts-1 explicitly.
 OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
 OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy").strip() or "alloy"
-OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-2").strip() or "gpt-image-2"
+OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
 # Spoken replies are server-only (Fish Audio and/or OpenAI TTS). Browser speechSynthesis is not used.
 
 BACKEND_PUBLIC_ORIGIN = (
@@ -163,51 +163,86 @@ def _openai_generate_image_bytes(
     *,
     size: str = "1536x1024",
     quality: str = "high",
-) -> tuple[bytes, str]:
-    """Generate a high-detail image with OpenAI's image model."""
+) -> tuple[bytes, str, str]:
+    """Generate an image with OpenAI. Returns (bytes, mime, error_message)."""
     if not OPENAI_API_KEY:
-        return b"", ""
-    payload: dict[str, Any] = {
-        "model": OPENAI_IMAGE_MODEL,
-        "prompt": prompt,
-        "size": size,
-        "quality": quality,
-    }
-    try:
-        with httpx.Client(timeout=httpx.Timeout(180.0, read=180.0)) as http:
-            resp = http.post(
-                "https://api.openai.com/v1/images/generations",
-                headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
+        return b"", "", "OPENAI_API_KEY not set"
+
+    # Try the configured model first, then fall back to currently-supported ones.
+    candidates: list[str] = []
+    for m in (OPENAI_IMAGE_MODEL, "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini", "dall-e-3"):
+        if m and m not in candidates:
+            candidates.append(m)
+
+    last_error = ""
+    for model_name in candidates:
+        payload: dict[str, Any] = {
+            "model": model_name,
+            "prompt": prompt,
+            "size": size,
+        }
+        # dall-e-3 uses different quality values and no 1536x1024 size.
+        if model_name == "dall-e-3":
+            payload["size"] = "1792x1024" if size.startswith("1536") else (
+                "1024x1792" if size.startswith("1024x1536") else "1024x1024"
             )
-            resp.raise_for_status()
-            data = resp.json()
-            items = data.get("data", []) if isinstance(data, dict) else []
-            item = items[0] if isinstance(items, list) and items else {}
-            if not isinstance(item, dict):
-                return b"", ""
-            b64_json = str(item.get("b64_json", "") or "").strip()
-            if b64_json:
-                image_bytes = base64.b64decode(b64_json)
-                mime = _sniff_image_mime(image_bytes) or "image/png"
-                return image_bytes, mime
-            image_url = str(item.get("url", "") or "").strip()
-            if image_url:
-                img_resp = http.get(image_url)
-                img_resp.raise_for_status()
-                image_bytes = img_resp.content
-                mime = (
-                    (img_resp.headers.get("content-type") or "").split(";", 1)[0].strip()
-                    or _sniff_image_mime(image_bytes)
-                    or "image/png"
+            payload["quality"] = "hd"
+            payload["response_format"] = "b64_json"
+        else:
+            payload["quality"] = quality
+
+        try:
+            with httpx.Client(timeout=httpx.Timeout(180.0, read=180.0)) as http:
+                resp = http.post(
+                    "https://api.openai.com/v1/images/generations",
+                    headers={
+                        "Authorization": f"Bearer {OPENAI_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
                 )
-                return image_bytes, mime
-    except Exception as e:
-        logger.warning("OpenAI image generation failed: %s", e)
-    return b"", ""
+                if resp.status_code >= 400:
+                    try:
+                        body = resp.json()
+                        err_obj = body.get("error", {}) if isinstance(body, dict) else {}
+                        err_msg = str(err_obj.get("message") or err_obj.get("code") or body)[:300]
+                    except Exception:
+                        err_msg = (resp.text or "")[:300]
+                    last_error = f"{model_name}: HTTP {resp.status_code} - {err_msg}"
+                    logger.warning("OpenAI image generation failed on %s: %s", model_name, last_error)
+                    continue
+
+                data = resp.json()
+                items = data.get("data", []) if isinstance(data, dict) else []
+                item = items[0] if isinstance(items, list) and items else {}
+                if not isinstance(item, dict):
+                    last_error = f"{model_name}: empty response"
+                    continue
+                b64_json = str(item.get("b64_json", "") or "").strip()
+                if b64_json:
+                    image_bytes = base64.b64decode(b64_json)
+                    mime = _sniff_image_mime(image_bytes) or "image/png"
+                    logger.info("OpenAI image generation succeeded with %s", model_name)
+                    return image_bytes, mime, ""
+                image_url = str(item.get("url", "") or "").strip()
+                if image_url:
+                    img_resp = http.get(image_url)
+                    img_resp.raise_for_status()
+                    image_bytes = img_resp.content
+                    mime = (
+                        (img_resp.headers.get("content-type") or "").split(";", 1)[0].strip()
+                        or _sniff_image_mime(image_bytes)
+                        or "image/png"
+                    )
+                    logger.info("OpenAI image generation succeeded with %s (url)", model_name)
+                    return image_bytes, mime, ""
+                last_error = f"{model_name}: no image data in response"
+        except Exception as e:
+            last_error = f"{model_name}: {type(e).__name__}: {e}"
+            logger.warning("OpenAI image generation exception on %s: %s", model_name, e)
+            continue
+
+    return b"", "", last_error or "all image models failed"
 
 
 _VOICE_FILLER_OPENERS = (
@@ -8469,7 +8504,7 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         deep_analysis = self._is_deep_analysis_request(user_msg)
         rich_topic = self._topic_needs_high_detail_visual(user_msg, response_text)
 
-        # Any explicit request for an image/picture/drawing always uses gpt-image-2.
+        # Any explicit request for an image/picture/drawing always uses the OpenAI image API.
         # We do not require the topic to be in the "rich topics" list.
         if explicit_draw:
             return True
@@ -8591,15 +8626,18 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         )
         return prompt, f"{title_base} Concept Illustration"
 
-    def _high_detail_image_block(self, user_msg: str, response_text: str = "") -> str:
+    def _high_detail_image_block(self, user_msg: str, response_text: str = "") -> tuple[str, str]:
+        """Returns (visual_block, error_message). visual_block is empty on failure."""
         uid = self._uid()
-        if uid < 0 or not self.current_session_id or not OPENAI_API_KEY:
-            return ""
+        if uid < 0 or not self.current_session_id:
+            return "", "no active session"
+        if not OPENAI_API_KEY:
+            return "", "OPENAI_API_KEY not configured"
         prompt, title = self._high_detail_image_prompt(user_msg, response_text)
         size = self._high_detail_image_size(user_msg, response_text)
-        image_bytes, mime = _openai_generate_image_bytes(prompt, size=size, quality="high")
+        image_bytes, mime, err = _openai_generate_image_bytes(prompt, size=size, quality="high")
         if not image_bytes:
-            return ""
+            return "", err or "image generation returned empty"
         ext = {
             "image/png": ".png",
             "image/jpeg": ".jpg",
@@ -8611,7 +8649,7 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             f"canvas-{_safe_filename_fragment(title.lower())}{ext}",
             image_bytes,
         )
-        return (
+        block = (
             "[VISUAL:type=illustration]\n"
             + json.dumps(
                 {
@@ -8621,6 +8659,7 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
                 ensure_ascii=False,
             )
         )
+        return block, ""
 
     def _illustration_subject_instruction(self, text: str) -> str:
         lower = (text or "").lower()
@@ -9928,7 +9967,7 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         if self._should_use_high_detail_image(user_msg, response_text):
             cleaned_text, _visual_blocks = _extract_all_visual_blocks(response_text)
             prompt_context = cleaned_text if _visual_blocks else response_text
-            detailed = self._high_detail_image_block(user_msg, prompt_context)
+            detailed, _err = self._high_detail_image_block(user_msg, prompt_context)
             if detailed:
                 prefix = (cleaned_text or "").strip() if _visual_blocks else (response_text or "").strip()
                 return f"{prefix}\n{detailed}".strip() if prefix else detailed
@@ -10043,7 +10082,9 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
     def _enforce_visual_only_response(self, content: str, user_msg: str) -> str:
         if self._is_3d_model_request(user_msg):
             return self._model3d_visual_block(user_msg)
-        detailed = self._high_detail_image_block(user_msg, content) if self._should_use_high_detail_image(user_msg, content, visual_only=True) else ""
+        detailed = ""
+        if self._should_use_high_detail_image(user_msg, content, visual_only=True):
+            detailed, _err = self._high_detail_image_block(user_msg, content)
         if detailed:
             return detailed
         forced = self._template_illustration_block(user_msg)
@@ -12409,9 +12450,9 @@ Course units to cover:\n{courses_text}"""
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             return
 
-        # ── EXPLICIT IMAGE GENERATION PATH (gpt-image-2) ──────────────────────────
+        # ── EXPLICIT IMAGE GENERATION PATH (OpenAI Images API) ───────────────────
         # When the user asks for a real image/picture/drawing and OPENAI_API_KEY is
-        # present, bypass the LLM entirely and call gpt-image-2 directly so the SVG
+        # present, bypass the LLM entirely and call the image API directly so the SVG
         # fallback path is never entered.
         if (
             not has_image_attached
@@ -12425,13 +12466,15 @@ Course units to cover:\n{courses_text}"""
             yield
             yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
+            image_block = ""
+            image_err = ""
             try:
-                image_block = await asyncio.to_thread(
+                image_block, image_err = await asyncio.to_thread(
                     self._high_detail_image_block, typed_user_msg, ""
                 )
             except Exception as _img_err:
-                print(f"ERROR gpt-image-2: {_img_err}")
-                image_block = ""
+                logger.warning("gpt-image bypass exception: %s", _img_err)
+                image_err = f"{type(_img_err).__name__}: {_img_err}"
 
             if image_block:
                 _img_caption = f"Here is a generated image for: **{typed_user_msg.strip()}**"
@@ -12439,10 +12482,28 @@ Course units to cover:\n{courses_text}"""
                 self._set_assistant_content(_img_assistant_index, _img_full)
                 self._save_message(uid, "assistant", _img_full)
             else:
-                _img_fail = (
-                    "I wasn't able to generate that image right now. "
-                    "This could be a temporary issue — please try again in a moment."
-                )
+                logger.warning("Image generation failed. Reason: %s", image_err)
+                _safe_err = (image_err or "unknown error").replace("`", "'")
+                if "insufficient" in _safe_err.lower() or "billing" in _safe_err.lower() or "quota" in _safe_err.lower():
+                    _img_fail = (
+                        "Image generation is temporarily unavailable due to an account billing or quota issue. "
+                        "Please contact support."
+                    )
+                elif "model" in _safe_err.lower() and ("not found" in _safe_err.lower() or "does not exist" in _safe_err.lower() or "access" in _safe_err.lower()):
+                    _img_fail = (
+                        "The image generation model isn't available on this account yet. "
+                        "Please try again later or contact support."
+                    )
+                elif "organization" in _safe_err.lower() and "verif" in _safe_err.lower():
+                    _img_fail = (
+                        "Image generation is blocked by OpenAI organization verification or model access settings. "
+                        "Please contact support to enable a supported image model for this app."
+                    )
+                else:
+                    _img_fail = (
+                        "I wasn't able to generate that image right now. "
+                        "This is usually a temporary issue — please try again in a moment."
+                    )
                 self._set_assistant_content(_img_assistant_index, _img_fail)
                 self._save_message(uid, "assistant", _img_fail)
 
