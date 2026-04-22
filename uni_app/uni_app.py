@@ -8338,6 +8338,27 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         lower = (text or "").lower().strip()
         if not lower:
             return False
+        if "draw conclusion" in lower:
+            return False
+
+        # Catch any message containing an image/picture/drawing keyword alongside
+        # a generation verb. This is resilient to typos and missing articles.
+        image_nouns = ("image", "picture", "drawing", "illustration", "sketch", "visual", "photo")
+        generation_verbs = (
+            "draw", "sketch", "illustrate", "illustrat",
+            "create", "generate", "make", "render", "produce",
+            "show", "give", "build",
+        )
+        has_image_noun = any(
+            re.search(rf"\b{re.escape(noun)}\b", lower) for noun in image_nouns
+        )
+        has_gen_verb = any(
+            re.search(rf"\b{re.escape(v)}\w*\b", lower) for v in generation_verbs
+        )
+        if has_image_noun and has_gen_verb:
+            return True
+
+        # Safety net: classic draw/sketch/illustrate prompts with an object.
         draw_markers = (
             "draw ",
             "sketch",
@@ -8346,33 +8367,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             "icon of",
             "picture of",
             "diagram of",
-            # explicit image-generation phrases
-            "create a image",
-            "create an image",
-            "create image of",
-            "make a image",
-            "make an image",
-            "make image of",
-            "generate a image",
-            "generate an image",
-            "generate image of",
-            "show me an image",
-            "show an image",
-            "give me an image",
-            "give me a picture",
-            "give me a drawing",
-            "can you create a image",
-            "can you create an image",
-            "can you make a image",
-            "can you make an image",
-            "can you draw",
-            "can you show me",
-            "create a visual",
-            "make a visual",
         )
         if any(m in lower for m in draw_markers):
-            if "draw conclusion" in lower:
-                return False
             return True
         return False
 
