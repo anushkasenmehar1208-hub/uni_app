@@ -119,7 +119,7 @@ OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe").strip
 # If you want the older fixed voice stack, set OPENAI_TTS_MODEL=tts-1-hd or tts-1 explicitly.
 OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
 OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy").strip() or "alloy"
-OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
+OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1.5").strip() or "gpt-image-1.5"
 # Spoken replies are server-only (Fish Audio and/or OpenAI TTS). Browser speechSynthesis is not used.
 
 BACKEND_PUBLIC_ORIGIN = (
@@ -8503,6 +8503,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         explicit_draw = self._is_visual_drawing_request(user_msg)
         deep_analysis = self._is_deep_analysis_request(user_msg)
         rich_topic = self._topic_needs_high_detail_visual(user_msg, response_text)
+        auto_teaching_visual = _teaching_message_suggests_concept_figure(user_msg, response_text)
+        is_followup_indepth = (user_msg or "").strip() == FOLLOWUP_DEEPEN_PROMPT
 
         # Any explicit request for an image/picture/drawing always uses the OpenAI image API.
         # We do not require the topic to be in the "rich topics" list.
@@ -8510,7 +8512,9 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             return True
         if visual_only and explicit_high_detail:
             return True
-        if deep_analysis and rich_topic:
+        if (deep_analysis or is_followup_indepth) and rich_topic:
+            return True
+        if rich_topic and auto_teaching_visual:
             return True
         return False
 

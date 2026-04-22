@@ -25,13 +25,13 @@ OPENAI_API_KEY=your_openai_key
 OPENAI_STT_MODEL=gpt-4o-mini-transcribe
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TTS_VOICE=alloy
-OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_IMAGE_MODEL=gpt-image-1.5
 ```
 
 Notes:
 - `OPENROUTER_API_KEY` still powers Alex's teaching/chat model.
 - `OPENAI_API_KEY` is used for voice transcription (STT), server-side TTS, and image generation.
-- `OPENAI_IMAGE_MODEL` should be a supported OpenAI image model such as `gpt-image-1`, `gpt-image-1.5`, `gpt-image-1-mini`, or `dall-e-3`.
+- `OPENAI_IMAGE_MODEL` should be a supported OpenAI image model such as `gpt-image-1.5`, `gpt-image-1`, `gpt-image-1-mini`, or `dall-e-3`.
 
 ---
 *Created by [Lenujan Paramanantham](https://alexstudies.com)*
