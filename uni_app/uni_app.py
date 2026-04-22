@@ -22564,6 +22564,7 @@ def landing_page():
     )
 
     voice_section = rx.box(
+        rx.script(_CHAT_TEACHER_AVATAR_JS),
         rx.hstack(
             rx.box(
                 rx.image(
@@ -22617,37 +22618,92 @@ def landing_page():
                 width=rx.breakpoints(initial="100%", md="420px"),
             ),
             rx.box(
-                rx.html(
-                    """
-                    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-                    <model-viewer
-                        id="alex-landing-3d-mentor"
-                        src="/models/alex_body.glb"
-                        alt="Alex AI 3D mentor"
-                        camera-controls
-                        touch-action="pan-y"
-                        auto-rotate
-                        auto-rotate-delay="1500"
-                        rotation-per-second="20deg"
-                        interaction-prompt="auto"
-                        interaction-prompt-threshold="2500"
-                        shadow-intensity="0.6"
-                        exposure="1.05"
-                        camera-orbit="0deg 80deg 2.4m"
-                        min-camera-orbit="auto auto 1.6m"
-                        max-camera-orbit="auto auto 3.6m"
-                        style="
-                            width: 100%;
-                            height: 100%;
-                            background: transparent;
-                            --poster-color: transparent;
-                            filter: drop-shadow(0 32px 80px rgba(0,0,0,0.45));
-                        "
-                    >
-                        <div slot="progress-bar"></div>
-                    </model-viewer>
-                    """
+                rx.el.style("""
+                    #landing-teacher-orb-wrap {
+                        width: 100%;
+                        max-width: 380px;
+                        height: 480px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: visible;
+                    }
+                    #landing-teacher-orb {
+                        position: relative;
+                        width: 100%;
+                        height: 100%;
+                        max-width: 380px;
+                        overflow: visible !important;
+                    }
+                    #landing-teacher-orb .orb-ring {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        border-radius: 50%;
+                        transform: translate(-50%, -50%);
+                    }
+                    #landing-teacher-orb.idle .orb-ring {
+                        border: 1px solid rgba(255,255,255,.12);
+                        background: transparent;
+                    }
+                    #landing-teacher-orb.idle .r1 {
+                        width: 84px;
+                        height: 84px;
+                        opacity: 1;
+                    }
+                    #landing-teacher-orb.idle .r2, #landing-teacher-orb.idle .r3 {
+                        opacity: 0;
+                        visibility: hidden;
+                    }
+                    #landing-teacher-orb.idle .orb-core {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 52px;
+                        height: 52px;
+                        border-radius: 50%;
+                        background: radial-gradient(circle, rgba(255,255,255,.26) 0%, rgba(255,255,255,.03) 100%);
+                        box-shadow: 0 0 26px rgba(255,255,255,.04);
+                    }
+                    @media (max-width: 768px) {
+                        #landing-teacher-orb-wrap {
+                            max-width: 320px;
+                            height: 400px;
+                        }
+                    }
+                """),
+                rx.el.div(
+                    rx.el.div(class_name="orb-ring r1"),
+                    rx.el.div(class_name="orb-ring r2"),
+                    rx.el.div(class_name="orb-ring r3"),
+                    rx.el.div(class_name="orb-core"),
+                    id="landing-teacher-orb",
+                    class_name="idle",
                 ),
+                rx.script(
+                    "(function(){"
+                    "window.ALEX_AVATAR_TARGET_ID='landing-teacher-orb';"
+                    "window.ALEX_AVATAR_URL='/models/alex_body.glb';"
+                    "function mount(){try{if(window.AlexAvatarMount)window.AlexAvatarMount('landing-teacher-orb');}catch(e){console.warn('[LandingAvatar] mount failed',e);}}"
+                    "function ensure(){"
+                    "if(!document.getElementById('landing-teacher-orb')) return;"
+                    "if(window.AlexAvatarMount){mount();return;}"
+                    "var existing=document.getElementById('_alex_avatar_script');"
+                    "if(existing){existing.addEventListener('load',mount,{once:true});return;}"
+                    "var av=document.createElement('script');"
+                    "av.id='_alex_avatar_script';"
+                    "av.src='/alex_avatar.js?v='+Date.now();"
+                    "av.onload=mount;"
+                    "av.onerror=function(){console.warn('[LandingAvatar] failed to load /alex_avatar.js');};"
+                    "document.head.appendChild(av);"
+                    "}"
+                    "ensure();"
+                    "var tries=0;"
+                    "var iv=setInterval(function(){ensure(); if(++tries>60 || window.AlexAvatarMount) clearInterval(iv);}, 500);"
+                    "})();"
+                ),
+                id="landing-teacher-orb-wrap",
                 width="100%",
                 max_width=rx.breakpoints(initial="100%", md="380px"),
                 height=rx.breakpoints(initial="340px", md="480px"),
