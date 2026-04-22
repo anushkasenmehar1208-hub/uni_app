@@ -22564,7 +22564,30 @@ def landing_page():
     )
 
     voice_section = rx.box(
+        rx.script(_CHAT_TEACHER_AVATAR_JS),
         rx.hstack(
+            rx.box(
+                rx.image(
+                    src="/landing-voice-demo.gif",
+                    alt="Alex AI live voice mentor",
+                    style={
+                        "width": "100%",
+                        "height": "100%",
+                        "objectFit": "contain",
+                        "display": "block",
+                        "background": "transparent",
+                        "filter": "drop-shadow(0 32px 80px rgba(0,0,0,0.45))",
+                        "pointerEvents": "none",
+                    },
+                ),
+                width="100%",
+                max_width=rx.breakpoints(initial="100%", md="380px"),
+                height=rx.breakpoints(initial="320px", md="440px"),
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                background="transparent",
+            ),
             rx.vstack(
                 rx.text(
                     "Voice study space that feels alive",
@@ -22579,7 +22602,7 @@ def landing_page():
                     color="rgba(255,255,255,0.56)",
                     font_size="1rem",
                     line_height="1.8",
-                    max_width="560px",
+                    max_width="480px",
                 ),
                 rx.vstack(
                     proof_chip("Live voice teaching"),
@@ -22592,8 +22615,7 @@ def landing_page():
                 ),
                 spacing="5",
                 align_items="flex-start",
-                width=rx.breakpoints(initial="100%", md="560px"),
-                flex=rx.breakpoints(initial="unset", md="1"),
+                width=rx.breakpoints(initial="100%", md="420px"),
             ),
             rx.box(
                 rx.el.style("""
@@ -22714,7 +22736,6 @@ def landing_page():
                 align_items="center",
                 justify_content="center",
                 background="transparent",
-                flex_shrink="0",
             ),
             spacing="6",
             align="center",
