@@ -2046,6 +2046,8 @@ def _teaching_message_suggests_concept_figure(user_msg: str, response_text: str)
         "lifecycle", "waterfall", "feedback loop", "state machine",
         "derivative", "integral", "triangle", "geometry", "coordinate",
         "block cipher", "encryption", "hash function",
+        "string theory", "brane", "extra dimensions", "compactification", "spacetime", "space-time",
+        "general relativity", "curvature", "quantum gravity", "wormhole", "black hole",
     )
     return any(h in u or h in r for h in hints)
 
@@ -8475,6 +8477,58 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         )
         return any(marker in lower for marker in markers)
 
+    def _is_rich_teaching_request(self, text: str, response_text: str = "") -> bool:
+        raw = (text or "").strip()
+        lower = raw.lower()
+        if not lower:
+            return False
+        if self._is_deep_analysis_request(raw):
+            return True
+        teaching_like = self._is_teaching_request(raw)
+        advanced_topic_markers = (
+            "string theory",
+            "relativity",
+            "general relativity",
+            "special relativity",
+            "spacetime",
+            "space-time",
+            "quantum",
+            "black hole",
+            "wormhole",
+            "brane",
+            "extra dimension",
+            "extra dimensions",
+            "dimension",
+            "dimensions",
+            "field theory",
+            "architecture",
+            "algorithm",
+            "network",
+            "topology",
+            "molecule",
+            "atom",
+            "dna",
+            "protein",
+        )
+        concept_explainer_markers = (
+            "explain",
+            "teach",
+            "what is",
+            "what are",
+            "how does",
+            "how do",
+            "why does",
+            "why do",
+            "describe",
+            "compare",
+            "difference between",
+        )
+        rich_topic = self._topic_needs_high_detail_visual(raw, response_text) or any(
+            marker in lower for marker in advanced_topic_markers
+        )
+        concept_like = any(marker in lower for marker in concept_explainer_markers)
+        return bool((teaching_like or concept_like) and rich_topic)
+
     def _topic_needs_high_detail_visual(self, user_msg: str, response_text: str = "") -> bool:
         combined = f"{user_msg}\n{response_text}".lower()
         if not combined.strip():
@@ -8490,6 +8544,8 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             "physics", "relativity", "general relativity", "spacetime", "space-time", "gravity", "gravitational",
             "curvature", "geodesic", "tensor", "field equation", "einstein", "quantum", "wave", "electric field",
             "magnetic field", "free body", "free-body", "force diagram",
+            "string theory", "string vibration", "vibrating string", "brane", "branes", "extra dimension",
+            "extra dimensions", "compactification", "calabi-yau", "quantum gravity",
             "blueprint", "schematic", "cross section", "cross-section", "internal structure", "callout", "annotated",
         )
         return any(keyword in combined for keyword in keywords)
@@ -10023,20 +10079,53 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
 
     def _maybe_auto_teaching_illustration(self, user_msg: str, response_text: str) -> str:
         """Append extra illustrations only in narrow cases — not after every teaching reply."""
+        cleaned_text, visual_blocks = _extract_all_visual_blocks(response_text)
+        base_text = (cleaned_text or response_text or "").strip()
+        existing_visuals = [
+            f"[VISUAL:type={vt}]\n{vj}"
+            for vt, vj in visual_blocks
+            if (vt or "").strip() and (vj or "").strip()
+        ]
+        has_generated_image = False
+        for vt, vj in visual_blocks:
+            if (vt or "").strip().lower() != "illustration":
+                continue
+            try:
+                vdata = json.loads(vj or "{}")
+            except Exception:
+                continue
+            if isinstance(vdata, dict) and str(vdata.get("image_url", "") or vdata.get("data_url", "")).strip():
+                has_generated_image = True
+                break
+
         if (user_msg or "").strip() == FOLLOWUP_DEEPEN_PROMPT:
             if not self._should_use_high_detail_image(user_msg, response_text):
                 return response_text
         if self._should_use_high_detail_image(user_msg, response_text):
-            cleaned_text, _visual_blocks = _extract_all_visual_blocks(response_text)
-            prompt_context = cleaned_text if _visual_blocks else response_text
+            prompt_context = base_text if visual_blocks else response_text
             detailed, _err = self._high_detail_image_block(user_msg, prompt_context)
             if detailed:
-                prefix = (cleaned_text or "").strip() if _visual_blocks else (response_text or "").strip()
-                return f"{prefix}\n{detailed}".strip() if prefix else detailed
+                if not existing_visuals and self._is_rich_teaching_request(user_msg, prompt_context):
+                    topic = self._extract_subject_keyword(user_msg) or "Concept"
+                    teach_svg = _openrouter_generate_teaching_svg(
+                        user_msg.strip()[:240],
+                        prompt_context[:1400],
+                    )
+                    if teach_svg and self._illustration_quality_score(teach_svg) >= 7:
+                        existing_visuals.append(
+                            f"[VISUAL:type=illustration]\n"
+                            f"{json.dumps({'title': topic.title(), 'svg': teach_svg}, ensure_ascii=False)}"
+                        )
+                if not has_generated_image:
+                    existing_visuals.append(detailed)
+                parts = [base_text] if base_text else []
+                parts.extend(existing_visuals)
+                return "\n".join(part for part in parts if part).strip()
             # If premium image generation was intended but failed, do not fall
             # through into lightweight SVG generation for the same rich topic.
-            return (cleaned_text or response_text).strip()
-        if _response_contains_visual_block(response_text):
+            return "\n".join(part for part in ([base_text] + existing_visuals) if part).strip()
+
+        if visual_blocks:
             return response_text
         if self._is_3d_model_request(user_msg):
             return response_text + "\n" + self._model3d_visual_block(user_msg)
@@ -12307,6 +12396,7 @@ Course units to cover:\n{courses_text}"""
         typed_user_msg = self.chat_input.strip()
         user_followup_label = _followup_prompt_display_label(typed_user_msg)
         user_msg = typed_user_msg
+        rich_teaching_request = self._is_rich_teaching_request(user_msg)
         image_bytes = self._image_data
         image_mime = self._image_mime
         document_bytes = self._document_data
@@ -12966,13 +13056,14 @@ Your response style rules:
 11. Explain the concept simply first in 1-2 sentences, then go one level deeper.
 12. Use short paragraphs or bullets and avoid walls of text.
 13. Keep replies focused and usually around 120-200 words unless code or a careful step breakdown genuinely needs more.
+13a. If the student asks to explain or teach a complex concept, theory, system, or mechanism, do NOT answer with a tiny summary. Give a fuller structured explanation with plain-language intuition, the core mechanism, key parts or terms, at least one example or analogy, and one important caveat or limitation.
 14. Close without a separate recap section or a "Recap:" summary block; finish inside the teaching flow. You may add at most one short forward-looking sentence if it helps. Do not use open-ended invitations such as "What would you like to know?" or "Ask me anything about…". You lead the lesson; avoid handing the student a menu of topics.
 15. If the student seems confused, immediately simplify and use an analogy or concrete example.
 16. If the student makes a mistake, correct gently with wording like "Almost. Try thinking of it this way..."
 17. Keep the tutoring personal, but mention {student_name} only occasionally when it feels genuinely helpful.
 18. Acknowledge progress occasionally by connecting the explanation to Day {day}/110.
 19. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
-20. Optional visuals only: you may add **at most one** [VISUAL:type=diagram|graph|chart] block when it clearly beats plain text. If the student explicitly asks for a 3D explanation or 3D model, you may instead return one [VISUAL:type=model3d] block. **Default to no visual** for history, introductions, and short explanations. NEVER use ```mermaid code blocks. Never use placeholder step text ("Concept 1", etc.) — only real topic wording.
+20. Optional visuals only: you may add visuals when they clearly improve understanding. For ordinary replies, use at most one [VISUAL:type=diagram|graph|chart] block. For complex concept explanations with internal structure, spatial relationships, or invisible mechanisms, you may include up to two visuals total: one explanatory diagram/graph/chart or SVG illustration, plus one additional teaching illustration when it materially improves clarity. If the student explicitly asks for a 3D explanation or 3D model, you may instead return one [VISUAL:type=model3d] block. Avoid visuals for history, introductions, and very short explanations. NEVER use ```mermaid code blocks. Never use placeholder step text ("Concept 1", etc.) — only real topic wording.
 21. If the question is technically complex, give a numbered breakdown before the final explanation or code.
 22. If you use a career example or analogy, prefer grounded Sri Lankan university and industry context relevant to the active degree and subject.
 23. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them.
@@ -12997,8 +13088,8 @@ Your response style rules:
 33. In SVG, never use <marker> or marker-end — use <line stroke-linecap='round'> and <polygon> for arrowheads (avoids double-draw glitches in Chrome/Safari)."""
                 else:
                     teach_prompt += """
-28. **Default: no [VISUAL] block.** Add at most one diagram, graph, or chart only when the idea is hard to follow without it (e.g. numeric comparison, strict process order). Use [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation. Skip visuals for historical narrative, day-one overviews, and brief answers.
-29. Do NOT use [VISUAL:type=illustration] for routine teaching unless the student explicitly asks to draw something, or the topic clearly has rich internal/spatial structure where a detailed visual would materially improve the explanation.
+28. Default to no [VISUAL] block for routine short answers, but for rich concept explanations where the topic has internal structure or hidden mechanisms, prefer at least one visual companion. You may use one diagram/graph/chart and, if it genuinely adds value, one SVG illustration as well. Use [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation. Skip visuals for historical narrative, day-one overviews, and very brief answers.
+29. For advanced topics like modern physics, system architecture, anatomy, networks, molecular structure, or other invisible mechanisms, a visual is encouraged when it would make the explanation clearer at first glance.
 30. If you use a diagram, every step must use concrete topic language — never generic placeholders.
 31. If you output raw SVG (e.g. inside illustration JSON), never use SVG <marker> or marker-end/marker-start — use rounded lines plus <polygon> arrowheads so forces and flow arrows render without browser glitches."""
 
@@ -13015,6 +13106,7 @@ Your response style rules:
                 use_answer_cache = (
                     not visual_only_request
                     and not reply_after_indepth_request
+                    and not rich_teaching_request
                     and not has_document_attached
                     and not _is_explicit_web_search_request(user_msg)
                     and not (search_context_block or "").strip()
@@ -13101,7 +13193,7 @@ Your response style rules:
                         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
                         return
 
-                teach_max_tokens = 8192 if (user_msg or "").strip() == FOLLOWUP_DEEPEN_PROMPT else 4096
+                teach_max_tokens = 8192 if ((user_msg or "").strip() == FOLLOWUP_DEEPEN_PROMPT or rich_teaching_request) else 4096
                 retries_used = 0
                 verify_extra_used = 0
                 final_text = ""
@@ -13489,9 +13581,10 @@ Behavior rules:
 3. Do NOT ask about or reference what year/semester the student is in.
 4. Answer directly and helpfully. Keep replies short and clear.
 5. Use bullets when they improve clarity. Avoid walls of text.
+5a. If the student asks to explain or teach a complex concept, theory, or mechanism, do not stop at a tiny summary. Give a fuller explanation with intuition, how it works, key terms or parts, and at least one concrete analogy or example.
 6. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
-7. For visuals, use [VISUAL:type=diagram] blocks with steps, [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation, and [VISUAL:type=illustration] only for explicit drawing requests or visually rich deep-analysis topics. NEVER use ```mermaid code blocks.
-8. If the question is technically complex, give a short numbered breakdown before the final answer.
+7. For visuals, use [VISUAL:type=diagram] blocks with steps, [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation, and [VISUAL:type=illustration] when the topic has internal structure, spatial relationships, or invisible mechanisms that would be much clearer visually. For rich concept explanations, you may include both a diagram/SVG explanation and one richer teaching illustration if that materially helps. NEVER use ```mermaid code blocks.
+8. If the question is technically complex, give a numbered breakdown before the final answer.
 9. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them.
 10. Teach proactively like a university professor: lead with clear structure, definitions, and examples. Do not end with open-ended invitations like "What would you like to know?" or "Ask me anything about…".
 11. Do not add a separate recap section or a paragraph labeled "Recap" / "Recap:".
@@ -13526,7 +13619,7 @@ Behavior rules:
 6. If the user asks about strengths, identify them from memory, adaptive profile, and semester summaries. If evidence is missing, say so clearly.
 7. If the user asks about weaknesses, identify them from memory, adaptive profile, and semester summaries. If evidence is missing, say so clearly.
 8. If semester data is missing, say that clearly instead of inventing progress.
-9. If the user asks a general academic question, answer normally, but keep the reply short and direct.
+9. If the user asks a general academic question, answer normally. Keep easy questions direct, but for complex concept explanations give enough depth to actually teach the idea clearly.
 10. If the user asks a very specific semester-topic teaching question, answer briefly and also say exactly: "This is better handled in your semester section for deeper guided teaching."
 11. If a semester is clearly the right place to continue, mention the matching year and semester directly.
 12. Keep responses short, clean, and direct.
@@ -13534,8 +13627,8 @@ Behavior rules:
 14. Keep the support personal, but mention {student_name} only occasionally when it helps the tone feel warm rather than repetitive.
 15. Adapt to the adaptive profile for brevity, formatting, pace, and tone.
 16. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
-17. For visuals, use [VISUAL:type=diagram] blocks with steps, [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation, and [VISUAL:type=illustration] only for explicit drawing requests or visually rich deep-analysis topics. NEVER use ```mermaid code blocks.
-18. If the question is technically complex, give a short numbered breakdown before the final answer.
+17. For visuals, use [VISUAL:type=diagram] blocks with steps, [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation, and [VISUAL:type=illustration] when the topic has internal structure, spatial relationships, or invisible mechanisms that would be much clearer visually. For rich concept explanations, you may include both a diagram/SVG explanation and one richer teaching illustration if that materially helps. NEVER use ```mermaid code blocks.
+18. If the question is technically complex, give a numbered breakdown before the final answer.
 19. Stay honest about what the stored memory does and does not show.
 20. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them.
 21. Teach proactively like a university professor: keep the answer structured and decisive. Avoid open-ended invitations like "What would you like to know?" or "Ask me anything about…".
@@ -13562,8 +13655,8 @@ Behavior rules:
 33. In that SVG, never use <marker> or marker-end — use <line stroke-linecap='round'> and <polygon> for arrowheads."""
         else:
             prompt += """
-27. **Default: no [VISUAL] block** in home chat. Add at most one graph/chart/diagram only when it is strictly clearer than text. Use [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation.
-28. Do NOT use [VISUAL:type=illustration] unless the user explicitly asks for a drawing, or the topic clearly has rich internal/spatial structure and the answer is a deep analysis.
+27. Default to no [VISUAL] block in home chat for routine short answers. For rich concept explanations, you may include one diagram/graph/chart or SVG explanation and, when it genuinely helps, one additional teaching illustration. Use [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation.
+28. Do NOT use [VISUAL:type=illustration] for fluff. Use it when the topic clearly has rich internal/spatial structure or an invisible mechanism that benefits from being shown.
 29. Never use placeholder labels in diagram steps — use real names from the question.
 30. If you embed SVG, never use SVG <marker> or marker-end — use rounded lines plus <polygon> arrowheads to avoid browser rendering glitches."""
 
@@ -13576,6 +13669,7 @@ Behavior rules:
         chat_model, or_teaching_mode, route = await self._alex_resolve_chat_model(user_msg, uid)
         use_answer_cache_home = (
             not visual_only_request
+            and not rich_teaching_request
             and not has_document_attached
             and not _is_explicit_web_search_request(user_msg)
             and not (search_context_block_home or "").strip()
@@ -13688,7 +13782,7 @@ Behavior rules:
                 {"role": "user", "content": prompt},
             ]
             try:
-                async for piece in _openrouter_stream_async(chat_model, home_messages, 4096):
+                async for piece in _openrouter_stream_async(chat_model, home_messages, 8192 if rich_teaching_request else 4096):
                     buf += piece
 
                     safe_live_text = sanitize_for_ui(buf)
@@ -15670,9 +15764,11 @@ def chat_input_field() -> rx.Component:
             ),
             rx.text_area(
                 id="chat_input",
+                name="alex_chat_message",
                 placeholder="Learn with Alex...",
                 value=AppState.chat_input,
                 on_change=AppState.set_chat_input,
+                auto_complete="off",
                 color="rgba(236,240,244,0.92)",
                 flex="1",
                 min_height="52px",
@@ -15681,6 +15777,13 @@ def chat_input_field() -> rx.Component:
                 font_size=rx.breakpoints(initial="1rem", md="0.92rem"),
                 line_height="1.5",
                 font_family="'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                custom_attrs={
+                    "autocomplete": "off",
+                    "autocorrect": "off",
+                    "autocapitalize": "off",
+                    "spellcheck": "false",
+                    "data-form-type": "other",
+                },
                 style={
                     "background": "transparent",
                     "border": "none",
