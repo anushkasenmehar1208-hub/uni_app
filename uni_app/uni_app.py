@@ -22566,9 +22566,31 @@ def landing_page():
     voice_section = rx.box(
         rx.script(
             src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js",
-            type_="module",
+            custom_attrs={"type": "module"},
         ),
         rx.hstack(
+            rx.box(
+                rx.image(
+                    src="/landing-voice-demo.gif",
+                    alt="Alex AI live voice mentor",
+                    style={
+                        "width": "100%",
+                        "height": "100%",
+                        "objectFit": "contain",
+                        "display": "block",
+                        "background": "transparent",
+                        "filter": "drop-shadow(0 32px 80px rgba(0,0,0,0.45))",
+                        "pointerEvents": "none",
+                    },
+                ),
+                width="100%",
+                max_width=rx.breakpoints(initial="100%", md="380px"),
+                height=rx.breakpoints(initial="320px", md="440px"),
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                background="transparent",
+            ),
             rx.vstack(
                 rx.text(
                     "Voice study space that feels alive",
@@ -22596,7 +22618,7 @@ def landing_page():
                 ),
                 spacing="5",
                 align_items="flex-start",
-                width=rx.breakpoints(initial="100%", md="440px"),
+                width=rx.breakpoints(initial="100%", md="420px"),
             ),
             rx.box(
                 rx.html(
@@ -22629,8 +22651,8 @@ def landing_page():
                     """
                 ),
                 width="100%",
-                max_width=rx.breakpoints(initial="100%", md="460px"),
-                height=rx.breakpoints(initial="360px", md="520px"),
+                max_width=rx.breakpoints(initial="100%", md="380px"),
+                height=rx.breakpoints(initial="320px", md="460px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
