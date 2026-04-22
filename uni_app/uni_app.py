@@ -22633,7 +22633,27 @@ def landing_page():
                         width: 100%;
                         height: 100%;
                         max-width: 380px;
-                        overflow: visible !important;
+                        overflow: hidden !important;
+                        border-radius: 28px;
+                    }
+                    #landing-teacher-orb-avatar-canvas {
+                        position: absolute !important;
+                        left: 50% !important;
+                        top: 54% !important;
+                        transform: translate(-50%, -50%) !important;
+                        width: 300px !important;
+                        height: 420px !important;
+                        max-width: none !important;
+                        opacity: 1 !important;
+                        z-index: 2 !important;
+                        pointer-events: auto !important;
+                        cursor: grab !important;
+                        touch-action: none !important;
+                        -webkit-mask-image: none !important;
+                        mask-image: none !important;
+                    }
+                    #landing-teacher-orb-avatar-canvas:active {
+                        cursor: grabbing !important;
                     }
                     #landing-teacher-orb .orb-ring {
                         position: absolute;
@@ -22670,6 +22690,11 @@ def landing_page():
                         #landing-teacher-orb-wrap {
                             max-width: 320px;
                             height: 400px;
+                        }
+                        #landing-teacher-orb-avatar-canvas {
+                            width: 250px !important;
+                            height: 360px !important;
+                            top: 55% !important;
                         }
                     }
                 """),
