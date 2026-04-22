@@ -111,7 +111,7 @@ OPENROUTER_SPEC_MODEL = os.getenv("OPENROUTER_SPEC_MODEL", "deepseek/deepseek-ch
 OPENROUTER_VOICE_MODEL = (os.getenv("OPENROUTER_VOICE_MODEL") or "").strip() or OPENROUTER_TEACHER_MODEL
 
 # ----------------------------
-# OpenAI (optional: voice STT/TTS only — OpenRouter does not host these endpoints)
+# OpenAI (optional: voice STT/TTS and high-detail image generation)
 # ----------------------------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe").strip() or "gpt-4o-mini-transcribe"
@@ -119,7 +119,14 @@ OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe").strip
 # If you want the older fixed voice stack, set OPENAI_TTS_MODEL=tts-1-hd or tts-1 explicitly.
 OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
 OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy").strip() or "alloy"
+OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-2").strip() or "gpt-image-2"
 # Spoken replies are server-only (Fish Audio and/or OpenAI TTS). Browser speechSynthesis is not used.
+
+BACKEND_PUBLIC_ORIGIN = (
+    os.getenv("REFLEX_API_URL")
+    or os.getenv("API_URL")
+    or "http://localhost:8000"
+).rstrip("/")
 
 # Fish Audio (optional): e.g. "Sol" from https://fish.audio — set FISH_AUDIO_API_KEY to enable.
 # Default reference_id is the public Sol model; override with FISH_AUDIO_REFERENCE_ID for another voice.
@@ -149,6 +156,58 @@ def _openai_tts_speech_json(input_text: str) -> dict[str, Any]:
             body["instructions"] = instr_env.strip()
         # empty string env = omit instructions (API default delivery)
     return body
+
+
+def _openai_generate_image_bytes(
+    prompt: str,
+    *,
+    size: str = "1536x1024",
+    quality: str = "high",
+) -> tuple[bytes, str]:
+    """Generate a high-detail image with OpenAI's image model."""
+    if not OPENAI_API_KEY:
+        return b"", ""
+    payload: dict[str, Any] = {
+        "model": OPENAI_IMAGE_MODEL,
+        "prompt": prompt,
+        "size": size,
+        "quality": quality,
+    }
+    try:
+        with httpx.Client(timeout=httpx.Timeout(180.0, read=180.0)) as http:
+            resp = http.post(
+                "https://api.openai.com/v1/images/generations",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            items = data.get("data", []) if isinstance(data, dict) else []
+            item = items[0] if isinstance(items, list) and items else {}
+            if not isinstance(item, dict):
+                return b"", ""
+            b64_json = str(item.get("b64_json", "") or "").strip()
+            if b64_json:
+                image_bytes = base64.b64decode(b64_json)
+                mime = _sniff_image_mime(image_bytes) or "image/png"
+                return image_bytes, mime
+            image_url = str(item.get("url", "") or "").strip()
+            if image_url:
+                img_resp = http.get(image_url)
+                img_resp.raise_for_status()
+                image_bytes = img_resp.content
+                mime = (
+                    (img_resp.headers.get("content-type") or "").split(";", 1)[0].strip()
+                    or _sniff_image_mime(image_bytes)
+                    or "image/png"
+                )
+                return image_bytes, mime
+    except Exception as e:
+        logger.warning("OpenAI image generation failed: %s", e)
+    return b"", ""
 
 
 _VOICE_FILLER_OPENERS = (
@@ -794,10 +853,12 @@ def _strip_leading_unit_code(unit: str) -> str:
 
 
 _VISUAL_TAG_RE = re.compile(r"\[VISUAL:type=(graph|chart|diagram|illustration|model3d)\]", re.IGNORECASE)
+_RAW_SVG_RE = re.compile(r"(?is)<svg\b[^>]*>.*?</svg>")
 
 
 def _response_contains_visual_block(text: str) -> bool:
-    return _VISUAL_TAG_RE.search(text or "") is not None
+    raw = text or ""
+    return _VISUAL_TAG_RE.search(raw) is not None or _RAW_SVG_RE.search(raw) is not None
 
 
 def _extract_json_object_slice(text: str, start_idx: int) -> tuple[str, int] | tuple[None, None]:
@@ -862,6 +923,7 @@ def _extract_all_visual_blocks(content: str) -> tuple[str, list[tuple[str, str]]
         text = (text[:m.start()] + text[block_end:]).strip()
         text = re.sub(r"\n{3,}", "\n\n", text)
 
+    svg_source = text
     if not blocks:
         normalized = content or ""
         for _ in range(4):
@@ -901,6 +963,28 @@ def _extract_all_visual_blocks(content: str) -> tuple[str, list[tuple[str, str]]
             text2 = re.sub(r"\n{3,}", "\n\n", text2)
         if blocks:
             text = text2
+        svg_source = text2
+
+    if not blocks and _RAW_SVG_RE.search(svg_source or ""):
+        svg_text = svg_source
+        svg_safety = 0
+        while svg_safety < 6:
+            svg_safety += 1
+            svg_match = _RAW_SVG_RE.search(svg_text or "")
+            if not svg_match:
+                break
+            svg_clean = _postprocess_svg(svg_match.group(0))
+            if svg_clean:
+                blocks.append(
+                    (
+                        "illustration",
+                        json.dumps({"title": "Generated SVG", "svg": svg_clean}, ensure_ascii=False),
+                    )
+                )
+            svg_text = (svg_text[:svg_match.start()] + svg_text[svg_match.end():]).strip()
+            svg_text = re.sub(r"\n{3,}", "\n\n", svg_text)
+        if blocks:
+            text = svg_text
 
     return text, blocks
 
@@ -911,6 +995,25 @@ def _extract_visual_block(content: str) -> tuple[str, str, str]:
     if blocks:
         return cleaned, blocks[0][0], blocks[0][1]
     return cleaned, "", ""
+
+
+def _visual_title_from_json(visual_type: str, visual_json: str) -> str:
+    try:
+        data = json.loads(visual_json or "{}")
+    except Exception:
+        data = {}
+    if isinstance(data, dict):
+        title = str(data.get("title", "")).strip()
+        if title:
+            return title
+    defaults = {
+        "graph": "Interactive graph",
+        "chart": "Interactive chart",
+        "diagram": "Interactive diagram",
+        "illustration": "SVG preview",
+        "model3d": "3D preview",
+    }
+    return defaults.get((visual_type or "").lower(), "Interactive canvas")
 
 
 def _esc_html(text: Any) -> str:
@@ -1187,6 +1290,17 @@ def _is_allowed_external_svg_url(url: str) -> bool:
         return False
 
 
+def _visual_asset_src(url: str) -> str:
+    raw = (url or "").strip()
+    if not raw:
+        return ""
+    if raw.startswith(("data:", "http://", "https://")):
+        return raw
+    if raw.startswith("/"):
+        return f"{BACKEND_PUBLIC_ORIGIN}{raw}"
+    return raw
+
+
 def _render_visual_html(visual_type: str, visual_json: str) -> str:
     try:
         data = json.loads(visual_json or "{}")
@@ -1196,13 +1310,32 @@ def _render_visual_html(visual_type: str, visual_json: str) -> str:
         return ""
 
     title = _esc_html(data.get("title", ""))
-    card = "background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin:12px 0 6px 0;max-width:520px;"
-    title_style = "font-size:0.78rem;font-weight:600;color:rgba(200,212,224,0.7);margin-bottom:8px;letter-spacing:.03em;text-transform:uppercase;"
+    card = (
+        "width:100%;background:linear-gradient(180deg, rgba(16,24,39,0.92), rgba(7,12,21,0.96));"
+        "border:1px solid rgba(125,211,252,0.12);border-radius:20px;padding:18px 20px;margin:0;"
+        "box-shadow:0 20px 60px rgba(2,6,23,0.32), inset 0 1px 0 rgba(255,255,255,0.04);"
+    )
+    title_style = (
+        "font-size:0.76rem;font-weight:700;color:rgba(190,220,245,0.78);margin-bottom:12px;"
+        "letter-spacing:.12em;text-transform:uppercase;"
+    )
 
     if visual_type == "model3d":
         return _render_model3d_html(data)
 
     if visual_type == "illustration":
+        image_url = str(data.get("image_url", "") or data.get("data_url", "")).strip()
+        if image_url:
+            safe_url = _esc_html(_visual_asset_src(_signed_media_url(image_url)))
+            if safe_url:
+                title_html = f"<div style='{title_style}'>{title}</div>" if title else ""
+                return (
+                    f"<div style='{card}'>{title_html}"
+                    f"<img src='{safe_url}' alt='generated illustration' "
+                    "style='width:100%;height:auto;display:block;border-radius:10px;' "
+                    "loading='lazy' decoding='async' referrerpolicy='no-referrer' />"
+                    "</div>"
+                )
         ext_url = str(data.get("url", "")).strip()
         if ext_url and _is_allowed_external_svg_url(ext_url):
             title_html = f"<div style='{title_style}'>{title}</div>" if title else ""
@@ -4622,6 +4755,11 @@ class AppState(reflex_local_auth.LocalAuthState):
     is_processing: bool = False
     is_searching: bool = False
     search_status: str = ""
+    is_canvas_open: bool = False
+    canvas_content: str = ""
+    canvas_title: str = ""
+    canvas_content_type: str = ""
+    canvas_source_message_index: int = -1
 
     # Message action state (edit / feedback / copy)
     editing_msg_index: int = -1
@@ -4861,6 +4999,52 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def has_document(self) -> bool:
         return bool(self.document_name)
+
+    @rx.var
+    def canvas_has_content(self) -> bool:
+        return bool((self.canvas_content or "").strip())
+
+    @rx.var
+    def canvas_mode_label(self) -> str:
+        labels = {
+            "graph": "Graph preview",
+            "chart": "Chart preview",
+            "diagram": "Diagram preview",
+            "illustration": "SVG preview",
+            "model3d": "3D preview",
+        }
+        return labels.get((self.canvas_content_type or "").lower(), "Interactive canvas")
+
+    def _clear_canvas_state(self) -> None:
+        self.is_canvas_open = False
+        self.canvas_content = ""
+        self.canvas_title = ""
+        self.canvas_content_type = ""
+        self.canvas_source_message_index = -1
+
+    def _sync_canvas_from_message(self, index: int, *, open_panel: bool = False) -> None:
+        if index < 0 or index >= len(self.chat_history):
+            return
+        msg = self.chat_history[index]
+        if not isinstance(msg, dict):
+            return
+        visual_html = str(msg.get("visual_html", "") or "").strip()
+        if not visual_html:
+            return
+        self.canvas_content = visual_html
+        self.canvas_title = str(msg.get("visual_title", "") or "").strip() or "Interactive Canvas"
+        self.canvas_content_type = str(msg.get("visual_type", "") or "").strip() or "illustration"
+        self.canvas_source_message_index = index
+        if open_panel:
+            self.is_canvas_open = True
+
+    @rx.event
+    def open_visual_canvas(self, index: int):
+        self._sync_canvas_from_message(index, open_panel=True)
+
+    @rx.event
+    def close_visual_canvas(self):
+        self.is_canvas_open = False
 
     @rx.event
     def open_image_modal(self, image_url: str):
@@ -7233,6 +7417,8 @@ class AppState(reflex_local_auth.LocalAuthState):
             all_html = "".join(_render_visual_html(vt, vj) for vt, vj in blocks)
             meta: dict[str, str] = {"content": cleaned}
             meta["visual_html"] = all_html
+            meta["visual_type"] = blocks[0][0]
+            meta["visual_title"] = _visual_title_from_json(blocks[0][0], blocks[0][1])
             return meta
         return {"content": cleaned if cleaned else safe}
 
@@ -7242,13 +7428,16 @@ class AppState(reflex_local_auth.LocalAuthState):
         msg = self.chat_history[index]
         if not isinstance(msg, dict):
             return
-        for k in ("visual_html",):
+        for k in ("visual_html", "visual_type", "visual_title"):
             if k in msg:
                 del msg[k]
         msg.update(self._assistant_content_meta(content))
+        if msg.get("visual_html"):
+            self._sync_canvas_from_message(index, open_panel=True)
 
     def _load_messages(self, uid: int, scope: str = "", *, _trusted: bool = False) -> None:
         effective_scope = scope or self.active_scope
+        self._clear_canvas_state()
         if not self.current_session_id:
             self.chat_history = []
             return
@@ -8188,8 +8377,86 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         )
         return any(m in lower for m in teaching_markers)
 
+    def _is_deep_analysis_request(self, text: str) -> bool:
+        raw = (text or "").strip()
+        lower = raw.lower()
+        if not lower:
+            return False
+        if raw == FOLLOWUP_DEEPEN_PROMPT:
+            return True
+        markers = (
+            "in-depth",
+            "indepth",
+            "deep analysis",
+            "deep dive",
+            "analyze deeply",
+            "go deeper",
+            "explain in detail",
+            "detailed analysis",
+            "thorough explanation",
+            "full analysis",
+        )
+        return any(marker in lower for marker in markers)
+
+    def _topic_needs_high_detail_visual(self, user_msg: str, response_text: str = "") -> bool:
+        combined = f"{user_msg}\n{response_text}".lower()
+        if not combined.strip():
+            return False
+        keywords = (
+            "animal", "frog", "toad", "lizard", "chameleon", "snake", "bird", "fish", "insect",
+            "heart", "brain", "eye", "ear", "lung", "kidney", "liver", "skeleton", "muscle", "anatomy",
+            "cell", "organelle", "mitochondria", "chloroplast", "dna", "molecule", "atom", "protein",
+            "flower", "leaf", "root", "plant", "photosynthesis",
+            "engine", "turbine", "gear", "machine", "robot", "circuit", "motherboard", "chip",
+            "architecture", "building", "bridge", "network", "topology", "server rack",
+            "solar system", "planet", "volcano", "rock layer", "map", "ecosystem",
+            "blueprint", "schematic", "cross section", "cross-section", "internal structure",
+        )
+        return any(keyword in combined for keyword in keywords)
+
+    def _should_use_high_detail_image(
+        self,
+        user_msg: str,
+        response_text: str = "",
+        *,
+        visual_only: bool = False,
+    ) -> bool:
+        if not OPENAI_API_KEY or not self.current_session_id:
+            return False
+        if self._is_3d_model_request(user_msg):
+            return False
+        lower = (user_msg or "").lower()
+        explicit_high_detail = any(
+            term in lower
+            for term in (
+                "high detail",
+                "high-detail",
+                "high quality",
+                "detailed visual",
+                "blueprint",
+                "schematic",
+                "technical illustration",
+                "annotated drawing",
+                "concept art",
+                "realistic render",
+            )
+        )
+        explicit_draw = self._is_visual_drawing_request(user_msg)
+        deep_analysis = self._is_deep_analysis_request(user_msg)
+        rich_topic = self._topic_needs_high_detail_visual(user_msg, response_text)
+
+        if visual_only and (explicit_draw or explicit_high_detail):
+            return True
+        if explicit_draw and (explicit_high_detail or rich_topic):
+            return True
+        if deep_analysis and rich_topic:
+            return True
+        return False
+
     def _visual_style_from_request(self, text: str) -> str:
         lower = (text or "").lower()
+        if any(k in lower for k in ("blueprint", "technical", "schematic", "annotated")):
+            return "blueprint"
         if any(k in lower for k in ("cartoon", "cute", "playful", "mascot")):
             return "cartoon"
         if any(k in lower for k in ("neon", "glow", "cyber", "futuristic")):
@@ -8201,6 +8468,11 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         return "minimal"
 
     def _visual_style_instruction(self, style: str) -> str:
+        if style == "blueprint":
+            return (
+                "Use a blueprint SVG style: deep navy background, precise white/cyan linework, "
+                "measurement marks, annotated callouts, and dense technical detail."
+            )
         if style == "cartoon":
             return (
                 "Use a cartoon SVG style: rounded shapes, friendly proportions, "
@@ -8219,6 +8491,100 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         return (
             "Use a minimal SVG style: flat shapes, restrained palette (2-4 colors), "
             "clean spacing, and low visual clutter."
+        )
+
+    def _high_detail_visual_style(self, text: str) -> str:
+        lower = (text or "").lower()
+        if any(k in lower for k in ("blueprint", "technical drawing", "schematic", "annotated", "callout")):
+            return "blueprint"
+        if any(k in lower for k in ("realistic", "photorealistic", "photo-realistic", "photo real")):
+            return "realistic"
+        if any(k in lower for k in ("anime", "manga", "illustration poster", "concept art")):
+            return "concept"
+        if any(k in lower for k in ("high detail", "high-detail", "detailed", "high quality", "premium quality")):
+            return "blueprint"
+        return "concept"
+
+    def _high_detail_image_size(self, text: str) -> str:
+        lower = (text or "").lower()
+        portrait_terms = (
+            "portrait",
+            "poster",
+            "standing",
+            "full body",
+            "full-body",
+            "character sheet",
+            "person",
+            "girl",
+            "boy",
+            "woman",
+            "man",
+        )
+        if any(term in lower for term in portrait_terms):
+            return "1024x1536"
+        return "1536x1024"
+
+    def _high_detail_image_prompt(self, user_msg: str) -> tuple[str, str]:
+        subject = self._extract_subject_keyword(user_msg).strip() or "Detailed visual"
+        style = self._high_detail_visual_style(user_msg)
+        title_base = subject.title()
+        common = (
+            f"Create one premium-quality visual for an interactive canvas based on this request: {user_msg.strip() or subject}. "
+            f"Keep the subject unmistakably recognizable as {subject}. "
+            "Use very high detail, crisp edges, strong composition, accurate proportions, layered materials, and clean professional finishing. "
+            "No watermark, no UI chrome, no browser frame, no fake app screenshot, no logos unless explicitly requested."
+        )
+        if style == "blueprint":
+            prompt = (
+                common
+                + " Render it as a dark navy technical blueprint plate with precise white and pale-cyan linework, subtle grid paper, "
+                "measurement ticks, engineering-style callouts, micro annotations, sectional contour lines, and dense schematic details similar to a premium AI-generated technical poster. "
+                "Use dramatic clarity, elegant spacing, and museum-grade presentation."
+            )
+            return prompt, f"{title_base} Blueprint"
+        if style == "realistic":
+            prompt = (
+                common
+                + " Render it as a polished high-end realistic concept image with rich materials, cinematic lighting, "
+                "sharp details, subtle depth, and premium commercial art direction."
+            )
+            return prompt, f"{title_base} Detailed Render"
+        prompt = (
+            common
+            + " Render it as a polished concept-art illustration with exceptional detail, fine texture work, "
+            "clear silhouette, premium lighting, and modern editorial quality."
+        )
+        return prompt, f"{title_base} Concept Illustration"
+
+    def _high_detail_image_block(self, user_msg: str) -> str:
+        uid = self._uid()
+        if uid < 0 or not self.current_session_id or not OPENAI_API_KEY:
+            return ""
+        prompt, title = self._high_detail_image_prompt(user_msg)
+        size = self._high_detail_image_size(user_msg)
+        image_bytes, mime = _openai_generate_image_bytes(prompt, size=size, quality="high")
+        if not image_bytes:
+            return ""
+        ext = {
+            "image/png": ".png",
+            "image/jpeg": ".jpg",
+            "image/webp": ".webp",
+        }.get((mime or "").lower(), ".png")
+        media_path = _store_chat_media(
+            uid,
+            self.current_session_id,
+            f"canvas-{_safe_filename_fragment(title.lower())}{ext}",
+            image_bytes,
+        )
+        return (
+            "[VISUAL:type=illustration]\n"
+            + json.dumps(
+                {
+                    "title": title,
+                    "image_url": media_path,
+                },
+                ensure_ascii=False,
+            )
         )
 
     def _illustration_subject_instruction(self, text: str) -> str:
@@ -9522,9 +9888,14 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
     def _maybe_auto_teaching_illustration(self, user_msg: str, response_text: str) -> str:
         """Append extra illustrations only in narrow cases — not after every teaching reply."""
         if (user_msg or "").strip() == FOLLOWUP_DEEPEN_PROMPT:
-            return response_text
+            if not self._should_use_high_detail_image(user_msg, response_text):
+                return response_text
         if _response_contains_visual_block(response_text):
             return response_text
+        if self._should_use_high_detail_image(user_msg, response_text):
+            detailed = self._high_detail_image_block(user_msg)
+            if detailed:
+                return response_text + "\n" + detailed
         if self._is_3d_model_request(user_msg):
             return response_text + "\n" + self._model3d_visual_block(user_msg)
         templated = self._teaching_illustration_template(user_msg)
@@ -9631,6 +10002,9 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
     def _enforce_visual_only_response(self, content: str, user_msg: str) -> str:
         if self._is_3d_model_request(user_msg):
             return self._model3d_visual_block(user_msg)
+        detailed = self._high_detail_image_block(user_msg) if self._should_use_high_detail_image(user_msg, content, visual_only=True) else ""
+        if detailed:
+            return detailed
         forced = self._template_illustration_block(user_msg)
         if forced:
             return forced
@@ -10502,6 +10876,7 @@ Quality rules:
                 self._load_home_sessions(uid)
             # NEW: reset to empty state (no welcome message stored)
             self.chat_history = []
+            self._clear_canvas_state()
             self.chat_input = self.chat_drafts.get(self.active_scope, "")
         except Exception as e:
             print(f"ERROR new_chat: {e}")
@@ -12343,8 +12718,8 @@ Course units to cover:\n{courses_text}"""
                         "Deliver a **long, university-level** explanation: several sections, thorough definitions, examples, "
                         "comparisons, pitfalls, and optional extensions. Prose (outside code fences) must be **well over 20 lines** "
                         "on a typical phone — length and depth are required, not optional.\n"
-                        "- **No diagrams this turn:** Do **not** include any `[VISUAL:...]` block (diagram, graph, chart, or illustration). "
-                        "In-depth mode is text- and code-first; visuals would only appear at the end of the message in the UI and read as an afterthought.\n"
+                        "- Keep the explanation text-first. Add a visual only if the topic has meaningful spatial, structural, or anatomical detail "
+                        "and the student would genuinely understand it better with one visual companion.\n"
                     )
 
                 teach_prompt = f"""You are Alex, a university professor and {self._mentor_role_label()} helping a {self.degree} student.
@@ -12398,7 +12773,7 @@ Your response style rules:
                 else:
                     teach_prompt += """
 28. **Default: no [VISUAL] block.** Add at most one diagram, graph, or chart only when the idea is hard to follow without it (e.g. numeric comparison, strict process order). Use [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation. Skip visuals for historical narrative, day-one overviews, and brief answers.
-29. Do NOT use [VISUAL:type=illustration] for routine teaching — only when the student explicitly asks to draw something.
+29. Do NOT use [VISUAL:type=illustration] for routine teaching unless the student explicitly asks to draw something, or the topic clearly has rich internal/spatial structure where a detailed visual would materially improve the explanation.
 30. If you use a diagram, every step must use concrete topic language — never generic placeholders.
 31. If you output raw SVG (e.g. inside illustration JSON), never use SVG <marker> or marker-end/marker-start — use rounded lines plus <polygon> arrowheads so forces and flow arrows render without browser glitches."""
 
@@ -12653,7 +13028,7 @@ Your response style rules:
                     yield
                     continue
 
-                if reply_after_indepth_request and final_text:
+                if reply_after_indepth_request and final_text and not self._should_use_high_detail_image(user_msg, final_text):
                     cleaned_indepth, _vb_indepth = _extract_all_visual_blocks(final_text)
                     if _vb_indepth:
                         stripped = (cleaned_indepth or "").strip()
@@ -12890,7 +13265,7 @@ Behavior rules:
 4. Answer directly and helpfully. Keep replies short and clear.
 5. Use bullets when they improve clarity. Avoid walls of text.
 6. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
-7. For visuals, use [VISUAL:type=diagram] blocks with steps, or [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation. NEVER use ```mermaid code blocks.
+7. For visuals, use [VISUAL:type=diagram] blocks with steps, [VISUAL:type=model3d] only when the student explicitly asks for a 3D model or 3D explanation, and [VISUAL:type=illustration] only for explicit drawing requests or visually rich deep-analysis topics. NEVER use ```mermaid code blocks.
 8. If the question is technically complex, give a short numbered breakdown before the final answer.
 9. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them.
 10. Teach proactively like a university professor: lead with clear structure, definitions, and examples. Do not end with open-ended invitations like "What would you like to know?" or "Ask me anything about…".
@@ -12934,7 +13309,7 @@ Behavior rules:
 14. Keep the support personal, but mention {student_name} only occasionally when it helps the tone feel warm rather than repetitive.
 15. Adapt to the adaptive profile for brevity, formatting, pace, and tone.
 16. If code is needed, wrap it in fenced markdown code blocks with the correct language. After a code example, include the expected output in a separate ```output block.
-17. For visuals, use [VISUAL:type=diagram] blocks with steps, or [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation. NEVER use ```mermaid code blocks.
+17. For visuals, use [VISUAL:type=diagram] blocks with steps, [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation, and [VISUAL:type=illustration] only for explicit drawing requests or visually rich deep-analysis topics. NEVER use ```mermaid code blocks.
 18. If the question is technically complex, give a short numbered breakdown before the final answer.
 19. Stay honest about what the stored memory does and does not show.
 20. If web search results are present, use them silently to improve accuracy. Only share links when the user explicitly asks for them.
@@ -12960,7 +13335,7 @@ Behavior rules:
         else:
             prompt += """
 27. **Default: no [VISUAL] block** in home chat. Add at most one graph/chart/diagram only when it is strictly clearer than text. Use [VISUAL:type=model3d] only when the user explicitly asks for a 3D model or 3D explanation.
-28. Do NOT use [VISUAL:type=illustration] unless the user explicitly asks for a drawing.
+28. Do NOT use [VISUAL:type=illustration] unless the user explicitly asks for a drawing, or the topic clearly has rich internal/spatial structure and the answer is a deep analysis.
 29. Never use placeholder labels in diagram steps — use real names from the question.
 30. If you embed SVG, never use SVG <marker> or marker-end — use rounded lines plus <polygon> arrowheads to avoid browser rendering glitches."""
 
@@ -16135,7 +16510,68 @@ def active_chat_panel() -> rx.Component:
                                 ),
                                 rx.cond(
                                     msg.contains("visual_html"),
-                                    rx.html(msg["visual_html"].to(str)),
+                                    rx.box(
+                                        rx.hstack(
+                                            rx.vstack(
+                                                rx.text(
+                                                    "Interactive Canvas",
+                                                    color="rgba(160,190,220,0.78)",
+                                                    font_size="0.68rem",
+                                                    font_weight="700",
+                                                    letter_spacing="0.12em",
+                                                    text_transform="uppercase",
+                                                ),
+                                                rx.text(
+                                                    rx.cond(
+                                                        msg.contains("visual_title") & (msg["visual_title"].to(str) != ""),
+                                                        msg["visual_title"],
+                                                        "Visual preview ready",
+                                                    ),
+                                                    color="rgba(236,242,248,0.94)",
+                                                    font_size="0.94rem",
+                                                    font_weight="600",
+                                                    line_height="1.35",
+                                                ),
+                                                rx.text(
+                                                    "The generated visual has been moved into a dedicated canvas so it stays out of the chat flow.",
+                                                    color="rgba(172,184,198,0.62)",
+                                                    font_size="0.78rem",
+                                                    line_height="1.55",
+                                                ),
+                                                spacing="1",
+                                                align_items="start",
+                                                min_width="0",
+                                                flex="1",
+                                            ),
+                                            rx.button(
+                                                "Visual",
+                                                on_click=AppState.open_visual_canvas(idx),
+                                                type="button",
+                                                size="2",
+                                                border_radius="999px",
+                                                cursor="pointer",
+                                                style={
+                                                    "background": "linear-gradient(135deg, rgba(96,165,250,0.28), rgba(34,211,238,0.22))",
+                                                    "border": "1px solid rgba(125,211,252,0.22)",
+                                                    "color": "rgba(236,244,252,0.96)",
+                                                    "box_shadow": "0 0 24px rgba(56,189,248,0.12)",
+                                                    "_hover": {
+                                                        "background": "linear-gradient(135deg, rgba(96,165,250,0.38), rgba(34,211,238,0.32))",
+                                                        "box_shadow": "0 0 34px rgba(56,189,248,0.18)",
+                                                    },
+                                                },
+                                            ),
+                                            spacing="4",
+                                            align="center",
+                                            width="100%",
+                                        ),
+                                        margin_top=rx.cond(msg["content"].to(str) != "", "14px", "4px"),
+                                        padding="14px 16px",
+                                        border_radius="18px",
+                                        border="1px solid rgba(125,211,252,0.12)",
+                                        background="linear-gradient(180deg, rgba(7,12,20,0.82), rgba(5,9,16,0.92))",
+                                        box_shadow="0 18px 44px rgba(2,6,23,0.22)",
+                                    ),
                                     rx.fragment(),
                                 ),
                                 # ── Assistant action buttons (hover reveal) ──
@@ -16603,13 +17039,186 @@ def active_chat_panel() -> rx.Component:
         background="transparent",
         position="relative",
     )
+def interactive_canvas_panel() -> rx.Component:
+    def canvas_surface() -> rx.Component:
+        return rx.box(
+            rx.vstack(
+                rx.hstack(
+                    rx.vstack(
+                        rx.text(
+                            "Interactive Canvas",
+                            color="rgba(148,163,184,0.82)",
+                            font_size="0.7rem",
+                            font_weight="700",
+                            letter_spacing="0.14em",
+                            text_transform="uppercase",
+                        ),
+                        rx.text(
+                            rx.cond(AppState.canvas_title != "", AppState.canvas_title, "Visual preview"),
+                            color="rgba(244,248,252,0.96)",
+                            font_size="1.1rem",
+                            font_weight="700",
+                            letter_spacing="-0.02em",
+                        ),
+                        rx.text(
+                            AppState.canvas_mode_label,
+                            color="rgba(167,182,198,0.62)",
+                            font_size="0.8rem",
+                            line_height="1.5",
+                        ),
+                        spacing="1",
+                        align_items="start",
+                        min_width="0",
+                        flex="1",
+                    ),
+                    rx.box(
+                        "Start creating",
+                        padding="9px 14px",
+                        border_radius="999px",
+                        color="rgba(236,244,252,0.96)",
+                        font_size="0.78rem",
+                        font_weight="600",
+                        background="linear-gradient(135deg, rgba(96,165,250,0.24), rgba(34,211,238,0.18))",
+                        border="1px solid rgba(125,211,252,0.16)",
+                        box_shadow="0 0 30px rgba(56,189,248,0.12)",
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="x", size=18),
+                        on_click=AppState.close_visual_canvas,
+                        variant="ghost",
+                        style={
+                            "color": "rgba(255,255,255,0.55)",
+                            "background": "rgba(255,255,255,0.03)",
+                            "border": "1px solid rgba(255,255,255,0.06)",
+                            "border_radius": "999px",
+                            "cursor": "pointer",
+                            "_hover": {
+                                "color": "rgba(255,255,255,0.96)",
+                                "background": "rgba(255,255,255,0.08)",
+                            },
+                        },
+                    ),
+                    spacing="3",
+                    align="start",
+                    width="100%",
+                ),
+                rx.box(
+                    rx.box(
+                        rx.html(AppState.canvas_content.to(str)),
+                        class_name="interactive-canvas-stage",
+                        width="100%",
+                        min_height=rx.breakpoints(initial="300px", md="420px"),
+                        display="flex",
+                        align_items="center",
+                        justify_content="center",
+                    ),
+                    width="100%",
+                    flex="1",
+                    min_height="0",
+                    overflow="auto",
+                    padding=rx.breakpoints(initial="18px", md="24px"),
+                    border_radius="24px",
+                    border="1px solid rgba(125,211,252,0.12)",
+                    background=(
+                        "radial-gradient(circle at top, rgba(56,189,248,0.10), transparent 42%), "
+                        "linear-gradient(180deg, rgba(4,8,15,0.94), rgba(2,6,12,0.98))"
+                    ),
+                    box_shadow="inset 0 1px 0 rgba(255,255,255,0.04), 0 24px 60px rgba(2,6,23,0.28)",
+                    style={
+                        "& .interactive-canvas-stage img": {
+                            "max_width": "100%",
+                            "height": "auto",
+                            "display": "block",
+                        },
+                        "& .interactive-canvas-stage svg": {
+                            "max_width": "100%",
+                            "height": "auto",
+                        },
+                        "& .interactive-canvas-stage canvas": {
+                            "max_width": "100%",
+                        },
+                    },
+                ),
+                spacing="4",
+                align_items="stretch",
+                width="100%",
+                height="100%",
+            ),
+            width="100%",
+            height="100%",
+            padding=rx.breakpoints(initial="16px", md="18px"),
+            background=(
+                "linear-gradient(180deg, rgba(4,8,15,0.96), rgba(2,6,12,0.98)), "
+                "radial-gradient(circle at top right, rgba(56,189,248,0.12), transparent 32%)"
+            ),
+            overflow="hidden",
+        )
+    return rx.fragment(
+        rx.box(
+            canvas_surface(),
+            position="absolute",
+            top="0",
+            right="0",
+            bottom="0",
+            width="min(42vw, 720px)",
+            border_left="1px solid rgba(255,255,255,0.06)",
+            box_shadow="-28px 0 80px rgba(2,6,23,0.32)",
+            z_index="8",
+            display=rx.breakpoints(initial="none", md="block"),
+        ),
+        rx.box(
+            on_click=AppState.close_visual_canvas,
+            position="fixed",
+            inset="0",
+            background="rgba(2,6,23,0.62)",
+            backdrop_filter="blur(8px)",
+            z_index="119",
+            display=rx.breakpoints(initial="block", md="none"),
+        ),
+        rx.box(
+            canvas_surface(),
+            position="fixed",
+            top="12px",
+            left="12px",
+            right="12px",
+            bottom="calc(env(safe-area-inset-bottom, 0px) + 12px)",
+            border="1px solid rgba(125,211,252,0.14)",
+            border_radius="24px",
+            box_shadow="0 32px 90px rgba(0,0,0,0.52)",
+            z_index="120",
+            overflow="hidden",
+            display=rx.breakpoints(initial="block", md="none"),
+        ),
+    )
+
+
 # ──────────────────────────────────────────────────────────────
 # Main chat panel — switches between empty and active
 # ──────────────────────────────────────────────────────────────
 def chat_panel():
     # Always use active_chat_panel: empty vs messages is handled inside the scroll area
     # so history is never hidden behind a separate component tree (Reflex reactivity).
-    return active_chat_panel()
+    return rx.box(
+        active_chat_panel(),
+        rx.cond(
+            AppState.is_canvas_open & AppState.canvas_has_content,
+            interactive_canvas_panel(),
+            rx.fragment(),
+        ),
+        width="100%",
+        height="100%",
+        position="relative",
+        overflow="hidden",
+        padding_right=rx.breakpoints(
+            initial="0px",
+            md=rx.cond(
+                AppState.is_canvas_open & AppState.canvas_has_content,
+                "min(42vw, 720px)",
+                "0px",
+            ),
+        ),
+        transition="padding-right 220ms ease",
+    )
 
 
 @rx.page(route="/auth/google/start", image=FAVICON_32, on_load=AppState.start_google_oauth)
