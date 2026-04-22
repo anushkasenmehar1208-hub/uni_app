@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Theory: Introduction to scientific computing",
+      "Role of software in mathematics and science"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Theory: Choosing appropriate software",
+      "MATLAB, Python/NumPy, R, Mathematica"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Setting up the environment",
+      "Installation and first session"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Basic syntax and variables",
+      "Arithmetic and expressions"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Arrays and vectors",
+      "Creation and indexing"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Matrix operations",
+      "Creating and manipulating matrices"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Element-wise vs matrix operations",
+      "Broadcasting basics"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Control flow (if, for, while)",
+      "Writing small programs"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Functions and scripts",
+      "Modular code in scientific software"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Plotting 2D graphs",
+      "Line and scatter plots"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Customising plots",
+      "Labels, legends, axes, colors"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Subplots and multi-panel figures",
+      "Organising visuals"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: 3D plots and surfaces",
+      "Visualising functions of two variables"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Solving linear systems numerically",
+      "Using built-in solvers"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Eigenvalues and eigenvectors",
+      "Using built-in functions"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Numerical root finding",
+      "Using built-in functions"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Numerical integration",
+      "Quadrature routines"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Numerical differentiation",
+      "Finite difference computations"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Solving ODEs numerically",
+      "ODE solvers in practice"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Symbolic computation (intro)",
+      "Symbolic vs numeric"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Working with data files",
+      "Reading and writing CSV"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Basic statistics in code",
+      "Mean, std, distributions"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Curve fitting",
+      "Least squares in practice"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Mini project (part 1)",
+      "Modeling a simple physical system"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Mini project (part 2)",
+      "Running simulations"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Mini project (part 3)",
+      "Visualising results"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Lab: Mini project (part 4)",
+      "Writing up findings"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Tutorial: Debugging and profiling scientific code",
+      "Common bugs"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Review: Scientific Computing I",
+      "Self-check: coding, linear algebra, ODE"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Recap of Mechanics I",
+      "Bridge to advanced mechanics"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Lagrangian mechanics (intro)",
+      "Generalized coordinates"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Principle of virtual work",
+      "D'Alembert's principle"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Euler-Lagrange equations",
+      "Derivation and examples"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Applications of Lagrangian mechanics",
+      "Pendulum, spring systems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Conservation laws from symmetry",
+      "Noether's theorem intuition"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Hamiltonian mechanics (intro)",
+      "Legendre transform"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Hamilton's equations",
+      "Examples"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Phase space and trajectories",
+      "Conservation of energy in phase space"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Central force motion",
+      "Two-body problem"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Reduction to one-body problem",
+      "Effective potential"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Kepler problem",
+      "Orbits and energy"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Scattering in central force",
+      "Rutherford-like scattering (intro)"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Small oscillations",
+      "Normal modes"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Coupled oscillators",
+      "Finding normal modes"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Rigid body dynamics",
+      "Inertia tensor"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Principal axes of inertia",
+      "Diagonalizing inertia tensor"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Euler's equations for rotation",
+      "Torque-free motion"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Gyroscopic motion",
+      "Precession and nutation"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Non-inertial reference frames",
+      "Pseudo-forces"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Lagrangian, Hamiltonian, central force"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Rotating frames",
+      "Coriolis and centrifugal forces"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Foucault pendulum",
+      "Earth's rotation effects"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Fluid mechanics (intro)",
+      "Continuity equation"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Euler's equation for fluids",
+      "Ideal fluid flow"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Bernoulli's principle",
+      "Applications"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Viscous fluids (intro)",
+      "Navier-Stokes overview"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Mechanics of continuous media (intro)",
+      "Strain and stress"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Elasticity (intro)",
+      "Hooke's law generalized"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Wave equation in 1D",
+      "Derivation and solutions"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Theory: Standing and traveling waves",
+      "Boundary conditions"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Tutorial: Worked problems on Lagrangian mechanics",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Tutorial: Worked problems on Hamiltonian mechanics",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Tutorial: Worked problems on central force",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Tutorial: Worked problems on oscillations",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Tutorial: Worked problems on rigid body",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Review: Mechanics II",
+      "Self-check: advanced mechanics"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Deep revisit: Matrix and linear algebra code",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Deep revisit: Numerical methods in code",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Deep revisit: Plotting and visualisation",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Deep revisit: ODE solvers",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Deep revisit: Lagrangian and Hamiltonian",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Deep revisit: Central force",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Deep revisit: Oscillations and rigid body",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Deep revisit: Fluids and continuous media",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Integration: Simulating mechanics problems",
+      "Code meets physics"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Integration: Using code to explore mechanics",
+      "Numerical experiments"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Advanced practice: Complex simulations",
+      "Multi-step projects"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Advanced practice: Harder mechanics problems",
+      "Challenging cases"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Exam-style mock 1 (practical)",
+      "Code task walkthrough"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Exam-style mock 2 (practical)",
+      "Harder code task"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical coding pitfalls"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical derivation pitfalls"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Mini viva",
+      "Explain your code"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Mini viva",
+      "Explain key concepts"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Real-world applications",
+      "Engineering, research, finance"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Real-world applications",
+      "Aerospace, robotics, research"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Preview of Sci Comp II",
+      "Advanced software topics"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Preview of further mechanics",
+      "Quantum and relativistic connections"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Final overview",
+      "Key workflows"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Final overview",
+      "Key principles"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen coding tasks"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen mechanics problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Integrated review (part 1)",
+      "Linking code with mechanics"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Integrated review (part 2)",
+      "Linking mechanics with code"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Portfolio polish",
+      "Cleaning up mini project"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Key derivations recap",
+      "Must-know proofs"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software I",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "AMAT",
+    "unit": "Mechanics II",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  }
+]

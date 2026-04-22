@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Introduction to signals",
+      "Continuous and discrete signals"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Signal classification",
+      "Periodic, aperiodic, deterministic, random"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Fourier series",
+      "Representing periodic signals"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Fourier transform",
+      "Frequency domain analysis"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Laplace transform",
+      "System analysis tools"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Transfer functions",
+      "System description in frequency domain"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Convolution",
+      "Time domain system response"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Sampling theorem",
+      "Nyquist criterion"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Aliasing",
+      "Effect of undersampling"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Discrete Fourier transform",
+      "DFT and its properties"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Fast Fourier transform",
+      "Efficient DFT computation"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Z-transform",
+      "Discrete system analysis"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Digital filters",
+      "FIR and IIR basics"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Filter design",
+      "Low-pass, high-pass, band-pass"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Data acquisition systems",
+      "Sensors, signal conditioning, ADC"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Signal conditioning",
+      "Amplification, filtering, isolation"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Sensors and transducers",
+      "Temperature, pressure, position"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: ADC and DAC (deeper)",
+      "Quantization error and resolution"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: DAQ hardware",
+      "PC-based measurement systems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Noise and interference",
+      "Ground loops, shielding, filtering"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Power spectral density",
+      "Random signal analysis"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Correlation functions",
+      "Auto and cross-correlation"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Windowing functions",
+      "Reducing spectral leakage"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Applications \u2014 audio processing",
+      "Music and speech"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Applications \u2014 communications",
+      "Modulation basics"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Theory: Applications \u2014 biomedical signals",
+      "ECG, EEG analysis"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Tutorial: Worked Fourier analysis problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Tutorial: Worked filter design problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Review: Signal Processing and Data Acquisition",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab intro: DAQ hardware and software",
+      "LabVIEW or Python setup"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Generating and measuring signals",
+      "Function generator and oscilloscope"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: FFT of a signal",
+      "Using software FFT"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Sampling and aliasing demonstration",
+      "Observing aliasing effects"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Digital filter implementation",
+      "FIR filter in code"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Sensor interfacing",
+      "Temperature or light sensor"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Signal conditioning circuit",
+      "Op-amp based conditioning"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: ADC characterization",
+      "Measuring resolution and quantization"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Noise measurement and filtering",
+      "SNR calculation"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Data logging system",
+      "Acquiring and storing real data"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Mini project \u2014 DAQ system design",
+      "From sensor to display"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Mini project \u2014 build and test",
+      "Hands-on"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Lab: Mini project \u2014 analysis and report",
+      "Results and findings"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Deep revisit: Fourier and Laplace",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Deep revisit: Sampling and digital filters",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Deep revisit: DAQ systems",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Deep revisit: Lab measurements",
+      "Common issues and fixes"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Integration: Analogue meets digital in signal processing",
+      "ADC/DAC bridge"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Advanced practice: Harder filter design",
+      "Complex specifications"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Advanced practice: Harder frequency analysis",
+      "Multi-component signals"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Mid-unit review",
+      "Signal processing recap"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Exam-style mock 1 (practical)",
+      "Lab task walkthrough"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder questions"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Exam-style mock 2 (practical)",
+      "Harder lab task"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Common mistakes and tips",
+      "Signal processing pitfalls"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Common mistakes and tips",
+      "Lab pitfalls"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Mini viva",
+      "Explain your system design"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Real-world applications",
+      "Telecommunications, medical devices, IoT"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Real-world applications",
+      "Industrial measurement systems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Final overview",
+      "Key concepts"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Final overview",
+      "Key lab skills"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unfamiliar experiments"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Integrated review part 1",
+      "Transforms and filters"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Integrated review part 2",
+      "Lab skills and DAQ systems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Quick recap drill",
+      "Fast concept recall"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Quick recap drill",
+      "Fast lab skill recall"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Concept map building",
+      "Linking all core ideas"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Concept map building",
+      "Linking all lab skills"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Reflection",
+      "What you can now analyse"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Reflection",
+      "What you can now measure and process"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Confidence booster",
+      "Easy recap problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Confidence booster",
+      "Easy recap tasks"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Timed practice",
+      "Under exam conditions"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Timed practice",
+      "Under practical conditions"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next stage"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next stage"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Key formulas quick reference",
+      "One-page summary"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Key lab procedures quick reference",
+      "One-page summary"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Exam readiness",
+      "Final checks"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Practical readiness",
+      "Final checks"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Rest and consolidation",
+      "Light review"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Rest and consolidation",
+      "Light review"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Final summary day 1",
+      "Core topics"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Final summary day 1",
+      "Core lab topics"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition",
+    "topics": [
+      "Final summary day 2",
+      "Advanced topics"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "ELEC",
+    "unit": "Signal Processing and Data Acquisition Laboratory",
+    "topics": [
+      "Final summary day 2",
+      "Advanced lab topics"
+    ]
+  }
+]

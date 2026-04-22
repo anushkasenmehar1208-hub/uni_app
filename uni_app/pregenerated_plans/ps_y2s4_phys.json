@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Introduction to thermodynamics",
+      "Systems, states, processes"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Zeroth law and temperature",
+      "Thermal equilibrium"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Work and heat",
+      "Sign conventions"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: First law of thermodynamics",
+      "Internal energy"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Applications of first law",
+      "Isothermal, adiabatic processes"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Heat capacity",
+      "Cv and Cp, relation for ideal gas"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Ideal gas law",
+      "Equation of state"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Kinetic theory of gases",
+      "Microscopic view"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Maxwell-Boltzmann distribution",
+      "Speed distribution"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Mean free path",
+      "Transport properties (intro)"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Second law of thermodynamics",
+      "Kelvin-Planck and Clausius statements"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Carnot cycle and theorem",
+      "Maximum efficiency"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Entropy",
+      "Definition and properties"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Entropy changes in processes",
+      "Reversible vs irreversible"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Third law of thermodynamics",
+      "Absolute zero"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Thermodynamic potentials",
+      "U, H, F, G"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Maxwell relations",
+      "Derivation and uses"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Phase transitions",
+      "Clausius-Clapeyron equation"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Real gases",
+      "Van der Waals equation"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Joule-Thomson effect",
+      "Cooling in gases"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Statistical mechanics (intro)",
+      "Microstates and macrostates"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Boltzmann distribution",
+      "Partition function intro"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Fermi-Dirac and Bose-Einstein distributions",
+      "Quantum statistics"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Blackbody radiation (statistical view)",
+      "Planck's law"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Introduction to solid state",
+      "Crystalline vs amorphous"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Crystal structures",
+      "Bravais lattices"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Miller indices",
+      "Crystal planes and directions"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: X-ray diffraction revisited",
+      "Bragg's law and lattices"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Crystal binding",
+      "Ionic, covalent, metallic, Van der Waals"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Lattice vibrations \u2014 phonons",
+      "Dispersion relations"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Specific heat of solids",
+      "Einstein and Debye models"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Free electron theory of metals",
+      "Drude and Sommerfeld"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Fermi energy and Fermi surface",
+      "Density of states"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Electrical conductivity (quantum view)",
+      "Ohm's law microscopically"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Thermal conductivity of metals",
+      "Wiedemann-Franz law"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Band theory of solids",
+      "Origin of bands"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Metals, semiconductors, insulators",
+      "Band gap explanation"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Intrinsic and extrinsic semiconductors",
+      "Doping"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: p-n junction",
+      "Diode physics"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Transistor basics (solid state view)",
+      "BJT and FET"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Hall effect (deeper)",
+      "Measuring carrier type and concentration"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Magnetism in solids",
+      "Diamagnetism, paramagnetism, ferromagnetism"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Curie and Curie-Weiss law",
+      "Temperature dependence"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Superconductivity (intro)",
+      "Meissner effect, type I vs II"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Dielectric properties of materials",
+      "Polarization mechanisms"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Optical properties of solids",
+      "Absorption and emission"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Theory: Nanomaterials (intro)",
+      "Size effects"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Tutorial: Worked problems on thermodynamics",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Tutorial: Worked problems on statistical mechanics",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Tutorial: Worked problems on crystal structures",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Key thermodynamics + solid state"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Tutorial: Worked problems on semiconductors",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Tutorial: Worked problems on magnetism",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Review: Solid State and Thermodynamics",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab intro: Advanced experimental techniques",
+      "Planning complex experiments"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab intro: Data acquisition systems",
+      "Digital instruments"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Specific heat using electric method",
+      "Calorimetry advanced"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Mechanical equivalent of heat",
+      "Joule's experiment style"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Stefan-Boltzmann law verification",
+      "Radiation measurement"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Heat conduction in solids",
+      "Measuring thermal conductivity"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Hall effect experiment",
+      "Semiconductor characterization"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Band gap of semiconductor",
+      "Temperature dependence of resistivity"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: p-n junction characteristics",
+      "I-V at different temperatures"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Transistor amplifier",
+      "Gain and frequency response"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Magnetic susceptibility",
+      "Gouy method or similar"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Curie temperature (demonstration)",
+      "Ferromagnetism"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: X-ray diffraction (demonstration or simulation)",
+      "Identifying structure"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Dielectric constant of materials",
+      "Capacitance method"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: LED spectrum",
+      "Connecting to band gap"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Solar cell characteristics",
+      "Efficiency measurement"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Thermistor and thermocouple",
+      "Temperature sensors"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Simulation of thermodynamic cycles",
+      "Using software"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Mini project \u2014 choosing and planning",
+      "Independent experiment"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Mini project \u2014 data collection",
+      "Running the experiment"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Mini project \u2014 analysis",
+      "Rigorous data treatment"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Mini project \u2014 report",
+      "Scientific writing"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Lab: Presentation of mini project",
+      "Viva-style defense"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Review: General Physics Laboratory II",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Deep revisit: Thermodynamic laws",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Deep revisit: Statistical mechanics",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Deep revisit: Crystal structures and diffraction",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Deep revisit: Free electron and band theory",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Deep revisit: Semiconductors",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Deep revisit: Magnetic and superconducting",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Deep revisit: Data analysis skills",
+      "Mixed tasks"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Integration: Thermodynamics and solid state",
+      "Heat capacity bridging both"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Integration: Labs verify solid state physics",
+      "Real experiments connecting theory"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Advanced practice: Harder thermodynamics",
+      "Challenging processes"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Advanced practice: Harder solid state",
+      "Band structure calculations"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Advanced practice: Complex data analysis",
+      "Multi-parameter fits"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Exam-style mock 1 (practical)",
+      "Lab task walkthrough"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Exam-style mock 2 (practical)",
+      "Harder lab task"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical lab pitfalls"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Mini viva",
+      "Lab skill defense"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Real-world applications",
+      "Semiconductors, energy, materials research"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Real-world applications",
+      "Industry and research labs"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Final overview",
+      "Key laws and models"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Final overview",
+      "Key lab skills"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory II",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "PHYS",
+    "unit": "Solid State and Thermodynamics",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check of both units"
+    ]
+  }
+]

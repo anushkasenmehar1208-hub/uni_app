@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Recap of Vector Analysis",
+      "Bridge to geometric methods"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Position vectors and loci",
+      "Describing shapes with vectors"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Vector equations of lines",
+      "Two-point and direction forms"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Intersecting, parallel, skew lines",
+      "Conditions and computations"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Shortest distance between two lines",
+      "Vector formula"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Vector equations of planes",
+      "Multiple forms"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Angle between lines and planes",
+      "Using dot and cross products"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Intersection of planes",
+      "Line of intersection"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Distance from point to plane",
+      "Projection method"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Sphere \u2014 vector form",
+      "Equation and tangent planes"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Circle in 3D",
+      "As intersection of sphere and plane"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Cylinder and cone (vector forms)",
+      "Parametric descriptions"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Quadric surfaces (intro)",
+      "Ellipsoid, paraboloid, hyperboloid"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Transformations in 3D",
+      "Translations and rotations"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Rotation matrices",
+      "About coordinate axes"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Reflections and shears",
+      "Matrix representations"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Parametric curves in 3D",
+      "Tangent vectors and normals"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Parametric surfaces",
+      "Normals and tangent planes"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Orthogonal projections",
+      "Projecting onto lines and planes"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Coordinate system transformations",
+      "Cartesian to cylindrical to spherical"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Applications in physics",
+      "Mechanics and geometry"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Theory: Applications in computer graphics",
+      "Rendering and transformations"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Tutorial: Worked problems on lines and planes",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Tutorial: Worked problems on surfaces",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Tutorial: Worked problems on transformations",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Review: Vector Methods in Geometry",
+      "Self-check: geometric concepts"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Introduction to numerical methods",
+      "Why we need numerical solutions"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Errors \u2014 absolute, relative, round-off",
+      "Sources of numerical error"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Floating point representation",
+      "IEEE 754 basics"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Error propagation",
+      "Stability and conditioning"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Root finding \u2014 bisection method",
+      "Convergence and examples"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: False position method",
+      "Comparison with bisection"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Fixed-point iteration",
+      "Convergence conditions"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Newton-Raphson method",
+      "Convergence and examples"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Secant method",
+      "When Newton's method is expensive"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Lab: Implementing bisection and Newton's method",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Systems of linear equations \u2014 direct methods",
+      "Gaussian elimination revisited"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: LU decomposition",
+      "Doolittle and Crout methods"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Pivoting strategies",
+      "Partial and complete pivoting"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Iterative methods \u2014 Jacobi",
+      "Convergence"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Gauss-Seidel method",
+      "When it converges faster"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: SOR (successive over-relaxation)",
+      "Choosing the relaxation parameter"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Lab: Implementing Gaussian elimination and LU",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Interpolation \u2014 Lagrange polynomials",
+      "Building the interpolating polynomial"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Newton's divided differences",
+      "Efficient interpolation"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Errors in polynomial interpolation",
+      "Runge's phenomenon"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Spline interpolation (intro)",
+      "Cubic splines"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Curve fitting \u2014 least squares",
+      "Normal equations approach"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Lab: Implementing interpolation",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Root finding, linear systems, interpolation"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Numerical differentiation",
+      "Finite differences"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Numerical integration \u2014 trapezoidal rule",
+      "Error analysis"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Simpson's rule (1/3 and 3/8)",
+      "Comparison with trapezoidal"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Composite rules",
+      "Improving accuracy"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Richardson extrapolation",
+      "Boosting accuracy"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Romberg integration",
+      "Systematic extrapolation"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Gaussian quadrature (intro)",
+      "Orthogonal polynomials"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Lab: Implementing numerical integration",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Solving ODEs numerically \u2014 Euler's method",
+      "Error analysis"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Improved Euler / Heun's method",
+      "Predictor-corrector idea"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Runge-Kutta methods (RK2, RK4)",
+      "Why RK4 is popular"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Theory: Stability of numerical ODE methods",
+      "Stiff equations intro"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Lab: Implementing Euler and RK4",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Tutorial: Worked problems on root finding",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Tutorial: Worked problems on linear systems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Tutorial: Worked problems on interpolation",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Tutorial: Worked problems on integration",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Tutorial: Worked problems on ODEs",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Review: Numerical Methods I",
+      "Self-check: all methods"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Deep revisit: Lines and planes",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Deep revisit: Surfaces and transformations",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Deep revisit: Root finding",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Deep revisit: Linear systems",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Deep revisit: Interpolation and integration",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Deep revisit: Numerical ODEs",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Integration: Geometry and numerical methods",
+      "Numerical computation of geometric quantities"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Integration: Numerical methods in physics",
+      "Applied simulations"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Advanced practice: Harder geometry problems",
+      "Challenging loci"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Advanced practice: Harder numerical problems",
+      "Stability analysis"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Advanced practice: Transformations",
+      "Composite and inverse transformations"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Advanced practice: Numerical linear algebra",
+      "Conditioning"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Real-world applications",
+      "CAD, graphics, robotics"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Real-world applications",
+      "Scientific computing, engineering simulations"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Preview of further topics",
+      "Advanced geometry"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Preview of Numerical Methods II",
+      "Advanced numerical techniques"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Final overview",
+      "Key techniques"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Final overview",
+      "Key techniques"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Integrated review (part 1)",
+      "Linking geometry and numerics"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Integrated review (part 2)",
+      "Linking numerics and geometry"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "AMAT",
+    "unit": "Vector Methods in Geometry",
+    "topics": [
+      "Self-assessment",
+      "Mixed readiness check"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Self-assessment",
+      "Mixed readiness check"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "AMAT",
+    "unit": "Numerical Methods I",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check of both units"
+    ]
+  }
+]

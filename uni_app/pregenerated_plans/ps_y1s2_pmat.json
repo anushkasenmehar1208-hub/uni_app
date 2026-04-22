@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Recap of Discrete Mathematics I",
+      "Bridge to deeper discrete topics"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Advanced counting \u2014 generating functions (intro)",
+      "Using power series for counting"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Ordinary generating functions",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Solving recurrence relations using generating functions",
+      "Linear recurrences"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Homogeneous linear recurrences",
+      "Characteristic equation method"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Non-homogeneous linear recurrences",
+      "Particular solutions"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Graphs \u2014 definitions and types",
+      "Simple graphs, multigraphs, digraphs"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Graph representations",
+      "Adjacency matrix and adjacency list"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Paths, cycles, and connectivity",
+      "Connected components"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Eulerian paths and circuits",
+      "Necessary and sufficient conditions"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Hamiltonian paths and cycles",
+      "Existence conditions (overview)"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Trees \u2014 definitions and properties",
+      "Spanning trees"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Minimum spanning trees",
+      "Kruskal's and Prim's algorithms"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Graph coloring",
+      "Chromatic number"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Planar graphs",
+      "Euler's formula"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Bipartite graphs",
+      "Matchings (intro)"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Shortest path problems",
+      "Dijkstra's algorithm (mathematical view)"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Network flows (intro)",
+      "Max flow - min cut basics"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Boolean algebra \u2014 axioms and operations",
+      "Laws of Boolean algebra"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Boolean functions and representations",
+      "Truth tables, sum-of-products"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Simplification of Boolean expressions",
+      "Karnaugh maps"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Lattices and partially ordered sets (deeper)",
+      "Join and meet"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Introduction to algebraic structures",
+      "Groups, rings, fields (overview)"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Groups \u2014 definition and examples",
+      "Abelian groups"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Theory: Subgroups and Lagrange's theorem (intro)",
+      "Cosets"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Tutorial: Worked problems on graphs",
+      "Step-by-step graph analysis"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Tutorial: Worked problems on recurrences",
+      "Solving recurrences in multiple ways"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Tutorial: Worked problems on Boolean algebra",
+      "Simplification practice"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Review: Discrete Mathematics II",
+      "Self-check: graphs, recurrences, Boolean algebra"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Real number system",
+      "Axioms and properties"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Suprema, infima, completeness axiom",
+      "Bounded sets"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Sequences \u2014 definition and convergence",
+      "Formal epsilon-N definition"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Limit laws for sequences",
+      "Proofs using epsilon-N"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Monotone convergence theorem",
+      "Bounded monotone sequences converge"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Cauchy sequences",
+      "Cauchy criterion"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Subsequences and Bolzano-Weierstrass (intro)",
+      "Every bounded sequence has a convergent subsequence"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Series \u2014 definition and convergence",
+      "Partial sums"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Tests for series convergence",
+      "Comparison test, ratio test, root test"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Absolute vs conditional convergence",
+      "Alternating series test"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Limits of functions",
+      "Epsilon-delta definition"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Limit laws for functions",
+      "Rigorous proofs"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Continuity at a point",
+      "Epsilon-delta for continuity"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Properties of continuous functions",
+      "Operations preserving continuity"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Intermediate value theorem",
+      "Proof and applications"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Extreme value theorem",
+      "Continuous functions on closed intervals"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Uniform continuity",
+      "Difference from pointwise continuity"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Differentiation \u2014 formal definition",
+      "Derivative as a limit"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Differentiability implies continuity",
+      "With counterexamples"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Rules of differentiation (rigorous)",
+      "Product, quotient, chain rules with proof"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Sequences, continuity, differentiability"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Rolle's theorem",
+      "Statement and proof"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Mean value theorem",
+      "Statement, proof, applications"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Cauchy's mean value theorem",
+      "L'Hopital's rule"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Taylor's theorem",
+      "Remainder forms"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Taylor and Maclaurin series",
+      "Examples and convergence"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Riemann integration (intro)",
+      "Partitions and Riemann sums"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Upper and lower sums",
+      "Integrability criterion"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Properties of the Riemann integral",
+      "Linearity, monotonicity"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Fundamental theorem of calculus (part 1)",
+      "Statement and proof"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Fundamental theorem of calculus (part 2)",
+      "Statement and proof"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Integration techniques (rigorous view)",
+      "Substitution and parts with proofs"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Improper integrals",
+      "Convergence tests"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Sequences and series of functions (intro)",
+      "Pointwise vs uniform convergence"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Uniform convergence and continuity",
+      "Preservation of continuity"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Theory: Power series",
+      "Radius and interval of convergence"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Tutorial: Worked problems on sequences and series",
+      "Rigorous convergence proofs"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Tutorial: Worked problems on continuity and differentiability",
+      "Epsilon-delta practice"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Tutorial: Worked problems on integration",
+      "Rigorous integral computations"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Tutorial: Worked problems on MVT and Taylor",
+      "Applications and proofs"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Review: Theory of Calculus",
+      "Self-check: sequences, limits, derivatives, integrals"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Deep revisit: Generating functions",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Deep revisit: Graph theory",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Deep revisit: Boolean algebra",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Deep revisit: Algebraic structures",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Deep revisit: Sequence and series convergence",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Deep revisit: Continuity and differentiability",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Deep revisit: Riemann integration",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Deep revisit: Taylor series and MVT",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Integration: Graphs and matrix algebra",
+      "Adjacency matrices revisited"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Integration: Calculus and discrete math",
+      "Series as discrete-to-continuous bridge"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Integration: Algorithms as recurrences",
+      "Complexity analysis connections"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Integration: Calculus in statistics and physics",
+      "Applied perspective"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Advanced practice: Harder graph problems",
+      "Complex graph scenarios"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Advanced practice: Harder epsilon-delta proofs",
+      "Challenging limits"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Advanced practice: Harder algebraic structures",
+      "Group theory problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Advanced practice: Harder integrability problems",
+      "Non-trivial Riemann integrals"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Final overview",
+      "All key theorems and techniques"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Final overview",
+      "All key theorems and techniques"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen proof problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Common mistakes and examiner tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Common mistakes and examiner tips",
+      "Typical proof pitfalls"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Applications in further mathematics",
+      "Preview of Year 2 discrete topics"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Applications in further mathematics",
+      "Preview of Infinite Series"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Real-world applications",
+      "Discrete math in CS, networks, cryptography"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Real-world applications",
+      "Calculus in physics, engineering, economics"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics II",
+    "topics": [
+      "Final review and self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "PMAT",
+    "unit": "Theory of Calculus",
+    "topics": [
+      "Final review and self-assessment",
+      "Readiness checklist"
+    ]
+  }
+]

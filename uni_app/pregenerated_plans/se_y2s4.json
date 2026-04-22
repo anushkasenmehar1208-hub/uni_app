@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: What is software architecture",
+      "Architecture vs design vs implementation"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Architectural drivers and quality attributes",
+      "Performance, scalability, security, maintainability"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Architectural styles (layered, client-server)",
+      "When to use each"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Pipe-and-filter, event-driven, repository styles",
+      "Examples and tradeoffs"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Service-oriented architecture (SOA)",
+      "Services and loose coupling"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Microservices architecture",
+      "Benefits, challenges, when to use"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Monolith vs microservices",
+      "Migration considerations"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Architectural views and viewpoints (4+1)",
+      "Documenting architecture"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Design principles (SOLID deeper)",
+      "Applying SOLID in architecture"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Design patterns (creational)",
+      "Factory, Singleton, Builder"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Design patterns (structural)",
+      "Adapter, Facade, Decorator, Proxy"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Design patterns (behavioural)",
+      "Observer, Strategy, Command, Iterator"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Architectural tradeoffs and ATAM overview",
+      "Evaluating architecture"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Cloud architecture basics",
+      "IaaS, PaaS, SaaS"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Theory: Distributed systems concepts",
+      "CAP theorem, consistency, availability"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Tutorial: Designing architecture for a case study",
+      "Step-by-step decisions"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Review: Software Architecture and Design",
+      "Self-check: styles, patterns, tradeoffs"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: What is HCI",
+      "Usability and user experience"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: Human factors (perception, memory, attention)",
+      "Designing for cognition"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: User-centred design process",
+      "Stages and activities"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: Personas, scenarios, user journey maps",
+      "Understanding users"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: Interaction design principles",
+      "Nielsen's heuristics"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: Information architecture and navigation",
+      "Organising content for users"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: Visual design basics (colour, typography, layout)",
+      "Creating clear hierarchies"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: Accessibility (WCAG basics)",
+      "Designing for all users"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Lab: Wireframing and low-fidelity prototyping",
+      "Lab: Figma or paper prototypes"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Lab: High-fidelity prototyping",
+      "Lab: Interactive prototypes"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: Usability evaluation methods",
+      "Heuristic evaluation, cognitive walkthroughs"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Theory: User testing basics",
+      "Running and analysing usability tests"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Tutorial: Evaluating and redesigning a UI",
+      "Case study walkthrough"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Review: Human Computer Interaction",
+      "Self-check: UCD, heuristics, evaluation"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: V&V fundamentals",
+      "Verification vs validation"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Testing levels (unit, integration, system, acceptance)",
+      "Roles at each level"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Testing techniques (black-box)",
+      "Equivalence partitioning, boundary value"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Testing techniques (white-box)",
+      "Statement, branch, path coverage"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Test case design",
+      "Writing effective test cases"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Test planning and strategy",
+      "Test plans and traceability"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Regression and performance testing",
+      "Keeping quality across releases"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Automated testing frameworks",
+      "xUnit-style tools"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Static analysis and inspections",
+      "Reviews and formal techniques"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Validation techniques",
+      "Acceptance criteria and customer validation"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Theory: Test-driven and behaviour-driven development",
+      "TDD vs BDD"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Tutorial: Designing tests for a case study",
+      "End-to-end V&V walkthrough"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Review: Software Verification and Validation",
+      "Self-check: testing levels, techniques, strategy"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Mobile platforms overview (Android, iOS)",
+      "Native vs cross-platform"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Mobile app lifecycle and components",
+      "Activities, views, intents (Android-style)"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Mobile UI design principles",
+      "Touch-first, small screens, gestures"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: Setting up Android Studio / Flutter",
+      "Lab: Running your first mobile app"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Layouts and widgets",
+      "Building responsive mobile UIs"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Navigation in mobile apps",
+      "Stack, tabs, drawers"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Mid-semester review: Integrated recap of SAD + HCI + V&V",
+      "Self-check across three units"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Local storage on mobile (SQLite, shared prefs)",
+      "Persisting app data"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Networking and REST calls",
+      "Working with remote APIs"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Background tasks and services",
+      "Keeping work off the UI thread"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Permissions, sensors, and device features",
+      "Camera, GPS, notifications"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: State management patterns on mobile",
+      "MVVM, BLoC, Provider overview"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: Mini mobile project (part 1)",
+      "Lab: UI and navigation"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: Mini mobile project (part 2)",
+      "Lab: Data, API, and polish"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Publishing to app stores",
+      "Google Play / App Store basics"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Review: Mobile Application Development",
+      "Self-check: UI, data, network, publishing"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: What is an embedded system",
+      "Characteristics and examples"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: Microcontrollers vs microprocessors",
+      "Common platforms (Arduino, ARM Cortex-M)"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: Embedded C basics",
+      "Memory-mapped I/O and registers"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: GPIO, ADC, PWM basics",
+      "Reading sensors, driving actuators"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: Timers and interrupts",
+      "Real-time behaviour basics"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: Serial communication (UART, SPI, I2C)",
+      "When to use each"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: Introduction to RTOS",
+      "Tasks, scheduling, synchronisation"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: Power management in embedded systems",
+      "Low-power design considerations"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Lab: Blinking LED and reading a sensor",
+      "Lab: Hands-on embedded basics"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Lab: Building a small embedded project",
+      "Lab: Sensor + actuator + simple logic"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Theory: Introduction to IoT and embedded networking",
+      "Connecting to the cloud"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Tutorial: Worked problems on timing and interrupts",
+      "Debugging embedded behaviour"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Review: Embedded Systems Development",
+      "Self-check: hardware, software, real-time"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Introduction to computer networks",
+      "Network types and topologies"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: OSI and TCP/IP reference models",
+      "Layer responsibilities"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Physical and data link layer basics",
+      "Framing, error detection"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: MAC protocols and Ethernet",
+      "LAN technologies"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Network layer and IP",
+      "IPv4, IPv6, subnetting"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Routing fundamentals",
+      "Static and dynamic routing overview"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Transport layer (TCP, UDP)",
+      "Reliable vs unreliable transport"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Congestion and flow control",
+      "TCP mechanisms"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Application layer protocols",
+      "HTTP, DNS, SMTP, FTP overview"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Network security basics",
+      "Threats, firewalls, TLS overview"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Wireless and mobile networks",
+      "Wi-Fi, cellular basics"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: Using tools (ping, traceroute, Wireshark)",
+      "Lab: Observing real traffic"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Tutorial: Subnetting and routing problems",
+      "Step-by-step calculations"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Review: Computer Networks",
+      "Self-check: models, protocols, security"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Recap of Management I",
+      "Bridge to advanced management topics"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Advanced project planning",
+      "Earned value management (EVM) basics"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Software metrics and measurement",
+      "Process, product, and project metrics"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Software quality management (advanced)",
+      "Standards (ISO 9001, CMMI overview)"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Software process improvement",
+      "Continuous improvement and retrospectives"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Agile scaling frameworks",
+      "SAFe, LeSS, Spotify model overview"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: DevOps culture and practice",
+      "CI/CD and collaboration between dev and ops"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Managing distributed and remote teams",
+      "Modern team realities"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Managing outsourced and offshore development",
+      "Sri Lanka as a software outsourcing hub"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Contracts, procurement, and vendor management",
+      "Practical basics"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Leadership and people management in SE",
+      "Motivation, coaching, conflict handling"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Theory: Ethics and governance in software projects",
+      "Corporate responsibility"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Tutorial: Case study \u2014 scaling an Agile team",
+      "End-to-end management walkthrough"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Review: Management for Software Engineering II",
+      "Self-check: metrics, quality, Agile, DevOps"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Integration: Architecture for the semester case study",
+      "Big-picture system design"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "SENG",
+    "unit": "Human Computer Interaction",
+    "topics": [
+      "Integration: HCI for the case study",
+      "Designing UX for the system"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "SENG",
+    "unit": "Software Verification and Validation",
+    "topics": [
+      "Integration: V&V plan for the case study",
+      "End-to-end test strategy"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "SENG",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Integration: Mobile frontend for the case study",
+      "Connecting UI with the architecture"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "SENG",
+    "unit": "Embedded Systems Development",
+    "topics": [
+      "Integration: Embedded / IoT component for the case study",
+      "Where hardware meets software"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "SENG",
+    "unit": "Computer Networks",
+    "topics": [
+      "Integration: Networking for the case study",
+      "Protocols, APIs, and security"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Integration: Managing the case study project",
+      "Scheduling, quality, team"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "SENG",
+    "unit": "Software Architecture and Design",
+    "topics": [
+      "Integrated semester review (part 1)",
+      "Architecture, HCI, V&V together"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering II",
+    "topics": [
+      "Integrated semester review (part 2)",
+      "Mobile, embedded, networks, management together"
+    ]
+  }
+]

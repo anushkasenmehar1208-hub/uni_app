@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Introduction to mechanics",
+      "Scope of Year 1 physics"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Vectors in physics",
+      "Addition, components, unit vectors"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Kinematics in 1D",
+      "Position, velocity, acceleration"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Kinematics in 2D and 3D",
+      "Projectile motion, circular motion"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Newton's laws of motion",
+      "Applications"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Friction and tension",
+      "Connected body problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Work, energy, power",
+      "Work-energy theorem"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Conservation of energy",
+      "Potential and kinetic energy"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Momentum and impulse",
+      "Collisions"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Center of mass",
+      "System of particles"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Rotational motion",
+      "Angular kinematics"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Moment of inertia",
+      "Common shapes"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Torque and rotational dynamics",
+      "Newton's 2nd law for rotation"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Angular momentum",
+      "Conservation"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Simple harmonic motion",
+      "Equations and energy"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Damped and forced oscillations",
+      "Resonance"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Gravitation",
+      "Newton's law, Kepler's laws"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Elasticity \u2014 stress and strain",
+      "Young's modulus"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Bulk and shear modulus",
+      "Poisson's ratio"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Fluid statics",
+      "Pressure, Pascal's and Archimedes' principles"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Surface tension and capillarity",
+      "Physical phenomena"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Fluid dynamics",
+      "Continuity, Bernoulli's equation"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Theory: Viscosity",
+      "Poiseuille's law, Stokes' law"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Tutorial: Worked problems on dynamics",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Tutorial: Worked problems on rotation",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Tutorial: Worked problems on elasticity",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Tutorial: Worked problems on fluids",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Review: Mechanics and Properties of Matter",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Electric charge and Coulomb's law",
+      "Force between charges"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Electric field",
+      "Field from point charges"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Electric potential",
+      "Potential from charges"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Gauss's law",
+      "Symmetric charge distributions"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Capacitance",
+      "Parallel plate capacitor"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Capacitors in series and parallel",
+      "Energy stored"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Dielectrics",
+      "Effect on capacitance"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Current and current density",
+      "Drift velocity"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Ohm's law and resistivity",
+      "Temperature dependence"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Resistors in series and parallel",
+      "Equivalent resistance"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: EMF and internal resistance",
+      "Real batteries"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Kirchhoff's laws",
+      "KCL and KVL"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Circuit analysis \u2014 mesh method",
+      "Setting up equations"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Circuit analysis \u2014 nodal method",
+      "Setting up equations"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Thevenin's and Norton's theorems",
+      "Simplifying circuits"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Superposition theorem",
+      "Linear circuits"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Maximum power transfer theorem",
+      "Applications"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: RC circuits",
+      "Charging and discharging"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: RL circuits",
+      "Transient behaviour"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: LC and RLC circuits",
+      "Oscillations and damping"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: AC circuits \u2014 basics",
+      "Phasors and RMS values"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Key circuit concepts"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Impedance of R, L, C",
+      "AC analysis"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: AC circuits \u2014 series and parallel",
+      "Impedance combinations"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Resonance in RLC circuits",
+      "Quality factor"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Power in AC circuits",
+      "Real, reactive, apparent power"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Power factor",
+      "Correction techniques"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Transformers (intro)",
+      "Mutual inductance"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Tutorial: Worked problems on DC circuits",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Tutorial: Worked problems on transients",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Tutorial: Worked problems on AC circuits",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Review: Electric Circuit Fundamentals",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab intro: Scientific measurement",
+      "Significant figures and precision"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab intro: Error analysis",
+      "Systematic and random errors"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab intro: Propagation of errors",
+      "Addition, multiplication rules"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab intro: Writing a lab report",
+      "Structure and scientific style"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Measurement with vernier and micrometer",
+      "Practice readings"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Simple pendulum",
+      "Measuring g"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Young's modulus of a wire",
+      "Measuring and computing"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Coefficient of friction",
+      "Inclined plane experiment"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Moment of inertia of a flywheel",
+      "Method and analysis"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Viscosity of a liquid",
+      "Stokes' method"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Surface tension",
+      "Capillary rise method"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Ohm's law verification",
+      "I-V characteristics"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Wheatstone bridge",
+      "Measuring unknown resistance"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Potentiometer",
+      "EMF comparison"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: RC circuit time constant",
+      "Measuring and analysing"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Resonance in RLC circuits",
+      "Finding resonance frequency"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Data fitting and linearization",
+      "Plotting log-log graphs"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Report writing workshop",
+      "Turning data into narrative"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Presenting lab results",
+      "Tables, graphs, figures"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Lab: Review of lab techniques",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Deep revisit: Dynamics and energy",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Deep revisit: Rotation and SHM",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Deep revisit: Elasticity and fluids",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Deep revisit: DC analysis",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Deep revisit: AC analysis",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Deep revisit: Error analysis",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Integration: Mechanics underpins circuits",
+      "Energy flow in physical systems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Integration: Circuits as physical systems",
+      "Energy and force analogies"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Integration: Lab skills link theory and practice",
+      "Reading physics through data"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Advanced practice: Harder mechanics problems",
+      "Challenging setups"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Advanced practice: Harder circuit problems",
+      "Complex networks"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical lab pitfalls"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Final overview",
+      "Key laws and equations"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Final overview",
+      "Key laws and equations"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Final overview",
+      "Key lab skills"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "PHYS",
+    "unit": "Mechanics and Properties of Matter",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "PHYS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory I",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  }
+]

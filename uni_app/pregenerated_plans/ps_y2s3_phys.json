@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Introduction to waves",
+      "Wave types and properties"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Wave equation \u2014 derivation (1D string)",
+      "Mathematical form"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Traveling and standing waves",
+      "Superposition principle"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Energy and power in waves",
+      "Intensity"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Reflection and transmission at boundaries",
+      "Amplitude coefficients"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Interference of waves",
+      "Constructive and destructive"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Beats",
+      "Two-wave superposition"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Standing waves in strings",
+      "Normal modes"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Standing waves in air columns",
+      "Open and closed pipes"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Sound waves",
+      "Speed, intensity, dB scale"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Doppler effect",
+      "Moving sources and observers"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Electromagnetic waves",
+      "Maxwell's equations (overview)"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: EM spectrum",
+      "Properties across frequency"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Geometrical optics \u2014 reflection",
+      "Mirrors"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Refraction and Snell's law",
+      "Total internal reflection"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Thin lenses",
+      "Lens equation"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Optical instruments",
+      "Microscopes, telescopes"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Aberrations",
+      "Spherical and chromatic"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Wave optics \u2014 Huygens' principle",
+      "Wavefront propagation"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Double-slit interference",
+      "Young's experiment"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Thin film interference",
+      "Newton's rings"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Diffraction \u2014 single slit",
+      "Minima positions"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Diffraction grating",
+      "Resolution and dispersion"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Polarization",
+      "Polarized and unpolarized light"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Malus's law",
+      "Brewster's angle"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Birefringence (intro)",
+      "Double refraction"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Laser fundamentals",
+      "Stimulated emission and population inversion"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Holography (intro)",
+      "3D imaging principles"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Fiber optics",
+      "Total internal reflection applications"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Fourier analysis of waves",
+      "Spectrum of a signal"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Wave packets and group velocity",
+      "Dispersion"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Theory: Nonlinear optics (brief intro)",
+      "Harmonic generation (conceptual)"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Tutorial: Worked problems on interference",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Tutorial: Worked problems on diffraction",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Tutorial: Worked problems on polarization",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Tutorial: Worked problems on optical instruments",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Review: Waves and Optics",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab intro: Experimental techniques at intermediate level",
+      "Planning and execution"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab intro: Advanced instrumentation",
+      "Oscilloscopes, function generators"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab intro: Data analysis and fitting",
+      "Least squares in labs"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab intro: Uncertainty and error propagation (deeper)",
+      "Statistical methods"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Measuring wavelength with interference",
+      "Newton's rings or Michelson"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Diffraction grating experiment",
+      "Measuring spectral lines"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Polarization experiments",
+      "Malus's law verification"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Speed of sound measurement",
+      "Resonance tube method"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Standing waves on a string",
+      "Measuring frequency and tension"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Measuring refractive index",
+      "Spectrometer method"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Focal length of lenses",
+      "Thin lens formula verification"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Construction of simple microscope",
+      "Magnification measurement"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Mid-unit review: Integrated lab skills recap",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: AC circuit measurements with oscilloscope",
+      "Phase and amplitude"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Resonance in LCR circuit",
+      "Q factor measurement"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Semiconductor diode I-V",
+      "Characterizing diodes"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Transistor characteristics",
+      "Amplifier basics"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Hall effect",
+      "Measuring carrier concentration"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Magnetic field of a coil",
+      "Helmholtz configuration"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Measurement of Planck's constant",
+      "LED method"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Measurement of speed of light (conceptual)",
+      "Or rotating mirror method"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Thermal conductivity",
+      "Steady-state method"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Specific heat capacity",
+      "Calorimetry"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Coefficient of linear expansion",
+      "Measurement and analysis"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Viscosity of liquid (rotational method)",
+      "Comparing with Year 1"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Mini project \u2014 choosing and designing",
+      "Independent experiment"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Mini project \u2014 data collection",
+      "Running the experiment"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Mini project \u2014 analysis and report",
+      "Writing up"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Lab: Presentation of mini project",
+      "Viva-style defense"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Review: General Physics Laboratory I",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Deep revisit: Wave equation and SHM connection",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Deep revisit: Interference",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Deep revisit: Diffraction",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Deep revisit: Polarization and lasers",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Deep revisit: Geometrical optics",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Deep revisit: Error analysis",
+      "Mixed tasks"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Deep revisit: Instrumentation",
+      "Mixed tasks"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Integration: Waves connect sound, light, quantum",
+      "Unifying theme"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Integration: Labs validate wave theory",
+      "Experiment meets theory"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Advanced practice: Harder interference problems",
+      "Challenging geometries"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Advanced practice: Harder diffraction problems",
+      "Complex setups"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Advanced practice: Harder optics problems",
+      "Multi-element systems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Advanced practice: Complex data fitting",
+      "Non-linear models"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Exam-style mock 1 (practical)",
+      "Lab task walkthrough"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Exam-style mock 2 (practical)",
+      "Harder lab task"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical lab pitfalls"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Mini viva",
+      "Lab skill defense"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Real-world applications",
+      "Medical imaging, telecommunications"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Real-world applications",
+      "Industrial measurement standards"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Preview of Y2S4",
+      "Solid state and thermodynamics connections"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Preview of Y2S4 lab",
+      "General Physics Laboratory II"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Final overview",
+      "Key principles"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Final overview",
+      "Key lab techniques"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen wave problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unfamiliar experiments"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Integrated review (part 1)",
+      "Linking waves with labs"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Integrated review (part 2)",
+      "Linking labs with waves"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Key derivations recap",
+      "Must-know equations"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Portfolio polish",
+      "Final lab report improvements"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "PHYS",
+    "unit": "General Physics Laboratory I",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "PHYS",
+    "unit": "Waves and Optics",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check of both units"
+    ]
+  }
+]

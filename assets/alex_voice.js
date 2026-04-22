@@ -627,8 +627,12 @@
   }
 
   function appendChatBubble(role, html, plain) {
+    // Desktop right-side panel (hidden on mobile via CSS)
     var panel = document.getElementById('alex-chat-panel');
-    if (!panel) return;
+    // Mobile transparent chat panel (visible on mobile only via CSS)
+    var mobilePanel = document.getElementById('alex-mobile-chat-panel');
+    var targetPanel = (mobilePanel && window.innerWidth <= 900) ? mobilePanel : panel;
+    if (!targetPanel) return;
     var bubble = document.createElement('div');
     bubble.className = 'alex-chat-bubble alex-chat-' + role;
     if (role === 'alex' && html) {
@@ -636,8 +640,8 @@
     } else {
       bubble.textContent = plain || '';
     }
-    panel.appendChild(bubble);
-    panel.scrollTop = panel.scrollHeight;
+    targetPanel.appendChild(bubble);
+    targetPanel.scrollTop = targetPanel.scrollHeight;
   }
 
   function renderVoiceTranscriptBlock(userLinePlain, alexData) {

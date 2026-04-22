@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Why data structures and algorithms matter",
+      "Recap: arrays and basic operations from Programming Concepts"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Algorithm analysis basics (time and space complexity)",
+      "Big O notation (intuitive introduction)"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Best, worst, and average case analysis",
+      "Comparing algorithm efficiency with examples"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Abstract data types (ADTs) vs data structures",
+      "Designing with ADTs in mind"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Linear search and binary search",
+      "Comparing search performance"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Implementing linear and binary search",
+      "Lab: Measuring performance on different input sizes"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Basic sorting (bubble sort, selection sort)",
+      "Tracing sort operations by hand"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Insertion sort",
+      "Analysing performance of basic sorts"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Merge sort (divide and conquer)",
+      "Recursion tree analysis"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Quick sort",
+      "Partitioning and average vs worst case"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Implementing merge sort and quick sort",
+      "Lab: Comparing sort algorithms experimentally"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Linked lists (singly linked)",
+      "Insertion, deletion, traversal operations"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Doubly linked lists and circular linked lists",
+      "When to use each variation"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Implementing a singly linked list",
+      "Lab: Common linked list problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Stacks (LIFO) and their operations",
+      "Applications: function calls, expression evaluation"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Queues (FIFO) and their operations",
+      "Applications: scheduling, buffering"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Circular queues and priority queues (intro)",
+      "Array vs linked list implementations"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Implementing stacks and queues",
+      "Lab: Using stacks for balanced parentheses check"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Trees and binary trees (definitions, terminology)",
+      "Tree traversals: in-order, pre-order, post-order"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Binary search trees (BST)",
+      "Insertion, search, deletion in BSTs"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Hashing and hash tables (introduction)",
+      "Collision handling strategies (chaining, open addressing)"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Introduction to graphs (directed vs undirected)",
+      "Graph representations: adjacency matrix and list"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Graph traversals (BFS and DFS intuition)",
+      "When to use BFS vs DFS"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Worked problems on sorting and searching",
+      "Step-by-step algorithm tracing"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Worked problems on linked lists, stacks, queues",
+      "Common interview-style questions at foundational level"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "SENG",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Review: Data Structures and Algorithms",
+      "Integrated self-check: complexity, sorts, lists, trees"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Why object-oriented programming",
+      "Procedural vs object-oriented thinking"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Classes and objects (core concepts)",
+      "Attributes, methods, and object state"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Lab: Defining classes and creating objects",
+      "Lab: Writing simple class-based programs"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Constructors and destructors",
+      "Default vs parameterised constructors"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Encapsulation and access modifiers (public, private, protected)",
+      "Getters, setters, and information hiding"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Lab: Building classes with proper encapsulation",
+      "Lab: Refactoring procedural code into OOP style"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Inheritance (single and multi-level)",
+      "Parent-child class relationships"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Method overriding and the 'super' keyword",
+      "When to override and when not to"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Lab: Building an inheritance hierarchy",
+      "Lab: Testing method overriding behaviour"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Polymorphism (compile-time and runtime)",
+      "Method overloading vs method overriding"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Abstract classes and abstract methods",
+      "When to use abstract classes"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Interfaces and their role in OOP",
+      "Interfaces vs abstract classes"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Lab: Implementing interfaces and abstract classes",
+      "Lab: Polymorphism in practice"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Composition vs inheritance",
+      "Favoring composition for flexible design"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Exception handling (try, catch, throw)",
+      "Checked vs unchecked exceptions (where applicable)"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Generics / templates (introduction)",
+      "Type safety and reusable code"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Collections framework basics (list, set, map)",
+      "Choosing the right collection"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Lab: Working with collections",
+      "Lab: Iterating and transforming collections"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: File I/O in an OOP context",
+      "Reading and writing objects (serialization intro)"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Introduction to design principles (SOLID \u2014 basics)",
+      "Single responsibility and open-closed principles"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Theory: Introduction to UML class diagrams",
+      "Reading and drawing simple class diagrams"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Lab: Mini project \u2014 designing and building a small OOP application",
+      "Lab: From UML to working code"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Tutorial: Worked OOP problems and code reading",
+      "Common beginner OOP mistakes"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "SENG",
+    "unit": "Object Oriented Programming",
+    "topics": [
+      "Review: Object Oriented Programming",
+      "Self-check: classes, inheritance, polymorphism, design"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: What is a database and a DBMS",
+      "File-based systems vs database systems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Database architecture (three-level ANSI/SPARC)",
+      "Data independence and schema layers"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Roles: DBA, database designer, application developer, end user",
+      "Data models overview (relational, hierarchical, network, NoSQL intro)"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: The relational model \u2014 relations, tuples, attributes",
+      "Keys: primary, candidate, foreign, composite"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Mid-semester review: Integrated recap of DSA + OOP",
+      "Self-check and conceptual questions across both units"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Entity-Relationship (ER) modelling",
+      "Entities, attributes, relationships, cardinality"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Enhanced ER (EER): specialization, generalization, aggregation",
+      "Drawing EER diagrams"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Mapping ER diagrams to relational schemas",
+      "Strong vs weak entities and their mappings"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Functional dependencies and normalization (1NF, 2NF)",
+      "Anomalies in unnormalized tables"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Normalization (3NF and BCNF)",
+      "Practical normalization walkthrough"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: SQL overview (DDL, DML, DCL, TCL)",
+      "Creating tables, constraints, and data types"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Lab: SQL DDL \u2014 CREATE, ALTER, DROP",
+      "Lab: Defining primary and foreign keys"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: SQL DML \u2014 INSERT, UPDATE, DELETE",
+      "Basic SELECT queries with WHERE"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: SQL \u2014 ORDER BY, DISTINCT, aggregate functions",
+      "GROUP BY and HAVING"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: SQL joins (INNER, LEFT, RIGHT, FULL)",
+      "Self-joins and join conditions"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Subqueries and nested queries",
+      "Correlated vs non-correlated subqueries"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Lab: Writing SQL queries on a sample schema",
+      "Lab: Joins, grouping, and subqueries in practice"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Views, indexes, and stored procedures (introduction)",
+      "When to use each"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Transactions and ACID properties",
+      "Concurrency control basics (conceptual)"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Database security and access control basics",
+      "Backup, recovery, and data integrity overview"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Theory: Introduction to NoSQL (key-value, document, column, graph)",
+      "When to pick NoSQL over relational"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Lab: Mini project \u2014 designing a small relational database from requirements",
+      "Lab: From ER diagram to working SQL database"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Tutorial: Worked problems on normalization and SQL",
+      "Step-by-step walkthroughs"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "SENG",
+    "unit": "Database Design and Development",
+    "topics": [
+      "Review: Database Design and Development",
+      "Self-check: ER, normalization, SQL, transactions"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Recap of Mathematics for Computing I (brief)",
+      "Bridge from Semester 1 topics to Semester 2 content"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Advanced differentiation techniques",
+      "Chain rule, implicit differentiation, higher-order derivatives"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Applications of differentiation",
+      "Optimization problems and related rates"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Advanced integration techniques",
+      "Integration by substitution and by parts"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Definite integrals and their applications",
+      "Area under curves and simple volume problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Sequences and series (arithmetic, geometric, harmonic)",
+      "Convergence and divergence (intuitive)"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Power series and Taylor series (introduction)",
+      "Approximating functions using polynomials"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Introduction to linear algebra (continued)",
+      "Vector spaces, linear combinations, linear independence"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Linear transformations (introduction)",
+      "Matrix representation of linear transformations"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Eigenvalues and eigenvectors (introduction)",
+      "Finding eigenvalues for 2x2 matrices"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Introduction to probability distributions (applied)",
+      "Binomial, Poisson, normal \u2014 applied context for computing"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Basic combinatorics and counting (deeper)",
+      "Permutations, combinations, inclusion-exclusion principle"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Growth of functions and asymptotic analysis (math side)",
+      "Connection to algorithm complexity"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Introduction to graph theory (light)",
+      "Paths, cycles, trees \u2014 mathematical perspective"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Theory: Introduction to Boolean algebra (mathematical foundations)",
+      "Simplification of Boolean expressions"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Tutorial: Worked problems on calculus and series",
+      "Step-by-step walkthroughs"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Tutorial: Worked problems on linear algebra and eigenvalues",
+      "Step-by-step walkthroughs"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PMAT",
+    "unit": "Mathematics for Computing II",
+    "topics": [
+      "Review: Mathematics for Computing II",
+      "Integrated self-check: calculus, series, linear algebra, combinatorics"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Introduction to software project management",
+      "Why management matters in software engineering"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: The software project lifecycle (management view)",
+      "Initiation, planning, execution, monitoring, closing"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Project scope and requirements management basics",
+      "Scope creep and how to prevent it"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Work breakdown structures (WBS)",
+      "Task decomposition and estimation"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Project scheduling basics",
+      "Gantt charts and critical path method (CPM) introduction"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Effort estimation techniques",
+      "Expert judgment, analogy-based, and function point basics"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Risk management in software projects",
+      "Identifying, analysing, and mitigating risks"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Cost management and budgeting basics",
+      "Direct vs indirect costs in software projects"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Quality management in software",
+      "Quality planning, assurance, and control (introduction)"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Human resources and team management",
+      "Team building, roles, and motivation"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Communication management",
+      "Stakeholder communication and reporting"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Configuration management basics",
+      "Version control and change management overview"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Introduction to software process models (management view)",
+      "Waterfall, iterative, and Agile overview"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Agile and Scrum basics",
+      "Sprints, roles, ceremonies, artifacts"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Theory: Professional and ethical issues in project management",
+      "Managing in the Sri Lankan software industry context"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Tutorial: Worked case studies on scheduling and risk",
+      "Small project planning walkthrough"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Review: Management for Software Engineering I",
+      "Self-check: project management fundamentals"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "SENG",
+    "unit": "Management for Software Engineering I",
+    "topics": [
+      "Integrated semester review",
+      "Connecting DSA, OOP, Databases, Math II, and Management into a unified engineering mindset"
+    ]
+  }
+]

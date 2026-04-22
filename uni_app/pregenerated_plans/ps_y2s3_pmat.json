@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Recap of Matrix Algebra",
+      "Bridge to abstract linear algebra"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Vector spaces \u2014 axioms",
+      "Examples and non-examples"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Subspaces",
+      "Tests for subspaces"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Linear combinations and span",
+      "Generating sets"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Linear independence (formal)",
+      "Proving independence"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Basis and dimension (rigorous)",
+      "Uniqueness of basis size"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Coordinates relative to a basis",
+      "Coordinate vectors"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Change of basis",
+      "Transition matrices (deeper)"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Row space, column space, null space",
+      "Fundamental subspaces"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Rank-nullity theorem",
+      "Statement and proof"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Linear transformations (formal)",
+      "Definition and properties"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Kernel and image",
+      "Isomorphism theorem (intro)"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Matrix of a linear transformation",
+      "Between arbitrary bases"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Composition and inverse of linear transformations",
+      "Invertibility criteria"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Inner product spaces",
+      "Axioms and examples"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Norm and orthogonality",
+      "Cauchy-Schwarz inequality"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Orthogonal sets and bases",
+      "Gram-Schmidt process"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Orthogonal complements",
+      "Projection onto a subspace"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Least squares problems",
+      "Normal equations"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Eigenvalues and eigenvectors (formal)",
+      "Algebraic and geometric multiplicity"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Diagonalization (rigorous)",
+      "Similarity of matrices"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Orthogonal diagonalization",
+      "Spectral theorem for symmetric matrices"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Quadratic forms",
+      "Classification via eigenvalues"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Jordan canonical form (intro)",
+      "When diagonalization fails"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Singular value decomposition (intro)",
+      "Intuition and applications"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Applications \u2014 Markov chains",
+      "Stochastic matrices"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Applications \u2014 linear ODEs",
+      "Using eigenvalues"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Applications in computer science",
+      "PageRank, image compression (intuitive)"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Worked problems on vector spaces",
+      "Step-by-step walkthroughs"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Worked problems on linear transformations",
+      "Step-by-step walkthroughs"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Worked problems on inner products",
+      "Gram-Schmidt practice"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Worked problems on eigenvalues",
+      "Diagonalization practice"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Review: Linear Algebra",
+      "Self-check: spaces, transformations, eigenvalues"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Recap of series from Theory of Calculus",
+      "Bridge to infinite series"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Sequences revisited",
+      "Convergence, divergence, monotonicity"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Series of real numbers",
+      "Partial sums and convergence"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Geometric and telescoping series",
+      "Closed-form sums"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Harmonic and p-series",
+      "Divergence of harmonic, convergence criteria"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Comparison tests (direct and limit)",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Ratio test and root test",
+      "When each is useful"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Integral test",
+      "Connection between integrals and series"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Alternating series test",
+      "Leibniz criterion"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Absolute vs conditional convergence",
+      "Rearrangement theorems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Riemann rearrangement theorem",
+      "Why ordering matters"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Power series \u2014 convergence",
+      "Radius and interval of convergence"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Operations on power series",
+      "Term-by-term differentiation and integration"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Taylor series (deeper)",
+      "Expanding functions"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Maclaurin series and common expansions",
+      "e^x, sin, cos, ln(1+x)"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Error analysis in Taylor approximations",
+      "Remainder bounds"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Convergence tests and power series"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Uniform convergence of series of functions",
+      "Weierstrass M-test"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Consequences of uniform convergence",
+      "Continuity, integration, differentiation"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Fourier series (intro)",
+      "Periodic functions"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Fourier coefficients",
+      "Computing small examples"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Convergence of Fourier series",
+      "Pointwise and uniform (overview)"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Applications of Fourier series",
+      "Heat and wave equations (conceptual)"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Infinite products (intro)",
+      "Connection to series"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Theory: Asymptotic series (light)",
+      "When series are useful even if divergent"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Tutorial: Worked problems on convergence tests",
+      "Mixed test applications"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Tutorial: Worked problems on power series",
+      "Finding radius and evaluating"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Tutorial: Worked problems on Taylor series",
+      "Expansions and error estimates"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Tutorial: Worked problems on Fourier series",
+      "Computing coefficients"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Review: Infinite Series",
+      "Self-check: tests, power, Taylor, Fourier"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Deep revisit: Vector spaces and subspaces",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Deep revisit: Linear transformations",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Deep revisit: Inner products and Gram-Schmidt",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Deep revisit: Eigenvalues and diagonalization",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Deep revisit: Convergence tests",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Deep revisit: Power series",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Deep revisit: Taylor series",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Deep revisit: Fourier series",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Integration: Linear algebra in calculus",
+      "Linearization and Jacobians (intro)"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Integration: Series and linear algebra",
+      "Expansions in orthogonal bases"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Integration: Linear algebra in physics",
+      "Quantum states as vectors (intuitive)"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Integration: Series in physics and engineering",
+      "Vibrating strings, signal analysis"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Advanced practice: Harder vector space problems",
+      "Abstract proofs"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Advanced practice: Harder eigenvalue problems",
+      "Non-diagonalizable cases"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Advanced practice: Harder convergence problems",
+      "Subtle cases"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Advanced practice: Harder Taylor/Fourier problems",
+      "Complex expansions"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Proof technique refresher",
+      "Standard patterns for linear algebra proofs"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Proof technique refresher",
+      "Standard patterns for convergence proofs"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Common mistakes and examiner tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Common mistakes and examiner tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Real-world applications",
+      "Data science, physics, engineering"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Real-world applications",
+      "Signal processing, approximation, physics"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Preview of Year 2 Sem 4 topics",
+      "Functions of several variables dependency"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Preview of Year 2 Sem 4 topics",
+      "ODEs and series solutions"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Final overview",
+      "Key theorems and techniques"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Final overview",
+      "Key theorems and techniques"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Integrated semester review (part 1)",
+      "Linking linear algebra and series"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Integrated semester review (part 2)",
+      "Linking series to linear algebra"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Self-assessment practice",
+      "Mixed readiness check"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Self-assessment practice",
+      "Mixed readiness check"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Final revision day",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "PMAT",
+    "unit": "Infinite Series",
+    "topics": [
+      "Final revision day",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "PMAT",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check of both units"
+    ]
+  }
+]

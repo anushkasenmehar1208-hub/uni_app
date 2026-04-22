@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: What is software engineering",
+      "Software crisis and discipline overview"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Software process models",
+      "Waterfall, iterative, Agile overview"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Requirements engineering basics",
+      "Functional vs non-functional requirements"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Stakeholders and elicitation",
+      "Interviews, observation, workshops"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Requirements specification",
+      "SRS basics"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Software design basics",
+      "Architecture vs detailed design"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: UML overview",
+      "Use case, class, sequence diagrams"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Implementation practices",
+      "Coding standards and version control"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Testing basics",
+      "Unit, integration, system testing"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Maintenance and evolution",
+      "Corrective, adaptive, perfective"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Project management basics",
+      "Scope, schedule, effort"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Risk management",
+      "Identifying and mitigating project risks"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Agile methods",
+      "Scrum, Kanban basics"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Quality assurance",
+      "Reviews, standards, metrics"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Tutorial: Case study walkthrough",
+      "Applying SE phases"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Review: Software Engineering",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Why data structures matter",
+      "Efficiency and abstraction"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Algorithm analysis intro",
+      "Time and space complexity"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Big-O, Big-Theta, Big-Omega",
+      "Growth rates"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Arrays and dynamic arrays",
+      "Access, insertion, deletion tradeoffs"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Linked lists",
+      "Singly and doubly linked"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Implementing arrays and linked lists",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Stacks",
+      "Applications and implementation"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Queues and circular queues",
+      "Applications and implementation"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Implementing stacks and queues",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Recursion",
+      "Base case and recursive thinking"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Recurrence relations (light)",
+      "Runtime intuition"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Recursive functions",
+      "Tracing recursion"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Trees intro",
+      "Terminology and traversals"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Binary trees and BSTs",
+      "Search and insert"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Tree traversal implementations",
+      "Preorder, inorder, postorder"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Heaps and priority queues",
+      "Heap property"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Hashing basics",
+      "Hash tables and collisions"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Hash table implementation",
+      "Simple chaining/open addressing"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Graphs intro",
+      "Representations and terminology"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Graph traversal",
+      "BFS and DFS"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Graph representations and traversals",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Sorting \u2014 bubble, selection, insertion",
+      "Basic sorting analysis"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Sorting \u2014 merge sort and quicksort",
+      "Divide and conquer"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Implementing sorting algorithms",
+      "Comparing behavior"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Searching \u2014 linear and binary search",
+      "Preconditions and complexity"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Greedy algorithms intro",
+      "Local vs global choices"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Dynamic programming intro",
+      "Overlapping subproblems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Worked problems on complexity",
+      "Step-by-step analysis"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Worked problems on trees and graphs",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Worked problems on sorting/searching",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Review: DSA core concepts",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Mini DSA task 1",
+      "Implement and test"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Mini DSA task 2",
+      "Implement and test"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Mid-unit review",
+      "Complexity + structures recap"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Deep revisit: Requirements and design",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Deep revisit: Testing and quality",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Deep revisit: Lists, stacks, queues",
+      "Mixed coding"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Deep revisit: Trees and hashing",
+      "Mixed coding"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Deep revisit: Graphs and sorting",
+      "Mixed coding"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Integration: SE needs good data structures",
+      "Design meets implementation"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Integration: Data structures support software design",
+      "Implementation perspective"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab/theory: Git and teamwork basics",
+      "Collaboration overview"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Timed coding practice 1",
+      "Short structure problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Timed coding practice 2",
+      "Short algorithm problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Case study: Small system lifecycle",
+      "From requirements to test cases"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Case study: Choosing the right data structure",
+      "Tradeoff analysis"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Advanced practice: Complexity comparisons",
+      "Best/worst/average thinking"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Advanced practice: Harder recursion problems",
+      "Tree recursion"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Advanced practice: Harder graph problems",
+      "Traversal logic"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Advanced practice: Harder SE scenarios",
+      "Process and testing choices"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed theory questions"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed coding/theory questions"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder theory questions"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder coding/theory questions"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Common mistakes and tips",
+      "Process and testing pitfalls"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Common mistakes and tips",
+      "Complexity and implementation pitfalls"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Mini viva",
+      "Explain your implementation choices"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Real-world applications",
+      "How teams build real software"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Real-world applications",
+      "How performance matters in software"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Preview of Y2S4",
+      "Architecture and databases ahead"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Preview of Y2S4",
+      "Systems and DB relevance"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Final overview",
+      "Key lifecycle concepts"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Final overview",
+      "Key structures and algorithms"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen SE questions"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen coding questions"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Integrated review part 1",
+      "Requirements, design, quality"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Integrated review part 2",
+      "Lists, trees, graphs, sorting"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Quick recap drill",
+      "Fast concept recall"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Quick recap drill",
+      "Fast coding recall"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Concept map building",
+      "Linking all core SE ideas"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Concept map building",
+      "Linking all structures and algorithms"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Reflection",
+      "What you can now explain clearly"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Reflection",
+      "What you can now implement clearly"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Confidence booster",
+      "Easy recap questions"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Confidence booster",
+      "Easy recap coding"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "COSC",
+    "unit": "Software Engineering",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "COSC",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  }
+]

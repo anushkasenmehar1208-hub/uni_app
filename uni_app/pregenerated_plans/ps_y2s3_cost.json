@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: What is professional communication",
+      "Workplace vs academic communication"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Business writing essentials",
+      "Clarity, brevity, professionalism"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Writing business emails",
+      "Format, tone, and etiquette"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Writing memos",
+      "Internal professional documents"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Writing formal letters",
+      "Job applications, complaints, inquiries"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Reports in the workplace",
+      "Short and long reports"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Technical reports",
+      "Writing for engineers and scientists"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Proposals",
+      "Structure and persuasiveness"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Executive summaries",
+      "Concise and decision-focused writing"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Meeting communication",
+      "Agendas, minutes, chairing"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Professional presentations",
+      "Planning and delivering in work contexts"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Presentation visuals",
+      "Slide design principles"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Handling questions",
+      "Professional Q&A strategies"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Interpersonal communication",
+      "Building professional relationships"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Negotiation communication",
+      "Win-win strategies"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Conflict communication",
+      "De-escalation and resolution"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Networking communication",
+      "First impressions and follow-up"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: CV and resume writing",
+      "Structure and impact"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Cover letter writing",
+      "Tailoring to a job"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Theory: Interview communication",
+      "Preparation and delivery"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Practice: Writing a professional email",
+      "Task and feedback"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Practice: Writing a short report",
+      "Task and feedback"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Practice: Writing a CV",
+      "Draft and peer review"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Practice: Writing a cover letter",
+      "Tailored to a real job posting"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Practice: Mock interview",
+      "Recording and feedback"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Practice: Professional presentation (5-7 min)",
+      "With slides"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Tutorial: Worked writing problems",
+      "Improving weak professional documents"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Review: Professional Communication I",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Review: Past paper style tasks",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Deep revisit: Business writing",
+      "Mixed practice"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Deep revisit: Reports and proposals",
+      "Mixed practice"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Deep revisit: Professional oral communication",
+      "Practice and feedback"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Deep revisit: CV and interviews",
+      "Mock and feedback"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Advanced practice: Complex technical report",
+      "Full formal document"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Advanced practice: Formal proposal",
+      "Pitching an idea"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Advanced practice: Conference-style presentation",
+      "Longer formal delivery"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Integration: Professional communication across subjects",
+      "Writing lab reports, presentations, emails"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed written tasks"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed feedback"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder written tasks"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed feedback"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Common mistakes and tips",
+      "Professional writing pitfalls"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Mini viva",
+      "Professional oral communication practice"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Real-world applications",
+      "Communication in engineering, science, business"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final overview",
+      "Key professional communication skills"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen professional writing tasks"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Integrated review part 1",
+      "Written professional documents"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Integrated review part 2",
+      "Oral professional communication"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Quick recap drill",
+      "Fast skill recall"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Concept map building",
+      "Linking all professional skills"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Reflection",
+      "What you can now write and present professionally"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Confidence booster",
+      "Easy recap tasks"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Timed writing practice",
+      "Under assessment conditions"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Review timed practice",
+      "Feedback and improvement"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final confidence check",
+      "All major skills"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Exam readiness",
+      "Final checks"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Rest and consolidation",
+      "Light review"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Writing portfolio review",
+      "Best professional documents"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Speaking portfolio review",
+      "Best oral performances"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Peer learning session",
+      "Sharing strategies"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Mock interview 2",
+      "Second attempt with improvement"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Mock interview 2 feedback",
+      "Detailed review"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Technical writing practice 2",
+      "Short technical memo"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Technical writing feedback",
+      "Review and improvement"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Presentation skills drill",
+      "Timing and delivery focus"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Presentation feedback",
+      "Review and improvement"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Professional language polish",
+      "Formal register and style"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Vocabulary consolidation",
+      "Professional and technical vocabulary"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Referencing and citation drill",
+      "Professional document standards"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Critical writing exercise",
+      "Evaluating a professional document"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Summary and abstract practice",
+      "Condensing professional reports"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Argumentative writing practice",
+      "Persuasive professional memo"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Feedback reflection",
+      "Acting on received feedback"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Research communication practice",
+      "Presenting findings"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Digital professional communication",
+      "LinkedIn, professional emails"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Visual communication practice",
+      "Effective use of data visuals"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Cross-cultural professional communication",
+      "Global workplace awareness"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Integrated writing task",
+      "Combining multiple professional skills"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Integrated speaking task",
+      "Combining multiple professional skills"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final integrated practice",
+      "Full professional communication task"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final integrated practice review",
+      "Feedback and improvement"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Preview of Y2S4",
+      "Professional Communication II ahead"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Concept consolidation",
+      "Linking all skills together"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Independent study session",
+      "Self-directed practice"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Independent study review",
+      "Reflection on progress"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Mock assessment 3",
+      "Full written task under conditions"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Mock assessment 3 \u2014 feedback",
+      "Detailed review"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Skill gap analysis",
+      "Identifying remaining weak areas"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Targeted practice",
+      "Working on skill gaps"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final polish",
+      "Last improvements"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final readiness",
+      "All systems go"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Semester close",
+      "Celebrating progress"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Consolidation day 1",
+      "Light review of writing"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Consolidation day 2",
+      "Light review of speaking"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Consolidation day 3",
+      "Light review of professional documents"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Consolidation day 4",
+      "Light review of interview skills"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Consolidation day 5",
+      "Light review of presentations"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Consolidation day 6",
+      "Light review of digital communication"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Consolidation day 7",
+      "Light review of interpersonal skills"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Final wrap-up",
+      "Everything in one view"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Last readiness check",
+      "Confident and prepared"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "COST",
+    "unit": "Professional Communication I",
+    "topics": [
+      "Unit closure",
+      "Done and ready"
+    ]
+  }
+]

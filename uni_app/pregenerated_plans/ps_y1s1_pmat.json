@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Introduction to discrete mathematics",
+      "Why discrete math matters for mathematicians and scientists"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Sets \u2014 definitions, notation",
+      "Operations: union, intersection, difference, complement"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Set identities and Venn diagrams",
+      "Power sets and Cartesian products"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Propositional logic \u2014 propositions, connectives",
+      "Truth tables"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Logical equivalence and tautologies",
+      "De Morgan's laws and other identities"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Predicate logic and quantifiers",
+      "Universal and existential quantifiers"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Nested quantifiers and negation",
+      "Translating English to predicate logic"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Rules of inference",
+      "Building valid arguments"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Direct proof and proof by contrapositive",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Proof by contradiction",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Mathematical induction (weak)",
+      "Proving identities and inequalities"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Strong induction and well-ordering",
+      "When strong induction is needed"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Relations \u2014 definition and properties",
+      "Reflexive, symmetric, transitive"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Equivalence relations and partitions",
+      "Equivalence classes"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Partial orders and Hasse diagrams",
+      "Chains and antichains (light)"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Functions \u2014 injective, surjective, bijective",
+      "Composition and inverses"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Cardinality of sets",
+      "Finite, countable, uncountable"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Counting \u2014 sum rule, product rule",
+      "Basic counting examples"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Permutations and combinations",
+      "Binomial coefficients"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Inclusion-exclusion principle",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Pigeonhole principle",
+      "Applications in proofs"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Number theory basics",
+      "Divisibility and primes"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Division algorithm and GCD",
+      "Euclidean algorithm"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Modular arithmetic",
+      "Congruences and basic theorems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Fermat's little theorem (intro)",
+      "Applications"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Theory: Recurrence relations (intro)",
+      "Solving simple recurrences"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Tutorial: Worked problems on logic and proofs",
+      "Step-by-step walkthroughs"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Tutorial: Worked problems on counting and number theory",
+      "Step-by-step walkthroughs"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Review: Discrete Mathematics I",
+      "Self-check: logic, proofs, sets, counting"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Introduction to matrices",
+      "Matrix notation and types of matrices"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Matrix addition and scalar multiplication",
+      "Properties and examples"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Matrix multiplication",
+      "Properties (associativity, distributivity, non-commutativity)"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Transpose and symmetric matrices",
+      "Skew-symmetric matrices"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Identity and zero matrices",
+      "Diagonal, triangular matrices"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Inverse of a matrix (2x2)",
+      "Conditions for invertibility"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Inverse of a matrix (3x3 and larger)",
+      "Using row reduction"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Determinants (2x2 and 3x3)",
+      "Cofactor expansion"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Properties of determinants",
+      "Effect of row operations"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Using determinants to find inverse",
+      "Adjugate matrix"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Cramer's rule",
+      "Solving small systems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Systems of linear equations",
+      "Matrix form Ax=b"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Gaussian elimination",
+      "Row echelon form"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Gauss-Jordan elimination",
+      "Reduced row echelon form"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Rank of a matrix",
+      "Rank-nullity overview"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Linear dependence and independence of vectors",
+      "Determining independence"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Basis and dimension (intro)",
+      "Standard basis in R^n"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Elementary matrices",
+      "Row operations as matrix multiplication"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: LU decomposition (intro)",
+      "Solving systems with LU"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Orthogonal matrices",
+      "Properties and examples"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Matrix operations, determinants, systems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Eigenvalues and eigenvectors (intro)",
+      "Characteristic polynomial"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Finding eigenvalues of 2x2 matrices",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Finding eigenvalues of 3x3 matrices",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Eigenvectors \u2014 geometric interpretation",
+      "Finding eigenvectors"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Diagonalization of matrices",
+      "When a matrix is diagonalizable"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Applications of diagonalization",
+      "Matrix powers"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Symmetric matrices and orthogonal diagonalization",
+      "Spectral theorem (intro)"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Introduction to linear transformations",
+      "Matrices as transformations"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Kernel and range of linear transformations",
+      "Basic properties"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Change of basis",
+      "Transition matrices"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Quadratic forms (intro)",
+      "Positive and negative definite matrices"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Applications of matrices in science",
+      "Physics and statistics examples"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Theory: Matrix norms and conditioning (light)",
+      "Numerical sensitivity"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Tutorial: Worked problems on determinants",
+      "Step-by-step computations"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Tutorial: Worked problems on systems",
+      "Gaussian elimination practice"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Tutorial: Worked problems on eigenvalues",
+      "Step-by-step eigenvalue computations"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Tutorial: Worked problems on diagonalization",
+      "Diagonalizing small matrices"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Review: Matrix Algebra",
+      "Self-check: operations, systems, eigenvalues"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Deep revisit: Proof techniques",
+      "Choosing the right proof method"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Deep revisit: Counting \u2014 mixed problems",
+      "Permutations, combinations, inclusion-exclusion"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Deep revisit: Number theory \u2014 mixed problems",
+      "GCD, modular arithmetic applications"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Deep revisit: Relations and functions",
+      "Equivalence, partial orders, bijections"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Deep revisit: Determinants and inverses",
+      "Practice problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Deep revisit: Systems of linear equations",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Deep revisit: Eigenvalues and eigenvectors",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Deep revisit: Diagonalization",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Integration: Connecting logic, sets, and functions",
+      "How discrete structures support matrix algebra"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Integration: Matrices as discrete structures",
+      "Viewing matrices through a discrete lens"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Integration: Discrete proofs about matrices",
+      "Induction on matrix powers"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Integration: Combinatorial interpretations of matrix products",
+      "Counting walks on graphs"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Integration: Relations as matrices",
+      "Adjacency matrices for relations"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Integration: Boolean matrices",
+      "Transitive closure via matrix methods"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Advanced practice: Harder proof problems",
+      "Challenging induction and contradiction"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Advanced practice: Harder eigenvalue problems",
+      "Non-trivial 3x3 cases"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Advanced practice: Harder counting problems",
+      "Combinatorial identities"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Advanced practice: Harder systems",
+      "Parameterized solutions"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Advanced practice: Number theory applications",
+      "Cryptographic intuitions"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Advanced practice: Applications in other subjects",
+      "Linking to physics and computing"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems across the unit"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems across the unit"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Final overview: Unit-wide summary",
+      "All key theorems and techniques in one place"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Final overview: Unit-wide summary",
+      "All key theorems and techniques in one place"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Problem-solving strategies",
+      "How to approach unseen problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Problem-solving strategies",
+      "How to approach unseen matrix problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Common student mistakes and how to avoid them",
+      "Examiner tips"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Common student mistakes and how to avoid them",
+      "Examiner tips"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Applications in further mathematics",
+      "Preview of Discrete Mathematics II"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Applications in further mathematics",
+      "Preview of Linear Algebra"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "PMAT",
+    "unit": "Discrete Mathematics I",
+    "topics": [
+      "Final review and self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "PMAT",
+    "unit": "Matrix Algebra",
+    "topics": [
+      "Final review and self-assessment",
+      "Readiness checklist"
+    ]
+  }
+]

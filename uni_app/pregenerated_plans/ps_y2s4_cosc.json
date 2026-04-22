@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: CPU internals and instruction cycle",
+      "ALU, registers, control unit"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: ISA and assembly basics",
+      "RISC vs CISC"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Memory hierarchy",
+      "Cache, RAM, virtual memory"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Pipelining",
+      "Stages and hazards"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: I/O and interrupts",
+      "DMA and buses"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: OS introduction",
+      "Roles and services"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Processes and threads",
+      "Lifecycle and states"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: CPU scheduling",
+      "FCFS, SJF, Round Robin"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Process synchronization",
+      "Race conditions and critical sections"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Deadlocks",
+      "Detection, prevention, avoidance"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Memory management",
+      "Paging and segmentation"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Virtual memory",
+      "Page replacement algorithms"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: File systems",
+      "Directories and disk allocation"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Disk scheduling",
+      "SCAN, SSTF algorithms"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Tutorial: Worked scheduling problems",
+      "Step-by-step tracing"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Tutorial: Worked memory problems",
+      "Page replacement tracing"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Review: CAOS",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Introduction to DBMS",
+      "File systems vs databases"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Relational model",
+      "Relations, keys, tuples"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: ER modelling",
+      "Entities, attributes, relationships"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: ER to relational mapping",
+      "Strong and weak entities"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Normalization \u2014 1NF, 2NF",
+      "Anomalies and functional dependencies"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Normalization \u2014 3NF and BCNF",
+      "Practical walkthrough"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: SQL \u2014 DDL",
+      "CREATE, ALTER, DROP"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: SQL \u2014 DML",
+      "INSERT, UPDATE, DELETE, SELECT"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: SQL DDL and DML practice",
+      "Creating and populating tables"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: SQL \u2014 aggregation and grouping",
+      "GROUP BY, HAVING, aggregates"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: SQL joins",
+      "INNER, LEFT, RIGHT, FULL"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: SQL joins and grouping",
+      "Hands-on queries"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Subqueries",
+      "Nested and correlated"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Views and indexes",
+      "When and why to use them"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: Subqueries and views",
+      "Hands-on queries"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Transactions and ACID",
+      "Concurrency control basics"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Stored procedures and triggers",
+      "Automation in databases"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: Stored procedures",
+      "Simple automation tasks"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Database security",
+      "Access control and privileges"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Backup and recovery",
+      "Strategies and importance"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: NoSQL databases intro",
+      "Key-value, document, graph"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: Mini DB project \u2014 ER design",
+      "From requirements to ER diagram"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: Mini DB project \u2014 schema creation",
+      "SQL DDL from ER"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: Mini DB project \u2014 queries",
+      "Complex SQL queries"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Tutorial: Worked normalization problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Tutorial: Worked SQL problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Review: Database Management Systems",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Deep revisit: Architecture concepts",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Deep revisit: OS concepts",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Deep revisit: ER and normalization",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Deep revisit: SQL queries",
+      "Mixed coding"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Mid-unit review",
+      "Architecture + OS recap"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Mid-unit review",
+      "DB design + SQL recap"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Integration: OS manages hardware resources",
+      "Big picture link"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Integration: DBMS uses OS services",
+      "Big picture link"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Advanced practice: Harder scheduling",
+      "Complex CPU scenarios"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Advanced practice: Harder memory problems",
+      "Page replacement"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Advanced practice: Harder normalization",
+      "Complex FDs"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Advanced practice: Harder SQL queries",
+      "Multi-join scenarios"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Lab: Linux shell basics",
+      "OS interaction"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: Advanced SQL practice",
+      "Transactions and views"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder questions"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder questions"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Mini viva",
+      "Explain your design/query"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Real-world applications",
+      "How OS works in industry"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Real-world applications",
+      "Databases in industry"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Final overview",
+      "Key principles"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Final overview",
+      "Key principles"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen questions"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen queries/design"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Integrated review part 1",
+      "Architecture + OS"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Integrated review part 2",
+      "DB design + SQL"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Quick recap drill",
+      "Fast concept recall"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Quick recap drill",
+      "Fast SQL recall"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Concept map building",
+      "Linking all core ideas"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Concept map building",
+      "Linking all DB ideas"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Reflection",
+      "What you can now explain clearly"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Reflection",
+      "What you can now design/query"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Confidence booster",
+      "Easy recap problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Confidence booster",
+      "Easy recap SQL"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next stage"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next stage"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Key formulas and facts",
+      "Quick reference"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Key SQL patterns",
+      "Quick reference"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Timed practice",
+      "Under exam conditions"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Timed practice",
+      "Under exam conditions"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "COSC",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "COSC",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  }
+]

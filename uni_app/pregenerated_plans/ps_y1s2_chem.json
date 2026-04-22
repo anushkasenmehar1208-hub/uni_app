@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Solutions",
+      "Concentration units, molarity, molality"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Colligative properties",
+      "Boiling point elevation, freezing point depression"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Osmosis and osmotic pressure",
+      "Biological relevance"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Chemical kinetics \u2014 reaction rates",
+      "Rate expression and units"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Rate laws",
+      "First and second order reactions"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Integrated rate laws",
+      "Half-life calculations"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Activation energy and Arrhenius",
+      "Temperature dependence of rates"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Reaction mechanisms",
+      "Elementary steps and rate-determining step"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Catalysis",
+      "Homogeneous and heterogeneous"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Chemical equilibrium",
+      "Le Chatelier's principle"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Equilibrium constant",
+      "Kc, Kp and their relationship"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: ICE tables",
+      "Solving equilibrium problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Acid-base equilibrium",
+      "Ka, Kb, pKa, pKb"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: pH of weak acids and bases",
+      "Approximations and exact methods"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Buffer solutions",
+      "Henderson-Hasselbalch equation"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Acid-base titrations",
+      "Equivalence point and indicators"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Solubility equilibrium",
+      "Ksp and common ion effect"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Complex ion equilibria",
+      "Formation constants"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Thermodynamics \u2014 entropy",
+      "Second law and spontaneity"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Gibbs free energy",
+      "Relationship to equilibrium and work"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Electrochemistry \u2014 galvanic cells",
+      "Cell potential and EMF"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Standard reduction potentials",
+      "Using tables"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Nernst equation",
+      "Concentration effects on cell potential"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Electrolytic cells",
+      "Faraday's laws"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Theory: Corrosion and electrochemical applications",
+      "Batteries and fuel cells"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Tutorial: Worked kinetics problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Tutorial: Worked equilibrium problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Tutorial: Worked acid-base and electrochemistry problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Review: General Chemistry II",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab intro: Advanced techniques",
+      "Reflux, distillation, extraction"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Determining reaction order",
+      "Graphical analysis of rate data"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Measuring activation energy",
+      "Arrhenius plot"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Equilibrium constant determination",
+      "Colourimetric method"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Buffer preparation and testing",
+      "pH measurements"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Acid-base titration curves",
+      "Using pH meter"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Solubility product determination",
+      "Ksp measurement"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Galvanic cell construction",
+      "Measuring EMF"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Electrolysis experiment",
+      "Faraday's law verification"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Enthalpy of solution",
+      "Calorimetry"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Chromatography",
+      "TLC and column chromatography"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: UV-Vis spectroscopy",
+      "Beer-Lambert advanced"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Mini project \u2014 kinetics investigation",
+      "Design and execute"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Lab: Mini project \u2014 analysis and report",
+      "Results and discussion"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Deep revisit: Kinetics",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Deep revisit: Equilibrium and acid-base",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Deep revisit: Thermodynamics and electrochemistry",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Deep revisit: Lab techniques",
+      "Common errors"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Integration: Theory meets lab",
+      "Linking concepts to experiments"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Mid-unit review",
+      "General Chemistry II recap"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Advanced practice: Harder kinetics",
+      "Complex mechanisms"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Advanced practice: Harder equilibrium",
+      "Multi-step ICE tables"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Advanced practice: Harder electrochemistry",
+      "Nernst equation applications"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Exam-style mock 1 (practical)",
+      "Lab task walkthrough"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder questions"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Exam-style mock 2 (practical)",
+      "Harder lab task"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Common mistakes and tips",
+      "Lab pitfalls"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Mini viva",
+      "Explain your lab results"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Real-world applications",
+      "Industrial chemistry and environment"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Real-world applications",
+      "Analytical and industrial labs"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Preview of Y2S3",
+      "Organic chemistry ahead"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Preview of Y2S3 lab",
+      "Organic chemistry lab ahead"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Final overview",
+      "Key concepts and equations"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Final overview",
+      "Key lab skills"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unfamiliar experiments"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Integrated review part 1",
+      "Kinetics and equilibrium"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Integrated review part 2",
+      "Thermodynamics and electrochemistry"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Integrated review part 3",
+      "Lab skills and analysis"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Quick recap drill",
+      "Fast concept recall"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Quick recap drill",
+      "Fast lab skill recall"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Concept map building",
+      "Linking all core ideas"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Concept map building",
+      "Linking all lab skills"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Reflection",
+      "What you can now explain"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Reflection",
+      "What you can now measure and analyse"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Confidence booster",
+      "Easy recap problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Confidence booster",
+      "Easy recap tasks"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Timed practice",
+      "Under exam conditions"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Timed practice",
+      "Under practical conditions"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Key equations quick reference",
+      "One-page summary"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Key lab procedures quick reference",
+      "One-page summary"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Exam readiness",
+      "Final checks"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Practical readiness",
+      "Final checks"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CHEM",
+    "unit": "General Chemistry II",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CHEM",
+    "unit": "General Chemistry Laboratory II",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  }
+]

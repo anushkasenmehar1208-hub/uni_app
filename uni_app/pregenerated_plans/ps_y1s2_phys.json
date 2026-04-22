@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Historical introduction",
+      "From classical to modern physics"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Cathode rays and discovery of electron",
+      "Thomson's experiment"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Millikan oil drop experiment",
+      "Measuring electron charge"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Rutherford scattering",
+      "Discovery of the nucleus"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Bohr model of hydrogen",
+      "Quantized orbits"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Bohr model \u2014 energy levels",
+      "Hydrogen spectrum"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Limitations of the Bohr model",
+      "Need for quantum mechanics"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Atomic spectra",
+      "Emission and absorption"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: X-rays",
+      "Production and spectra"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: X-ray diffraction",
+      "Bragg's law"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Nuclear structure",
+      "Protons, neutrons, nuclides"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Nuclear size and density",
+      "Empirical facts"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Binding energy",
+      "Mass defect"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Semi-empirical mass formula",
+      "Liquid drop model"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Nuclear models \u2014 shell model (intro)",
+      "Magic numbers"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Radioactive decay",
+      "Alpha, beta, gamma"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Decay law",
+      "Half-life and decay constant"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Radioactive series",
+      "Secular and transient equilibrium"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Nuclear reactions",
+      "Q-value and conservation laws"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Nuclear fission",
+      "Chain reactions"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Nuclear reactors",
+      "Controlled fission"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Nuclear fusion",
+      "Stellar nucleosynthesis"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Radiation detectors",
+      "Geiger, scintillation, semiconductor"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Biological effects of radiation",
+      "Dosimetry basics"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Theory: Elementary particles (intro)",
+      "Leptons, hadrons, quarks"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Tutorial: Worked problems on atomic spectra",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Tutorial: Worked problems on radioactive decay",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Tutorial: Worked problems on nuclear reactions",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Review: Atomic and Nuclear Physics",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Galilean relativity",
+      "Inertial frames"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Michelson-Morley experiment",
+      "Failure of ether hypothesis"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Einstein's postulates",
+      "Principle of relativity"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Lorentz transformations",
+      "Derivation"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Time dilation",
+      "Proper time and moving clocks"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Length contraction",
+      "Proper length"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Relativistic velocity addition",
+      "No-speed-exceeds-c"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Spacetime and four-vectors",
+      "Invariants"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Relativistic momentum and energy",
+      "E=mc^2"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Mass-energy equivalence",
+      "Applications"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Relativistic Doppler effect",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Twin paradox and other paradoxes",
+      "Resolution"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Introduction to quantum mechanics",
+      "Historical context"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Black body radiation",
+      "Planck's hypothesis"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Photoelectric effect",
+      "Einstein's explanation"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Compton effect",
+      "Photon momentum"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Wave-particle duality",
+      "De Broglie hypothesis"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Davisson-Germer experiment",
+      "Electron diffraction"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Uncertainty principle",
+      "Heisenberg's relations"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Wave functions",
+      "Born's probabilistic interpretation"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Relativity + early quantum"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Schrodinger equation",
+      "Time-dependent and time-independent"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Particle in a 1D box",
+      "Energy levels and wavefunctions"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Potential step and barrier",
+      "Reflection and transmission"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Tunneling",
+      "Applications (alpha decay, tunnel diode)"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Harmonic oscillator (quantum)",
+      "Energy levels"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Hydrogen atom (quantum)",
+      "Quantum numbers"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Spin and Pauli principle",
+      "Multi-electron atoms"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Theory: Periodic table from QM",
+      "Electron configuration"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Tutorial: Worked problems on relativity",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Tutorial: Worked problems on early quantum phenomena",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Tutorial: Worked problems on Schrodinger equation",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Review: Relativity and Quantum Mechanics",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab intro: Advanced error analysis",
+      "Statistical treatment"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab intro: Using advanced instruments",
+      "Oscilloscopes, multimeters"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Photoelectric effect experiment",
+      "Measuring Planck's constant"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Millikan-like experiment (simulated)",
+      "Understanding charge quantization"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: e/m ratio of electron",
+      "Thomson's method"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Spectrometer and spectral lines",
+      "Hydrogen spectrum"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Diffraction grating",
+      "Measuring wavelength"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Geiger counter and radiation",
+      "Safe radiation experiments"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Half-life measurement",
+      "Using short-lived sources"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Semiconductor diode characteristics",
+      "I-V curves"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Transistor basics",
+      "Characteristic curves"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Operational amplifiers (intro lab)",
+      "Inverting and non-inverting"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Cathode ray oscilloscope measurements",
+      "Measuring AC signals"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Measuring magnetic fields",
+      "Hall effect"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Measurement of refractive index",
+      "Prism and spectrometer"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Newton's rings",
+      "Interference"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Single slit diffraction",
+      "Quantitative analysis"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Report writing workshop",
+      "Modern physics experiments"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Analyzing experimental uncertainty",
+      "Chi-square and fitting"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Lab: Integrated lab skills",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Deep revisit: Atomic structure",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Deep revisit: Nuclear physics",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Deep revisit: Special relativity",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Deep revisit: Early quantum phenomena",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Deep revisit: Schrodinger equation",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Deep revisit: Lab techniques",
+      "Mixed tasks"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Integration: Atoms and quantum mechanics",
+      "Why QM is needed for atomic structure"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Integration: Relativity and nuclear physics",
+      "E=mc^2 and fission/fusion"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Integration: Labs verify modern physics",
+      "Experiments that changed physics"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Real-world applications",
+      "Medicine, energy, research"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Real-world applications",
+      "GPS, electronics, computing"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "PHYS",
+    "unit": "Atomic and Nuclear Physics",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "PHYS",
+    "unit": "Special Theory of Relativity & Quantum Mechanics",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "PHYS",
+    "unit": "Elementary Physics Laboratory II",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  }
+]

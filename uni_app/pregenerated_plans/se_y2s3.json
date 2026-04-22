@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: What is computer architecture",
+      "Von Neumann vs Harvard architecture"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: CPU internals (ALU, control unit, registers)",
+      "Instruction cycle in detail"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Instruction set architecture (ISA)",
+      "RISC vs CISC"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Assembly language basics",
+      "Machine code and addressing modes"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Memory systems (RAM, ROM, cache)",
+      "Memory hierarchy deeper look"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Cache organization and replacement policies",
+      "Write-through vs write-back"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Virtual memory and paging",
+      "Page tables and TLB"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: I/O systems and interrupts",
+      "DMA and bus architectures"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Pipelining basics",
+      "Hazards and forwarding"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Introduction to operating systems",
+      "OS roles and services"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Processes and threads",
+      "Process lifecycle and states"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: CPU scheduling algorithms",
+      "FCFS, SJF, Round Robin, priority"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Process synchronization",
+      "Race conditions, critical sections"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Semaphores, mutexes, monitors",
+      "Classical synchronization problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Deadlocks",
+      "Detection, prevention, avoidance"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Memory management (OS view)",
+      "Contiguous allocation, paging, segmentation"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: File systems",
+      "File organization, directories, allocation methods"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Disk scheduling algorithms",
+      "FCFS, SSTF, SCAN, C-SCAN"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Linux/Unix shell basics and system calls",
+      "Practical OS interaction"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Tutorial: Worked problems on scheduling and memory",
+      "Step-by-step tracing"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Review: Computer Architecture and Operating Systems",
+      "Self-check: CPU, memory, processes, files"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Theory: What is software construction",
+      "Construction within the software lifecycle"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Theory: Coding standards and style",
+      "Readable and maintainable code"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Theory: Defensive programming",
+      "Assertions, preconditions, postconditions"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Lab: Version control with Git (branching, merging)",
+      "Lab: Collaborative workflows"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Theory: Code refactoring techniques",
+      "Smells and improvements"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Theory: Unit testing fundamentals",
+      "Writing effective test cases"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Lab: Test-driven development (TDD)",
+      "Lab: Red-green-refactor cycle"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Theory: Debugging strategies",
+      "Scientific debugging approach"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Theory: Build systems and automation",
+      "Make, Maven, Gradle overview"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Theory: Integration basics and CI/CD introduction",
+      "Why automation matters"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Lab: Mini project \u2014 construction with tests, Git, CI",
+      "Lab: End-to-end walkthrough"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Review: Software Construction",
+      "Self-check: construction practices"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: What is requirements engineering",
+      "Role in the SE lifecycle"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Stakeholders and stakeholder analysis",
+      "Identifying needs"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Requirements elicitation techniques",
+      "Interviews, workshops, observation, prototyping"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Functional vs non-functional requirements",
+      "Quality attributes overview"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Requirements analysis and negotiation",
+      "Resolving conflicts"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Writing good requirements",
+      "SMART, testable, unambiguous"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Use cases and user stories",
+      "Writing acceptance criteria"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Requirements specification (SRS)",
+      "IEEE 830 structure overview"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Requirements validation and verification",
+      "Reviews, inspections, prototypes"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Theory: Requirements management and traceability",
+      "Handling changes"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Tutorial: Writing a small SRS from a case study",
+      "Step-by-step walkthrough"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Review: Requirement Engineering",
+      "Self-check: elicitation, specification, validation"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: Introduction to software modelling",
+      "Why we model software"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: Modelling vs programming",
+      "Abstraction levels"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: UML overview (structural and behavioural diagrams)",
+      "When to use which"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: UML use case diagrams",
+      "Actors, use cases, relationships"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: UML class diagrams (deeper)",
+      "Associations, aggregation, composition"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Mid-semester review: Integrated recap of CAOS + SC + RE",
+      "Self-check across three units"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: UML sequence diagrams",
+      "Modelling object interactions"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: UML activity diagrams",
+      "Modelling workflows and processes"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: UML state machine diagrams",
+      "Modelling object behaviour over time"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: UML component and deployment diagrams",
+      "Physical and logical architecture"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Theory: Model-driven engineering basics",
+      "From model to code"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Tutorial: Worked modelling problems from a case study",
+      "Drawing coherent UML sets"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Review: Software Modelling",
+      "Self-check: UML diagrams"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Web architecture (client-server, HTTP)",
+      "Request-response lifecycle"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: HTML5 fundamentals",
+      "Semantic elements and structure"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: CSS fundamentals",
+      "Selectors, box model, layout"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Responsive design basics",
+      "Flexbox, Grid, media queries"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: JavaScript fundamentals",
+      "Variables, functions, DOM basics"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Lab: Building a static website",
+      "Lab: HTML/CSS/JS in practice"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: DOM manipulation and events",
+      "Interactive web pages"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Modern JavaScript (ES6+)",
+      "Arrow functions, modules, promises"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Asynchronous JS and fetch API",
+      "Working with external data"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Introduction to frontend frameworks (React overview)",
+      "Component-based thinking"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Backend basics (Node.js / Express or equivalent)",
+      "Routing and middleware"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Connecting web apps to databases",
+      "CRUD over HTTP"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: RESTful API design",
+      "Best practices and status codes"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Web security basics",
+      "XSS, CSRF, authentication overview"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Lab: Mini project \u2014 full-stack web app",
+      "Lab: End-to-end build walkthrough"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Theory: Web deployment basics",
+      "Hosting, domains, HTTPS"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Tutorial: Worked problems on frontend and backend",
+      "Debugging common web issues"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Review: Web Application Development",
+      "Self-check: frontend, backend, REST, security"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: What is an interactive application",
+      "GUI vs CLI paradigms"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: Event-driven programming",
+      "Event loops and listeners"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: GUI design principles",
+      "Layout, hierarchy, usability"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: Desktop GUI frameworks overview",
+      "JavaFX, Swing, Qt, or equivalent"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Lab: Building a simple GUI application",
+      "Lab: Handling widgets and events"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: MVC / MVP / MVVM patterns for UI",
+      "Separating concerns in interactive apps"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: Form handling and validation",
+      "User input best practices"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: Working with local data (files, SQLite)",
+      "Persisting app state"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: Multithreading in interactive apps",
+      "Keeping the UI responsive"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: Accessibility and internationalisation basics",
+      "Building inclusive apps"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Theory: Packaging and distributing desktop apps",
+      "Installers and updates"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Lab: Mini project \u2014 interactive desktop application",
+      "Lab: End-to-end build walkthrough"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Tutorial: Worked problems on GUI events and layouts",
+      "Common UI bugs and fixes"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Review: Interactive Application Development",
+      "Self-check: GUI patterns, events, data"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Integration: Linking OS concepts to Software Construction",
+      "How process/memory affect code performance"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Integration: Applying construction practices to Web/Interactive apps",
+      "Testing and refactoring in real projects"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Integration: RE applied to a realistic case",
+      "From stakeholder needs to SRS"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Integration: Modelling for the RE case",
+      "Translating requirements into UML"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Integration: Implementing the modelled system on the web",
+      "Mapping UML to web code"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Integration: Alternative desktop implementation",
+      "Comparing web vs desktop tradeoffs"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Tutorial: Cross-unit refactoring exercise",
+      "Improving the integrated case"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Tutorial: Handling changing requirements",
+      "Propagating changes to model and code"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Tutorial: Updating UML for requirement changes",
+      "Keeping models consistent"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Tutorial: Extending the web app with new features",
+      "Adding endpoints and views"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Tutorial: Extending the desktop app with new features",
+      "Keeping UX consistent"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Tutorial: Profiling and performance of the integrated system",
+      "Where OS concepts show up"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Review: Software Construction (revisit)",
+      "Advanced construction pitfalls"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "SENG",
+    "unit": "Requirement Engineering",
+    "topics": [
+      "Review: Requirement Engineering (revisit)",
+      "Traceability in practice"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "SENG",
+    "unit": "Software Modelling",
+    "topics": [
+      "Review: Software Modelling (revisit)",
+      "When UML helps vs overkill"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Review: Web Application Development (revisit)",
+      "Security and performance checkpoints"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "SENG",
+    "unit": "Interactive Application Development",
+    "topics": [
+      "Review: Interactive Application Development (revisit)",
+      "Usability and accessibility checkpoints"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "SENG",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Review: Computer Architecture and Operating Systems (revisit)",
+      "Key exam-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "SENG",
+    "unit": "Software Construction",
+    "topics": [
+      "Integrated semester review (part 1)",
+      "Construction, RE, modelling together"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "SENG",
+    "unit": "Web Application Development",
+    "topics": [
+      "Integrated semester review (part 2)",
+      "Web + interactive + architecture together"
+    ]
+  }
+]

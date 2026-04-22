@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Introduction to organic chemistry",
+      "Carbon and hybridization"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Structural and molecular formulas",
+      "Condensed and skeletal structures"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Functional groups overview",
+      "Alcohols, aldehydes, ketones, etc."
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Alkanes and cycloalkanes",
+      "Nomenclature and conformations"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Stereochemistry",
+      "Chirality, enantiomers, diastereomers"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Alkenes",
+      "Nomenclature and physical properties"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Reactions of alkenes",
+      "Addition reactions, Markovnikov's rule"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Alkynes",
+      "Nomenclature and reactions"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Aromatic compounds",
+      "Benzene and aromaticity"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Electrophilic aromatic substitution",
+      "Halogenation, nitration, sulfonation"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Directing effects",
+      "Ortho/para vs meta directors"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Alkyl halides",
+      "Nomenclature and properties"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Nucleophilic substitution",
+      "SN1 and SN2 mechanisms"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Elimination reactions",
+      "E1 and E2 mechanisms"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Alcohols",
+      "Nomenclature, properties, reactions"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Ethers",
+      "Williamson synthesis"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Aldehydes and ketones",
+      "Nomenclature and nucleophilic addition"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Carboxylic acids",
+      "Nomenclature and acidity"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Carboxylic acid derivatives",
+      "Esters, amides, acid chlorides"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Amines",
+      "Nomenclature, basicity, reactions"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: Spectroscopy intro",
+      "IR and NMR overview"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: IR spectroscopy",
+      "Identifying functional groups"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Theory: NMR spectroscopy basics",
+      "Chemical shift and splitting"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Tutorial: Worked mechanism problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Tutorial: Worked spectroscopy problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Review: Organic Chemistry I",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab intro: Organic lab safety",
+      "Handling solvents and reagents"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab intro: Organic techniques",
+      "Recrystallization, distillation, extraction"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Melting point determination",
+      "Identifying organic compounds"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Recrystallization",
+      "Purification of an organic solid"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Simple distillation",
+      "Separating liquids"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Extraction",
+      "Liquid-liquid extraction"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: TLC \u2014 thin layer chromatography",
+      "Identifying components"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Synthesis of an ester",
+      "Fischer esterification"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Aldol condensation",
+      "Synthesis and characterization"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Grignard reaction",
+      "Organometallic synthesis"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: IR spectroscopy of unknowns",
+      "Identifying functional groups"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: NMR interpretation",
+      "Assigning spectra"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Mini synthesis project",
+      "Multi-step organic synthesis"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Deep revisit: Alkenes and alkynes",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Deep revisit: Substitution and elimination",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Deep revisit: Carbonyl chemistry",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Deep revisit: Spectroscopy",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Deep revisit: Lab techniques",
+      "Common errors"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Integration: Theory meets lab",
+      "Linking mechanisms to experiments"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Advanced practice: Harder mechanism problems",
+      "Multi-step synthesis"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Advanced practice: Harder spectroscopy",
+      "Unknown compound identification"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Lab: Advanced synthesis",
+      "Multi-step organic project"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Mid-unit review",
+      "Organic Chemistry I recap"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Exam-style mock 1 (practical)",
+      "Lab task walkthrough"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder questions"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Exam-style mock 2 (practical)",
+      "Harder lab task"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Common mistakes and tips",
+      "Lab pitfalls"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Mini viva",
+      "Conceptual and mechanism questions"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Mini viva",
+      "Explain your synthesis"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Real-world applications",
+      "Pharmaceuticals, polymers, dyes"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Real-world applications",
+      "Synthesis in industry"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Preview of Y2S4",
+      "Organic Chemistry II ahead"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Preview of Y2S4 lab",
+      "Organic Chemistry Lab II ahead"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Final overview",
+      "Key reactions and mechanisms"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Final overview",
+      "Key lab skills"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen synthesis problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unfamiliar experiments"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Integrated review part 1",
+      "Functional groups and mechanisms"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Integrated review part 2",
+      "Spectroscopy and stereochemistry"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Integrated review part 3",
+      "Lab skills and synthesis"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Quick recap drill",
+      "Fast concept recall"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Quick recap drill",
+      "Fast lab skill recall"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Concept map building",
+      "Linking all core ideas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Concept map building",
+      "Linking all lab skills"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Reflection",
+      "What you can now explain"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Reflection",
+      "What you can now synthesise and analyse"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Confidence booster",
+      "Easy recap problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Confidence booster",
+      "Easy recap tasks"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Timed practice",
+      "Under exam conditions"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Timed practice",
+      "Under practical conditions"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Last revision",
+      "Final pass"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Exam readiness",
+      "Final checks"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Practical readiness",
+      "Final checks"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Rest and consolidation",
+      "Light review"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Rest and consolidation",
+      "Light review"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Final summary day 2",
+      "Advanced topics"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry Laboratory I",
+    "topics": [
+      "Final summary day 2",
+      "Advanced lab topics"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CHEM",
+    "unit": "Organic Chemistry I",
+    "topics": [
+      "Final readiness",
+      "All systems go"
+    ]
+  }
+]

@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Recap of discrete distributions",
+      "Bernoulli, Binomial, Poisson"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Geometric distribution",
+      "Waiting time problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Negative binomial distribution",
+      "Extensions of geometric"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Hypergeometric distribution",
+      "Sampling without replacement"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Multinomial distribution",
+      "Multi-category outcomes"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Continuous distributions \u2014 exponential",
+      "Memoryless property"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Gamma distribution",
+      "Shape and rate parameters"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Beta distribution",
+      "Unit interval modeling"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Uniform distribution (continuous)",
+      "Properties and applications"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Normal distribution (deeper)",
+      "Derivation and properties"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Log-normal distribution",
+      "Skewed data modeling"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Joint distributions (discrete)",
+      "Joint PMF and marginals"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Joint distributions (continuous)",
+      "Joint PDF and marginals"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Covariance and correlation",
+      "Dependence measures"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Conditional distributions",
+      "Conditional PDF and expectation"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Functions of random variables",
+      "Transformation technique"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Moment generating functions",
+      "Definition and uses"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: MGF applications",
+      "Finding moments and identifying distributions"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Convergence concepts",
+      "Convergence in probability and distribution"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Law of large numbers",
+      "Weak LLN"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Central limit theorem (deeper)",
+      "Proof sketch and applications"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Theory: Normal approximations",
+      "Continuity correction"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Tutorial: Worked distribution problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Tutorial: Worked joint distribution problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Review: Probability Distributions I",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Recap of Optimization I",
+      "Bridge to advanced methods"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Revised simplex method",
+      "Efficient computation"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Sensitivity analysis (deeper)",
+      "Shadow prices and ranges"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Parametric LP",
+      "Varying a parameter"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Goal programming",
+      "Multi-objective optimization"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Integer programming (deeper)",
+      "Cutting planes"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Branch and bound (deeper)",
+      "Tree search for ILP"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Network models \u2014 shortest path",
+      "Dijkstra and Bellman-Ford"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Minimum spanning tree",
+      "Kruskal and Prim"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Maximum flow",
+      "Ford-Fulkerson"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Dynamic programming",
+      "Principle of optimality"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: DP applications",
+      "Knapsack, shortest path, scheduling"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Game theory basics",
+      "Two-person zero-sum games"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Mixed strategies",
+      "Nash equilibrium intro"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Decision analysis",
+      "Decision trees and expected value"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Decision under uncertainty",
+      "Minimax, maximin, regret"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Markov chains intro",
+      "Transition matrices"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Steady-state distributions",
+      "Long-run behavior"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Theory: Queuing theory basics",
+      "M/M/1 queue"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Tutorial: Worked DP problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Tutorial: Worked game theory problems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Review: Optimization II",
+      "Self-check"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Deep revisit: Discrete distributions",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Deep revisit: Continuous and joint distributions",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Deep revisit: Network models",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Deep revisit: Dynamic programming",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Lab: Simulating distributions",
+      "Software-based"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Lab: Joint distribution analysis",
+      "Software-based"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Lab: Solving ILP with software",
+      "Excel Solver or R"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Lab: Markov chain simulation",
+      "Software-based"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Integration: Distributions feed optimization",
+      "Stochastic programming intro"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Integration: Optimization under uncertainty",
+      "Using distributions in decisions"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Advanced practice: Harder distribution problems",
+      "Complex transformations"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Advanced practice: Harder DP and game theory",
+      "Complex scenarios"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Advanced practice: Harder joint distributions",
+      "Bivariate analysis"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed questions"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder questions"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder questions"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Common mistakes and tips",
+      "Distribution pitfalls"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Common mistakes and tips",
+      "Optimization pitfalls"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Mini viva",
+      "Explain your solution"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Real-world applications",
+      "Finance, engineering, science"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Real-world applications",
+      "Logistics, supply chain, AI"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Preview of Y2S3",
+      "Statistical inference ahead"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Preview of Y2S3",
+      "Advanced statistical methods ahead"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Final overview",
+      "Key distributions and properties"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Final overview",
+      "Key methods"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen optimization"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Integrated review part 1",
+      "Distributions and CLT"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Integrated review part 2",
+      "DP, networks, queuing"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Quick recap drill",
+      "Fast concept recall"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Quick recap drill",
+      "Fast method recall"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Last mock corrections",
+      "Weak areas fix"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Concept map building",
+      "Linking all distribution ideas"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Concept map building",
+      "Linking all optimization ideas"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Reflection",
+      "What you can now explain clearly"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Reflection",
+      "What you can now solve clearly"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Confidence booster",
+      "Easy recap problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Confidence booster",
+      "Easy recap problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Final summary",
+      "Unit closure"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Timed practice",
+      "Under exam conditions"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Timed practice",
+      "Under exam conditions"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Review timed practice",
+      "Solutions and feedback"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Final checkpoint",
+      "Ready for next semester"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Semester wrap-up",
+      "Integrated view"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "STAT",
+    "unit": "Probability Distributions and Applications I",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "STAT",
+    "unit": "Optimization II",
+    "topics": [
+      "Final confidence check",
+      "All major topics"
+    ]
+  }
+]

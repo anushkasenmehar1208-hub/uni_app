@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Scalars vs vectors",
+      "Geometric and algebraic representations"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Vector addition and scalar multiplication",
+      "Triangle and parallelogram laws"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Position vectors and unit vectors",
+      "i, j, k notation"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Dot (scalar) product",
+      "Properties and geometric meaning"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Applications of dot product",
+      "Angle between vectors, projections"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Cross (vector) product",
+      "Properties and geometric meaning"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Applications of cross product",
+      "Area of parallelogram, torque"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Scalar triple product",
+      "Volume of parallelepiped"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Vector triple product",
+      "BAC-CAB identity"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Lines in 3D",
+      "Parametric and symmetric forms"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Planes in 3D",
+      "Normal form, intercepts"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Distance problems in 3D",
+      "Point to line, point to plane"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Vector-valued functions",
+      "Curves in 3D"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Differentiation of vector functions",
+      "Velocity and acceleration"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Arc length and unit tangent",
+      "Reparametrization"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Curvature and torsion",
+      "Frenet-Serret frame (intro)"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Scalar and vector fields",
+      "Examples in physics"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Gradient of a scalar field",
+      "Geometric interpretation"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Divergence of a vector field",
+      "Physical meaning"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Curl of a vector field",
+      "Physical meaning"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Vector identities",
+      "Grad, div, curl relationships"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Line integrals",
+      "Work done by a force"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Conservative vector fields",
+      "Path independence"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Surface integrals (intro)",
+      "Flux through a surface"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Volume integrals",
+      "Computing masses and moments"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Theory: Green's theorem (intro)",
+      "Planar version"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Tutorial: Worked problems on dot/cross products",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Tutorial: Worked problems on grad/div/curl",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Tutorial: Worked problems on line integrals",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Review: Vector Analysis",
+      "Self-check: all key topics"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Introduction to classical mechanics",
+      "Scope and history"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Kinematics in one dimension",
+      "Position, velocity, acceleration"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Kinematics in two and three dimensions",
+      "Vectors in motion"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Projectile motion",
+      "Range, maximum height"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Uniform circular motion",
+      "Centripetal acceleration"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Relative motion",
+      "Frames of reference"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Newton's laws of motion",
+      "Statement and applications"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Free body diagrams",
+      "Drawing and using them"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Friction",
+      "Static and kinetic friction"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Applications of Newton's laws",
+      "Inclined planes, connected bodies"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Work and kinetic energy",
+      "Work-energy theorem"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Potential energy",
+      "Gravitational and elastic"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Conservation of energy",
+      "Mechanical energy conservation"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Power",
+      "Definition and computations"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Impulse and momentum",
+      "Impulse-momentum theorem"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Conservation of momentum",
+      "Elastic and inelastic collisions"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Collisions in 1D",
+      "Worked examples"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Collisions in 2D",
+      "Oblique collisions"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Center of mass",
+      "Definition and computation"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Motion of center of mass",
+      "System of particles"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Kinematics, Newton's laws, energy, momentum"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Rotational motion \u2014 angular quantities",
+      "Angular velocity, acceleration"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Moment of inertia",
+      "Computing for simple shapes"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Parallel axis theorem",
+      "Applications"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Torque and angular acceleration",
+      "Rotational Newton's 2nd law"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Rotational kinetic energy",
+      "Rolling without slipping"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Angular momentum",
+      "Definition and properties"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Conservation of angular momentum",
+      "Applications"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Simple harmonic motion",
+      "SHM equations"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Energy in SHM",
+      "Pendulum motion"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Damped and forced oscillations",
+      "Resonance (intro)"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Gravitation",
+      "Newton's law of gravitation"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Gravitational field and potential",
+      "Escape velocity"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Kepler's laws",
+      "Planetary motion"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Theory: Equilibrium of rigid bodies",
+      "Statics"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Tutorial: Worked problems on Newton's laws",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Tutorial: Worked problems on energy and momentum",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Tutorial: Worked problems on rotation",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Tutorial: Worked problems on SHM",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Review: Mechanics I",
+      "Self-check: kinematics, dynamics, energy, rotation"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Deep revisit: Vector operations",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Deep revisit: Grad/div/curl",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Deep revisit: Line/surface/volume integrals",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Deep revisit: Dynamics",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Deep revisit: Rotation and SHM",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Deep revisit: Gravitation",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Integration: Vectors in mechanics",
+      "Force, velocity, acceleration as vectors"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Integration: Vector calculus in mechanics",
+      "Work done and line integrals"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Integration: Vector fields and physics",
+      "Gravitational and electric fields"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Integration: Energy via gradients",
+      "Conservative forces"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Advanced practice: Harder vector problems",
+      "Challenging integrals"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Advanced practice: Harder mechanics problems",
+      "Complex systems"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Advanced practice: Vector identities",
+      "Proof practice"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Advanced practice: Rotational dynamics",
+      "Coupled rotating bodies"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Common mistakes and examiner tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Common mistakes and examiner tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Real-world applications",
+      "Physics, engineering, graphics"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Real-world applications",
+      "Engineering, aerospace, robotics"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Preview of Y1S2 topics",
+      "Vector methods in geometry coming up"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Preview of Y2 topics",
+      "Mechanics II coming up"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Final overview",
+      "Key techniques in one place"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Final overview",
+      "Key techniques in one place"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Integrated semester review (part 1)",
+      "Linking vector analysis with mechanics"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Integrated semester review (part 2)",
+      "Linking mechanics with vector analysis"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "AMAT",
+    "unit": "Mechanics I",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "AMAT",
+    "unit": "Vector Analysis",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check"
+    ]
+  }
+]

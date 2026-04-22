@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Recap of Numerical Methods I",
+      "Bridge to advanced numerics"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Advanced root finding",
+      "Muller's method, Brent's method"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Systems of nonlinear equations",
+      "Multivariate Newton's method"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Eigenvalue problems \u2014 power method",
+      "Finding dominant eigenvalue"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Inverse power method and shifted power method",
+      "Other eigenvalues"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: QR algorithm (intro)",
+      "Modern eigenvalue computation"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Singular value decomposition",
+      "Computing SVD numerically"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Iterative methods for sparse systems",
+      "Conjugate gradient (intro)"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Preconditioning",
+      "Why and how"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Advanced interpolation",
+      "Hermite interpolation"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Splines (deeper)",
+      "Natural and clamped cubic splines"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Bezier curves (intro)",
+      "Applications in graphics"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Trigonometric interpolation",
+      "Discrete Fourier transform intro"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Fast Fourier transform (intro)",
+      "Divide and conquer approach"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Applications of FFT",
+      "Signal processing overview"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Gaussian quadrature (deeper)",
+      "Legendre polynomials"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Adaptive quadrature",
+      "Error-controlled integration"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Multiple integration",
+      "Monte Carlo methods (intro)"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Monte Carlo methods",
+      "Random sampling for integration"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Stiff ODEs and implicit methods",
+      "Backward Euler"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Multi-step methods for ODEs",
+      "Adams-Bashforth and Adams-Moulton"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Boundary value problems",
+      "Shooting method"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Finite difference methods for BVPs",
+      "Discretization"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Introduction to PDEs numerics",
+      "Classifying PDEs"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Finite differences for parabolic PDEs",
+      "Heat equation"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Finite differences for hyperbolic PDEs",
+      "Wave equation"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Finite differences for elliptic PDEs",
+      "Laplace equation"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Stability analysis (von Neumann)",
+      "When schemes work"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Introduction to finite element method",
+      "Basis functions"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Optimization basics",
+      "Gradient descent"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Newton's method for optimization",
+      "Quadratic convergence"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Theory: Constrained optimization",
+      "Lagrange multipliers in numerics"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Lab: Implementing power method",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Lab: Implementing FFT",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Lab: Solving PDEs numerically",
+      "Hands-on coding"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Tutorial: Worked problems on advanced numerics",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Review: Numerical Methods II",
+      "Self-check: advanced techniques"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Theory: Recap of Sci Comp I",
+      "Bridge to advanced tools"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Theory: Advanced programming constructs",
+      "Object-oriented patterns in scientific code"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Implementing numerical methods II in software",
+      "Power method, FFT"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Solving nonlinear systems",
+      "Multivariate Newton in code"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: SVD in practice",
+      "Using built-in SVD"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Splines and interpolation in code",
+      "Plotting results"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: FFT and signal processing",
+      "Real signals"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Monte Carlo integration",
+      "Implementing and validating"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Stiff ODE solvers",
+      "Comparing explicit vs implicit"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: BVP solver implementation",
+      "Shooting method in code"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Finite difference method for heat equation",
+      "Visualizing evolution"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Finite difference method for wave equation",
+      "Visualizing waves"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Laplace equation solver",
+      "Iterative methods in code"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Optimization routines",
+      "Using built-in optimizers"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Linear programming",
+      "Simplex or built-in LP"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Nonlinear optimization",
+      "Gradient-based methods in code"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Data analysis workflows",
+      "From raw data to figures"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Basic machine learning (intro)",
+      "Regression in code"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Advanced visualisation",
+      "Animations, 3D surfaces"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Reproducible scientific computing",
+      "Version control, notebooks"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Performance considerations",
+      "Vectorization, avoiding loops"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Mini project (part 1)",
+      "Choosing a scientific problem"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Mini project (part 2)",
+      "Implementation"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Mini project (part 3)",
+      "Validation and analysis"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Lab: Mini project (part 4)",
+      "Presentation and write-up"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Tutorial: Debugging complex scientific code",
+      "Strategies"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Review: Scientific Computing II",
+      "Self-check: advanced workflows"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Deep revisit: Eigenvalue algorithms",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Deep revisit: FFT and transforms",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Deep revisit: Advanced integration",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Deep revisit: PDE numerics",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Deep revisit: Optimization",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Deep revisit: Data analysis workflows",
+      "Mixed tasks"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Deep revisit: PDE simulations in code",
+      "Mixed tasks"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Deep revisit: Optimization in code",
+      "Mixed tasks"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Deep revisit: Visualisation techniques",
+      "Mixed tasks"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Integration: Numerics in scientific computing",
+      "Where theory meets code"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Integration: Code meets mathematical proofs",
+      "Verifying theory numerically"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Advanced practice: Harder numerical problems",
+      "Challenging stability"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Advanced practice: Complex simulations",
+      "Multi-scale problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Advanced practice: PDE problems",
+      "Realistic boundary conditions"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Advanced practice: End-to-end research workflow",
+      "Small project from scratch"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Exam-style mock 1 (practical)",
+      "Code task walkthrough"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Exam-style mock 2 (practical)",
+      "Harder code task"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical numerical pitfalls"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Common mistakes and tips",
+      "Typical coding pitfalls"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Mini viva",
+      "Conceptual questions"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Mini viva",
+      "Explain your code and approach"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Real-world applications",
+      "Engineering simulations, research"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Real-world applications",
+      "Data science, HPC, research"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Preview of further numerics",
+      "HPC and parallel numerics"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Preview of further software",
+      "Parallel and distributed computing"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Final overview",
+      "Key algorithms"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Final overview",
+      "Key workflows"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen numerical problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen coding tasks"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Integrated review (part 1)",
+      "Linking numerics with code"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Integrated review (part 2)",
+      "Linking code with numerics"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Key derivations recap",
+      "Must-know proofs and derivations"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Portfolio polish",
+      "Cleaning up mini project"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "AMAT",
+    "unit": "Scientific Computing using Appropriate Software II",
+    "topics": [
+      "Final revision",
+      "Last-pass consolidation"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "AMAT",
+    "unit": "Numerical Methods II",
+    "topics": [
+      "Final readiness review",
+      "Integrated self-check of both units"
+    ]
+  }
+]

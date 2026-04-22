@@ -28346,6 +28346,57 @@ def alex_voice_overlay_panel() -> rx.Component:
             @media (max-width:900px) {
                 #alex-chat-panel { display:none; }
             }
+            /* ── Mobile chat bubbles panel (below the 3D model) ── */
+            #alex-mobile-chat-panel {
+                display: none;
+            }
+            @media (max-width:900px) {
+                #alex-mobile-chat-panel {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    width: 100%;
+                    max-width: min(480px, 92vw);
+                    max-height: 200px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    padding: 10px 14px;
+                    box-sizing: border-box;
+                    background: transparent;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                    flex-shrink: 0;
+                }
+                #alex-mobile-chat-panel::-webkit-scrollbar { display: none; }
+                #alex-mobile-chat-panel .alex-chat-bubble {
+                    max-width: 82%;
+                    padding: 9px 13px;
+                    border-radius: 14px;
+                    font-size: 0.84rem;
+                    line-height: 1.5;
+                    word-break: break-word;
+                    animation: chat-in .2s ease;
+                }
+                #alex-mobile-chat-panel .alex-chat-user {
+                    align-self: flex-end;
+                    background: rgba(0,200,255,0.12);
+                    border: 1px solid rgba(0,200,255,0.22);
+                    color: rgba(220,240,255,0.95);
+                    border-bottom-right-radius: 4px;
+                }
+                #alex-mobile-chat-panel .alex-chat-alex {
+                    align-self: flex-start;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.09);
+                    color: rgba(210,220,235,0.92);
+                    border-bottom-left-radius: 4px;
+                }
+                #alex-mobile-chat-panel .alex-chat-alex p { margin: 0 0 5px; }
+                #alex-mobile-chat-panel .alex-chat-alex p:last-child { margin-bottom: 0; }
+                #alex-mobile-chat-panel .alex-chat-alex ul,
+                #alex-mobile-chat-panel .alex-chat-alex ol { margin: 4px 0 4px 16px; padding: 0; }
+                #alex-mobile-chat-panel .alex-chat-alex li { margin-bottom: 3px; }
+            }
             html:has(.alex-voice-overlay-root),
             body:has(.alex-voice-overlay-root) {
                 overflow: hidden !important;
@@ -28529,6 +28580,9 @@ def alex_voice_overlay_panel() -> rx.Component:
                     id="alex-orb",
                     class_name="idle",
                 ),
+                # Mobile chat bubbles panel — transparent panel between the 3D model
+                # and the transcript wall; only visible on mobile (<900px).
+                rx.el.div(id="alex-mobile-chat-panel"),
                 # The "wall" — a distinct SaaS panel below the body. The avatar canvas
                 # fades to transparent near the waist so the character reads as standing
                 # behind this surface; the transcript text lives ON the wall.

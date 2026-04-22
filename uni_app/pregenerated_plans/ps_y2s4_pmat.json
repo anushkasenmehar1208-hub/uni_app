@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: What is a differential equation",
+      "Classification and order"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Solutions of ODEs",
+      "General, particular, singular"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: First-order ODEs \u2014 separable equations",
+      "Solving by separation"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Homogeneous first-order ODEs",
+      "Substitution techniques"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Exact equations",
+      "Integrating factors"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Linear first-order ODEs",
+      "Integrating factor method"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Bernoulli and Riccati equations",
+      "Transformations"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Applications of first-order ODEs",
+      "Growth, decay, mixing"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Existence and uniqueness (intro)",
+      "Picard's theorem (statement)"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Higher-order linear ODEs \u2014 setup",
+      "Homogeneous vs non-homogeneous"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Constant coefficient linear ODEs",
+      "Characteristic equation"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Real and distinct roots",
+      "Solution structure"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Repeated roots",
+      "Solution structure"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Complex roots",
+      "Real form of solutions"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Method of undetermined coefficients",
+      "Particular solutions"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Variation of parameters",
+      "When undetermined coefficients fails"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Cauchy-Euler equations",
+      "Substitution y=x^r"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Applications \u2014 mechanical vibrations",
+      "Undamped, damped, forced"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Applications \u2014 electrical circuits",
+      "RLC circuits"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Systems of first-order linear ODEs",
+      "Matrix form"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Solving systems via eigenvalues",
+      "Diagonalization approach"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Phase plane analysis (intro)",
+      "Stability of equilibria"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Laplace transform \u2014 definition",
+      "Properties"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Inverse Laplace transform",
+      "Partial fractions approach"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Solving ODEs with Laplace transforms",
+      "Initial value problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Step and impulse functions",
+      "Heaviside and delta function"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Convolution and Laplace",
+      "Solving with convolution"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Series solutions of ODEs (intro)",
+      "Ordinary points"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Frobenius method (intro)",
+      "Regular singular points"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Introduction to numerical methods for ODEs",
+      "Euler's method"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Theory: Runge-Kutta methods (intro)",
+      "RK2 and RK4"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Tutorial: Worked problems on first-order ODEs",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Tutorial: Worked problems on higher-order ODEs",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Tutorial: Worked problems on Laplace transforms",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Tutorial: Worked problems on systems",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Review: Ordinary Differential Equations",
+      "Self-check: methods and applications"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Functions of several variables \u2014 definitions",
+      "Domain, range, level curves"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Limits and continuity in multiple variables",
+      "Path dependence"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Partial derivatives",
+      "Computation and interpretation"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Higher-order partial derivatives",
+      "Clairaut's theorem"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Differentiability in several variables",
+      "Total derivative"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Chain rule for multivariable functions",
+      "Tree diagrams"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Gradient vector",
+      "Geometric meaning"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Directional derivatives",
+      "Maximum rate of change"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Tangent planes and linear approximation",
+      "Using partial derivatives"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Taylor's theorem in several variables",
+      "Second-order expansion"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Extrema of multivariable functions",
+      "Critical points"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Hessian matrix and second derivative test",
+      "Saddle points"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Constrained optimization",
+      "Lagrange multipliers"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Mid-unit review: Integrated recap",
+      "Partial derivatives and extrema"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Multiple integrals \u2014 double integrals",
+      "Over rectangles"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Double integrals over general regions",
+      "Changing order of integration"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Double integrals in polar coordinates",
+      "When to switch"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Triple integrals",
+      "Over rectangular boxes and general regions"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Triple integrals in cylindrical and spherical",
+      "When to switch coordinates"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Change of variables in multiple integrals",
+      "Jacobians"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Applications \u2014 area, volume, mass, centroid",
+      "Computing physical quantities"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Vector fields",
+      "Gradient, divergence, curl"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Line integrals",
+      "Scalar and vector line integrals"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Fundamental theorem for line integrals",
+      "Path independence"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Green's theorem",
+      "Statement and applications"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Surface integrals",
+      "Parametric surfaces"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Stokes' theorem",
+      "Statement and applications"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Divergence theorem",
+      "Statement and applications"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Theory: Applications in physics",
+      "Flux, circulation, conservation laws"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Tutorial: Worked problems on partial derivatives",
+      "Step-by-step"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Tutorial: Worked problems on extrema",
+      "Lagrange multiplier practice"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Tutorial: Worked problems on multiple integrals",
+      "Change of coordinates"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Tutorial: Worked problems on vector calculus",
+      "Green, Stokes, divergence"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Review: Functions of Several Variables",
+      "Self-check: derivatives, integrals, vector calc"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Review: Past paper style problems",
+      "Exam-style practice"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Deep revisit: First-order methods",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Deep revisit: Higher-order linear ODEs",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Deep revisit: Laplace transform technique",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Deep revisit: Systems and phase plane",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Deep revisit: Partial derivatives and chain rule",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Deep revisit: Extrema and optimization",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Deep revisit: Multiple integrals",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Deep revisit: Vector calculus theorems",
+      "Mixed problem set"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Integration: ODEs and linear algebra",
+      "Systems via diagonalization"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Integration: Multivariable calc and linear algebra",
+      "Jacobians as linear maps"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Integration: ODEs and series",
+      "Series solutions near ordinary points"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Integration: Multivariable calc and physics",
+      "Conservation laws"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Advanced practice: Harder ODE problems",
+      "Challenging cases"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Advanced practice: Harder multivariable problems",
+      "Challenging integrals"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Advanced practice: Modeling with ODEs",
+      "Real-world setups"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Advanced practice: Applications in physics",
+      "Electromagnetism intuition"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Exam-style mock 1",
+      "Mixed problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Exam-style mock 1 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Exam-style mock 2",
+      "Harder mixed problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Exam-style mock 2 \u2014 solutions walkthrough",
+      "Detailed explanations"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Common mistakes and examiner tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Common mistakes and examiner tips",
+      "Typical pitfalls"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Mini viva: Conceptual questions",
+      "Explain in your own words"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Real-world applications",
+      "Physics, biology, engineering"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Real-world applications",
+      "Fluid dynamics, economics, ML"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Preview of further topics",
+      "PDEs and advanced dynamical systems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Preview of further topics",
+      "Differential geometry and manifolds"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Final overview",
+      "All key methods in one place"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Final overview",
+      "All key theorems in one place"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen ODEs"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Problem-solving strategies",
+      "Approaching unseen multivariable problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "PMAT",
+    "unit": "Ordinary Differential Equations",
+    "topics": [
+      "Final revision and self-assessment",
+      "Readiness checklist"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "PMAT",
+    "unit": "Functions of Several Variables",
+    "topics": [
+      "Final revision and self-assessment",
+      "Readiness checklist"
+    ]
+  }
+]
