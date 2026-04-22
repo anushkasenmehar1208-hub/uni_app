@@ -22718,13 +22718,13 @@ def landing_page():
                     "  var s=existing||document.createElement('style');"
                     "  s.id='landing-avatar-crop';"
                     "  s.textContent=["
-                    "    '#landing-teacher-orb-wrap { overflow: hidden !important; height: 300px !important; }',"
-                    "    '#landing-teacher-orb { overflow: hidden !important; max-height: 300px !important; }',"
+                    "    '#landing-teacher-orb-wrap { overflow: hidden !important; height: 340px !important; }',"
+                    "    '#landing-teacher-orb { overflow: hidden !important; max-height: 340px !important; }',"
                     "    '#landing-teacher-orb-avatar-canvas {',"
-                    "    '  width: 220px !important; height: 340px !important;',"
-                    "    '  top: 38% !important; transform: translate(-50%,-50%) !important;',"
+                    "    '  width: 230px !important; height: 360px !important;',"
+                    "    '  top: 44% !important; transform: translate(-50%,-50%) !important;',"
                     "    '  -webkit-mask-image: none !important; mask-image: none !important;',"
-                    "    '  clip-path: inset(0 0 30% 0) !important;',"
+                    "    '  clip-path: inset(0 0 14% 0) !important;',"
                     "    '}'"
                     "  ].join('\\n');"
                     "  document.head.appendChild(s);"
@@ -22750,7 +22750,7 @@ def landing_page():
                 id="landing-teacher-orb-wrap",
                 width=rx.breakpoints(initial="100%", md="260px"),
                 flex_shrink="0",
-                height=rx.breakpoints(initial="280px", md="300px"),
+                height=rx.breakpoints(initial="300px", md="340px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
