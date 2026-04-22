@@ -8346,9 +8346,31 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             "icon of",
             "picture of",
             "diagram of",
+            # explicit image-generation phrases
+            "create a image",
+            "create an image",
+            "create image of",
+            "make a image",
+            "make an image",
+            "make image of",
+            "generate a image",
+            "generate an image",
+            "generate image of",
+            "show me an image",
+            "show an image",
+            "give me an image",
+            "give me a picture",
+            "give me a drawing",
+            "can you create a image",
+            "can you create an image",
+            "can you make a image",
+            "can you make an image",
+            "can you draw",
+            "can you show me",
+            "create a visual",
+            "make a visual",
         )
         if any(m in lower for m in draw_markers):
-            # Avoid common non-visual phrase "draw conclusion".
             if "draw conclusion" in lower:
                 return False
             return True
@@ -8451,9 +8473,11 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
         deep_analysis = self._is_deep_analysis_request(user_msg)
         rich_topic = self._topic_needs_high_detail_visual(user_msg, response_text)
 
-        if visual_only and (explicit_draw or explicit_high_detail):
+        # Any explicit request for an image/picture/drawing always uses gpt-image-2.
+        # We do not require the topic to be in the "rich topics" list.
+        if explicit_draw:
             return True
-        if explicit_draw and (explicit_high_detail or rich_topic):
+        if visual_only and explicit_high_detail:
             return True
         if deep_analysis and rich_topic:
             return True
@@ -12782,7 +12806,10 @@ Your response style rules:
                     teach_prompt += """
 26. The student explicitly asked you to search the web. Fulfill that lookup directly using the search results.
 27. Do not turn an explicit lookup request into a tutorial, coding lesson, or semester redirection unless the student asks for teaching after the answer."""
-                if visual_only_request:
+                if self._is_visual_drawing_request(user_msg):
+                    teach_prompt += """
+28. The student asked you to create/draw/generate an image or picture. The platform will generate a real high-quality image separately — do NOT output any [VISUAL] block. Instead write 1-3 short sentences describing what the image will show, then stop. Do not produce diagrams, SVG, or any [VISUAL:type=...] block."""
+                elif visual_only_request:
                     teach_prompt += """
 28. The student requested a visual-only answer. Return ONLY one valid [VISUAL:type=graph|chart|diagram|illustration|model3d] block.
 29. Do not include any normal sentences, paragraphs, markdown, code fences, links, or notes outside that visual block."""
@@ -13343,7 +13370,10 @@ Behavior rules:
             prompt += """
 25. The user explicitly asked you to search the web. Answer with the found result directly.
 26. Do not convert an explicit lookup request into a lesson, coding example, or study-plan coaching unless the user asks for that next."""
-        if visual_only_request:
+        if self._is_visual_drawing_request(user_msg):
+            prompt += """
+27. The user asked you to create/draw/generate an image or picture. The platform will generate a real high-quality image separately — do NOT output any [VISUAL] block. Instead write 1-3 short sentences describing what the image will show, then stop. Do not produce diagrams, SVG, or any [VISUAL:type=...] block."""
+        elif visual_only_request:
             prompt += """
 27. The user requested a visual-only response. Return ONLY one valid [VISUAL:type=graph|chart|diagram|illustration|model3d] block.
 28. Do not include any normal sentences, markdown, links, or extra text outside that visual block.
