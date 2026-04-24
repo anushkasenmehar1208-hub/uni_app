@@ -20,7 +20,7 @@ config = rx.Config(
     api_url=_resolve_api_url(),
     favicon="favicon-v2.ico",
     
-    db_url=os.getenv("DATABASE_URL", "sqlite:///reflex.db"),
+    db_url=os.getenv("DATABASE_URL", "sqlite:///.data/reflex.db"),
     show_built_with_reflex=False,
     
     plugins=[

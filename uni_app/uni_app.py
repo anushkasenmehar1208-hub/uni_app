@@ -119,7 +119,7 @@ OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe").strip
 # If you want the older fixed voice stack, set OPENAI_TTS_MODEL=tts-1-hd or tts-1 explicitly.
 OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
 OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy").strip() or "alloy"
-OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1.5").strip() or "gpt-image-1.5"
+OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-2").strip() or "gpt-image-2"
 # Spoken replies are server-only (Fish Audio and/or OpenAI TTS). Browser speechSynthesis is not used.
 
 BACKEND_PUBLIC_ORIGIN = (
@@ -170,7 +170,7 @@ def _openai_generate_image_bytes(
 
     # Try the configured model first, then fall back to currently-supported ones.
     candidates: list[str] = []
-    for m in (OPENAI_IMAGE_MODEL, "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini", "dall-e-3"):
+    for m in (OPENAI_IMAGE_MODEL, "gpt-image-2", "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini", "dall-e-3"):
         if m and m not in candidates:
             candidates.append(m)
 
@@ -1411,7 +1411,8 @@ def _render_visual_html(visual_type: str, visual_json: str) -> str:
         return (
             f"<div style='{card}'>{title_html}"
             f"<img src='{svg_data_uri}' alt='generated illustration' "
-            "style='width:100%;height:auto;display:block;border-radius:10px;' "
+            "style='width:100%;height:auto;display:block;border-radius:10px;"
+            "background:#ffffff;' "
             "loading='lazy' decoding='async' />"
             f"{focus_html}"
             "</div>"
@@ -8380,6 +8381,9 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             "3-d",
             "three dimensional",
             "model",
+            "image",
+            "picture",
+            "illustration",
         )
         no_text_markers = (
             "no text",
@@ -8389,6 +8393,14 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             "visual only",
             "no explanation",
             "don't explain",
+            "no more text",
+            "only image",
+            "image only",
+            "only picture",
+            "via an image",
+            "via image",
+            "just image",
+            "just the image",
         )
         return any(v in lower for v in visual_markers) and any(n in lower for n in no_text_markers)
 
@@ -8414,6 +8426,11 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             re.search(rf"\b{re.escape(v)}\w*\b", lower) for v in generation_verbs
         )
         if has_image_noun and has_gen_verb:
+            return True
+
+        # "explain X via an image", "X only image", "X via image" — image is the output format.
+        via_image_markers = ("via an image", "via image", "via a picture", "via picture", "only image", "image only")
+        if has_image_noun and any(m in lower for m in via_image_markers):
             return True
 
         # Safety net: classic draw/sketch/illustrate prompts with an object.
@@ -8632,7 +8649,9 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             )
         return (
             "Use a minimal SVG style: flat shapes, restrained palette (2-4 colors), "
-            "clean spacing, and low visual clutter."
+            "clean spacing, and low visual clutter. "
+            "Always start with <rect width='100%' height='100%' fill='#ffffff'/> as the first element "
+            "so the SVG has a white background and is readable on any surface."
         )
 
     def _high_detail_visual_style(self, text: str, response_text: str = "") -> str:
@@ -12673,13 +12692,25 @@ Course units to cover:\n{courses_text}"""
         # When the user asks for a real image/picture/drawing and OPENAI_API_KEY is
         # present, bypass the LLM entirely and call the image API directly so the SVG
         # fallback path is never entered.
+        _wants_real_image = (
+            self._is_visual_drawing_request(typed_user_msg)
+            or self._is_visual_only_request(typed_user_msg)
+        )
         if (
             not has_image_attached
             and not has_document_attached
             and OPENAI_API_KEY
-            and self.current_session_id
-            and self._is_visual_drawing_request(typed_user_msg)
+            and _wants_real_image
         ):
+            if not self.current_session_id:
+                try:
+                    self._ensure_session(uid, self.active_scope or "home")
+                except Exception as _ses_err:
+                    logger.warning("ensure_session before image gen failed: %s", _ses_err)
+            print(
+                f"[image-gen-bypass] user_msg={typed_user_msg!r} "
+                f"key_set={bool(OPENAI_API_KEY)} session={self.current_session_id!r}"
+            )
             self.chat_history.append({"role": "assistant", **self._assistant_content_meta("")})
             _img_assistant_index = len(self.chat_history) - 1
             yield

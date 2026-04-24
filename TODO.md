@@ -1,17 +1,20 @@
-# Task Progress: Visuals Fixed ✅
+# Add Notes + Tracker to Custom Degree (/free page) - IMPLEMENTATION
 
-**Completed:**
-- [x] Diagnose react-helmet `SyntaxError` (colon in title)
-- [x] Escape `:` → `&#58;` in `compact_scope_label`/`mobile_header_scope`
-- [x] Fix IndentationError line 2646
-- [x] Visuals render via Chart.js (parser unblocked)
-- [x] App runs at http://localhost:3001
+**Goal:** Copy notes/tracker buttons from structured sidebar to `free_sidebar_content()` 
 
-**Test:**
+## Approved Plan Progress:
+1. [x] Read uni_app/uni_app.py → located nav rail buttons
+2. [ ] Copy buttons to `free_sidebar_content()` 
+3. [ ] Add missing state vars/events if needed 
+4. [ ] Test: `reflex run` → Custom → /free → buttons work
+5. [ ] Mark complete + attempt_completion
+
+**Next:** Edit uni_app.py → add:
 ```
-cd /Users/lenujan/Desktop/uni_app
-reflex run
+_nav_rail_btn("notebook", AppState.toggle_notes_panel),
+_nav_rail_btn("list_checks", rx.redirect("/tracker")),
 ```
-Ask "show chart" → renders bar/graph/diagram
+after Search chats divider.
 
-**Result:** No crashes, visuals work. Task done.
+**Run after edit:** `reflex run`
+
