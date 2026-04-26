@@ -120,6 +120,11 @@ OPENAI_STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe").strip
 OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
 OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy").strip() or "alloy"
 OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-2").strip() or "gpt-image-2"
+# Alex Video Service (Manim renderer running on a separate Railway service).
+ALEX_VIDEO_SERVICE_URL = os.getenv(
+    "ALEX_VIDEO_SERVICE_URL",
+    "https://observant-tenderness-production.up.railway.app",
+).rstrip("/")
 # Spoken replies are server-only (Fish Audio and/or OpenAI TTS). Browser speechSynthesis is not used.
 
 BACKEND_PUBLIC_ORIGIN = (
@@ -21406,6 +21411,7 @@ def nav_rail() -> rx.Component:
         _nav_rail_btn("search", AppState.toggle_global_search),
         _nav_rail_btn("notebook", AppState.toggle_notes_panel),
         _nav_rail_btn("list_checks", rx.redirect("/tracker")),
+        _nav_rail_btn("clapperboard", rx.redirect("/video")),
         rx.spacer(),
         # ── Bottom group ──
         _nav_rail_btn("settings", rx.redirect("/settings")),
@@ -26223,6 +26229,500 @@ def tracker_page():
     )
 
 
+# ============================================================
+# /video — Manim-powered cinematic explainer video generator
+# ============================================================
+
+
+class VideoState(AppState):
+    # Form
+    video_topic: str = ""
+    video_prompt: str = ""
+    video_style: str = "cinematic"
+    video_use_3d: bool = False
+
+    # Job tracking
+    video_job_id: str = ""
+    video_status: str = ""  # "" | queued | generating | rendering | done | error
+    video_url: str = ""
+    video_error: str = ""
+    video_polling: bool = False
+    video_started_at: float = 0.0
+
+    @rx.var
+    def video_status_label(self) -> str:
+        m = {
+            "queued": "Queued — warming up the renderer…",
+            "generating": "Director writing the scene script with Claude…",
+            "rendering": "Rendering frames with Manim — this is the slow part…",
+            "done": "Done.",
+            "error": "Something went wrong.",
+        }
+        return m.get(self.video_status, "")
+
+    @rx.var
+    def video_status_pct(self) -> int:
+        m = {"queued": 8, "generating": 28, "rendering": 65, "done": 100, "error": 100}
+        return m.get(self.video_status, 0)
+
+    @rx.var
+    def video_is_busy(self) -> bool:
+        return self.video_status in ("queued", "generating", "rendering")
+
+    @rx.var
+    def video_can_submit(self) -> bool:
+        return (
+            (not self.video_is_busy)
+            and (len(self.video_topic.strip()) > 0)
+            and (len(self.video_prompt.strip()) > 0)
+        )
+
+    def set_video_topic(self, v: str): self.video_topic = v
+    def set_video_prompt(self, v: str): self.video_prompt = v
+    def set_video_style(self, v: str): self.video_style = v
+    def toggle_video_3d(self): self.video_use_3d = not self.video_use_3d
+
+    def reset_video(self):
+        self.video_job_id = ""
+        self.video_status = ""
+        self.video_url = ""
+        self.video_error = ""
+        self.video_polling = False
+
+    @rx.event(background=True)
+    async def submit_video(self):
+        async with self:
+            if not self.video_can_submit:
+                return
+            if not ALEX_VIDEO_SERVICE_URL:
+                self.video_status = "error"
+                self.video_error = "Video service is not configured."
+                return
+            self.video_job_id = ""
+            self.video_status = "queued"
+            self.video_url = ""
+            self.video_error = ""
+            self.video_started_at = time.time()
+            topic = self.video_topic.strip()
+            prompt = self.video_prompt.strip()
+            style = self.video_style
+            use_3d = self.video_use_3d
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                r = await client.post(
+                    f"{ALEX_VIDEO_SERVICE_URL}/render",
+                    json={
+                        "topic": topic,
+                        "prompt": prompt,
+                        "style": style,
+                        "use_3d": use_3d,
+                    },
+                )
+                r.raise_for_status()
+                data = r.json()
+        except Exception as e:
+            async with self:
+                self.video_status = "error"
+                self.video_error = f"Could not reach renderer: {e}"
+            return
+
+        async with self:
+            self.video_job_id = data.get("job_id", "")
+            self.video_status = data.get("status", "queued")
+
+        # Poll status until terminal.
+        deadline = time.time() + 600  # hard ceiling: 10 minutes
+        while time.time() < deadline:
+            await asyncio.sleep(3.0)
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    s = await client.get(
+                        f"{ALEX_VIDEO_SERVICE_URL}/status/{self.video_job_id}"
+                    )
+                    s.raise_for_status()
+                    sd = s.json()
+            except Exception as e:
+                async with self:
+                    self.video_error = f"Lost connection to renderer: {e}"
+                continue
+
+            async with self:
+                self.video_status = sd.get("status", self.video_status)
+                if self.video_status == "done":
+                    self.video_url = sd.get("video_url", "")
+                    return
+                if self.video_status == "error":
+                    self.video_error = sd.get("error", "Render failed.")
+                    return
+
+        async with self:
+            if self.video_status not in ("done", "error"):
+                self.video_status = "error"
+                self.video_error = "Render timed out after 10 minutes."
+
+
+def _video_style_chip(value: str, label: str, emoji: str) -> rx.Component:
+    is_active = VideoState.video_style == value
+    return rx.button(
+        rx.hstack(
+            rx.text(emoji, font_size="1rem"),
+            rx.text(label, font_size="0.85rem", font_weight="500"),
+            spacing="2", align="center",
+        ),
+        on_click=VideoState.set_video_style(value),
+        style={
+            "background": rx.cond(is_active, "rgba(52,211,153,0.14)", "rgba(255,255,255,0.04)"),
+            "border": rx.cond(is_active, "1px solid rgba(52,211,153,0.55)", "1px solid rgba(255,255,255,0.08)"),
+            "color": rx.cond(is_active, "rgba(220,255,235,0.95)", "rgba(240,244,248,0.78)"),
+            "border_radius": "10px",
+            "padding": "8px 14px",
+            "cursor": "pointer",
+            "transition": "all 0.15s ease",
+            "_hover": {"background": "rgba(255,255,255,0.07)"},
+        },
+        variant="ghost",
+    )
+
+
+def video_page_content() -> rx.Component:
+    return rx.box(
+        rx.vstack(
+            # Header
+            rx.vstack(
+                rx.hstack(
+                    rx.text("🎬", font_size="1.6rem"),
+                    rx.heading(
+                        "Make a video",
+                        size="6",
+                        color="rgba(240,244,248,0.95)",
+                        font_weight="700",
+                    ),
+                    spacing="2", align="center",
+                ),
+                rx.text(
+                    "Cinematic 3Blue1Brown-style explainers, generated on demand.",
+                    color="rgba(240,244,248,0.55)",
+                    font_size="0.92rem",
+                ),
+                align="start",
+                spacing="1",
+                width="100%",
+            ),
+
+            # Form card
+            rx.cond(
+                ~VideoState.video_is_busy & (VideoState.video_status != "done"),
+                rx.vstack(
+                    # Topic
+                    rx.vstack(
+                        rx.text("Topic", color="rgba(240,244,248,0.78)", font_size="0.85rem", font_weight="600"),
+                        rx.input(
+                            placeholder="e.g. Fourier series, Pythagoras theorem, photosynthesis…",
+                            value=VideoState.video_topic,
+                            on_change=VideoState.set_video_topic,
+                            size="3",
+                            style={
+                                "background": "rgba(255,255,255,0.04)",
+                                "border": "1px solid rgba(255,255,255,0.08)",
+                                "color": "rgba(240,244,248,0.95)",
+                                "border_radius": "10px",
+                            },
+                            width="100%",
+                        ),
+                        align="start", spacing="2", width="100%",
+                    ),
+                    # Prompt
+                    rx.vstack(
+                        rx.text("What should the video explain?", color="rgba(240,244,248,0.78)", font_size="0.85rem", font_weight="600"),
+                        rx.text_area(
+                            placeholder="Describe what to show, the order of beats, and any specific equations or visuals you want…",
+                            value=VideoState.video_prompt,
+                            on_change=VideoState.set_video_prompt,
+                            rows="6",
+                            style={
+                                "background": "rgba(255,255,255,0.04)",
+                                "border": "1px solid rgba(255,255,255,0.08)",
+                                "color": "rgba(240,244,248,0.95)",
+                                "border_radius": "10px",
+                                "font_size": "0.92rem",
+                                "padding": "12px",
+                            },
+                            width="100%",
+                        ),
+                        align="start", spacing="2", width="100%",
+                    ),
+                    # Style chips
+                    rx.vstack(
+                        rx.text("Style", color="rgba(240,244,248,0.78)", font_size="0.85rem", font_weight="600"),
+                        rx.hstack(
+                            _video_style_chip("cinematic", "Cinematic", "🎥"),
+                            _video_style_chip("playful", "Playful", "✨"),
+                            _video_style_chip("technical", "Technical", "📐"),
+                            _video_style_chip("minimal", "Minimal", "⚪"),
+                            spacing="2",
+                            wrap="wrap",
+                        ),
+                        align="start", spacing="2", width="100%",
+                    ),
+                    # 3D toggle
+                    rx.hstack(
+                        rx.text("Use 3D scene", color="rgba(240,244,248,0.78)", font_size="0.9rem", font_weight="500"),
+                        rx.spacer(),
+                        rx.switch(
+                            checked=VideoState.video_use_3d,
+                            on_change=VideoState.toggle_video_3d,
+                            color_scheme="green",
+                        ),
+                        width="100%",
+                        padding="6px 0",
+                    ),
+                    # Submit
+                    rx.button(
+                        rx.hstack(
+                            rx.icon(tag="sparkles", size=16),
+                            rx.text("Generate video", font_size="0.95rem", font_weight="600"),
+                            spacing="2", align="center",
+                        ),
+                        on_click=VideoState.submit_video,
+                        disabled=~VideoState.video_can_submit,
+                        size="3",
+                        style={
+                            "background": "linear-gradient(135deg, rgba(52,211,153,0.95), rgba(34,197,94,0.95))",
+                            "color": "#0a1f15",
+                            "border": "none",
+                            "border_radius": "10px",
+                            "padding": "10px 22px",
+                            "cursor": "pointer",
+                            "font_weight": "600",
+                            "_disabled": {"opacity": "0.45", "cursor": "not-allowed"},
+                            "_hover": {"opacity": "0.92"},
+                        },
+                        width="100%",
+                    ),
+                    spacing="4",
+                    align="stretch",
+                    width="100%",
+                    padding="20px",
+                    style={
+                        "background": "rgba(255,255,255,0.02)",
+                        "border": "1px solid rgba(255,255,255,0.06)",
+                        "border_radius": "16px",
+                    },
+                ),
+                rx.fragment(),
+            ),
+
+            # Progress card
+            rx.cond(
+                VideoState.video_is_busy,
+                rx.vstack(
+                    rx.hstack(
+                        rx.spinner(size="3", color="rgba(52,211,153,0.9)"),
+                        rx.text(
+                            VideoState.video_status_label,
+                            color="rgba(240,244,248,0.85)",
+                            font_size="0.95rem",
+                            font_weight="500",
+                        ),
+                        spacing="3", align="center",
+                    ),
+                    rx.box(
+                        rx.box(
+                            background="linear-gradient(90deg, rgba(52,211,153,0.9), rgba(34,197,94,0.9))",
+                            height="6px",
+                            border_radius="3px",
+                            width=VideoState.video_status_pct.to_string() + "%",
+                            transition="width 0.6s ease",
+                        ),
+                        background="rgba(255,255,255,0.06)",
+                        height="6px",
+                        border_radius="3px",
+                        width="100%",
+                    ),
+                    rx.text(
+                        "Hang tight — high-quality math/science animations take 1–4 minutes.",
+                        color="rgba(240,244,248,0.45)",
+                        font_size="0.82rem",
+                    ),
+                    spacing="3",
+                    width="100%",
+                    padding="22px",
+                    style={
+                        "background": "rgba(52,211,153,0.04)",
+                        "border": "1px solid rgba(52,211,153,0.18)",
+                        "border_radius": "16px",
+                    },
+                ),
+                rx.fragment(),
+            ),
+
+            # Done card
+            rx.cond(
+                VideoState.video_status == "done",
+                rx.vstack(
+                    rx.hstack(
+                        rx.icon(tag="check_circle", size=20, color="rgba(52,211,153,0.95)"),
+                        rx.text(
+                            "Your video is ready",
+                            color="rgba(240,244,248,0.95)",
+                            font_size="1.05rem",
+                            font_weight="600",
+                        ),
+                        spacing="2", align="center",
+                    ),
+                    rx.el.video(
+                        rx.el.source(src=VideoState.video_url, type="video/mp4"),
+                        controls=True,
+                        autoplay=False,
+                        style={
+                            "width": "100%",
+                            "max_height": "70vh",
+                            "border_radius": "12px",
+                            "background": "#000",
+                        },
+                    ),
+                    rx.hstack(
+                        rx.link(
+                            rx.button(
+                                rx.hstack(
+                                    rx.icon(tag="download", size=14),
+                                    rx.text("Download MP4", font_size="0.85rem", font_weight="500"),
+                                    spacing="2", align="center",
+                                ),
+                                style={
+                                    "background": "rgba(255,255,255,0.05)",
+                                    "border": "1px solid rgba(255,255,255,0.08)",
+                                    "color": "rgba(240,244,248,0.85)",
+                                    "border_radius": "8px",
+                                    "padding": "8px 14px",
+                                    "cursor": "pointer",
+                                },
+                            ),
+                            href=VideoState.video_url,
+                            is_external=True,
+                            download=True,
+                        ),
+                        rx.button(
+                            rx.hstack(
+                                rx.icon(tag="rotate_ccw", size=14),
+                                rx.text("Make another", font_size="0.85rem", font_weight="500"),
+                                spacing="2", align="center",
+                            ),
+                            on_click=VideoState.reset_video,
+                            style={
+                                "background": "rgba(255,255,255,0.05)",
+                                "border": "1px solid rgba(255,255,255,0.08)",
+                                "color": "rgba(240,244,248,0.85)",
+                                "border_radius": "8px",
+                                "padding": "8px 14px",
+                                "cursor": "pointer",
+                            },
+                        ),
+                        spacing="3",
+                    ),
+                    spacing="3",
+                    width="100%",
+                    padding="22px",
+                    style={
+                        "background": "rgba(52,211,153,0.04)",
+                        "border": "1px solid rgba(52,211,153,0.22)",
+                        "border_radius": "16px",
+                    },
+                ),
+                rx.fragment(),
+            ),
+
+            # Error card
+            rx.cond(
+                VideoState.video_status == "error",
+                rx.vstack(
+                    rx.hstack(
+                        rx.icon(tag="circle_alert", size=18, color="rgba(248,113,113,0.95)"),
+                        rx.text(
+                            "We couldn't make that one",
+                            color="rgba(248,113,113,0.95)",
+                            font_size="1rem",
+                            font_weight="600",
+                        ),
+                        spacing="2", align="center",
+                    ),
+                    rx.text(
+                        VideoState.video_error,
+                        color="rgba(240,244,248,0.7)",
+                        font_size="0.88rem",
+                        white_space="pre-wrap",
+                    ),
+                    rx.button(
+                        rx.text("Try again", font_size="0.85rem", font_weight="500"),
+                        on_click=VideoState.reset_video,
+                        style={
+                            "background": "rgba(255,255,255,0.05)",
+                            "border": "1px solid rgba(255,255,255,0.08)",
+                            "color": "rgba(240,244,248,0.85)",
+                            "border_radius": "8px",
+                            "padding": "8px 14px",
+                            "cursor": "pointer",
+                            "align_self": "start",
+                        },
+                    ),
+                    spacing="3",
+                    align="start",
+                    width="100%",
+                    padding="22px",
+                    style={
+                        "background": "rgba(248,113,113,0.05)",
+                        "border": "1px solid rgba(248,113,113,0.2)",
+                        "border_radius": "16px",
+                    },
+                ),
+                rx.fragment(),
+            ),
+
+            spacing="5",
+            align="stretch",
+            width="100%",
+            max_width="780px",
+            padding="36px 28px 60px 28px",
+        ),
+        display="flex",
+        justify_content="center",
+        flex_direction="column",
+        align_items="center",
+        height="100vh",
+        overflow_y="auto",
+        background="#191919",
+        flex="1",
+        min_width="0",
+    )
+
+
+@rx.page(
+    route="/video",
+    title="Video — Alex AI",
+    image=FAVICON_32,
+)
+@require_app_login
+def video_page():
+    return rx.box(
+        rx.hstack(
+            rx.box(
+                nav_rail(),
+                display=rx.breakpoints(initial="none", md="flex"),
+            ),
+            video_page_content(),
+            width="100%",
+            height="100vh",
+            spacing="0",
+            align="stretch",
+        ),
+        background="#191919",
+        width="100%",
+        height="100vh",
+        overflow="hidden",
+    )
+
+
 @rx.page(
     route="/settings",
     title="Settings — Alex AI",
@@ -28886,6 +29386,7 @@ def free_sidebar_content() -> rx.Component:
         _nav_row("search", "Search chats", AppState.toggle_global_search),
         _nav_row("notebook", "Notes", AppState.toggle_notes_panel),
         _nav_row("list_checks", "Tracker", rx.redirect("/tracker")),
+        _nav_row("clapperboard", "Make a video", rx.redirect("/video")),
 
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.07)", margin_y="4px"),
 
