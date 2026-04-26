@@ -1,6 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "alex_video_service/Dockerfile"
 
 [deploy]
 startCommand = "./start.sh"
