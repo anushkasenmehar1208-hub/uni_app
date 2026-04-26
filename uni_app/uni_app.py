@@ -102,10 +102,10 @@ if not OPENROUTER_API_KEY:
 
 OPENROUTER_TEACHER_MODEL = os.getenv("OPENROUTER_TEACHER_MODEL", "deepseek/deepseek-chat").strip() or "deepseek/deepseek-chat"
 OPENROUTER_REASONING_MODEL = os.getenv("OPENROUTER_REASONING_MODEL", "deepseek/deepseek-r1").strip() or "deepseek/deepseek-r1"
-OPENROUTER_PREMIUM_MODEL = os.getenv("OPENROUTER_PREMIUM_MODEL", "anthropic/claude-opus-4.6").strip() or "anthropic/claude-opus-4.6"
+OPENROUTER_PREMIUM_MODEL = os.getenv("OPENROUTER_PREMIUM_MODEL", "anthropic/claude-opus-4-7").strip() or "anthropic/claude-opus-4-7"
 OPENROUTER_AUX_MODEL = os.getenv("OPENROUTER_AUX_MODEL", "").strip() or OPENROUTER_TEACHER_MODEL
-OPENROUTER_VISION_MODEL = os.getenv("OPENROUTER_VISION_MODEL", "openai/gpt-4o-mini").strip() or "openai/gpt-4o-mini"
-OPENROUTER_DRAW_MODEL = os.getenv("OPENROUTER_DRAW_MODEL", "openai/gpt-4o-mini").strip() or "openai/gpt-4o-mini"
+OPENROUTER_VISION_MODEL = os.getenv("OPENROUTER_VISION_MODEL", "openai/gpt-5.5-pro").strip() or "openai/gpt-5.5-pro"
+OPENROUTER_DRAW_MODEL = os.getenv("OPENROUTER_DRAW_MODEL", "openai/gpt-5.5-pro").strip() or "openai/gpt-5.5-pro"
 OPENROUTER_SPEC_MODEL = os.getenv("OPENROUTER_SPEC_MODEL", "deepseek/deepseek-chat").strip() or "deepseek/deepseek-chat"
 # Live voice calls only: set to a smaller/faster OpenRouter model to cut wait time (defaults to teacher).
 OPENROUTER_VOICE_MODEL = (os.getenv("OPENROUTER_VOICE_MODEL") or "").strip() or OPENROUTER_TEACHER_MODEL
@@ -11197,6 +11197,11 @@ Quality rules:
             self.chat_history = []
             self._clear_canvas_state()
             self.chat_input = self.chat_drafts.get(self.active_scope, "")
+            if self.active_scope == "home":
+                yield rx.call_script(
+                    "if (window.location.pathname !== '/s/home') {"
+                    " window.history.pushState(null, '', '/s/home'); }"
+                )
         except Exception as e:
             print(f"ERROR new_chat: {e}")
 
@@ -11210,6 +11215,10 @@ Quality rules:
             self.current_session_id = session_id
             self.chat_input = self.chat_drafts.get(self.active_scope, "")
             self._load_messages(uid)
+            if self.active_scope == "home":
+                yield rx.call_script(
+                    f"window.history.pushState(null,'','/s/home/{session_id}')"
+                )
         except Exception as e:
             print(f"ERROR switch_chat: {e}")
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -21686,7 +21695,7 @@ def semester_page():
                     # Left: degree + semester/day + progress pip
                     rx.vstack(
                         rx.text(
-                            rx.cond(AppState.degree != "", AppState.degree, "Software Engineering"),
+                            AppState.degree,
                             color="rgba(240,244,248,0.92)",
                             font_size="0.88rem",
                             font_weight="600",
@@ -28875,6 +28884,8 @@ def free_sidebar_content() -> rx.Component:
         # ── NAV ITEMS ──
         _nav_row("square_pen", "New chat", AppState.new_chat),
         _nav_row("search", "Search chats", AppState.toggle_global_search),
+        _nav_row("notebook", "Notes", AppState.toggle_notes_panel),
+        _nav_row("list_checks", "Tracker", rx.redirect("/tracker")),
 
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.07)", margin_y="4px"),
 
@@ -28948,6 +28959,7 @@ def free_sidebar_content() -> rx.Component:
 @require_app_login
 def free_page():
     return rx.fragment(
+        notes_panel(),
         rx.box(
             # ── Mobile header ──
             rx.box(
