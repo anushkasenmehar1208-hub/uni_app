@@ -1,16 +1,18 @@
 """Manim renderer with TTS voice-over.
 
 Pipeline per job:
-  1. Write scene.py to temp work dir
-  2. manim CLI → silent MP4
-  3. edge-tts on narration text → narration.mp3  (skipped if no narration)
-  4. ffmpeg merge audio + video → final MP4
+  1. Generate TTS narration.mp3 first  (so we know exact audio duration)
+  2. Patch scene_code: extend final self.wait() so video ≥ audio length
+  3. Write scene.py → manim CLI → silent MP4
+  4. ffmpeg: merge audio + video → final MP4 (audio drives duration)
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -24,7 +26,6 @@ QUALITY_FLAG = {
     "high": "-qh",
     "production": "-qp",
 }.get(os.environ.get("RENDER_QUALITY", "low"), "-ql")
-# 12 minutes ceiling — low-quality 3D should finish in ~2–5 min on Railway
 MAX_RENDER_SECONDS = int(os.environ.get("MAX_RENDER_SECONDS", "720"))
 TTS_VOICE = os.environ.get("TTS_VOICE", "en-US-AndrewNeural")
 
@@ -42,14 +43,56 @@ async def _generate_tts(text: str, out_path: Path) -> None:
     await communicate.save(str(out_path))
 
 
+async def _get_audio_duration(audio_path: Path) -> float:
+    """Return exact duration of an audio file in seconds via ffprobe."""
+    proc = await asyncio.create_subprocess_exec(
+        "ffprobe", "-v", "quiet",
+        "-print_format", "json",
+        "-show_streams",
+        str(audio_path),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
+    try:
+        data = json.loads(stdout)
+        return float(data["streams"][0]["duration"])
+    except Exception:
+        # Fallback: estimate from word count (~140 wpm)
+        return 0.0
+
+
+def _patch_video_length(code: str, min_seconds: float) -> str:
+    """Ensure the Manim scene is at least min_seconds long.
+
+    Replaces the last self.wait(N) in construct() with self.wait(min_seconds+2).
+    If none found, appends one.  This guarantees the silent MP4 outlasts the audio.
+    """
+    tail = int(min_seconds) + 2          # 2s grace on top of audio length
+    stripped = code.rstrip()
+
+    # Replace the very last self.wait(digits) anywhere in the file
+    patched = re.sub(
+        r'self\.wait\s*\(\s*\d+(?:\.\d+)?\s*\)',
+        f'self.wait({tail})',
+        stripped,
+        count=0,       # replace ALL occurrences so the last one definitely becomes tail
+    )
+
+    # If no self.wait at all, append one inside construct indentation
+    if 'self.wait' not in patched:
+        patched = stripped + f'\n        self.wait({tail})'
+
+    return patched
+
+
 async def _merge_audio_video(
     video_path: Path, audio_path: Path, output_path: Path
 ) -> None:
-    """ffmpeg: overlay narration audio on the silent Manim video.
+    """ffmpeg: lay audio over the silent Manim video.
 
-    Uses -shortest so it ends at whichever stream finishes first.
-    The LLM is asked to add self.wait(3) at the end so the video is
-    typically a few seconds longer than the narration.
+    Video is always longer than audio (we patched it), so -shortest cuts
+    at the audio end — perfect sync.
     """
     cmd = [
         "ffmpeg", "-y",
@@ -60,7 +103,7 @@ async def _merge_audio_video(
         "-b:a", "128k",
         "-map", "0:v:0",
         "-map", "1:a:0",
-        "-shortest",
+        "-shortest",          # stop at audio end (video is padded longer)
         str(output_path),
     ]
     proc = await asyncio.create_subprocess_exec(
@@ -91,11 +134,26 @@ async def render_scene(
         shutil.rmtree(job_work, ignore_errors=True)
     job_work.mkdir(parents=True, exist_ok=True)
 
-    # ── 1. Write scene file ──────────────────────────────────────────────────
+    audio_path: Path | None = None
+
+    # ── 1. TTS first (so we know exact audio length before rendering) ─────────
+    if narration_text.strip():
+        audio_path = job_work / "narration.mp3"
+        await _generate_tts(narration_text, audio_path)
+
+        audio_duration = await _get_audio_duration(audio_path)
+        if audio_duration < 5:
+            # ffprobe failed — fall back to word-count estimate (140 wpm)
+            audio_duration = len(narration_text.split()) / 2.33
+
+        # Patch the scene so the silent video is always longer than the audio
+        scene_code = _patch_video_length(scene_code, audio_duration)
+
+    # ── 2. Write (patched) scene file ─────────────────────────────────────────
     scene_file = job_work / "scene.py"
     scene_file.write_text(scene_code, encoding="utf-8")
 
-    # ── 2. Run Manim ─────────────────────────────────────────────────────────
+    # ── 3. Run Manim ──────────────────────────────────────────────────────────
     media_dir = job_work / "media"
     manim_cmd = [
         "manim",
@@ -118,9 +176,7 @@ async def render_scene(
         )
     except asyncio.TimeoutError:
         proc.kill()
-        raise RenderError(
-            f"Manim render exceeded {MAX_RENDER_SECONDS}s"
-        ) from None
+        raise RenderError(f"Manim render exceeded {MAX_RENDER_SECONDS}s") from None
 
     if proc.returncode != 0:
         tail = (stderr or b"").decode("utf-8", errors="ignore")[-2000:]
@@ -133,10 +189,8 @@ async def render_scene(
 
     final_path = VIDEOS_DIR / f"{job_id}.mp4"
 
-    # ── 3 & 4. TTS + merge (or just copy if no narration) ────────────────────
-    if narration_text.strip():
-        audio_path = job_work / "narration.mp3"
-        await _generate_tts(narration_text, audio_path)
+    # ── 4. Merge audio + video ────────────────────────────────────────────────
+    if audio_path and audio_path.exists():
         await _merge_audio_video(silent_mp4, audio_path, final_path)
     else:
         shutil.copy2(silent_mp4, final_path)
