@@ -23,9 +23,9 @@ QUALITY_FLAG = {
     "medium": "-qm",
     "high": "-qh",
     "production": "-qp",
-}.get(os.environ.get("RENDER_QUALITY", "medium"), "-qm")
-# 15 minutes ceiling — complex 3D scenes on Railway need time
-MAX_RENDER_SECONDS = int(os.environ.get("MAX_RENDER_SECONDS", "900"))
+}.get(os.environ.get("RENDER_QUALITY", "low"), "-ql")
+# 12 minutes ceiling — low-quality 3D should finish in ~2–5 min on Railway
+MAX_RENDER_SECONDS = int(os.environ.get("MAX_RENDER_SECONDS", "720"))
 TTS_VOICE = os.environ.get("TTS_VOICE", "en-US-AndrewNeural")
 
 VIDEOS_DIR.mkdir(parents=True, exist_ok=True)

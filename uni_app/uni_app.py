@@ -26332,7 +26332,7 @@ class VideoState(AppState):
             self.video_status = data.get("status", "queued")
 
         # Poll status until terminal.
-        deadline = time.time() + 600  # hard ceiling: 10 minutes
+        deadline = time.time() + 900  # hard ceiling: 15 minutes
         while time.time() < deadline:
             await asyncio.sleep(3.0)
             try:
@@ -26365,7 +26365,7 @@ class VideoState(AppState):
         async with self:
             if self.video_status not in ("done", "error"):
                 self.video_status = "error"
-                self.video_error = "Render timed out after 10 minutes."
+                self.video_error = "Render timed out after 15 minutes. Try a simpler topic or add a focus hint."
 
 
 def _video_style_chip(value: str, label: str, emoji: str) -> rx.Component:
