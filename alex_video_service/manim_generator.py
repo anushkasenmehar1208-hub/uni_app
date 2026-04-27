@@ -1,26 +1,32 @@
-"""LLM-driven Manim scene generator — premium 3D explainer videos.
+"""LLM-driven recipe generator → composes premium Manim videos from templates.
 
-Output format the LLM must produce:
-    ===NARRATION===
-    <voice-over text>
-    ===CODE===
-    <python code>
+Pipeline:
+  1. Validate topic (profanity / gibberish guard)
+  2. Ask LLM for a JSON recipe + narration text
+  3. Compose recipe → full Manim scene code
+  4. Return (narration_text, scene_code) — renderer takes it from here
 """
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import textwrap
 
 import httpx
 
+from composer import RecipeError, compose_scene
+from templates import TEMPLATES, get_template_catalog, list_template_names
+
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL = "openai/gpt-4o"
 
-# ── Topic validation ────────────────────────────────────────────────────────
 
-# Common profanity / inappropriate words (lowercase)
+# ──────────────────────────────────────────────────────────────────────────
+# Topic validation (profanity / gibberish)
+# ──────────────────────────────────────────────────────────────────────────
+
 _PROFANITY = {
     "fuck", "fucking", "fucked", "fucker", "shit", "shitting", "shitty",
     "bitch", "bitches", "bastard", "asshole", "ass", "arse", "damn",
@@ -28,40 +34,31 @@ _PROFANITY = {
     "nigger", "nigga", "faggot", "fag", "slut", "whore", "porn",
     "sex", "naked", "nude", "rape", "kill", "murder", "suicide",
     "terrorist", "bomb", "drug", "drugs", "cocaine", "heroin", "meth",
-    "weed", "cannabis",   # educational uses will still pass gibberish check
+    "weed", "cannabis",
 }
 
+
 def _is_gibberish(word: str) -> bool:
-    """Return True if a word looks like random keystrokes."""
     if len(word) <= 2:
-        return False          # single chars / abbreviations are fine
+        return False
     vowels = set("aeiouAEIOU")
     vowel_count = sum(c in vowels for c in word)
-    # Fewer than 15% vowels in a word longer than 4 chars → gibberish
     if len(word) > 4 and vowel_count / len(word) < 0.15:
         return True
-    # More than 4 consecutive consonants → very likely gibberish
     consonants_run = max(
-        (len(m.group()) for m in __import__("re").finditer(r"[^aeiouAEIOU\W\d_]+", word)),
+        (len(m.group()) for m in re.finditer(r"[^aeiouAEIOU\W\d_]+", word)),
         default=0,
     )
-    if consonants_run >= 5:
-        return True
-    return False
+    return consonants_run >= 5
 
 
 def validate_topic(topic: str) -> None:
     """Raise GenerationError if topic is inappropriate or gibberish."""
-    import re as _re
-
     stripped = topic.strip()
     if not stripped:
         raise GenerationError("Please enter a topic.")
 
-    # Extract words
-    words = _re.findall(r"[a-zA-Z]+", stripped)
-
-    # 1. Profanity / inappropriate content check
+    words = re.findall(r"[a-zA-Z]+", stripped)
     for w in words:
         if w.lower() in _PROFANITY:
             raise GenerationError(
@@ -69,7 +66,6 @@ def validate_topic(topic: str) -> None:
                 "Please enter an educational topic (e.g. Quantum Mechanics, Black Holes, DNA)."
             )
 
-    # 2. Non-alphabetic ratio check — "....erf,@#$" style
     alpha_chars = sum(c.isalpha() for c in stripped)
     if len(stripped) > 0 and alpha_chars / len(stripped) < 0.4:
         raise GenerationError(
@@ -77,7 +73,6 @@ def validate_topic(topic: str) -> None:
             "Please enter a real subject (e.g. Calculus, The French Revolution, Photosynthesis)."
         )
 
-    # 3. Gibberish word check — if MOST words look like random keystrokes
     if words:
         gibberish_count = sum(1 for w in words if _is_gibberish(w))
         if gibberish_count / len(words) >= 0.6:
@@ -87,83 +82,84 @@ def validate_topic(topic: str) -> None:
             )
 
 
-FORBIDDEN_PATTERNS = [
-    r"\bos\.system\b",
-    r"\bsubprocess\b",
-    r"\b__import__\b",
-    r"\beval\s*\(",
-    r"\bexec\s*\(",
-    r"\bopen\s*\(",
-    r"\bcompile\s*\(",
-    r"\bsocket\b",
-    r"\brequests\b",
-    r"\bhttpx\b",
-    r"\burllib\b",
-    r"\bshutil\b",
-    r"\bpathlib\b",
-    r"\bPath\s*\(",
-]
+class GenerationError(RuntimeError):
+    pass
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# LLM prompt
+# ──────────────────────────────────────────────────────────────────────────
 
 SYSTEM_PROMPT = textwrap.dedent(
-    """
-    You are a Manim animation engineer. Create a 2-MINUTE 3D educational video
-    in the style of 3Blue1Brown — beautiful, clear, never text-heavy.
+    f"""
+    You are a director of premium 3D educational videos in the style of 3Blue1Brown.
+    You DO NOT write Python code. You SELECT templates and write narration.
+
+    ━━━ HOW IT WORKS ━━━
+    A renderer composes the final video from pre-built, fast-rendering 3D animation
+    templates. Your job: pick the right templates and parameters for the topic,
+    and write a beautiful voice-over.
 
     ━━━ OUTPUT FORMAT (MANDATORY) ━━━
     ===NARRATION===
-    [Voice-over text — natural speech, 200–240 words]
-    ===CODE===
-    [Complete Manim Python file]
+    [Voice-over text, 200–240 words, natural flowing speech]
+    ===RECIPE===
+    {{
+      "scenes": [
+        {{"template": "<name>", "params": {{...}}}},
+        ...
+      ]
+    }}
 
-    ━━━ SPEED RULES — HARD LIMITS (slow render server) ━━━
-    ✗ NO Surface() — forbidden, always causes timeout
-    ✗ NO Dot3D groups > 8 objects
-    ✗ NO more than 5 mobjects on screen at once
-    ✗ NO more than 2 animations in one self.play() call
-    ✗ NO complex nested loops creating many objects
+    ━━━ STRUCTURE — pick 4–6 scenes total ━━━
+    1. Always START with `intro_hero`
+    2. Pick 2–4 subject-specific scenes that teach the concept
+    3. Optionally use `key_insight` for the "aha" moment
+    4. Always END with `closing_takeaway`
 
-    ━━━ WHAT TO BUILD WITH ━━━
-    ✅ ThreeDScene + ambient camera rotation (rate=0.10) — cheap & beautiful
-    ✅ 3–5 simple primitives: Sphere, Cube, Torus, Cylinder, Cone
-    ✅ ParametricFunction (3D curves/paths) — fast and visually rich
-    ✅ ThreeDAxes for coordinate frames
-    ✅ Arrow3D / Line for vectors (max 4 total)
-    ✅ Short MathTex labels on visuals (max 3 total)
-    ✅ Colors: BLUE_D, TEAL_C, YELLOW_C, RED_D, PURPLE_B, GREEN_C, GOLD
+    ━━━ AVAILABLE TEMPLATES ━━━
+    {get_template_catalog()}
 
-    ━━━ STRUCTURE (4 beats, ~120s total) ━━━
-    Beat 1 — OPEN (10s): beautiful 3D object appears, camera begins rotating
-    Beat 2 — BUILD (50s): add 2–3 more objects, show key relationships
-    Beat 3 — INSIGHT (30s): the "aha" transform or reveal
-    Beat 4 — CLOSE (10s): clean final composition
+    ━━━ COLOR PALETTE (use Manim color names) ━━━
+    BLUE_D, BLUE_E, TEAL_C, TEAL_D, GREEN_C, GREEN_D,
+    YELLOW_C, GOLD, ORANGE, RED_D, MAROON_C, PINK,
+    PURPLE_B, WHITE, GREY_B
 
-    ━━━ TIMING — CRITICAL ━━━
-    • Narration = 200–240 words (~85–100 seconds of voice-over)
-    • Each self.play() should have a matching self.wait() after it
-    • Total self.wait() time must cover the full narration
-    • The renderer will auto-extend the final wait to match audio —
-      but YOU must still write reasonable timing throughout
+    ━━━ NARRATION RULES ━━━
+    • 200–240 words (~90 seconds of audio)
+    • Brilliant teacher tone — short punchy sentences, genuine wonder
+    • Reference what the viewer SEES ("watch as the helix unwinds…")
+    • Build intuition first, terms second
+    • The narration must flow naturally with the scenes you picked
 
-    ━━━ CODE RULES ━━━
-    • class MainScene(ThreeDScene):
-    • Start construct with:
-        self.set_camera_orientation(phi=70*DEGREES, theta=-45*DEGREES, distance=8)
-        self.begin_ambient_camera_rotation(rate=0.10)
-    • from manim import *  (optionally import numpy as np)
-    • NEVER import os, sys, subprocess, requests, httpx, pathlib, shutil
-    • NEVER call exec, eval, open, compile, __import__
-    • End with self.wait(6)
+    ━━━ STRICT RULES ━━━
+    • Use ONLY templates from the list above — invented names will fail
+    • Match parameters from each template's `params` list exactly
+    • Pick subject-appropriate templates (don't use cs_neural_network for chemistry)
+    • Labels should be short (≤30 chars) — they're text on screen, not paragraphs
+    • Output the recipe as VALID JSON inside ===RECIPE===
 
-    ━━━ NARRATION STYLE ━━━
-    Brilliant teacher. Short punchy sentences. Reference what the viewer sees.
-    200–240 words. Build intuition first, then terms. Genuine wonder.
+    ━━━ EXAMPLE ━━━
+    Topic: Photosynthesis
+    ===NARRATION===
+    Watch a leaf catch sunlight... [200 words about photosynthesis]
+    ===RECIPE===
+    {{
+      "scenes": [
+        {{"template": "intro_hero", "params": {{"title": "Photosynthesis", "subtitle": "Life from light", "color": "GREEN_C"}}}},
+        {{"template": "bio_cell_simple", "params": {{"label": "Plant cell", "color": "GREEN_C"}}}},
+        {{"template": "chem_reaction", "params": {{"reactants": "CO₂ + H₂O", "products": "Glucose + O₂", "color": "GOLD"}}}},
+        {{"template": "key_insight", "params": {{"label": "Light → Energy", "color": "YELLOW_C"}}}},
+        {{"template": "closing_takeaway", "params": {{"takeaway": "Every breath you take, a leaf made possible.", "color": "GREEN_C"}}}}
+      ]
+    }}
     """
 ).strip()
 
 
-class GenerationError(RuntimeError):
-    pass
-
+# ──────────────────────────────────────────────────────────────────────────
+# Parsing
+# ──────────────────────────────────────────────────────────────────────────
 
 def _strip_fences(text: str) -> str:
     text = text.strip()
@@ -173,33 +169,41 @@ def _strip_fences(text: str) -> str:
     return text.strip()
 
 
-def _parse_response(raw: str) -> tuple[str, str]:
-    if "===CODE===" not in raw:
-        raise GenerationError("LLM response missing ===CODE=== marker")
-    parts = raw.split("===CODE===", 1)
+def _parse_response(raw: str) -> tuple[str, dict]:
+    """Split LLM output into narration + recipe dict."""
+    if "===RECIPE===" not in raw:
+        raise GenerationError("LLM response missing ===RECIPE=== marker")
+
+    parts = raw.split("===RECIPE===", 1)
     narration = parts[0].replace("===NARRATION===", "").strip()
-    code = _strip_fences(parts[1].strip())
-    return narration, code
+
+    recipe_str = _strip_fences(parts[1].strip())
+    # If the model wrapped the JSON in any extra commentary, try to extract { ... }
+    if not recipe_str.startswith("{"):
+        m = re.search(r"\{[\s\S]*\}", recipe_str)
+        if not m:
+            raise GenerationError(f"Could not find JSON object in recipe: {recipe_str[:200]}")
+        recipe_str = m.group(0)
+
+    try:
+        recipe = json.loads(recipe_str)
+    except json.JSONDecodeError as e:
+        raise GenerationError(f"Recipe JSON invalid: {e}\n\n{recipe_str[:400]}") from e
+
+    return narration, recipe
 
 
-def _validate(code: str) -> None:
-    if "class MainScene" not in code:
-        raise GenerationError("LLM output is missing `class MainScene`")
-    if "def construct" not in code:
-        raise GenerationError("LLM output is missing `def construct`")
-    for pat in FORBIDDEN_PATTERNS:
-        if re.search(pat, code):
-            raise GenerationError(f"Forbidden pattern in generated code: {pat}")
-
+# ──────────────────────────────────────────────────────────────────────────
+# Public API
+# ──────────────────────────────────────────────────────────────────────────
 
 async def generate_scene_code(
     topic: str,
     prompt: str = "",
-    style: str = "",         # ignored — kept for compat
+    style: str = "",         # ignored — kept for API compat
     use_3d: bool = True,     # ignored — always premium 3D
 ) -> tuple[str, str]:
-    """Returns (narration_text, manim_code) — always premium 3D explainers."""
-    # Validate before spending any API credits
+    """Returns (narration_text, manim_code) — composed from templates."""
     validate_topic(topic)
 
     api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -209,24 +213,25 @@ async def generate_scene_code(
     if prompt.strip():
         guidance = f"Focus hint from user: {prompt}"
     else:
-        guidance = "No specific hint — pick the single most insightful angle for this topic."
+        guidance = "No specific hint — pick the most insightful angle for this topic."
 
     user_prompt = textwrap.dedent(
         f"""
         TOPIC: {topic}
         {guidance}
 
-        Create a SHORT 3D explainer: max 45 seconds, max 100 words narration,
-        NO Surface(), max 4 objects, simple and beautiful.
+        Build a 4–6 scene premium video for this topic using ONLY the templates
+        listed in the system prompt. Pick subject-appropriate templates.
+        Write 200–240 words of natural voice-over narration that flows with the scenes.
 
-        Produce the narration and Manim code now.
+        Output narration and recipe now.
         """
     ).strip()
 
     payload = {
         "model": MODEL,
         "temperature": 0.55,
-        "max_tokens": 5000,
+        "max_tokens": 2500,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
@@ -240,7 +245,7 @@ async def generate_scene_code(
         "X-Title": "Alex Video Service",
     }
 
-    async with httpx.AsyncClient(timeout=240.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         resp = await client.post(OPENROUTER_URL, json=payload, headers=headers)
         if resp.status_code != 200:
             raise GenerationError(
@@ -253,6 +258,13 @@ async def generate_scene_code(
     except (KeyError, IndexError) as e:
         raise GenerationError(f"Unexpected LLM response shape: {data}") from e
 
-    narration, code = _parse_response(raw)
-    _validate(code)
+    narration, recipe = _parse_response(raw)
+
+    # Compose recipe → real Manim code
+    try:
+        code = compose_scene(recipe)
+    except RecipeError as e:
+        # Fallback: if the LLM hallucinated a template, try a safe minimal recipe
+        raise GenerationError(f"Recipe invalid: {e}") from e
+
     return narration, code
