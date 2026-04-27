@@ -19,7 +19,7 @@ import textwrap
 import httpx
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = "openai/gpt-4o-mini"
+MODEL = "openai/gpt-4o"
 
 FORBIDDEN_PATTERNS = [
     r"\bos\.system\b",
