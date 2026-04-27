@@ -26271,11 +26271,11 @@ class VideoState(AppState):
 
     @rx.var
     def video_can_submit(self) -> bool:
-        # Prompt is now optional — only topic is required
-        return (
-            (not self.video_is_busy)
-            and (len(self.video_topic.strip()) > 0)
-        )
+        # Prompt is optional — only topic is required.
+        # Also require at least 2 letters (blocks pure-symbol input).
+        t = self.video_topic.strip()
+        has_letters = sum(c.isalpha() for c in t) >= 2
+        return (not self.video_is_busy) and has_letters
 
     def set_video_topic(self, v: str): self.video_topic = v
     def set_video_prompt(self, v: str): self.video_prompt = v
@@ -26353,7 +26353,13 @@ class VideoState(AppState):
                     self.video_url = sd.get("video_url", "")
                     return
                 if self.video_status == "error":
-                    self.video_error = sd.get("error", "Render failed.")
+                    raw_err = sd.get("error", "Render failed.")
+                    # Strip internal prefixes so users see clean messages
+                    for prefix in ("generation: ", "render: ", "unexpected: "):
+                        if raw_err.startswith(prefix):
+                            raw_err = raw_err[len(prefix):]
+                            break
+                    self.video_error = raw_err
                     return
 
         async with self:

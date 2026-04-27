@@ -18,6 +18,75 @@ import httpx
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL = "openai/gpt-4o"
 
+# ── Topic validation ────────────────────────────────────────────────────────
+
+# Common profanity / inappropriate words (lowercase)
+_PROFANITY = {
+    "fuck", "fucking", "fucked", "fucker", "shit", "shitting", "shitty",
+    "bitch", "bitches", "bastard", "asshole", "ass", "arse", "damn",
+    "cunt", "dick", "cock", "pussy", "piss", "pissed", "crap",
+    "nigger", "nigga", "faggot", "fag", "slut", "whore", "porn",
+    "sex", "naked", "nude", "rape", "kill", "murder", "suicide",
+    "terrorist", "bomb", "drug", "drugs", "cocaine", "heroin", "meth",
+    "weed", "cannabis",   # educational uses will still pass gibberish check
+}
+
+def _is_gibberish(word: str) -> bool:
+    """Return True if a word looks like random keystrokes."""
+    if len(word) <= 2:
+        return False          # single chars / abbreviations are fine
+    vowels = set("aeiouAEIOU")
+    vowel_count = sum(c in vowels for c in word)
+    # Fewer than 15% vowels in a word longer than 4 chars → gibberish
+    if len(word) > 4 and vowel_count / len(word) < 0.15:
+        return True
+    # More than 4 consecutive consonants → very likely gibberish
+    consonants_run = max(
+        (len(m.group()) for m in __import__("re").finditer(r"[^aeiouAEIOU\W\d_]+", word)),
+        default=0,
+    )
+    if consonants_run >= 5:
+        return True
+    return False
+
+
+def validate_topic(topic: str) -> None:
+    """Raise GenerationError if topic is inappropriate or gibberish."""
+    import re as _re
+
+    stripped = topic.strip()
+    if not stripped:
+        raise GenerationError("Please enter a topic.")
+
+    # Extract words
+    words = _re.findall(r"[a-zA-Z]+", stripped)
+
+    # 1. Profanity / inappropriate content check
+    for w in words:
+        if w.lower() in _PROFANITY:
+            raise GenerationError(
+                "Topic contains inappropriate content. "
+                "Please enter an educational topic (e.g. Quantum Mechanics, Black Holes, DNA)."
+            )
+
+    # 2. Non-alphabetic ratio check — "....erf,@#$" style
+    alpha_chars = sum(c.isalpha() for c in stripped)
+    if len(stripped) > 0 and alpha_chars / len(stripped) < 0.4:
+        raise GenerationError(
+            "Topic looks like random characters. "
+            "Please enter a real subject (e.g. Calculus, The French Revolution, Photosynthesis)."
+        )
+
+    # 3. Gibberish word check — if MOST words look like random keystrokes
+    if words:
+        gibberish_count = sum(1 for w in words if _is_gibberish(w))
+        if gibberish_count / len(words) >= 0.6:
+            raise GenerationError(
+                "Topic doesn't look like a real subject. "
+                "Please enter something educational (e.g. Machine Learning, Roman Empire, Relativity)."
+            )
+
+
 FORBIDDEN_PATTERNS = [
     r"\bos\.system\b",
     r"\bsubprocess\b",
@@ -167,6 +236,9 @@ async def generate_scene_code(
     use_3d: bool = True,     # ignored — always premium 3D
 ) -> tuple[str, str]:
     """Returns (narration_text, manim_code) — always premium 3D explainers."""
+    # Validate before spending any API credits
+    validate_topic(topic)
+
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise GenerationError("OPENROUTER_API_KEY is not set")
