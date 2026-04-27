@@ -26391,6 +26391,18 @@ def video_page_content() -> rx.Component:
             # Header
             rx.vstack(
                 rx.hstack(
+                    rx.icon_button(
+                        rx.icon("arrow_left", size=18),
+                        on_click=rx.redirect("/"),
+                        variant="ghost",
+                        size="2",
+                        style={
+                            "color": "rgba(240,244,248,0.6)",
+                            "cursor": "pointer",
+                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
+                            "border_radius": "8px",
+                        },
+                    ),
                     rx.text("🎬", font_size="1.6rem"),
                     rx.heading(
                         "Make a video",
