@@ -1,8 +1,13 @@
 """LLM-driven Manim scene generator.
 
-Calls OpenRouter (claude-opus-4-7) with a strict system prompt and returns
-a Python source string that defines a single `MainScene(Scene)` class.
-The output is sanity-checked for forbidden APIs before being written to disk.
+Single LLM call returns BOTH narration script (for TTS) and Manim Python code,
+naturally synchronized because the LLM writes them together.
+
+Output format the LLM must produce:
+    ===NARRATION===
+    <voice-over text>
+    ===CODE===
+    <python code>
 """
 
 from __future__ import annotations
@@ -35,31 +40,49 @@ FORBIDDEN_PATTERNS = [
 
 SYSTEM_PROMPT = textwrap.dedent(
     """
-    You are a Manim animation engineer creating cinematic 3Blue1Brown-style
-    educational videos. Output ONLY valid Manim Community Edition Python code.
+    You are an expert educational video creator producing 3Blue1Brown-style explainers.
+    Your response MUST contain exactly two sections with these exact markers:
 
-    Hard requirements:
-    - The file must define exactly one class: `class MainScene(Scene):` (or
-      `ThreeDScene` when 3D is needed).
-    - Inside, define `def construct(self):` with the full animation.
-    - Import only from `manim` (e.g. `from manim import *`). Use `numpy as np`
-      if needed. NEVER import os, sys, subprocess, requests, httpx, urllib,
-      socket, pathlib, shutil. Never call exec, eval, open, compile, __import__.
-    - Total runtime should be 15-30 seconds. Use `self.wait(...)` between beats.
-    - Use rich color palettes (BLUE_D, TEAL, YELLOW, RED_D, PURPLE_B, etc).
-    - For math, use `MathTex(r"...")` with raw strings; for body text use `Text`.
-    - Animate with `Create`, `Write`, `FadeIn`, `Transform`, `ReplacementTransform`,
-      `Indicate`, `MoveAlongPath`, `Rotate`. Pace beats with `run_time`.
-    - For 3D, set `self.set_camera_orientation(phi=..., theta=...)` and
-      `self.begin_ambient_camera_rotation(rate=0.1)` for cinematic feel.
-    - Group related Mobjects with `VGroup` and arrange with `.arrange()` or
-      `.next_to()`. Avoid overlapping labels; clear scene between sections with
-      `FadeOut(*self.mobjects)` when changing topic.
-    - Output MUST be a single Python file with no markdown fences, no prose,
-      no comments outside code, and no extra classes.
+    ===NARRATION===
+    [Voice-over narration text only — natural flowing speech, no stage directions,
+     no code, no "(pause)" notes, no timestamps. Just what the narrator says.]
+    ===CODE===
+    [Complete Manim Python file — raw code only, no markdown fences, no prose]
 
-    The user prompt contains the topic and any style notes. Build the most
-    beautiful explanation you can within those bounds.
+    ━━━ CONTENT PHILOSOPHY ━━━
+    • Study the topic deeply. The user's prompt is a HINT, not a limit.
+      Always deliver a COMPLETE, well-structured educational explanation.
+    • Structure every video:
+        1. Hook — a surprising or motivating question
+        2. Motivation — why this topic matters
+        3. Core concept — the main idea built up step by step
+        4. Key insight — the "aha" moment
+        5. Worked example — concrete numbers / visuals
+        6. Takeaway — one memorable sentence
+    • Narration: brilliant enthusiastic teacher, not a textbook.
+      Short punchy sentences. Active voice. Genuine wonder.
+    • Adaptive length (estimate 140 words per minute for TTS):
+        - Simple / intro topics  → 45–70 s  (~100–165 words)
+        - Intermediate topics    → 90–120 s (~210–280 words)
+        - Deep / multi-part      → 120–180 s (~280–420 words)
+
+    ━━━ MANIM CODE RULES ━━━
+    • Class: `class MainScene(Scene):` (or `ThreeDScene` when 3D is needed)
+    • Imports: `from manim import *` and optionally `import numpy as np`
+    • NEVER import: os, sys, subprocess, requests, httpx, urllib, socket, pathlib, shutil
+    • NEVER call: exec, eval, open, compile, __import__
+    • Timing: total Manim runtime ≈ narration duration + 3 s tail buffer.
+      Distribute `self.wait(n)` between beats so animations match speech.
+    • Palette: BLUE_D, TEAL, YELLOW_C, RED_D, PURPLE_B, GREEN_C, ORANGE, WHITE
+    • Animations: Create, Write, FadeIn, FadeOut, Transform, ReplacementTransform,
+      Indicate, GrowArrow, Circumscribe, Flash, MoveAlongPath
+    • Math: `MathTex(r"...")` with raw strings; prose: `Text("...")`
+    • Layout: VGroup + .arrange() / .next_to() — no overlaps allowed
+    • Transitions: clear between major sections with
+      `self.play(FadeOut(*self.mobjects))`
+    • Always end with `self.wait(3)` as audio tail buffer
+    • 3D: `self.set_camera_orientation(phi=75*DEGREES, theta=-45*DEGREES)`
+      and `self.begin_ambient_camera_rotation(rate=0.1)`
     """
 ).strip()
 
@@ -71,9 +94,20 @@ class GenerationError(RuntimeError):
 def _strip_fences(text: str) -> str:
     text = text.strip()
     if text.startswith("```"):
-        text = re.sub(r"^```[a-zA-Z]*\n", "", text)
-        text = re.sub(r"\n```\s*$", "", text)
+        text = re.sub(r"^```[a-zA-Z]*\n?", "", text)
+        text = re.sub(r"\n?```\s*$", "", text)
     return text.strip()
+
+
+def _parse_response(raw: str) -> tuple[str, str]:
+    """Split LLM output into (narration, manim_code)."""
+    if "===CODE===" not in raw:
+        raise GenerationError("LLM response missing ===CODE=== marker")
+
+    parts = raw.split("===CODE===", 1)
+    narration = parts[0].replace("===NARRATION===", "").strip()
+    code = _strip_fences(parts[1].strip())
+    return narration, code
 
 
 def _validate(code: str) -> None:
@@ -91,31 +125,39 @@ async def generate_scene_code(
     prompt: str,
     style: str = "cinematic",
     use_3d: bool = False,
-) -> str:
-    """Ask the LLM to write a Manim scene; return the validated Python source."""
+) -> tuple[str, str]:
+    """Ask the LLM to write narration + Manim scene.
 
+    Returns (narration_text, python_code).
+    prompt is optional — if empty the LLM builds the full curriculum itself.
+    """
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise GenerationError("OPENROUTER_API_KEY is not set")
 
+    if prompt.strip():
+        guidance = f"User's guidance / focus: {prompt}"
+    else:
+        guidance = (
+            "No specific guidance provided — build the best possible complete "
+            "explanation for this topic from scratch."
+        )
+
     user_prompt = textwrap.dedent(
         f"""
         TOPIC: {topic}
-
-        EXPLANATION REQUEST:
-        {prompt}
-
+        {guidance}
         STYLE: {style}
-        DIMENSION: {"3D (use ThreeDScene)" if use_3d else "2D (use Scene)"}
+        DIMENSION: {"3D — use ThreeDScene" if use_3d else "2D — use Scene"}
 
-        Build the animation now. Return ONLY the Python file contents.
+        Produce the narration and Manim code now.
         """
     ).strip()
 
     payload = {
         "model": MODEL,
-        "temperature": 0.4,
-        "max_tokens": 4000,
+        "temperature": 0.45,
+        "max_tokens": 7000,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
@@ -129,7 +171,7 @@ async def generate_scene_code(
         "X-Title": "Alex Video Service",
     }
 
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         resp = await client.post(OPENROUTER_URL, json=payload, headers=headers)
         resp.raise_for_status()
         data = resp.json()
@@ -139,6 +181,6 @@ async def generate_scene_code(
     except (KeyError, IndexError) as e:
         raise GenerationError(f"Unexpected LLM response shape: {data}") from e
 
-    code = _strip_fences(raw)
+    narration, code = _parse_response(raw)
     _validate(code)
-    return code
+    return narration, code

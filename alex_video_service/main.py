@@ -26,7 +26,7 @@ from renderer import VIDEOS_DIR, RenderError, render_scene
 
 load_dotenv()
 
-app = FastAPI(title="Alex Video Service", version="0.1.0")
+app = FastAPI(title="Alex Video Service", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,13 +37,13 @@ app.add_middleware(
 
 app.mount("/videos", StaticFiles(directory=str(VIDEOS_DIR)), name="videos")
 
-JobStatus = Literal["queued", "generating", "rendering", "done", "error"]
+JobStatus = Literal["queued", "generating", "voicing", "rendering", "done", "error"]
 JOBS: dict[str, dict] = {}
 
 
 class RenderRequest(BaseModel):
     topic: str = Field(..., min_length=1, max_length=200)
-    prompt: str = Field(..., min_length=1, max_length=4000)
+    prompt: str = Field("", max_length=4000)   # optional — AI builds full curriculum if empty
     style: str = Field("cinematic", max_length=60)
     use_3d: bool = False
 
@@ -79,21 +79,26 @@ def _set(job_id: str, **fields) -> None:
 
 async def _run_job(job_id: str, req: RenderRequest) -> None:
     try:
+        # Phase 1: LLM generates narration + Manim code together
         _set(job_id, status="generating")
-        code = await generate_scene_code(
+        narration, code = await generate_scene_code(
             topic=req.topic,
             prompt=req.prompt,
             style=req.style,
             use_3d=req.use_3d,
         )
-        _set(job_id, status="rendering", scene_chars=len(code))
-        await render_scene(job_id, code)
+
+        # Phase 2: Render animation + voice
+        _set(job_id, status="rendering", scene_chars=len(code), narration_words=len(narration.split()))
+        await render_scene(job_id, code, narration)
+
         _set(job_id, status="done", video_url=_public_video_url(job_id))
+
     except GenerationError as e:
         _set(job_id, status="error", error=f"generation: {e}")
     except RenderError as e:
         _set(job_id, status="error", error=f"render: {e}")
-    except Exception as e:  # noqa: BLE001 — surface unexpected failures to client
+    except Exception as e:  # noqa: BLE001
         _set(job_id, status="error", error=f"unexpected: {e!r}")
 
 

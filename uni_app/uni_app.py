@@ -26252,17 +26252,17 @@ class VideoState(AppState):
     @rx.var
     def video_status_label(self) -> str:
         m = {
-            "queued": "Queued — warming up the renderer…",
-            "generating": "Director writing the scene script with Claude…",
-            "rendering": "Rendering frames with Manim — this is the slow part…",
-            "done": "Done.",
+            "queued": "Queued — warming up…",
+            "generating": "Claude is writing the full explanation + animation script…",
+            "rendering": "Manim is rendering frames + adding voice-over…",
+            "done": "Done!",
             "error": "Something went wrong.",
         }
         return m.get(self.video_status, "")
 
     @rx.var
     def video_status_pct(self) -> int:
-        m = {"queued": 8, "generating": 28, "rendering": 65, "done": 100, "error": 100}
+        m = {"queued": 5, "generating": 30, "rendering": 70, "done": 100, "error": 100}
         return m.get(self.video_status, 0)
 
     @rx.var
@@ -26271,10 +26271,10 @@ class VideoState(AppState):
 
     @rx.var
     def video_can_submit(self) -> bool:
+        # Prompt is now optional — only topic is required
         return (
             (not self.video_is_busy)
             and (len(self.video_topic.strip()) > 0)
-            and (len(self.video_prompt.strip()) > 0)
         )
 
     def set_video_topic(self, v: str): self.video_topic = v
@@ -26446,7 +26446,11 @@ def video_page_content() -> rx.Component:
                     ),
                     # Prompt
                     rx.vstack(
-                        rx.text("What should the video explain?", color="rgba(240,244,248,0.78)", font_size="0.85rem", font_weight="600"),
+                        rx.hstack(
+                            rx.text("What should the video explain?", color="rgba(240,244,248,0.78)", font_size="0.85rem", font_weight="600"),
+                            rx.text("optional", color="rgba(240,244,248,0.35)", font_size="0.75rem", font_style="italic"),
+                            spacing="2", align="center",
+                        ),
                         rx.text_area(
                             placeholder="Describe what to show, the order of beats, and any specific equations or visuals you want…",
                             value=VideoState.video_prompt,
