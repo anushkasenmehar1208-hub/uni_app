@@ -23,9 +23,9 @@ QUALITY_FLAG = {
     "medium": "-qm",
     "high": "-qh",
     "production": "-qp",
-}.get(os.environ.get("RENDER_QUALITY", "high"), "-qh")
-# Longer timeout now that videos are 1–3 minutes
-MAX_RENDER_SECONDS = int(os.environ.get("MAX_RENDER_SECONDS", "600"))
+}.get(os.environ.get("RENDER_QUALITY", "medium"), "-qm")
+# 15 minutes ceiling — complex 3D scenes on Railway need time
+MAX_RENDER_SECONDS = int(os.environ.get("MAX_RENDER_SECONDS", "900"))
 TTS_VOICE = os.environ.get("TTS_VOICE", "en-US-AndrewNeural")
 
 VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
