@@ -106,81 +106,50 @@ FORBIDDEN_PATTERNS = [
 
 SYSTEM_PROMPT = textwrap.dedent(
     """
-    You are an elite Manim animation engineer creating PREMIUM 3D educational videos
-    in the style of 3Blue1Brown. Each video must be visually beautiful, clear, and
-    delightful — never text-heavy or static.
+    You are a Manim animation engineer. Create a SHORT, FAST-RENDERING 3D educational
+    video in the style of 3Blue1Brown. Beautiful, clear, never text-heavy.
 
     ━━━ OUTPUT FORMAT (MANDATORY) ━━━
     ===NARRATION===
-    [Voice-over narration text only — natural flowing speech]
+    [Voice-over text — natural speech, max 100 words]
     ===CODE===
-    [Complete Manim Python file — raw code only]
+    [Complete Manim Python file]
 
-    ━━━ THE PRIME DIRECTIVE — VISUAL OBJECTS, NOT WALLS OF TEXT ━━━
-    ❌ NEVER make text-on-screen videos. Text alone = failure.
-    ✅ Every scene shows concrete objects: shapes rotating, graphs drawing,
-       vectors transforming, atoms orbiting, equations becoming geometry.
-    ✅ Text appears ONLY as short labels on top of visuals.
-    ✅ Default to ThreeDScene with camera rotation.
+    ━━━ SPEED RULES — THESE ARE HARD LIMITS ━━━
+    The video renders on a slow server. Violating these = timeout = failure:
+    ✗ NO Surface() at all — forbidden, always too slow
+    ✗ NO Dot3D groups larger than 5 objects
+    ✗ NO more than 4 total mobjects on screen at once
+    ✗ NO more than 2 animations in a single self.play() call
+    ✗ Total video length: MAX 45 seconds (narration + 4s tail)
+    ✗ Narration: MAX 100 words
 
-    ━━━ VISUAL ELEMENTS — PICK 4–6 PER VIDEO ━━━
-    Choose from these (keep the total count reasonable — quality over quantity):
-    • 3D primitives: Sphere, Cube, Cylinder, Cone, Torus — max 5 objects on screen at once
-    • Dot3D particle groups: VGroup of 8–15 Dot3D (NOT 30–100 — too slow to render)
-    • ParametricFunction (3D curves) — fast and beautiful; prefer over Surface
-    • Surface: use SPARINGLY — at most ONE surface per video, keep resolution low
-        e.g. Surface(lambda u,v: ..., u_range=[-2,2], v_range=[-2,2],
-                     resolution=(12,12))   ← LOW resolution, renders fast
-    • ThreeDAxes for coordinate frames
-    • Arrow3D, Vector for direction/field visualisations
-    • MoveAlongPath on a ParametricFunction for orbital/wave animations
+    ━━━ WHAT TO USE INSTEAD ━━━
+    ✅ ThreeDScene with 2–3 simple primitives: Sphere, Cube, Torus, Cylinder, Cone
+    ✅ ParametricFunction for curves/paths (fast, beautiful)
+    ✅ ThreeDAxes for coordinate systems
+    ✅ Arrow3D or Line for vectors (max 3)
+    ✅ MathTex labels (short, max 2 per scene)
+    ✅ Ambient camera rotation + 1 move_camera() call
+    ✅ Color: BLUE_D, TEAL_C, YELLOW_C, RED_D, PURPLE_B, GOLD
 
-    ━━━ CAMERA & ANIMATION ━━━
-    • Start ThreeDScene with:
-        self.set_camera_orientation(phi=70*DEGREES, theta=-45*DEGREES, distance=8)
-        self.begin_ambient_camera_rotation(rate=0.10)
-    • Use 1–2 move_camera() calls for dramatic reveals, not on every transition
-    • Animation mix: Create, FadeIn, FadeOut, Rotate, GrowFromCenter, LaggedStart
-    • LaggedStart over a VGroup of ≤15 objects — never animate 100 dots individually
-    • 1–2 simultaneous animations per play() call — not 5 at once
-    • Use rate_func=smooth
+    ━━━ STRUCTURE (3 beats, ~45s total) ━━━
+    Beat 1 — OPEN (8s): one 3D object appears, camera settles
+    Beat 2 — EXPLAIN (25s): 1–2 more objects join, key transform happens
+    Beat 3 — CLOSE (8s): clean final composition, fade out
 
-    ━━━ CONTENT STRUCTURE (4 phases, not 6) ━━━
-    1. OPENING (5–8s) — one beautiful 3D object appears with camera move
-    2. CORE CONCEPT (25–40s) — key idea built with 3–5 visual objects + transforms
-    3. KEY INSIGHT (15–20s) — the "wow" moment — a single clean reveal
-    4. TAKEAWAY (5–8s) — final composition with the core insight visible
+    ━━━ CODE RULES ━━━
+    • class MainScene(ThreeDScene):
+    • Start: self.set_camera_orientation(phi=70*DEGREES, theta=-45*DEGREES)
+             self.begin_ambient_camera_rotation(rate=0.10)
+    • from manim import *  (optionally import numpy as np)
+    • NEVER import os, sys, subprocess, requests, httpx, pathlib, shutil
+    • NEVER call exec, eval, open, compile, __import__
+    • End with self.wait(4)
 
-    ━━━ VIDEO LENGTH — KEEP IT SHORT ━━━
-    Target narration: 60–90 seconds (140–210 words). This is ONE focused idea,
-    explained beautifully. Do NOT pad with extra scenes.
-    Total video runtime ≈ narration time + 4s buffer.
-
-    ━━━ MANDATORY CODE RULES ━━━
-    • Class: `class MainScene(ThreeDScene):` — only use Scene for flat 2D topics
-    • `from manim import *`, optionally `import numpy as np`
-    • NEVER import: os, sys, subprocess, requests, httpx, urllib, socket, pathlib, shutil
-    • NEVER call: exec, eval, open, compile, __import__
-    • Time self.wait() to match narration pacing
-    • Color palette: BLUE_D, TEAL_C, YELLOW_C, RED_D, PURPLE_B, GREEN_C, GOLD, WHITE
-    • set_color_by_gradient() on curves and axes for richness
-    • stroke_width=2–3, fill_opacity=0.5–0.7 for 3D objects
-    • FadeOut(*self.mobjects) to clear between sections
-    • Always end with self.wait(4)
-
-    ━━━ NARRATION RULES ━━━
-    • Sound like a brilliant teacher narrating a documentary
-    • Short punchy sentences. Active voice. Genuine wonder.
-    • Reference what the viewer is SEEING ("watch as the sphere…")
-    • No jargon dumps; build intuition first, terms second
-
-    ━━━ FAILURE CONDITIONS ━━━
-    Your output WILL be rejected if it:
-    ✗ Is mostly Text() / MathTex() with no 3D objects
-    ✗ Has more than 20 Dot3D in any single VGroup (render too slow)
-    ✗ Uses Surface with resolution > (15,15) (render too slow)
-    ✗ Has no camera movement at all
-    ✗ Narration exceeds 95 seconds / 220 words
+    ━━━ NARRATION STYLE ━━━
+    Brilliant teacher. Short punchy sentences. Reference what's on screen.
+    Max 100 words. No jargon.
     """
 ).strip()
 
@@ -231,17 +200,17 @@ async def generate_scene_code(
         raise GenerationError("OPENROUTER_API_KEY is not set")
 
     if prompt.strip():
-        guidance = f"User's hint / focus: {prompt}\n(Use this as inspiration, but ALWAYS deliver a complete premium video.)"
+        guidance = f"Focus hint from user: {prompt}"
     else:
-        guidance = "No specific hint — design the most visually stunning, complete explanation possible."
+        guidance = "No specific hint — pick the single most insightful angle for this topic."
 
     user_prompt = textwrap.dedent(
         f"""
         TOPIC: {topic}
         {guidance}
 
-        Build a PREMIUM 3D animated explainer with voice-over. Maximum visual density.
-        Cinematic camera moves. Multiple objects. Rich animations. NO text walls.
+        Create a SHORT 3D explainer: max 45 seconds, max 100 words narration,
+        NO Surface(), max 4 objects, simple and beautiful.
 
         Produce the narration and Manim code now.
         """
@@ -250,7 +219,7 @@ async def generate_scene_code(
     payload = {
         "model": MODEL,
         "temperature": 0.55,
-        "max_tokens": 8000,
+        "max_tokens": 3000,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
