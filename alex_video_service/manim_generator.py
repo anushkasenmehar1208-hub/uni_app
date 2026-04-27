@@ -173,7 +173,10 @@ async def generate_scene_code(
 
     async with httpx.AsyncClient(timeout=180.0) as client:
         resp = await client.post(OPENROUTER_URL, json=payload, headers=headers)
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            raise GenerationError(
+                f"OpenRouter {resp.status_code} for model {MODEL}: {resp.text[:600]}"
+            )
         data = resp.json()
 
     try:
