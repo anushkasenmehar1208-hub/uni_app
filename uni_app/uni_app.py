@@ -26413,7 +26413,7 @@ def video_page_content() -> rx.Component:
                     spacing="2", align="center",
                 ),
                 rx.text(
-                    "Cinematic 3Blue1Brown-style explainers, generated on demand.",
+                    "Premium 3D explainer videos with voice-over. Just type a topic.",
                     color="rgba(240,244,248,0.55)",
                     font_size="0.92rem",
                 ),
@@ -26467,31 +26467,6 @@ def video_page_content() -> rx.Component:
                             width="100%",
                         ),
                         align="start", spacing="2", width="100%",
-                    ),
-                    # Style chips
-                    rx.vstack(
-                        rx.text("Style", color="rgba(240,244,248,0.78)", font_size="0.85rem", font_weight="600"),
-                        rx.hstack(
-                            _video_style_chip("cinematic", "Cinematic", "🎥"),
-                            _video_style_chip("playful", "Playful", "✨"),
-                            _video_style_chip("technical", "Technical", "📐"),
-                            _video_style_chip("minimal", "Minimal", "⚪"),
-                            spacing="2",
-                            wrap="wrap",
-                        ),
-                        align="start", spacing="2", width="100%",
-                    ),
-                    # 3D toggle
-                    rx.hstack(
-                        rx.text("Use 3D scene", color="rgba(240,244,248,0.78)", font_size="0.9rem", font_weight="500"),
-                        rx.spacer(),
-                        rx.switch(
-                            checked=VideoState.video_use_3d,
-                            on_change=VideoState.toggle_video_3d,
-                            color_scheme="green",
-                        ),
-                        width="100%",
-                        padding="6px 0",
                     ),
                     # Submit
                     rx.button(
