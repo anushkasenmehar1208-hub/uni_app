@@ -37,8 +37,11 @@ _HEADER = textwrap.dedent('''
 
     class MainScene(ThreeDScene):
         def construct(self):
-            self.set_camera_orientation(phi=70*DEGREES, theta=-45*DEGREES, distance=8)
-            self.begin_ambient_camera_rotation(rate=0.10)
+            # Default to FLAT 2D camera. 2D works better for most diagrams
+            # (graphs, equations, flowcharts, cells, molecules-from-the-side).
+            # Scenes that genuinely need 3D set their own camera explicitly.
+            self.set_camera_orientation(phi=0, theta=-PI/2, distance=10)
+            # NO ambient rotation — it makes 2D diagrams unreadable.
 ''').strip()
 
 
@@ -80,9 +83,9 @@ def _wrap_slide(i: int, heading: str, subtext: str, template_body: str) -> str:
     ''').strip()
 
     # After template plays, hold heading+subtext on screen for a beat, then fade.
-    # 4s hold lets the audience read while the camera keeps rotating.
+    # 3s hold lets the audience absorb what they just saw before the next scene.
     post = textwrap.dedent(f'''
-        self.wait(4)
+        self.wait(3)
         self.play(FadeOut({h}), FadeOut({s}), run_time=0.5)
     ''').strip()
 
