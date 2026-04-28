@@ -64,10 +64,10 @@ def intro_hero(title: str = "Concept", subtitle: str = "", color: str = "BLUE_D"
     subtitle = _safe(subtitle, "")
     return _code(f'''
         # Template: intro_hero
-        hero = Sphere(radius=1.0, resolution=(16, 16))
+        hero = Sphere(radius=1.0, resolution=(10, 10))
         hero.set_color({color})
         hero.set_opacity(0.75)
-        glow = Sphere(radius=1.4, resolution=(12, 12))
+        glow = Sphere(radius=1.4, resolution=(8, 8))
         glow.set_color({color})
         glow.set_opacity(0.12)
         title_t = Text("{title}", font_size=42, weight=BOLD, color=WHITE)
@@ -113,7 +113,7 @@ def closing_takeaway(takeaway: str = "Beautiful, isn't it?", color: str = "TEAL_
     takeaway = _safe(takeaway, "Beautiful, isn't it?")
     return _code(f'''
         # Template: closing_takeaway
-        s1 = Sphere(radius=0.55, resolution=(12,12)).set_color({color}).set_opacity(0.8).shift(LEFT*1.5)
+        s1 = Sphere(radius=0.55, resolution=(8,8)).set_color({color}).set_opacity(0.8).shift(LEFT*1.5)
         s2 = Cube(side_length=0.9, fill_opacity=0.7).set_color(YELLOW_C).rotate(PI/4, axis=UP)
         s3 = Torus(major_radius=0.6, minor_radius=0.15).set_color(PURPLE_B).shift(RIGHT*1.7)
         msg = Text("{takeaway}", font_size=30, color=WHITE).to_edge(DOWN, buff=0.8)
@@ -294,7 +294,7 @@ def physics_planet_orbit(central_label: str = "Sun", orbit_label: str = "Earth",
     orbit_label = _safe(orbit_label, "Earth")
     return _code(f'''
         # Template: physics_planet_orbit
-        sun = Sphere(radius=0.6, resolution=(14,14)).set_color(YELLOW_C).set_opacity(0.9)
+        sun = Sphere(radius=0.6, resolution=(8,8)).set_color(YELLOW_C).set_opacity(0.9)
         orbit = ParametricFunction(
             lambda t: np.array([2.5*np.cos(t), 2.5*np.sin(t), 0.3*np.sin(t)]),
             t_range=[0, 2*PI], color={color}, stroke_width=2)
@@ -319,7 +319,7 @@ def physics_atom_bohr(element: str = "Atom", color: str = "TEAL_C") -> str:
     element = _safe(element, "Atom")
     return _code(f'''
         # Template: physics_atom_bohr
-        nucleus = Sphere(radius=0.35, resolution=(12,12)).set_color(RED_D).set_opacity(0.85)
+        nucleus = Sphere(radius=0.35, resolution=(8,8)).set_color(RED_D).set_opacity(0.85)
         orbit1 = ParametricFunction(lambda t: np.array([1.2*np.cos(t), 1.2*np.sin(t), 0]),
                                     t_range=[0, 2*PI], color={color}, stroke_width=1.5)
         orbit2 = ParametricFunction(lambda t: np.array([1.9*np.cos(t), 0.4*np.sin(t), 1.0*np.sin(t)]),
@@ -353,7 +353,7 @@ def physics_wave_travel(label: str = "Wave", color: str = "BLUE_D") -> str:
         phase = ValueTracker(0)
         wave = always_redraw(lambda: ParametricFunction(
             lambda x: np.array([x, np.sin(2*x - phase.get_value()), 0]),
-            t_range=[-4, 4, 0.05], color={color}, stroke_width=4))
+            t_range=[-4, 4, 0.15], color={color}, stroke_width=4))
         cap = Text("{label}", font_size=26, color={color}).to_edge(UP, buff=0.5)
         self.add_fixed_in_frame_mobjects(cap)
         cap.set_opacity(0)
@@ -380,7 +380,7 @@ def physics_pendulum(label: str = "Simple pendulum", color: str = "GOLD") -> str
             start=[0,2,0],
             end=[2*np.sin(angle.get_value()), 2-2*np.cos(angle.get_value()), 0],
             color=GREY_B, stroke_width=3))
-        bob = always_redraw(lambda: Sphere(radius=0.25, resolution=(10,10))
+        bob = always_redraw(lambda: Sphere(radius=0.25, resolution=(8,8))
             .set_color({color}).set_opacity(0.85)
             .move_to([2*np.sin(angle.get_value()), 2-2*np.cos(angle.get_value()), 0]))
         cap = Text("{label}", font_size=26, color=WHITE).to_edge(UP, buff=0.5)
@@ -438,7 +438,7 @@ def physics_projectile(label: str = "Projectile motion", color: str = "RED_D") -
         traj = ParametricFunction(
             lambda t: np.array([-3 + 1.5*t, -1.5 + 2*t - 0.4*t*t, 0]),
             t_range=[0, 4], color={color}, stroke_width=3)
-        ball = Sphere(radius=0.18, resolution=(10,10)).set_color({color}).set_opacity(0.9)
+        ball = Sphere(radius=0.18, resolution=(8,8)).set_color({color}).set_opacity(0.9)
         ball.move_to(traj.point_from_proportion(0))
         cap = Text("{label}", font_size=26, color=WHITE).to_edge(UP, buff=0.5)
         self.add_fixed_in_frame_mobjects(cap)
@@ -472,7 +472,7 @@ def chem_molecule_3d(formula: str = "H₂O", n_bonds: int = 3,
     # geometry helper
     return _code(f'''
         # Template: chem_molecule_3d ({formula}, n_bonds={n})
-        center = Sphere(radius=0.4, resolution=(12,12)).set_color({central_color}).set_opacity(0.9)
+        center = Sphere(radius=0.4, resolution=(8,8)).set_color({central_color}).set_opacity(0.9)
         outers = VGroup()
         bonds = VGroup()
         positions_n = {n}
@@ -482,7 +482,7 @@ def chem_molecule_3d(formula: str = "H₂O", n_bonds: int = 3,
             pos = np.array([1.4*np.sin(phi)*np.cos(theta),
                             1.4*np.sin(phi)*np.sin(theta),
                             1.4*np.cos(phi)*0.6])
-            outer = Sphere(radius=0.22, resolution=(10,10)).set_color({outer_color}).set_opacity(0.85).move_to(pos)
+            outer = Sphere(radius=0.22, resolution=(8,8)).set_color({outer_color}).set_opacity(0.85).move_to(pos)
             bond = Line(ORIGIN, pos, color=GREY_B, stroke_width=3)
             outers.add(outer)
             bonds.add(bond)
@@ -509,8 +509,8 @@ def chem_bond_form(atom_a: str = "A", atom_b: str = "B",
     atom_b = _safe(atom_b, "B")
     return _code(f'''
         # Template: chem_bond_form
-        a = Sphere(radius=0.45, resolution=(12,12)).set_color({color_a}).set_opacity(0.85).shift(LEFT*3)
-        b = Sphere(radius=0.45, resolution=(12,12)).set_color({color_b}).set_opacity(0.85).shift(RIGHT*3)
+        a = Sphere(radius=0.45, resolution=(8,8)).set_color({color_a}).set_opacity(0.85).shift(LEFT*3)
+        b = Sphere(radius=0.45, resolution=(8,8)).set_color({color_b}).set_opacity(0.85).shift(RIGHT*3)
         a_lab = Text("{atom_a}", font_size=24, weight=BOLD, color=WHITE)
         b_lab = Text("{atom_b}", font_size=24, weight=BOLD, color=WHITE)
         self.add_fixed_in_frame_mobjects(a_lab, b_lab)
@@ -521,7 +521,7 @@ def chem_bond_form(atom_a: str = "A", atom_b: str = "B",
                   a_lab.animate.set_opacity(1), b_lab.animate.set_opacity(1), run_time=1.2)
         self.play(a.animate.shift(RIGHT*2.2), b.animate.shift(LEFT*2.2), run_time=2)
         bond = Line(a.get_center(), b.get_center(), color=GOLD, stroke_width=4)
-        flash = Sphere(radius=0.2, resolution=(10,10)).set_color(GOLD).set_opacity(0.6).move_to(ORIGIN)
+        flash = Sphere(radius=0.2, resolution=(8,8)).set_color(GOLD).set_opacity(0.6).move_to(ORIGIN)
         self.play(GrowFromCenter(flash), Create(bond), run_time=0.8)
         self.play(flash.animate.scale(2.5).set_opacity(0), run_time=0.6)
         self.play(Rotate(VGroup(a, b, bond), angle=TAU, axis=UP), run_time=3, rate_func=linear)
@@ -537,21 +537,28 @@ def chem_bond_form(atom_a: str = "A", atom_b: str = "B",
 def chem_crystal(label: str = "Cubic lattice", color: str = "TEAL_C") -> str:
     label = _safe(label, "Cubic lattice")
     return _code(f'''
-        # Template: chem_crystal
+        # Template: chem_crystal — 2x2x2 lattice (fast)
         atoms = VGroup()
-        for x in range(3):
-            for y in range(3):
-                for z in range(3):
-                    pos = np.array([x-1, y-1, z-1]) * 1.0
-                    atom = Sphere(radius=0.18, resolution=(8,8)).set_color({color}).set_opacity(0.85).move_to(pos)
+        for x in range(2):
+            for y in range(2):
+                for z in range(2):
+                    pos = np.array([x-0.5, y-0.5, z-0.5]) * 1.6
+                    atom = Sphere(radius=0.28, resolution=(8,8)).set_color({color}).set_opacity(0.85).move_to(pos)
                     atoms.add(atom)
+        # add lattice edges (lines) for visual structure
+        edges = VGroup()
+        for a in atoms:
+            for b in atoms:
+                d = np.linalg.norm(a.get_center() - b.get_center())
+                if 1.5 < d < 1.7:
+                    edges.add(Line(a.get_center(), b.get_center(), color=GREY_B, stroke_width=1.5))
         cap = Text("{label}", font_size=26, color={color}).to_edge(UP, buff=0.5)
         self.add_fixed_in_frame_mobjects(cap)
         cap.set_opacity(0)
-        self.play(LaggedStart(*[GrowFromCenter(a) for a in atoms], lag_ratio=0.025, run_time=3))
-        self.play(cap.animate.set_opacity(1), run_time=0.5)
-        self.play(Rotate(atoms, angle=TAU, axis=UP), run_time=4, rate_func=linear)
-        self.play(FadeOut(atoms, cap), run_time=0.6)
+        self.play(LaggedStart(*[GrowFromCenter(a) for a in atoms], lag_ratio=0.15, run_time=2))
+        self.play(Create(edges), cap.animate.set_opacity(1), run_time=1.5)
+        self.play(Rotate(VGroup(atoms, edges), angle=TAU, axis=UP), run_time=4, rate_func=linear)
+        self.play(FadeOut(atoms, edges, cap), run_time=0.6)
     ''')
 
 
@@ -567,8 +574,8 @@ def chem_reaction(reactants: str = "A + B", products: str = "AB", color: str = "
     return _code(f'''
         # Template: chem_reaction
         self.move_camera(phi=0, theta=-PI/2, run_time=0.6)
-        r_ball = Sphere(radius=0.5, resolution=(12,12)).set_color(BLUE_D).set_opacity(0.85).shift(LEFT*3.5)
-        p_ball = Sphere(radius=0.5, resolution=(12,12)).set_color({color}).set_opacity(0.85).shift(RIGHT*3.5)
+        r_ball = Sphere(radius=0.5, resolution=(8,8)).set_color(BLUE_D).set_opacity(0.85).shift(LEFT*3.5)
+        p_ball = Sphere(radius=0.5, resolution=(8,8)).set_color({color}).set_opacity(0.85).shift(RIGHT*3.5)
         arrow = Arrow(start=[-1.2,0,0], end=[1.2,0,0], color=YELLOW_C, buff=0, stroke_width=5)
         r_lab = Text("{reactants}", font_size=28, color=WHITE).next_to(r_ball, DOWN, buff=0.5)
         p_lab = Text("{products}", font_size=28, color=WHITE).next_to(p_ball, DOWN, buff=0.5)
@@ -660,7 +667,7 @@ def cs_neural_network(label: str = "Neural network", color: str = "TEAL_C") -> s
     return _code(f'''
         # Template: cs_neural_network
         self.move_camera(phi=0, theta=-PI/2, run_time=0.6)
-        layer_sizes = [3, 4, 4, 2]
+        layer_sizes = [3, 4, 3, 2]   # smaller = faster
         layers = []
         for li, sz in enumerate(layer_sizes):
             x = -3 + li*2
@@ -777,7 +784,7 @@ def bio_dna_helix(label: str = "DNA", color: str = "TEAL_C") -> str:
             lambda t: np.array([0.6*np.cos(t+PI), 0.6*np.sin(t+PI), 0.25*t - 1.5]),
             t_range=[0, 4*PI], color=PURPLE_B, stroke_width=4)
         rungs = VGroup()
-        for t in np.linspace(0, 4*PI, 10):
+        for t in np.linspace(0, 4*PI, 7):
             p1 = np.array([0.6*np.cos(t), 0.6*np.sin(t), 0.25*t - 1.5])
             p2 = np.array([0.6*np.cos(t+PI), 0.6*np.sin(t+PI), 0.25*t - 1.5])
             rungs.add(Line(p1, p2, color=YELLOW_C, stroke_width=2))
@@ -903,7 +910,7 @@ def general_comparison(left_label: str = "A", right_label: str = "B",
     right_label = _safe(right_label, "B")
     return _code(f'''
         # Template: general_comparison
-        left = Sphere(radius=0.8, resolution=(12,12)).set_color({left_color}).set_opacity(0.85).shift(LEFT*2.2)
+        left = Sphere(radius=0.8, resolution=(8,8)).set_color({left_color}).set_opacity(0.85).shift(LEFT*2.2)
         right = Cube(side_length=1.4).set_color({right_color}).set_fill(opacity=0.7).shift(RIGHT*2.2)
         l_lab = Text("{left_label}", font_size=28, color={left_color}, weight=BOLD)
         r_lab = Text("{right_label}", font_size=28, color={right_color}, weight=BOLD)
@@ -931,7 +938,7 @@ def general_globe(label: str = "Global view", color: str = "BLUE_D") -> str:
     label = _safe(label, "Global view")
     return _code(f'''
         # Template: general_globe
-        globe = Sphere(radius=1.5, resolution=(20,20)).set_color({color}).set_opacity(0.7)
+        globe = Sphere(radius=1.5, resolution=(12,12)).set_color({color}).set_opacity(0.7)
         latitude = ParametricFunction(
             lambda t: np.array([1.5*np.cos(t), 1.5*np.sin(t), 0]),
             t_range=[0, 2*PI], color=GREY_B, stroke_width=1.5)
