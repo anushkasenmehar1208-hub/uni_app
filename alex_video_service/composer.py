@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import textwrap
 
-from templates import TEMPLATES, _safe
+from templates import TEMPLATES, _safe, validate_custom_scene
 
 
 class RecipeError(ValueError):
@@ -114,25 +114,39 @@ def compose_scene(recipe: dict) -> str:
         tname = scene.get("template")
         if not tname:
             raise RecipeError(f"Scene #{i} missing 'template' field")
-        if tname not in TEMPLATES:
-            raise RecipeError(
-                f"Unknown template '{tname}'. Available: {sorted(TEMPLATES.keys())}"
-            )
 
-        params = scene.get("params", {}) or {}
-        if not isinstance(params, dict):
-            raise RecipeError(f"Scene #{i} 'params' must be an object")
+        # ── Custom LLM-generated scene ────────────────────────────────────
+        if tname == "custom":
+            import textwrap as _tw
+            raw_code = scene.get("code", "") or ""
+            raw_code = _tw.dedent(raw_code).strip()   # normalise to 0-indent (composer adds 8 later)
+            if not raw_code:
+                raise RecipeError(f"Scene #{i} has template='custom' but no 'code' field")
+            error = validate_custom_scene(raw_code)
+            if error:
+                raise RecipeError(f"Scene #{i} custom code rejected: {error}")
+            block = raw_code  # composer's textwrap.indent adds the 8-space indent
+        # ── Standard template ─────────────────────────────────────────────
+        else:
+            if tname not in TEMPLATES:
+                raise RecipeError(
+                    f"Unknown template '{tname}'. Available: {sorted(TEMPLATES.keys())}"
+                )
 
-        # Filter to only the params this template accepts (LLM might add extras)
-        accepted = set(TEMPLATES[tname]["params"].keys())
-        clean_params = {k: v for k, v in params.items() if k in accepted}
+            params = scene.get("params", {}) or {}
+            if not isinstance(params, dict):
+                raise RecipeError(f"Scene #{i} 'params' must be an object")
 
-        try:
-            block = TEMPLATES[tname]["fn"](**clean_params)
-        except Exception as e:
-            raise RecipeError(
-                f"Template '{tname}' failed with params {clean_params}: {e}"
-            ) from e
+            # Filter to only the params this template accepts (LLM might add extras)
+            accepted = set(TEMPLATES[tname]["params"].keys())
+            clean_params = {k: v for k, v in params.items() if k in accepted}
+
+            try:
+                block = TEMPLATES[tname]["fn"](**clean_params)
+            except Exception as e:
+                raise RecipeError(
+                    f"Template '{tname}' failed with params {clean_params}: {e}"
+                ) from e
 
         # Wrap the template with heading + subtext + hold
         heading = scene.get("heading", "") or ""
