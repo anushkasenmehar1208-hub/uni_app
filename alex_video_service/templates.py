@@ -50,6 +50,24 @@ def _safe(s: str, fallback: str = "") -> str:
     return s[:80]  # cap length so labels don't break layout
 
 
+def _safe_expr(expr: str, var: str = "x", fallback: str = "np.sin(x)") -> str:
+    """Validate that `expr` can be the body of a `lambda <var>: ...`.
+
+    The LLM sometimes passes textbook equations like "y = mx + b" instead of a
+    Python expression. Anything that fails to compile as a lambda body is
+    replaced with a safe default.
+    """
+    if not expr or not isinstance(expr, str):
+        return fallback
+    expr = expr.strip()
+    # Try to compile as a lambda body — catches "y = mx + b", bare names, etc.
+    try:
+        compile(f"lambda {var}: {expr}", "<expr-check>", "eval")
+        return expr
+    except (SyntaxError, ValueError):
+        return fallback
+
+
 # ──────────────────────────────────────────────────────────────────────────
 # UNIVERSAL — opening, insight, closing
 # ──────────────────────────────────────────────────────────────────────────
@@ -140,6 +158,7 @@ def closing_takeaway(takeaway: str = "Beautiful, isn't it?", color: str = "TEAL_
 )
 def math_axes_2d_function(equation: str = "np.sin(x)", label: str = "y = sin(x)", color: str = "TEAL_C") -> str:
     label = _safe(label, "y = f(x)")
+    equation = _safe_expr(equation, var="x", fallback="np.sin(x)")
     return _code(f'''
         # Template: math_axes_2d_function
         self.move_camera(phi=0, theta=-PI/2, run_time=0.8)
