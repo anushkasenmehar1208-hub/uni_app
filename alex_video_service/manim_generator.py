@@ -111,11 +111,14 @@ SYSTEM_PROMPT = textwrap.dedent(
       ]
     }}
 
-    ━━━ STRUCTURE — pick 4–6 scenes total ━━━
+    ━━━ STRUCTURE — EXACTLY 5 or 6 scenes (NEVER fewer than 5) ━━━
     1. Always START with `intro_hero`
-    2. Pick 2–4 subject-specific scenes that teach the concept
-    3. Optionally use `key_insight` for the "aha" moment
+    2. Pick 3–4 subject-specific scenes that teach the concept (USE DIFFERENT TEMPLATES, not the same one twice)
+    3. Always include `key_insight` for the "aha" moment
     4. Always END with `closing_takeaway`
+
+    IMPORTANT: You MUST output at minimum 5 scenes. Fewer than 5 scenes is an error.
+    Each scene MUST use a different template — do NOT repeat template names.
 
     ━━━ AVAILABLE TEMPLATES ━━━
     {get_template_catalog()}
@@ -220,8 +223,9 @@ async def generate_scene_code(
         TOPIC: {topic}
         {guidance}
 
-        Build a 4–6 scene premium video for this topic using ONLY the templates
-        listed in the system prompt. Pick subject-appropriate templates.
+        Build a 5–6 scene premium video for this topic using ONLY the templates
+        listed in the system prompt. You MUST use exactly 5 or 6 scenes — never fewer.
+        Pick subject-appropriate templates and use a DIFFERENT template for each scene.
         Write 200–240 words of natural voice-over narration that flows with the scenes.
 
         Output narration and recipe now.

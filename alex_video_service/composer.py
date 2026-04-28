@@ -46,6 +46,11 @@ def compose_scene(recipe: dict) -> str:
     scenes = recipe.get("scenes")
     if not isinstance(scenes, list) or not scenes:
         raise RecipeError("Recipe must contain a non-empty 'scenes' list")
+    if len(scenes) < 4:
+        raise RecipeError(
+            f"Recipe has only {len(scenes)} scene(s) — minimum is 4. "
+            "The LLM must output at least 4 scenes for a quality video."
+        )
 
     body_blocks = []
     for i, scene in enumerate(scenes):

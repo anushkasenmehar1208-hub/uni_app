@@ -65,22 +65,20 @@ async def _get_audio_duration(audio_path: Path) -> float:
 def _patch_video_length(code: str, min_seconds: float) -> str:
     """Ensure the Manim scene is at least min_seconds long.
 
-    Replaces the last self.wait(N) in construct() with self.wait(min_seconds+2).
-    If none found, appends one.  This guarantees the silent MP4 outlasts the audio.
+    Replaces ONLY the final self.wait(N) with self.wait(min_seconds+2).
+    Mid-scene waits inside templates are left untouched — replacing them all
+    was the bug that made the 2nd scene fill the entire video.
     """
     tail = int(min_seconds) + 2          # 2s grace on top of audio length
     stripped = code.rstrip()
 
-    # Replace the very last self.wait(digits) anywhere in the file
-    patched = re.sub(
-        r'self\.wait\s*\(\s*\d+(?:\.\d+)?\s*\)',
-        f'self.wait({tail})',
-        stripped,
-        count=0,       # replace ALL occurrences so the last one definitely becomes tail
-    )
-
-    # If no self.wait at all, append one inside construct indentation
-    if 'self.wait' not in patched:
+    # Find ALL occurrences, then replace only the very last one
+    matches = list(re.finditer(r'self\.wait\s*\(\s*\d+(?:\.\d+)?\s*\)', stripped))
+    if matches:
+        last = matches[-1]
+        patched = stripped[:last.start()] + f'self.wait({tail})' + stripped[last.end():]
+    else:
+        # No self.wait at all — append one at the end
         patched = stripped + f'\n        self.wait({tail})'
 
     return patched
