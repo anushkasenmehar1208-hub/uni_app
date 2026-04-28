@@ -76,10 +76,21 @@ def _wrap_slide(i: int, heading: str, subtext: str, template_body: str) -> str:
         self.play({h}.animate.set_opacity(1), {s}.animate.set_opacity(1), run_time=0.6)
     ''').strip()
 
-    # Tail: subtle heading pulse + catch-all FadeOut so visuals don't disappear
-    # before the next scene starts. We fade EVERYTHING on screen in one go.
+    # Tail: keep motion alive even when the body ends early.
+    # 1) Pulse the visual (any non-text mobjects on screen) so the screen
+    #    doesn't freeze. This buys ~2s of extra motion even if the body
+    #    only ran for 5s.
+    # 2) Brief hold so the audience absorbs the final state.
+    # 3) Catch-all FadeOut on EVERYTHING currently on screen so we don't
+    #    leave dead time with just text.
     post = textwrap.dedent(f'''
-        self.play({h}.animate.scale(1.04), run_time=0.4, rate_func=there_and_back)
+        # Keep things moving — pulse the visual so it's never static
+        _live_{i} = [_m for _m in list(self.mobjects) if _m not in [{h}, {s}]]
+        if _live_{i}:
+            _pulse_{i} = _live_{i}[:4]
+            self.play(*[_m.animate.scale(1.06) for _m in _pulse_{i}],
+                      run_time=0.7, rate_func=there_and_back)
+        self.play({h}.animate.scale(1.04), run_time=0.5, rate_func=there_and_back)
         self.wait(0.3)
         _remaining_{i} = [_m for _m in list(self.mobjects)]
         if _remaining_{i}:

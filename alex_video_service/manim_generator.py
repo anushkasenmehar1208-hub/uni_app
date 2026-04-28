@@ -175,6 +175,34 @@ SYSTEM_PROMPT = textwrap.dedent(
        triangle, scene 3 should NOT show a triangle. Pick different shapes,
        different layouts, different focal elements per scene.
 
+    7. ⚠️ HARD RULE: EACH SCENE'S BODY MUST RUN AT LEAST 12 SECONDS.
+       Add up the run_time of every self.play() and self.wait() in your
+       code. The total MUST be ≥12. If your scene is too short, ADD more
+       animations. Don't pad with self.wait — pad with motion.
+
+       BAD (5 seconds, mostly static):
+         self.play(GrowFromCenter(circle), run_time=1)
+         self.play(Write(label), run_time=1)
+         self.wait(3)
+
+       GOOD (13 seconds, lots of motion):
+         self.play(Create(axes), run_time=1.0)
+         self.play(GrowFromCenter(circle), run_time=1.0)
+         self.play(circle.animate.shift(RIGHT*2), run_time=1.5)
+         self.play(circle.animate.scale(0.8), run_time=1.0)
+         self.play(Transform(circle, square), run_time=1.5)
+         self.play(square.animate.set_color(GOLD), Write(label), run_time=1.5)
+         self.play(Indicate(square), run_time=1.0)
+         self.play(square.animate.shift(LEFT*3), run_time=2.0)
+         self.wait(1.5)
+
+    8. SHOW TRANSFORMATION, NOT STATE.
+       Bad: "eq = Text('F=ma'); self.play(Write(eq))" — that's just text.
+       Good: a block being pushed by an arrow, the arrow growing larger and
+       the block accelerating faster — that SHOWS what F=ma means.
+       Animate the MECHANISM. Make objects MOVE, MORPH, PAIR UP, COLLIDE,
+       SEPARATE, GROW, SHRINK. That's how you teach with visuals.
+
     ━━━ MANIM TOOLKIT (everything you can use) ━━━
 
     SHAPES (2D):
@@ -326,79 +354,150 @@ SYSTEM_PROMPT = textwrap.dedent(
     }
 
     ===CODE:S1===
-    # INTRO scene — topic-specific. Big triangle silhouette growing in.
-    A = LEFT*2.5 + DOWN*1.5
-    B = RIGHT*2.5 + DOWN*1.5
-    C = LEFT*2.5 + UP*1.5
-    tri = Polygon(A, B, C, color=GOLD, stroke_width=5, fill_color=GOLD, fill_opacity=0.2)
-    eq = Text('a² + b² = c²', font_size=36, weight=BOLD, color=GOLD)
-    self.add_fixed_in_frame_mobjects(eq)
-    eq.set_opacity(0)
-    self.play(Create(tri), run_time=1.5)
-    self.play(Rotate(tri, TAU/8, axis=OUT), run_time=1.5, rate_func=there_and_back)
-    self.play(eq.animate.set_opacity(1), run_time=0.8)
-    self.wait(1.0)
-
-    ===CODE:S2===
+    # INTRO — show 3 different right triangles to hint "this rule works for ALL of them"
+    # Each triangle morphs into the next, demonstrating the universal pattern.
     A = LEFT*1.5 + DOWN*1.0
     B = RIGHT*1.5 + DOWN*1.0
     C = LEFT*1.5 + UP*1.0
-    tri = Polygon(A, B, C, color=WHITE, stroke_width=3, fill_color=BLUE_D, fill_opacity=0.15)
-    side_a = Line(A, B, color=GREEN_C, stroke_width=5)
-    side_b = Line(A, C, color=ORANGE, stroke_width=5)
-    side_c = Line(B, C, color=RED_D, stroke_width=5)
-    la = Text('a', font_size=28, color=GREEN_C).next_to(side_a, DOWN, buff=0.15)
-    lb = Text('b', font_size=28, color=ORANGE).next_to(side_b, LEFT, buff=0.15)
-    lc = Text('c', font_size=28, color=RED_D).next_to(side_c.get_center(), UR, buff=0.1)
-    self.add_fixed_in_frame_mobjects(la, lb, lc)
-    self.play(Create(tri), run_time=1.0)
-    self.play(Create(side_a), Write(la), run_time=0.8)
-    self.play(Create(side_b), Write(lb), run_time=0.8)
-    self.play(Create(side_c), Write(lc), run_time=0.8)
+    tri1 = Polygon(A, B, C, color=GOLD, stroke_width=5, fill_color=GOLD, fill_opacity=0.25)
+    A2, B2, C2 = LEFT*2.0 + DOWN*0.8, RIGHT*1.0 + DOWN*0.8, LEFT*2.0 + UP*1.6
+    tri2 = Polygon(A2, B2, C2, color=GOLD, stroke_width=5, fill_color=GOLD, fill_opacity=0.25)
+    A3, B3, C3 = LEFT*1.0 + DOWN*1.2, RIGHT*2.5 + DOWN*1.2, LEFT*1.0 + UP*0.8
+    tri3 = Polygon(A3, B3, C3, color=GOLD, stroke_width=5, fill_color=GOLD, fill_opacity=0.25)
+    eq = Text('a² + b² = c²', font_size=42, weight=BOLD, color=GOLD).to_edge(DOWN, buff=1.2)
+    self.add_fixed_in_frame_mobjects(eq)
+    eq.set_opacity(0)
+    self.play(Create(tri1), run_time=1.2)
+    self.play(eq.animate.set_opacity(1), run_time=0.8)
+    self.wait(0.5)
+    self.play(Transform(tri1, tri2), run_time=1.5, rate_func=smooth)
+    self.wait(0.5)
+    self.play(Transform(tri1, tri3), run_time=1.5, rate_func=smooth)
+    self.wait(0.5)
+    self.play(Indicate(tri1, color=YELLOW_C, scale_factor=1.15), run_time=1.2)
+    self.play(Indicate(eq, color=YELLOW_C), run_time=1.2)
+    self.wait(1.5)
+
+    ===CODE:S2===
+    # MECHANISM — anatomy of a right triangle.
+    # Build the triangle one side at a time, mark the right angle, label each side.
+    A = LEFT*1.8 + DOWN*1.2
+    B = RIGHT*1.8 + DOWN*1.2
+    C = LEFT*1.8 + UP*1.2
+    side_a = Line(A, B, color=GREEN_C, stroke_width=6)
+    side_b = Line(A, C, color=ORANGE, stroke_width=6)
+    side_c = Line(B, C, color=RED_D, stroke_width=6)
+    right_marker = Square(side_length=0.3, color=YELLOW_C, stroke_width=3).move_to(A + RIGHT*0.15 + UP*0.15)
+    la = Text('a', font_size=32, weight=BOLD, color=GREEN_C).next_to(side_a, DOWN, buff=0.2)
+    lb = Text('b', font_size=32, weight=BOLD, color=ORANGE).next_to(side_b, LEFT, buff=0.2)
+    lc = Text('c', font_size=32, weight=BOLD, color=RED_D).next_to(side_c.get_center(), UR, buff=0.15)
+    hyp_lab = Text('(hypotenuse)', font_size=18, color=RED_D).next_to(lc, RIGHT, buff=0.15)
+    self.add_fixed_in_frame_mobjects(la, lb, lc, hyp_lab)
+    hyp_lab.set_opacity(0)
+    self.play(Create(side_a), Write(la), run_time=1.2)
+    self.play(Create(side_b), Write(lb), run_time=1.2)
+    self.play(Create(right_marker), run_time=0.8)
+    self.play(Indicate(right_marker, color=YELLOW_C, scale_factor=1.5), run_time=1.0)
+    self.play(Create(side_c), Write(lc), run_time=1.2)
+    self.play(hyp_lab.animate.set_opacity(1), run_time=0.6)
+    self.play(Indicate(side_c, color=YELLOW_C), run_time=1.2)
     self.wait(1.5)
 
     ===CODE:S3===
-    A = LEFT*1.5 + DOWN*1.0
-    B = RIGHT*1.5 + DOWN*1.0
-    C = LEFT*1.5 + UP*1.0
-    tri = Polygon(A, B, C, color=WHITE, stroke_width=3)
-    sq_a = Square(side_length=3.0, color=GREEN_C, fill_opacity=0.4).move_to(DOWN*2.5)
-    sq_b = Square(side_length=2.0, color=ORANGE, fill_opacity=0.4).move_to(LEFT*2.5)
-    la = Text('a²', font_size=30, color=GREEN_C).move_to(sq_a.get_center())
-    lb = Text('b²', font_size=30, color=ORANGE).move_to(sq_b.get_center())
-    self.add_fixed_in_frame_mobjects(la, lb)
-    self.play(Create(tri), run_time=0.8)
-    self.play(GrowFromCenter(sq_a), Write(la), run_time=1.0)
-    self.play(GrowFromCenter(sq_b), Write(lb), run_time=1.0)
+    # FORMULA via VISUAL PROOF — squares grow from each side, with their areas.
+    A = LEFT*0.5 + DOWN*0.5
+    B = RIGHT*1.5 + DOWN*0.5
+    C = LEFT*0.5 + UP*1.0
+    tri = Polygon(A, B, C, color=WHITE, stroke_width=3, fill_color=BLUE_D, fill_opacity=0.2)
+    # Square on side a (length 2, area 4)
+    sq_a = Square(side_length=2.0, color=GREEN_C, fill_opacity=0.55).move_to(np.array([0.5, -1.5, 0]))
+    la = Text('a²', font_size=36, weight=BOLD, color=WHITE).move_to(sq_a.get_center())
+    # Square on side b (length 1.5, area 2.25)
+    sq_b = Square(side_length=1.5, color=ORANGE, fill_opacity=0.55).move_to(np.array([-1.25, 0.25, 0]))
+    lb = Text('b²', font_size=32, weight=BOLD, color=WHITE).move_to(sq_b.get_center())
+    # Square on hypotenuse (length 2.5, area 6.25)
+    sq_c = Square(side_length=2.5, color=RED_D, fill_opacity=0.55)
+    sq_c.rotate(np.arctan2(1.5, 2.0)).move_to(np.array([1.7, 0.85, 0]))
+    lc = Text('c²', font_size=36, weight=BOLD, color=WHITE).move_to(sq_c.get_center())
+    self.add_fixed_in_frame_mobjects(la, lb, lc)
+    la.set_opacity(0); lb.set_opacity(0); lc.set_opacity(0)
+    self.play(Create(tri), run_time=1.0)
+    self.play(GrowFromCenter(sq_a), la.animate.set_opacity(1), run_time=1.5)
+    self.play(GrowFromCenter(sq_b), lb.animate.set_opacity(1), run_time=1.5)
+    self.play(Indicate(sq_a), Indicate(sq_b), run_time=1.2)
+    self.play(GrowFromCenter(sq_c), lc.animate.set_opacity(1), run_time=1.5)
+    self.play(Indicate(sq_c, color=YELLOW_C, scale_factor=1.1), run_time=1.5)
     self.wait(1.5)
 
     ===CODE:S4===
-    eq = Text('a² + b² = c²', font_size=84, weight=BOLD, color=GOLD)
-    self.add_fixed_in_frame_mobjects(eq)
-    eq.set_opacity(0)
-    self.play(eq.animate.set_opacity(1).scale(1.0), run_time=1.0)
-    self.play(Indicate(eq, color=YELLOW_C, scale_factor=1.08), run_time=1.2)
-    self.wait(2.0)
+    # FORMULA assembly — build "a² + b² = c²" piece by piece with colors matching squares.
+    a_sq = Text('a²', font_size=72, weight=BOLD, color=GREEN_C).shift(LEFT*3)
+    plus = Text('+', font_size=72, weight=BOLD, color=WHITE).shift(LEFT*1.5)
+    b_sq = Text('b²', font_size=72, weight=BOLD, color=ORANGE).shift(LEFT*0.0)
+    eq = Text('=', font_size=72, weight=BOLD, color=WHITE).shift(RIGHT*1.5)
+    c_sq = Text('c²', font_size=72, weight=BOLD, color=RED_D).shift(RIGHT*3)
+    self.add_fixed_in_frame_mobjects(a_sq, plus, b_sq, eq, c_sq)
+    a_sq.set_opacity(0); plus.set_opacity(0); b_sq.set_opacity(0)
+    eq.set_opacity(0); c_sq.set_opacity(0)
+    self.play(a_sq.animate.set_opacity(1), run_time=0.8)
+    self.play(plus.animate.set_opacity(1), run_time=0.5)
+    self.play(b_sq.animate.set_opacity(1), run_time=0.8)
+    self.play(eq.animate.set_opacity(1), run_time=0.5)
+    self.play(c_sq.animate.set_opacity(1), run_time=0.8)
+    self.play(Indicate(a_sq, color=YELLOW_C), Indicate(b_sq, color=YELLOW_C), run_time=1.2)
+    self.play(Indicate(c_sq, color=YELLOW_C, scale_factor=1.2), run_time=1.5)
+    full = VGroup(a_sq, plus, b_sq, eq, c_sq)
+    self.play(full.animate.scale(1.1), run_time=0.8, rate_func=there_and_back)
+    self.wait(1.5)
 
     ===CODE:S5===
-    line1 = Text('a = 3,  b = 4', font_size=44, color=BLUE_D)
-    line2 = Text('3² + 4² = 9 + 16 = 25', font_size=42, color=TEAL_C).next_to(line1, DOWN, buff=0.4)
-    line3 = Text('√25 = 5  →  c = 5', font_size=44, weight=BOLD, color=GOLD).next_to(line2, DOWN, buff=0.4)
-    self.add_fixed_in_frame_mobjects(line1, line2, line3)
-    line1.set_opacity(0); line2.set_opacity(0); line3.set_opacity(0)
-    self.play(line1.animate.set_opacity(1), run_time=0.8)
-    self.play(line2.animate.set_opacity(1), run_time=0.9)
-    self.play(line3.animate.set_opacity(1), run_time=0.9)
-    self.wait(1.8)
+    # WORKED EXAMPLE — 3-4-5 triangle with computation appearing live.
+    # Triangle on left, math on right. Lines tick into existence one by one.
+    A = LEFT*4 + DOWN*1.0
+    B = LEFT*1 + DOWN*1.0
+    C = LEFT*4 + UP*1.0
+    tri = Polygon(A, B, C, color=BLUE_D, stroke_width=3, fill_color=BLUE_D, fill_opacity=0.2)
+    side_a = Line(A, B, color=GREEN_C, stroke_width=5)
+    side_b = Line(A, C, color=ORANGE, stroke_width=5)
+    side_c = Line(B, C, color=RED_D, stroke_width=5)
+    n3 = Text('3', font_size=28, color=GREEN_C).next_to(side_a, DOWN, buff=0.15)
+    n4 = Text('4', font_size=28, color=ORANGE).next_to(side_b, LEFT, buff=0.15)
+    nc = Text('?', font_size=32, color=RED_D).next_to(side_c.get_center(), UR, buff=0.15)
+    l1 = Text('3² + 4²', font_size=38, color=WHITE).move_to(RIGHT*2 + UP*1.2)
+    l2 = Text('= 9 + 16', font_size=38, color=TEAL_C).next_to(l1, DOWN, buff=0.3)
+    l3 = Text('= 25', font_size=38, color=TEAL_C).next_to(l2, DOWN, buff=0.3)
+    l4 = Text('c = 5', font_size=44, weight=BOLD, color=GOLD).next_to(l3, DOWN, buff=0.4)
+    self.add_fixed_in_frame_mobjects(n3, n4, nc, l1, l2, l3, l4)
+    for o in [l1, l2, l3, l4]: o.set_opacity(0)
+    self.play(Create(tri), run_time=0.8)
+    self.play(Create(side_a), Write(n3), run_time=0.8)
+    self.play(Create(side_b), Write(n4), run_time=0.8)
+    self.play(Create(side_c), Write(nc), run_time=0.8)
+    self.play(l1.animate.set_opacity(1), run_time=0.7)
+    self.play(l2.animate.set_opacity(1), run_time=0.7)
+    self.play(l3.animate.set_opacity(1), run_time=0.7)
+    self.play(l4.animate.set_opacity(1), run_time=0.8)
+    new_c = Text('5', font_size=32, weight=BOLD, color=GOLD).next_to(side_c.get_center(), UR, buff=0.15)
+    self.add_fixed_in_frame_mobjects(new_c)
+    self.play(Transform(nc, new_c), Indicate(side_c, color=GOLD), run_time=1.5)
+    self.wait(1.5)
 
     ===CODE:S6===
-    # CLOSING scene — final dramatic image.
-    eq = Text('a² + b² = c²', font_size=64, weight=BOLD, color=GOLD)
-    line = Text('— from triangles to GPS satellites —', font_size=24, color=GREY_B).next_to(eq, DOWN, buff=0.5)
-    self.add_fixed_in_frame_mobjects(eq, line)
-    eq.set_opacity(0); line.set_opacity(0)
+    # CLOSING — multiple use-cases tile in: GPS, architecture, screens, navigation.
+    use1 = Text('GPS satellites', font_size=26, color=BLUE_D).move_to(UP*1.2 + LEFT*2.5)
+    use2 = Text('Bridges & buildings', font_size=26, color=ORANGE).move_to(UP*1.2 + RIGHT*2.5)
+    use3 = Text('Computer graphics', font_size=26, color=GREEN_C).move_to(DOWN*0.4 + LEFT*2.5)
+    use4 = Text('Music & frequencies', font_size=26, color=PURPLE_B).move_to(DOWN*0.4 + RIGHT*2.5)
+    eq = Text('a² + b² = c²', font_size=56, weight=BOLD, color=GOLD).move_to(DOWN*1.8)
+    self.add_fixed_in_frame_mobjects(use1, use2, use3, use4, eq)
+    for o in [use1, use2, use3, use4, eq]: o.set_opacity(0)
+    self.play(use1.animate.set_opacity(1), run_time=0.7)
+    self.play(use2.animate.set_opacity(1), run_time=0.7)
+    self.play(use3.animate.set_opacity(1), run_time=0.7)
+    self.play(use4.animate.set_opacity(1), run_time=0.7)
+    self.wait(0.5)
     self.play(eq.animate.set_opacity(1).scale(1.0), run_time=1.2)
-    self.play(line.animate.set_opacity(1), run_time=0.8)
+    self.play(Indicate(eq, color=YELLOW_C, scale_factor=1.15), run_time=1.5)
     self.play(Indicate(eq, color=YELLOW_C), run_time=1.2)
     self.wait(1.5)
 
