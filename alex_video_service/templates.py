@@ -15,6 +15,7 @@ Design rules for ALL templates:
 
 from __future__ import annotations
 
+import ast
 import textwrap
 from typing import Callable
 
@@ -51,21 +52,31 @@ def _safe(s: str, fallback: str = "") -> str:
 
 
 def _safe_expr(expr: str, var: str = "x", fallback: str = "np.sin(x)") -> str:
-    """Validate that `expr` can be the body of a `lambda <var>: ...`.
-
-    The LLM sometimes passes textbook equations like "y = mx + b" instead of a
-    Python expression. Anything that fails to compile as a lambda body is
-    replaced with a safe default.
+    """Validate that `expr` can be the body of a `lambda <var>: ...` AND only
+    references known names.  The LLM sometimes:
+      - passes textbook equations:  "y = mx + b"   (SyntaxError)
+      - passes shorthand variables: "ax + b"       (NameError at runtime)
+      - uses ^ instead of **:       "x^2"          (XOR, not power)
+    Anything that doesn't parse as a clean math expression in `var` falls back.
     """
     if not expr or not isinstance(expr, str):
         return fallback
     expr = expr.strip()
-    # Try to compile as a lambda body — catches "y = mx + b", bare names, etc.
+
+    # Step 1: must parse as a lambda body
     try:
-        compile(f"lambda {var}: {expr}", "<expr-check>", "eval")
-        return expr
+        tree = ast.parse(f"lambda {var}: {expr}", mode="eval")
     except (SyntaxError, ValueError):
         return fallback
+
+    # Step 2: every Name referenced must be in the allowlist
+    # (the lambda var itself, numpy module, common math constants from manim)
+    allowed = {var, "np", "PI", "TAU", "E", "DEGREES"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and node.id not in allowed:
+            return fallback
+
+    return expr
 
 
 # ──────────────────────────────────────────────────────────────────────────
