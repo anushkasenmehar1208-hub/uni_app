@@ -46,19 +46,16 @@ _HEADER = textwrap.dedent('''
 
 
 def _wrap_slide(i: int, heading: str, subtext: str, template_body: str) -> str:
-    """Wrap a template body with heading + subtext + hold.
+    """Wrap a scene's body with heading + subtext, with continuous flow.
 
-    Layout (fixed in frame, doesn't rotate with camera):
-      ┌──────────────────────────────────┐
-      │   BIG HEADING (top, font 38)     │
-      │                                  │
-      │       [3D template visual]       │
-      │                                  │
-      │   subtext (bottom, font 20)      │
-      └──────────────────────────────────┘
-
-    Heading appears first, template plays, subtext appears mid-scene, then a 3s
-    hold lets the viewer absorb the visual before everything fades out.
+    Key behaviour:
+      - Heading + subtext fade in BEFORE the visual builds
+      - They stay on screen during the whole visual
+      - At the end, there's NO empty gap — we use a catch-all FadeOut on
+        everything still on screen, so the visual stays visible until the
+        scene transitions out (no dead time with just text)
+      - During the brief 0.8s tail, the heading does a subtle scale-pulse
+        so the screen never feels frozen
     """
     heading = _safe(heading, "")
     subtext = _safe(subtext, "")
@@ -68,25 +65,25 @@ def _wrap_slide(i: int, heading: str, subtext: str, template_body: str) -> str:
 
     pre = textwrap.dedent(f'''
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        # SLIDE {i}: {heading[:50]}
+        # SCENE {i}: {heading[:50]}
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        {h} = Text("{heading}", font_size=38, weight=BOLD, color=WHITE)
-        {h}.to_edge(UP, buff=0.18)
+        {h} = Text("{heading}", font_size=42, weight=BOLD, color=WHITE)
+        {h}.to_edge(UP, buff=0.22)
         {s} = Text("{subtext}", font_size=22, color=GREY_B)
-        {s}.to_edge(DOWN, buff=0.22)
+        {s}.to_edge(DOWN, buff=0.28)
         self.add_fixed_in_frame_mobjects({h}, {s})
-        {h}.set_opacity(0)
-        {s}.set_opacity(0)
-        # Heading + subtext fade in TOGETHER, before the visual builds.
-        # Both stay on screen while the template plays underneath.
-        self.play({h}.animate.set_opacity(1), {s}.animate.set_opacity(1), run_time=0.8)
+        {h}.set_opacity(0); {s}.set_opacity(0)
+        self.play({h}.animate.set_opacity(1), {s}.animate.set_opacity(1), run_time=0.6)
     ''').strip()
 
-    # After template plays, hold heading+subtext on screen for a beat, then fade.
-    # 3s hold lets the audience absorb what they just saw before the next scene.
+    # Tail: subtle heading pulse + catch-all FadeOut so visuals don't disappear
+    # before the next scene starts. We fade EVERYTHING on screen in one go.
     post = textwrap.dedent(f'''
-        self.wait(3)
-        self.play(FadeOut({h}), FadeOut({s}), run_time=0.5)
+        self.play({h}.animate.scale(1.04), run_time=0.4, rate_func=there_and_back)
+        self.wait(0.3)
+        _remaining_{i} = [_m for _m in list(self.mobjects)]
+        if _remaining_{i}:
+            self.play(*[FadeOut(_m) for _m in _remaining_{i}], run_time=0.4)
     ''').strip()
 
     return pre + "\n" + template_body + "\n" + post

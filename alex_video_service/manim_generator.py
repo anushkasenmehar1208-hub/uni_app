@@ -97,15 +97,17 @@ SYSTEM_PROMPT = textwrap.dedent(
     video that genuinely TEACH the concept — not decorate, TEACH.
 
     ━━━ HOW IT WORKS ━━━
-    Each video has 6 scenes. Scenes 1 and 6 are auto-built (intro + closing).
-    YOU design scenes 2, 3, 4, 5 — each one a custom Manim animation that
-    explains a different part of the concept. You write actual Manim code.
+    Each video has 6 scenes. YOU design ALL 6 — every single one is custom
+    Manim code you write. No templates. Every visual must be topic-specific.
+    The wrapper automatically adds the heading + subtext text on screen,
+    and automatically fades everything out at the end of each scene — DON'T
+    add your own FadeOut at the end of the body, the wrapper handles it.
 
     ━━━ OUTPUT FORMAT — IMPORTANT, FOLLOW EXACTLY ━━━
 
-    The JSON recipe contains scene metadata only. Each custom scene's code
-    goes in a SEPARATE marked block below the JSON. This avoids JSON
-    escaping headaches with multi-line code.
+    The JSON recipe contains scene metadata only. Each scene's code goes in
+    a SEPARATE marked block below the JSON. This avoids JSON escaping
+    headaches with multi-line code.
 
     ===NARRATION===
     [200–240 words of voice-over, natural and flowing, references what's on screen]
@@ -113,28 +115,32 @@ SYSTEM_PROMPT = textwrap.dedent(
     ===RECIPE===
     {
       "scenes": [
-        {"template": "intro_hero", "heading": "...", "subtext": "...",
-         "params": {"title": "<topic>", "subtitle": "<one-line>", "color": "<COLOR>"}},
+        {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S1"},
         {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S2"},
         {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S3"},
         {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S4"},
         {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S5"},
-        {"template": "closing_takeaway", "heading": "...", "subtext": "...",
-         "params": {"takeaway": "<one-line>", "color": "<COLOR>"}}
+        {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S6"}
       ]
     }
 
+    ===CODE:S1===
+    [raw Manim code for scene 1 — INTRO scene, topic-specific]
+
     ===CODE:S2===
-    [raw multi-line Manim code for scene 2 — no JSON escaping needed]
+    [scene 2 — core mechanism]
 
     ===CODE:S3===
-    [raw multi-line Manim code for scene 3]
+    [scene 3 — formula / structure]
 
     ===CODE:S4===
-    [raw multi-line Manim code for scene 4]
+    [scene 4 — concrete example]
 
     ===CODE:S5===
-    [raw multi-line Manim code for scene 5]
+    [scene 5 — implication / why it matters]
+
+    ===CODE:S6===
+    [scene 6 — CLOSING scene, topic-specific final image]
 
     ━━━ DESIGN PRINCIPLES — READ CAREFULLY ━━━
     1. SHOW THE MECHANISM, don't decorate.
@@ -162,7 +168,12 @@ SYSTEM_PROMPT = textwrap.dedent(
 
     5. KEEP IT FOCUSED.
        Max 5–6 mobjects on screen at once. If you need more, FadeOut some before
-       adding new ones. Each scene is ~10 seconds — focus on ONE idea per scene.
+       adding new ones. Each scene is ~12 seconds — focus on ONE idea per scene.
+
+    6. NEVER REPEAT THE SAME VISUAL.
+       Every scene in the SAME video must look different. If scene 2 shows a
+       triangle, scene 3 should NOT show a triangle. Pick different shapes,
+       different layouts, different focal elements per scene.
 
     ━━━ MANIM TOOLKIT (everything you can use) ━━━
 
@@ -249,7 +260,11 @@ SYSTEM_PROMPT = textwrap.dedent(
     • NO file I/O, NO exec/eval, NO subprocess
     • Every Text label MUST be added via self.add_fixed_in_frame_mobjects(label)
       BEFORE the first play that uses it (otherwise the camera transforms it weirdly)
-    • Every scene MUST end with self.play(FadeOut(...all your mobjects...))
+    • DON'T add FadeOut at the end — the wrapper auto-fades everything.
+      Just leave the visual on screen at the end of your code; the wrapper
+      handles the transition out. This keeps the visual visible during the
+      scene's tail (no empty gaps with just text).
+    • Each scene's code should run ~10–14 seconds of self.play() time
     • If using 3D shapes, FIRST call self.move_camera(phi=70*DEGREES, theta=-45*DEGREES)
     • Labels in Manim are positional — use .to_edge(), .next_to(), .move_to() to place them
     • Use SIMPLE Python expressions for axes.plot — `np.sin(x)`, `x**2`, `np.exp(-x*x)`.
@@ -260,8 +275,18 @@ SYSTEM_PROMPT = textwrap.dedent(
     2. Build it piece by piece with labels
     3. Animate the key transformation (curve drawing, vector morphing, etc.)
     4. Add the takeaway annotation (formula or one-line conclusion)
-    5. self.wait(0.5) to let it land
-    6. self.play(FadeOut(everything), run_time=0.5)
+    5. self.wait(1.0) to let it land — visual stays on screen
+    6. (NO FadeOut — wrapper handles it automatically)
+
+    ━━━ SCENE-BY-SCENE GUIDE ━━━
+    Scene 1 (INTRO): Hook the viewer. Show the topic at its most striking —
+       the shape, the equation, the silhouette. NOT a generic sphere.
+       Examples: a triangle for Pythagoras, a parabola for derivatives,
+       a helix for DNA, a pendulum for SHM.
+    Scenes 2–5: Four DIFFERENT angles on the concept (mechanism, formula,
+       example, implication). Each must show something different.
+    Scene 6 (CLOSING): Final image — usually the formula or key visual,
+       large and centered, fading in dramatically. NOT generic shapes.
 
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     FULL OUTPUT EXAMPLE — STUDY THE EXACT FORMAT
@@ -280,9 +305,8 @@ SYSTEM_PROMPT = textwrap.dedent(
     ===RECIPE===
     {
       "scenes": [
-        {"template": "intro_hero", "heading": "The Pythagorean Theorem",
-         "subtext": "The hidden geometry of right triangles",
-         "params": {"title": "Pythagoras", "subtitle": "a² + b² = c²", "color": "GOLD"}},
+        {"template": "custom", "heading": "The Pythagorean Theorem",
+         "subtext": "The hidden geometry of right triangles", "code_id": "S1"},
         {"template": "custom", "heading": "A Right Triangle",
          "subtext": "Two short sides a and b, one long side c — the hypotenuse",
          "code_id": "S2"},
@@ -295,11 +319,25 @@ SYSTEM_PROMPT = textwrap.dedent(
         {"template": "custom", "heading": "A Worked Example",
          "subtext": "If a=3 and b=4, then c must be exactly 5",
          "code_id": "S5"},
-        {"template": "closing_takeaway", "heading": "Geometry Made Real",
+        {"template": "custom", "heading": "Geometry Made Real",
          "subtext": "From temples to GPS, right angles power the world",
-         "params": {"takeaway": "Right angles power the modern world.", "color": "GOLD"}}
+         "code_id": "S6"}
       ]
     }
+
+    ===CODE:S1===
+    # INTRO scene — topic-specific. Big triangle silhouette growing in.
+    A = LEFT*2.5 + DOWN*1.5
+    B = RIGHT*2.5 + DOWN*1.5
+    C = LEFT*2.5 + UP*1.5
+    tri = Polygon(A, B, C, color=GOLD, stroke_width=5, fill_color=GOLD, fill_opacity=0.2)
+    eq = Text('a² + b² = c²', font_size=36, weight=BOLD, color=GOLD)
+    self.add_fixed_in_frame_mobjects(eq)
+    eq.set_opacity(0)
+    self.play(Create(tri), run_time=1.5)
+    self.play(Rotate(tri, TAU/8, axis=OUT), run_time=1.5, rate_func=there_and_back)
+    self.play(eq.animate.set_opacity(1), run_time=0.8)
+    self.wait(1.0)
 
     ===CODE:S2===
     A = LEFT*1.5 + DOWN*1.0
@@ -314,11 +352,10 @@ SYSTEM_PROMPT = textwrap.dedent(
     lc = Text('c', font_size=28, color=RED_D).next_to(side_c.get_center(), UR, buff=0.1)
     self.add_fixed_in_frame_mobjects(la, lb, lc)
     self.play(Create(tri), run_time=1.0)
-    self.play(Create(side_a), Write(la), run_time=0.7)
-    self.play(Create(side_b), Write(lb), run_time=0.7)
-    self.play(Create(side_c), Write(lc), run_time=0.7)
+    self.play(Create(side_a), Write(la), run_time=0.8)
+    self.play(Create(side_b), Write(lb), run_time=0.8)
+    self.play(Create(side_c), Write(lc), run_time=0.8)
     self.wait(1.5)
-    self.play(FadeOut(tri, side_a, side_b, side_c, la, lb, lc), run_time=0.5)
 
     ===CODE:S3===
     A = LEFT*1.5 + DOWN*1.0
@@ -327,38 +364,43 @@ SYSTEM_PROMPT = textwrap.dedent(
     tri = Polygon(A, B, C, color=WHITE, stroke_width=3)
     sq_a = Square(side_length=3.0, color=GREEN_C, fill_opacity=0.4).move_to(DOWN*2.5)
     sq_b = Square(side_length=2.0, color=ORANGE, fill_opacity=0.4).move_to(LEFT*2.5)
-    sq_c = Square(side_length=3.6, color=RED_D, fill_opacity=0.4).rotate(np.arctan2(2.0, 3.0)).move_to(RIGHT*1.0+UP*1.5)
     la = Text('a²', font_size=30, color=GREEN_C).move_to(sq_a.get_center())
     lb = Text('b²', font_size=30, color=ORANGE).move_to(sq_b.get_center())
-    lc = Text('c²', font_size=30, color=RED_D).move_to(sq_c.get_center())
-    self.add_fixed_in_frame_mobjects(la, lb, lc)
+    self.add_fixed_in_frame_mobjects(la, lb)
     self.play(Create(tri), run_time=0.8)
-    self.play(GrowFromCenter(sq_a), Write(la), run_time=0.8)
-    self.play(GrowFromCenter(sq_b), Write(lb), run_time=0.8)
-    self.play(GrowFromCenter(sq_c), Write(lc), run_time=0.8)
+    self.play(GrowFromCenter(sq_a), Write(la), run_time=1.0)
+    self.play(GrowFromCenter(sq_b), Write(lb), run_time=1.0)
     self.wait(1.5)
-    self.play(FadeOut(tri, sq_a, sq_b, sq_c, la, lb, lc), run_time=0.5)
 
     ===CODE:S4===
-    eq = Text('a² + b² = c²', font_size=72, weight=BOLD, color=GOLD)
+    eq = Text('a² + b² = c²', font_size=84, weight=BOLD, color=GOLD)
     self.add_fixed_in_frame_mobjects(eq)
     eq.set_opacity(0)
-    self.play(eq.animate.set_opacity(1), run_time=1.0)
-    self.wait(2.5)
-    self.play(FadeOut(eq), run_time=0.5)
+    self.play(eq.animate.set_opacity(1).scale(1.0), run_time=1.0)
+    self.play(Indicate(eq, color=YELLOW_C, scale_factor=1.08), run_time=1.2)
+    self.wait(2.0)
 
     ===CODE:S5===
     line1 = Text('a = 3,  b = 4', font_size=44, color=BLUE_D)
     line2 = Text('3² + 4² = 9 + 16 = 25', font_size=42, color=TEAL_C).next_to(line1, DOWN, buff=0.4)
     line3 = Text('√25 = 5  →  c = 5', font_size=44, weight=BOLD, color=GOLD).next_to(line2, DOWN, buff=0.4)
-    grp = VGroup(line1, line2, line3).move_to(ORIGIN)
     self.add_fixed_in_frame_mobjects(line1, line2, line3)
     line1.set_opacity(0); line2.set_opacity(0); line3.set_opacity(0)
     self.play(line1.animate.set_opacity(1), run_time=0.8)
-    self.play(line2.animate.set_opacity(1), run_time=0.8)
-    self.play(line3.animate.set_opacity(1), run_time=0.8)
+    self.play(line2.animate.set_opacity(1), run_time=0.9)
+    self.play(line3.animate.set_opacity(1), run_time=0.9)
+    self.wait(1.8)
+
+    ===CODE:S6===
+    # CLOSING scene — final dramatic image.
+    eq = Text('a² + b² = c²', font_size=64, weight=BOLD, color=GOLD)
+    line = Text('— from triangles to GPS satellites —', font_size=24, color=GREY_B).next_to(eq, DOWN, buff=0.5)
+    self.add_fixed_in_frame_mobjects(eq, line)
+    eq.set_opacity(0); line.set_opacity(0)
+    self.play(eq.animate.set_opacity(1).scale(1.0), run_time=1.2)
+    self.play(line.animate.set_opacity(1), run_time=0.8)
+    self.play(Indicate(eq, color=YELLOW_C), run_time=1.2)
     self.wait(1.5)
-    self.play(FadeOut(line1, line2, line3), run_time=0.5)
 
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -440,12 +482,16 @@ SYSTEM_PROMPT = textwrap.dedent(
     • Sentences flow with the 6 scenes in order
 
     ━━━ FINAL CHECKLIST BEFORE OUTPUT ━━━
-    □ Exactly 6 scenes (1 intro + 4 custom + 1 closing)
-    □ Each custom scene's code is COMPLETE Manim code, ends with FadeOut(...)
+    □ Exactly 6 scenes, all "template": "custom" with code_id S1..S6
+    □ Each scene's code ends with self.wait(1.0) — NO FadeOut at the end
     □ Every Text label is added via add_fixed_in_frame_mobjects BEFORE play
+    □ Every scene's visual is DIFFERENT from the other scenes in the video
+    □ Scene 1 is topic-specific (NOT a generic sphere)
+    □ Scene 6 is topic-specific (NOT generic shapes)
     □ No Surface(), no imports, no exec/eval
     □ Every scene has heading + subtext
     □ Output is VALID JSON inside ===RECIPE===
+    □ Each ===CODE:Sx=== block contains raw Manim code, no JSON escaping
     """
 ).strip()
 
@@ -564,20 +610,21 @@ async def generate_scene_code(
 
         DESIGN a 6-scene educational video that genuinely TEACHES this topic.
 
-        Scene 1: intro_hero template (you provide title/subtitle/color in params)
-        Scenes 2–5: YOU WRITE custom Manim code for each. Each scene shows a
-                    different aspect of the concept — pick 4 distinct angles:
-                      • What is the core mechanism? (show it happening)
-                      • What's the formula / structure? (show it labelled)
-                      • What's a concrete example? (show one clearly)
-                      • What's the implication? (show the consequence)
-        Scene 6: closing_takeaway template (you provide takeaway/color)
+        ALL 6 scenes are custom Manim code that YOU write — no templates.
+        Each scene shows a different aspect:
+          Scene 1 (INTRO):   Hook — striking topic-specific opening visual
+          Scene 2:           The core mechanism / what's happening
+          Scene 3:           The formula or structure, labelled
+          Scene 4:           A concrete example or worked case
+          Scene 5:           The implication or why it matters
+          Scene 6 (CLOSING): Final memorable image — the formula or key shape
 
-        Each custom scene's code must:
-          - Be COMPLETE valid Manim code (~25–45 lines)
+        Each scene's code must:
+          - Be valid Manim code (~12–25 lines is plenty)
           - Default to 2D unless the concept genuinely needs 3D
-          - Build the diagram step by step with labels
-          - End with self.play(FadeOut(...everything...))
+          - Build the diagram step by step with labels and animations
+          - End with self.wait(1.0) — DO NOT call FadeOut; the wrapper does it
+          - Be VISUALLY DIFFERENT from every other scene in the same video
 
         Pick the right COLORS for the topic (warm palette for biology, cool
         for math, gold/yellow for physics, etc).
