@@ -101,22 +101,40 @@ SYSTEM_PROMPT = textwrap.dedent(
     YOU design scenes 2, 3, 4, 5 — each one a custom Manim animation that
     explains a different part of the concept. You write actual Manim code.
 
-    ━━━ OUTPUT FORMAT ━━━
+    ━━━ OUTPUT FORMAT — IMPORTANT, FOLLOW EXACTLY ━━━
+
+    The JSON recipe contains scene metadata only. Each custom scene's code
+    goes in a SEPARATE marked block below the JSON. This avoids JSON
+    escaping headaches with multi-line code.
+
     ===NARRATION===
     [200–240 words of voice-over, natural and flowing, references what's on screen]
+
     ===RECIPE===
     {
       "scenes": [
         {"template": "intro_hero", "heading": "...", "subtext": "...",
          "params": {"title": "<topic>", "subtitle": "<one-line>", "color": "<COLOR>"}},
-        {"template": "custom", "heading": "...", "subtext": "...", "code": "<your manim code>"},
-        {"template": "custom", "heading": "...", "subtext": "...", "code": "<your manim code>"},
-        {"template": "custom", "heading": "...", "subtext": "...", "code": "<your manim code>"},
-        {"template": "custom", "heading": "...", "subtext": "...", "code": "<your manim code>"},
+        {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S2"},
+        {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S3"},
+        {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S4"},
+        {"template": "custom", "heading": "...", "subtext": "...", "code_id": "S5"},
         {"template": "closing_takeaway", "heading": "...", "subtext": "...",
          "params": {"takeaway": "<one-line>", "color": "<COLOR>"}}
       ]
     }
+
+    ===CODE:S2===
+    [raw multi-line Manim code for scene 2 — no JSON escaping needed]
+
+    ===CODE:S3===
+    [raw multi-line Manim code for scene 3]
+
+    ===CODE:S4===
+    [raw multi-line Manim code for scene 4]
+
+    ===CODE:S5===
+    [raw multi-line Manim code for scene 5]
 
     ━━━ DESIGN PRINCIPLES — READ CAREFULLY ━━━
     1. SHOW THE MECHANISM, don't decorate.
@@ -246,155 +264,157 @@ SYSTEM_PROMPT = textwrap.dedent(
     6. self.play(FadeOut(everything), run_time=0.5)
 
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    GOLD-STANDARD EXAMPLES — STUDY THESE PATTERNS
+    FULL OUTPUT EXAMPLE — STUDY THE EXACT FORMAT
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    ━━━ EXAMPLE 1 — MATH (Pythagorean Theorem, 2D geometric) ━━━
-    "code": "
-        A = LEFT*1.5 + DOWN*1.0
-        B = RIGHT*1.5 + DOWN*1.0
-        C = LEFT*1.5 + UP*1.0
-        tri = Polygon(A, B, C, color=WHITE, stroke_width=3, fill_color=BLUE_D, fill_opacity=0.15)
-        side_a = Line(A, B, color=GREEN_C, stroke_width=5)
-        side_b = Line(A, C, color=ORANGE, stroke_width=5)
-        side_c = Line(B, C, color=RED_D, stroke_width=5)
-        la = Text('a', font_size=28, color=GREEN_C).next_to(side_a, DOWN, buff=0.15)
-        lb = Text('b', font_size=28, color=ORANGE).next_to(side_b, LEFT, buff=0.15)
-        lc = Text('c', font_size=28, color=RED_D).next_to(side_c.get_center(), UR, buff=0.1)
-        formula = Text('a² + b² = c²', font_size=42, weight=BOLD, color=GOLD).to_edge(DOWN, buff=1.1)
-        self.add_fixed_in_frame_mobjects(la, lb, lc, formula)
-        formula.set_opacity(0)
-        self.play(Create(tri), run_time=1.0)
-        self.play(Create(side_a), Write(la), run_time=0.7)
-        self.play(Create(side_b), Write(lb), run_time=0.7)
-        self.play(Create(side_c), Write(lc), run_time=0.7)
-        self.play(formula.animate.set_opacity(1), run_time=0.8)
-        self.wait(2)
-        self.play(FadeOut(tri, side_a, side_b, side_c, la, lb, lc, formula), run_time=0.5)
-    "
+    For topic "Pythagorean Theorem":
 
-    ━━━ EXAMPLE 2 — PHYSICS (Newton's Second Law, 2D force diagram) ━━━
-    "code": "
-        block = Square(side_length=1.2, color=BLUE_D, fill_opacity=0.7).set_stroke(WHITE, 2)
-        ground = Line(LEFT*4, RIGHT*4, color=GREY_B, stroke_width=2).shift(DOWN*0.6)
-        force = Arrow(block.get_right(), block.get_right() + RIGHT*2, color=YELLOW_C, buff=0, stroke_width=4)
-        f_lab = Text('F', font_size=32, weight=BOLD, color=YELLOW_C).next_to(force, UP, buff=0.1)
-        m_lab = Text('m', font_size=28, weight=BOLD, color=WHITE).move_to(block.get_center())
-        accel = Arrow(block.get_top()+RIGHT*0.4, block.get_top()+RIGHT*1.2, color=ORANGE, buff=0)
-        a_lab = Text('a', font_size=28, weight=BOLD, color=ORANGE).next_to(accel, UP, buff=0.05)
-        formula = Text('F = m × a', font_size=44, weight=BOLD, color=GOLD).to_edge(DOWN, buff=1.0)
-        self.add_fixed_in_frame_mobjects(f_lab, m_lab, a_lab, formula)
-        formula.set_opacity(0)
-        self.play(Create(ground), run_time=0.5)
-        self.play(GrowFromCenter(block), Write(m_lab), run_time=0.8)
-        self.play(GrowArrow(force), Write(f_lab), run_time=0.8)
-        self.play(GrowArrow(accel), Write(a_lab), run_time=0.6)
-        self.play(block.animate.shift(RIGHT*2), force.animate.shift(RIGHT*2),
-                  f_lab.animate.shift(RIGHT*2), m_lab.animate.shift(RIGHT*2),
-                  accel.animate.shift(RIGHT*2), a_lab.animate.shift(RIGHT*2),
-                  run_time=1.5, rate_func=smooth)
-        self.play(formula.animate.set_opacity(1), run_time=0.6)
-        self.wait(1.5)
-        self.play(FadeOut(block, ground, force, f_lab, m_lab, accel, a_lab, formula), run_time=0.5)
-    "
+    ===NARRATION===
+    Here's something the ancient Greeks figured out three thousand years ago.
+    Take any right triangle. Build a square on each side. The two smaller
+    squares — they always add up to the biggest square. Always. Watch:
+    a squared, plus b squared, equals c squared. Three to the four to the
+    five. Five to the twelve to the thirteen. The pattern never breaks.
+    [continues to 200-240 words total...]
 
-    ━━━ EXAMPLE 3 — BIOLOGY (DNA Replication Fork, 2D mechanism) ━━━
-    "code": "
-        # Replication fork: two strands splitting
-        helix_top = ParametricFunction(
-            lambda t: np.array([t*0.3, 1.5 + 0.25*np.sin(2*t), 0]),
-            t_range=[-5, 0], color=BLUE_D, stroke_width=4)
-        helix_bot = ParametricFunction(
-            lambda t: np.array([t*0.3, -1.5 - 0.25*np.sin(2*t), 0]),
-            t_range=[-5, 0], color=TEAL_C, stroke_width=4)
-        helix_orig = ParametricFunction(
-            lambda t: np.array([t*0.3, 0.4*np.sin(2*t), 0]),
-            t_range=[-8, -5], color=PURPLE_B, stroke_width=4)
-        helicase = Circle(radius=0.35, color=ORANGE, fill_opacity=0.8).move_to(LEFT*1.5)
-        h_lab = Text('Helicase', font_size=20, color=ORANGE).next_to(helicase, UP, buff=0.2)
-        new_top = ParametricFunction(
-            lambda t: np.array([t*0.3, 1.5 + 0.25*np.sin(2*t), 0]),
-            t_range=[-5, -2], color=GOLD, stroke_width=4)
-        new_bot = ParametricFunction(
-            lambda t: np.array([t*0.3, -1.5 - 0.25*np.sin(2*t), 0]),
-            t_range=[-5, -2], color=GOLD, stroke_width=4)
-        n_lab = Text('New strands', font_size=20, color=GOLD).to_edge(DOWN, buff=0.7)
-        self.add_fixed_in_frame_mobjects(h_lab, n_lab)
-        n_lab.set_opacity(0)
-        self.play(Create(helix_orig), run_time=1.0)
-        self.play(Create(helix_top), Create(helix_bot), run_time=1.5)
-        self.play(GrowFromCenter(helicase), Write(h_lab), run_time=0.6)
-        self.play(Create(new_top), Create(new_bot), n_lab.animate.set_opacity(1), run_time=2.0)
-        self.wait(1.5)
-        self.play(FadeOut(helix_orig, helix_top, helix_bot, helicase, h_lab,
-                          new_top, new_bot, n_lab), run_time=0.5)
-    "
+    ===RECIPE===
+    {
+      "scenes": [
+        {"template": "intro_hero", "heading": "The Pythagorean Theorem",
+         "subtext": "The hidden geometry of right triangles",
+         "params": {"title": "Pythagoras", "subtitle": "a² + b² = c²", "color": "GOLD"}},
+        {"template": "custom", "heading": "A Right Triangle",
+         "subtext": "Two short sides a and b, one long side c — the hypotenuse",
+         "code_id": "S2"},
+        {"template": "custom", "heading": "Squares On Each Side",
+         "subtext": "Build a square outward from each of the three sides",
+         "code_id": "S3"},
+        {"template": "custom", "heading": "The Equation",
+         "subtext": "Areas of the small squares equal area of the largest",
+         "code_id": "S4"},
+        {"template": "custom", "heading": "A Worked Example",
+         "subtext": "If a=3 and b=4, then c must be exactly 5",
+         "code_id": "S5"},
+        {"template": "closing_takeaway", "heading": "Geometry Made Real",
+         "subtext": "From temples to GPS, right angles power the world",
+         "params": {"takeaway": "Right angles power the modern world.", "color": "GOLD"}}
+      ]
+    }
 
-    ━━━ EXAMPLE 4 — CS (Binary Search, 2D array with pointers) ━━━
-    "code": "
-        nums = [3, 7, 12, 18, 25, 31, 42, 55]
-        target_val = 25
-        boxes = VGroup()
-        labs = VGroup()
-        for i, n in enumerate(nums):
-            box = Square(side_length=0.7, color=GREY_B, fill_opacity=0.3, stroke_width=1.5)
-            box.move_to(np.array([-2.7 + i*0.78, 0.5, 0]))
-            num = Text(str(n), font_size=22, color=WHITE).move_to(box.get_center())
-            self.add_fixed_in_frame_mobjects(num)
-            boxes.add(box)
-            labs.add(num)
-        title = Text('Searching for 25', font_size=26, color=GOLD).to_edge(UP, buff=0.6)
-        self.add_fixed_in_frame_mobjects(title)
-        title.set_opacity(0)
-        self.play(LaggedStart(*[GrowFromCenter(b) for b in boxes], lag_ratio=0.05),
-                  LaggedStart(*[Write(l) for l in labs], lag_ratio=0.05),
-                  title.animate.set_opacity(1), run_time=1.5)
-        # Highlight midpoint, then narrow
-        mid_arrow = Arrow(boxes[3].get_top()+UP*0.6, boxes[3].get_top()+UP*0.05, color=YELLOW_C, buff=0)
-        m_lab = Text('mid', font_size=18, color=YELLOW_C).next_to(mid_arrow, UP, buff=0.05)
-        self.add_fixed_in_frame_mobjects(m_lab)
-        self.play(GrowArrow(mid_arrow), Write(m_lab), run_time=0.8)
-        self.play(boxes[3].animate.set_fill(YELLOW_C, 0.5), run_time=0.5)
-        # 18 < 25, search right half
-        self.play(boxes[0].animate.set_opacity(0.2), boxes[1].animate.set_opacity(0.2),
-                  boxes[2].animate.set_opacity(0.2), boxes[3].animate.set_opacity(0.2),
-                  labs[0].animate.set_opacity(0.2), labs[1].animate.set_opacity(0.2),
-                  labs[2].animate.set_opacity(0.2), labs[3].animate.set_opacity(0.2),
-                  run_time=0.8)
-        # Found 25
-        self.play(boxes[4].animate.set_fill(GREEN_C, 0.6), run_time=0.5)
-        self.wait(1.5)
-        self.play(FadeOut(boxes, labs, mid_arrow, m_lab, title), run_time=0.5)
-    "
+    ===CODE:S2===
+    A = LEFT*1.5 + DOWN*1.0
+    B = RIGHT*1.5 + DOWN*1.0
+    C = LEFT*1.5 + UP*1.0
+    tri = Polygon(A, B, C, color=WHITE, stroke_width=3, fill_color=BLUE_D, fill_opacity=0.15)
+    side_a = Line(A, B, color=GREEN_C, stroke_width=5)
+    side_b = Line(A, C, color=ORANGE, stroke_width=5)
+    side_c = Line(B, C, color=RED_D, stroke_width=5)
+    la = Text('a', font_size=28, color=GREEN_C).next_to(side_a, DOWN, buff=0.15)
+    lb = Text('b', font_size=28, color=ORANGE).next_to(side_b, LEFT, buff=0.15)
+    lc = Text('c', font_size=28, color=RED_D).next_to(side_c.get_center(), UR, buff=0.1)
+    self.add_fixed_in_frame_mobjects(la, lb, lc)
+    self.play(Create(tri), run_time=1.0)
+    self.play(Create(side_a), Write(la), run_time=0.7)
+    self.play(Create(side_b), Write(lb), run_time=0.7)
+    self.play(Create(side_c), Write(lc), run_time=0.7)
+    self.wait(1.5)
+    self.play(FadeOut(tri, side_a, side_b, side_c, la, lb, lc), run_time=0.5)
 
-    ━━━ EXAMPLE 5 — CHEMISTRY (Water polarity, 2D molecule with charge arrows) ━━━
-    "code": "
-        # H2O at 104.5° bend angle, with partial charges
-        ang = 104.5 * DEGREES / 2
-        O_pos = np.array([0, 0.3, 0])
-        H1_pos = O_pos + np.array([np.sin(ang)*1.5, -np.cos(ang)*1.5, 0])
-        H2_pos = O_pos + np.array([-np.sin(ang)*1.5, -np.cos(ang)*1.5, 0])
-        O = Circle(radius=0.55, color=RED_D, fill_opacity=0.85).move_to(O_pos)
-        H1 = Circle(radius=0.32, color=WHITE, fill_opacity=0.85).move_to(H1_pos)
-        H2 = Circle(radius=0.32, color=WHITE, fill_opacity=0.85).move_to(H2_pos)
-        b1 = Line(O_pos, H1_pos, color=BLUE_D, stroke_width=4)
-        b2 = Line(O_pos, H2_pos, color=BLUE_D, stroke_width=4)
-        ol = Text('O', font_size=28, weight=BOLD, color=WHITE).move_to(O.get_center())
-        h1l = Text('H', font_size=22, color=GREY_B).move_to(H1.get_center())
-        h2l = Text('H', font_size=22, color=GREY_B).move_to(H2.get_center())
-        neg = Text('δ−', font_size=24, weight=BOLD, color=BLUE_D).next_to(O, UP, buff=0.15)
-        pos1 = Text('δ+', font_size=20, weight=BOLD, color=RED_D).next_to(H1, RIGHT, buff=0.1)
-        pos2 = Text('δ+', font_size=20, weight=BOLD, color=RED_D).next_to(H2, LEFT, buff=0.1)
-        self.add_fixed_in_frame_mobjects(ol, h1l, h2l, neg, pos1, pos2)
-        neg.set_opacity(0); pos1.set_opacity(0); pos2.set_opacity(0)
-        self.play(GrowFromCenter(O), Write(ol), run_time=0.6)
-        self.play(Create(b1), Create(b2), GrowFromCenter(H1), GrowFromCenter(H2),
-                  Write(h1l), Write(h2l), run_time=1.0)
-        self.play(neg.animate.set_opacity(1), pos1.animate.set_opacity(1), pos2.animate.set_opacity(1),
-                  run_time=0.8)
-        self.wait(2)
-        self.play(FadeOut(O, H1, H2, b1, b2, ol, h1l, h2l, neg, pos1, pos2), run_time=0.5)
-    "
+    ===CODE:S3===
+    A = LEFT*1.5 + DOWN*1.0
+    B = RIGHT*1.5 + DOWN*1.0
+    C = LEFT*1.5 + UP*1.0
+    tri = Polygon(A, B, C, color=WHITE, stroke_width=3)
+    sq_a = Square(side_length=3.0, color=GREEN_C, fill_opacity=0.4).move_to(DOWN*2.5)
+    sq_b = Square(side_length=2.0, color=ORANGE, fill_opacity=0.4).move_to(LEFT*2.5)
+    sq_c = Square(side_length=3.6, color=RED_D, fill_opacity=0.4).rotate(np.arctan2(2.0, 3.0)).move_to(RIGHT*1.0+UP*1.5)
+    la = Text('a²', font_size=30, color=GREEN_C).move_to(sq_a.get_center())
+    lb = Text('b²', font_size=30, color=ORANGE).move_to(sq_b.get_center())
+    lc = Text('c²', font_size=30, color=RED_D).move_to(sq_c.get_center())
+    self.add_fixed_in_frame_mobjects(la, lb, lc)
+    self.play(Create(tri), run_time=0.8)
+    self.play(GrowFromCenter(sq_a), Write(la), run_time=0.8)
+    self.play(GrowFromCenter(sq_b), Write(lb), run_time=0.8)
+    self.play(GrowFromCenter(sq_c), Write(lc), run_time=0.8)
+    self.wait(1.5)
+    self.play(FadeOut(tri, sq_a, sq_b, sq_c, la, lb, lc), run_time=0.5)
+
+    ===CODE:S4===
+    eq = Text('a² + b² = c²', font_size=72, weight=BOLD, color=GOLD)
+    self.add_fixed_in_frame_mobjects(eq)
+    eq.set_opacity(0)
+    self.play(eq.animate.set_opacity(1), run_time=1.0)
+    self.wait(2.5)
+    self.play(FadeOut(eq), run_time=0.5)
+
+    ===CODE:S5===
+    line1 = Text('a = 3,  b = 4', font_size=44, color=BLUE_D)
+    line2 = Text('3² + 4² = 9 + 16 = 25', font_size=42, color=TEAL_C).next_to(line1, DOWN, buff=0.4)
+    line3 = Text('√25 = 5  →  c = 5', font_size=44, weight=BOLD, color=GOLD).next_to(line2, DOWN, buff=0.4)
+    grp = VGroup(line1, line2, line3).move_to(ORIGIN)
+    self.add_fixed_in_frame_mobjects(line1, line2, line3)
+    line1.set_opacity(0); line2.set_opacity(0); line3.set_opacity(0)
+    self.play(line1.animate.set_opacity(1), run_time=0.8)
+    self.play(line2.animate.set_opacity(1), run_time=0.8)
+    self.play(line3.animate.set_opacity(1), run_time=0.8)
+    self.wait(1.5)
+    self.play(FadeOut(line1, line2, line3), run_time=0.5)
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    EXTRA EXAMPLES — different subjects (each block goes inside ===CODE:Sx===):
+
+    ━━━ Newton's Second Law (physics, 2D force diagram) ━━━
+    block = Square(side_length=1.2, color=BLUE_D, fill_opacity=0.7).set_stroke(WHITE, 2)
+    ground = Line(LEFT*4, RIGHT*4, color=GREY_B, stroke_width=2).shift(DOWN*0.6)
+    force = Arrow(block.get_right(), block.get_right() + RIGHT*2, color=YELLOW_C, buff=0)
+    f_lab = Text('F', font_size=32, weight=BOLD, color=YELLOW_C).next_to(force, UP, buff=0.1)
+    m_lab = Text('m', font_size=28, weight=BOLD, color=WHITE).move_to(block.get_center())
+    self.add_fixed_in_frame_mobjects(f_lab, m_lab)
+    self.play(Create(ground), run_time=0.5)
+    self.play(GrowFromCenter(block), Write(m_lab), run_time=0.8)
+    self.play(GrowArrow(force), Write(f_lab), run_time=0.8)
+    self.play(block.animate.shift(RIGHT*2), force.animate.shift(RIGHT*2),
+              f_lab.animate.shift(RIGHT*2), m_lab.animate.shift(RIGHT*2),
+              run_time=1.5, rate_func=smooth)
+    self.wait(1.5)
+    self.play(FadeOut(block, ground, force, f_lab, m_lab), run_time=0.5)
+
+    ━━━ DNA Replication Fork (biology, 2D mechanism) ━━━
+    helix_top = ParametricFunction(lambda t: np.array([t*0.3, 1.5 + 0.25*np.sin(2*t), 0]),
+        t_range=[-5, 0], color=BLUE_D, stroke_width=4)
+    helix_bot = ParametricFunction(lambda t: np.array([t*0.3, -1.5 - 0.25*np.sin(2*t), 0]),
+        t_range=[-5, 0], color=TEAL_C, stroke_width=4)
+    helix_orig = ParametricFunction(lambda t: np.array([t*0.3, 0.4*np.sin(2*t), 0]),
+        t_range=[-8, -5], color=PURPLE_B, stroke_width=4)
+    helicase = Circle(radius=0.35, color=ORANGE, fill_opacity=0.8).move_to(LEFT*1.5)
+    h_lab = Text('Helicase', font_size=20, color=ORANGE).next_to(helicase, UP, buff=0.2)
+    self.add_fixed_in_frame_mobjects(h_lab)
+    self.play(Create(helix_orig), run_time=1.0)
+    self.play(Create(helix_top), Create(helix_bot), run_time=1.5)
+    self.play(GrowFromCenter(helicase), Write(h_lab), run_time=0.6)
+    self.wait(1.5)
+    self.play(FadeOut(helix_orig, helix_top, helix_bot, helicase, h_lab), run_time=0.5)
+
+    ━━━ Water polarity (chemistry, 2D molecule + charges) ━━━
+    ang = 104.5 * DEGREES / 2
+    O_pos = np.array([0, 0.3, 0])
+    H1_pos = O_pos + np.array([np.sin(ang)*1.5, -np.cos(ang)*1.5, 0])
+    H2_pos = O_pos + np.array([-np.sin(ang)*1.5, -np.cos(ang)*1.5, 0])
+    O = Circle(radius=0.55, color=RED_D, fill_opacity=0.85).move_to(O_pos)
+    H1 = Circle(radius=0.32, color=WHITE, fill_opacity=0.85).move_to(H1_pos)
+    H2 = Circle(radius=0.32, color=WHITE, fill_opacity=0.85).move_to(H2_pos)
+    b1 = Line(O_pos, H1_pos, color=BLUE_D, stroke_width=4)
+    b2 = Line(O_pos, H2_pos, color=BLUE_D, stroke_width=4)
+    ol = Text('O', font_size=28, weight=BOLD, color=WHITE).move_to(O.get_center())
+    neg = Text('δ-', font_size=24, weight=BOLD, color=BLUE_D).next_to(O, UP, buff=0.15)
+    self.add_fixed_in_frame_mobjects(ol, neg)
+    neg.set_opacity(0)
+    self.play(GrowFromCenter(O), Write(ol), run_time=0.6)
+    self.play(Create(b1), Create(b2), GrowFromCenter(H1), GrowFromCenter(H2), run_time=1.0)
+    self.play(neg.animate.set_opacity(1), run_time=0.8)
+    self.wait(2)
+    self.play(FadeOut(O, H1, H2, b1, b2, ol, neg), run_time=0.5)
 
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -442,16 +462,50 @@ def _strip_fences(text: str) -> str:
     return text.strip()
 
 
+_CODE_BLOCK_RE = re.compile(
+    r"===\s*CODE\s*:\s*(\w+)\s*===\s*\n(.*?)(?=\n===|\Z)",
+    re.DOTALL,
+)
+
+
 def _parse_response(raw: str) -> tuple[str, dict]:
-    """Split LLM output into narration + recipe dict."""
+    """Split LLM output into narration + recipe dict.
+
+    New format (V2):
+      ===NARRATION=== ... ===RECIPE=== {json with code_id refs} ===CODE:Sx===
+      <raw multi-line code> ===CODE:Sy=== ...
+
+    The narrator can also still send the older single-block format with
+    embedded `code` fields — we accept both.
+    """
     if "===RECIPE===" not in raw:
         raise GenerationError("LLM response missing ===RECIPE=== marker")
 
-    parts = raw.split("===RECIPE===", 1)
-    narration = parts[0].replace("===NARRATION===", "").strip()
+    # Step 1: split off the narration (everything before ===RECIPE===)
+    pre, _, after_recipe = raw.partition("===RECIPE===")
+    narration = pre.replace("===NARRATION===", "").strip()
 
-    recipe_str = _strip_fences(parts[1].strip())
-    # If the model wrapped the JSON in any extra commentary, try to extract { ... }
+    # Step 2: pull all ===CODE:Sx=== blocks. They're greedy until the next
+    # ===…=== marker or end of string.
+    code_blocks: dict[str, str] = {}
+    for m in _CODE_BLOCK_RE.finditer(after_recipe):
+        code_id = m.group(1).strip()
+        code_body = m.group(2).strip()
+        # Strip leading code fence if the LLM wrapped it (```python ... ```)
+        if code_body.startswith("```"):
+            code_body = re.sub(r"^```[a-zA-Z]*\n?", "", code_body)
+            code_body = re.sub(r"\n?```\s*$", "", code_body).strip()
+        code_blocks[code_id] = code_body
+
+    # Step 3: isolate the recipe JSON (everything between ===RECIPE=== and the
+    # first ===CODE:…=== if any, else everything after).
+    first_code_pos = after_recipe.find("===CODE")
+    if first_code_pos >= 0:
+        recipe_str = after_recipe[:first_code_pos].strip()
+    else:
+        recipe_str = after_recipe.strip()
+
+    recipe_str = _strip_fences(recipe_str)
     if not recipe_str.startswith("{"):
         m = re.search(r"\{[\s\S]*\}", recipe_str)
         if not m:
@@ -462,6 +516,21 @@ def _parse_response(raw: str) -> tuple[str, dict]:
         recipe = json.loads(recipe_str)
     except json.JSONDecodeError as e:
         raise GenerationError(f"Recipe JSON invalid: {e}\n\n{recipe_str[:400]}") from e
+
+    # Step 4: resolve code_id references — inject the real code into each scene
+    if isinstance(recipe.get("scenes"), list):
+        for i, scene in enumerate(recipe["scenes"]):
+            if not isinstance(scene, dict):
+                continue
+            ref = scene.get("code_id")
+            if ref:
+                if ref not in code_blocks:
+                    raise GenerationError(
+                        f"Scene #{i} refers to code_id={ref!r} but no ===CODE:{ref}=== "
+                        f"block was provided. Available: {list(code_blocks.keys())}"
+                    )
+                scene["code"] = code_blocks[ref]
+                scene.pop("code_id", None)
 
     return narration, recipe
 
