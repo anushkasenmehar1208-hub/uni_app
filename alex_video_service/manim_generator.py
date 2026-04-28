@@ -106,19 +106,42 @@ SYSTEM_PROMPT = textwrap.dedent(
     ===RECIPE===
     {{
       "scenes": [
-        {{"template": "<name>", "params": {{...}}}},
+        {{
+          "template": "<name>",
+          "heading": "Big concept name (≤45 chars) shown LARGE at top",
+          "subtext": "One-line explanation (≤70 chars) shown small at bottom",
+          "params": {{...}}
+        }},
         ...
       ]
     }}
 
-    ━━━ STRUCTURE — EXACTLY 5 or 6 scenes (NEVER fewer than 5) ━━━
-    1. Always START with `intro_hero`
-    2. Pick 3–4 subject-specific scenes that teach the concept (USE DIFFERENT TEMPLATES, not the same one twice)
-    3. Always include `key_insight` for the "aha" moment
-    4. Always END with `closing_takeaway`
+    ━━━ HEADING + SUBTEXT — THESE TEACH THE CONCEPT ━━━
+    Each scene gets a BIG heading at the top and a caption at the bottom.
+    The heading dominates the screen — it's the title of what we're showing.
+    The subtext explains what the visual means in plain words.
+    The 3D visual underneath illustrates the heading.
+    Think: textbook chapter title + diagram + caption.
 
-    IMPORTANT: You MUST output at minimum 5 scenes. Fewer than 5 scenes is an error.
-    Each scene MUST use a different template — do NOT repeat template names.
+    GOOD heading examples:
+      "The Double Helix"  /  "Newton's Second Law"  /  "Electron Orbitals"
+      "Photosynthesis: Light → Sugar"  /  "The Pythagorean Theorem"
+
+    GOOD subtext examples:
+      "Two strands of DNA twist around a common axis"
+      "Force equals mass times acceleration"
+      "Plants convert sunlight into chemical energy"
+
+    ━━━ STRUCTURE — EXACTLY 6 scenes ━━━
+    1. Scene 1: `intro_hero` (set up the topic)
+    2. Scene 2: subject-specific template (introduce the core mechanism)
+    3. Scene 3: subject-specific template (deepen the explanation)
+    4. Scene 4: subject-specific template (a different angle / consequence)
+    5. Scene 5: `key_insight` (the "aha" beat)
+    6. Scene 6: `closing_takeaway` (final takeaway)
+
+    HARD RULE: You MUST output exactly 6 scenes. Not 5, not 4, not 3 — six.
+    Each scene MUST use a DIFFERENT template — never repeat template names.
 
     ━━━ AVAILABLE TEMPLATES ━━━
     {get_template_catalog()}
@@ -139,7 +162,8 @@ SYSTEM_PROMPT = textwrap.dedent(
     • Use ONLY templates from the list above — invented names will fail
     • Match parameters from each template's `params` list exactly
     • Pick subject-appropriate templates (don't use cs_neural_network for chemistry)
-    • Labels should be short (≤30 chars) — they're text on screen, not paragraphs
+    • EVERY scene MUST have `heading` (≤45 chars) AND `subtext` (≤70 chars)
+    • Labels inside `params` should be short (≤30 chars)
     • Output the recipe as VALID JSON inside ===RECIPE===
 
     ━━━ EXAMPLE ━━━
@@ -149,11 +173,42 @@ SYSTEM_PROMPT = textwrap.dedent(
     ===RECIPE===
     {{
       "scenes": [
-        {{"template": "intro_hero", "params": {{"title": "Photosynthesis", "subtitle": "Life from light", "color": "GREEN_C"}}}},
-        {{"template": "bio_cell_simple", "params": {{"label": "Plant cell", "color": "GREEN_C"}}}},
-        {{"template": "chem_reaction", "params": {{"reactants": "CO₂ + H₂O", "products": "Glucose + O₂", "color": "GOLD"}}}},
-        {{"template": "key_insight", "params": {{"label": "Light → Energy", "color": "YELLOW_C"}}}},
-        {{"template": "closing_takeaway", "params": {{"takeaway": "Every breath you take, a leaf made possible.", "color": "GREEN_C"}}}}
+        {{
+          "template": "intro_hero",
+          "heading": "Photosynthesis",
+          "subtext": "How plants turn sunlight into life itself",
+          "params": {{"title": "Photosynthesis", "subtitle": "Life from light", "color": "GREEN_C"}}
+        }},
+        {{
+          "template": "bio_cell_simple",
+          "heading": "Inside a Plant Cell",
+          "subtext": "Chloroplasts capture photons and start the reaction",
+          "params": {{"label": "Plant cell", "color": "GREEN_C"}}
+        }},
+        {{
+          "template": "chem_reaction",
+          "heading": "The Core Equation",
+          "subtext": "Carbon dioxide + water become glucose + oxygen",
+          "params": {{"reactants": "CO₂ + H₂O", "products": "Glucose + O₂", "color": "GOLD"}}
+        }},
+        {{
+          "template": "physics_wave_travel",
+          "heading": "Sunlight as Waves",
+          "subtext": "Photons in the visible spectrum drive the reaction",
+          "params": {{"label": "Visible light", "color": "YELLOW_C"}}
+        }},
+        {{
+          "template": "key_insight",
+          "heading": "Light → Energy",
+          "subtext": "Photons supply the energy that bonds the atoms together",
+          "params": {{"label": "Light → Energy", "color": "YELLOW_C"}}
+        }},
+        {{
+          "template": "closing_takeaway",
+          "heading": "Life Runs on Light",
+          "subtext": "Every breath you take, a leaf made possible",
+          "params": {{"takeaway": "Every breath you take, a leaf made possible.", "color": "GREEN_C"}}
+        }}
       ]
     }}
     """
@@ -223,9 +278,10 @@ async def generate_scene_code(
         TOPIC: {topic}
         {guidance}
 
-        Build a 5–6 scene premium video for this topic using ONLY the templates
-        listed in the system prompt. You MUST use exactly 5 or 6 scenes — never fewer.
+        Build a 6-scene premium video for this topic using ONLY the templates
+        listed in the system prompt. You MUST use exactly 6 scenes — never fewer.
         Pick subject-appropriate templates and use a DIFFERENT template for each scene.
+        Every scene MUST have a `heading` (big text on top) and `subtext` (caption).
         Write 200–240 words of natural voice-over narration that flows with the scenes.
 
         Output narration and recipe now.

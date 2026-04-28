@@ -3,20 +3,27 @@
 The LLM emits a recipe (JSON) like:
     {
       "scenes": [
-        {"template": "intro_hero", "params": {"title": "Photosynthesis", "color": "GREEN_C"}},
-        {"template": "bio_cell_simple", "params": {"label": "Plant cell"}},
-        {"template": "closing_takeaway", "params": {"takeaway": "Life is light."}}
+        {
+          "template": "intro_hero",
+          "heading": "DNA: The Code of Life",
+          "subtext": "Every cell carries this molecular library",
+          "params": {"title": "DNA", "color": "BLUE_D"}
+        },
+        ...
       ]
     }
 
-This module composes that recipe into a runnable Manim scene file.
+Each scene gets a slide-style wrapper: a big heading at the top + a caption at
+the bottom that stay on screen while the 3D template plays.  The wrapper also
+adds a 3-second hold so the visual lingers — viewers absorb what they're seeing
+before it fades to the next scene.
 """
 
 from __future__ import annotations
 
 import textwrap
 
-from templates import TEMPLATES
+from templates import TEMPLATES, _safe
 
 
 class RecipeError(ValueError):
@@ -33,6 +40,53 @@ _HEADER = textwrap.dedent('''
             self.set_camera_orientation(phi=70*DEGREES, theta=-45*DEGREES, distance=8)
             self.begin_ambient_camera_rotation(rate=0.10)
 ''').strip()
+
+
+def _wrap_slide(i: int, heading: str, subtext: str, template_body: str) -> str:
+    """Wrap a template body with heading + subtext + hold.
+
+    Layout (fixed in frame, doesn't rotate with camera):
+      ┌──────────────────────────────────┐
+      │   BIG HEADING (top, font 38)     │
+      │                                  │
+      │       [3D template visual]       │
+      │                                  │
+      │   subtext (bottom, font 20)      │
+      └──────────────────────────────────┘
+
+    Heading appears first, template plays, subtext appears mid-scene, then a 3s
+    hold lets the viewer absorb the visual before everything fades out.
+    """
+    heading = _safe(heading, "")
+    subtext = _safe(subtext, "")
+
+    # Unique mobject names per scene so they don't clash across scenes
+    h, s = f"slide_h_{i}", f"slide_s_{i}"
+
+    pre = textwrap.dedent(f'''
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # SLIDE {i}: {heading[:50]}
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        {h} = Text("{heading}", font_size=38, weight=BOLD, color=WHITE)
+        {h}.to_edge(UP, buff=0.18)
+        {s} = Text("{subtext}", font_size=22, color=GREY_B)
+        {s}.to_edge(DOWN, buff=0.22)
+        self.add_fixed_in_frame_mobjects({h}, {s})
+        {h}.set_opacity(0)
+        {s}.set_opacity(0)
+        # Heading + subtext fade in TOGETHER, before the visual builds.
+        # Both stay on screen while the template plays underneath.
+        self.play({h}.animate.set_opacity(1), {s}.animate.set_opacity(1), run_time=0.8)
+    ''').strip()
+
+    # After template plays, hold heading+subtext on screen for a beat, then fade.
+    # 4s hold lets the audience read while the camera keeps rotating.
+    post = textwrap.dedent(f'''
+        self.wait(4)
+        self.play(FadeOut({h}), FadeOut({s}), run_time=0.5)
+    ''').strip()
+
+    return pre + "\n" + template_body + "\n" + post
 
 
 def compose_scene(recipe: dict) -> str:
@@ -80,9 +134,14 @@ def compose_scene(recipe: dict) -> str:
                 f"Template '{tname}' failed with params {clean_params}: {e}"
             ) from e
 
-        body_blocks.append(textwrap.indent(block, "        "))
+        # Wrap the template with heading + subtext + hold
+        heading = scene.get("heading", "") or ""
+        subtext = scene.get("subtext", "") or ""
+        wrapped = _wrap_slide(i, heading, subtext, block)
+
+        body_blocks.append(textwrap.indent(wrapped, "        "))
 
     # Final wait — renderer auto-extends this to match audio length
-    body_blocks.append("        self.wait(6)")
+    body_blocks.append("        self.wait(4)")
 
     return _HEADER + "\n" + "\n\n".join(body_blocks) + "\n"
