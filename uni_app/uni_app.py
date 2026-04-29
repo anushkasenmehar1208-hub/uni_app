@@ -26322,6 +26322,12 @@ class LearnState(AppState):
         return bool(self.transcript) and not self.transcript_error
 
     @rx.var
+    def video_watch_url(self) -> str:
+        if not self.video_id:
+            return ""
+        return f"https://www.youtube.com/watch?v={self.video_id}"
+
+    @rx.var
     def chat_count(self) -> int:
         return len(self.chat_messages)
 
@@ -26562,12 +26568,21 @@ class LearnState(AppState):
             history = list(self.chat_messages)
 
         # Build LLM messages with the transcript as system context
+        if transcript:
+            transcript_section = (
+                "Use the transcript below to ground your answers — quote specifics when relevant. "
+                "If the answer isn't in the transcript, say so honestly and offer a general explanation.\n\n"
+                f"TRANSCRIPT:\n{youtube_utils.truncate_for_llm(transcript, 10000)}\n"
+            )
+        else:
+            transcript_section = (
+                "No transcript is available for this video. Answer based on your general knowledge, "
+                "but let the student know you don't have the specific video content to reference.\n"
+            )
         system = (
             "You are an expert tutor helping a student learn from a YouTube video. "
-            "Answer their questions clearly, accurately, and concisely (2-4 short paragraphs). "
-            "Use the transcript below to ground your answers — quote specifics when relevant. "
-            "If the answer isn't in the transcript, say so honestly and offer a general explanation.\n\n"
-            f"TRANSCRIPT:\n{youtube_utils.truncate_for_llm(transcript, 10000)}\n"
+            "Answer their questions clearly, accurately, and concisely (2-4 short paragraphs).\n\n"
+            + transcript_section
         )
         messages = [{"role": "system", "content": system}]
         for m in history[-10:]:
@@ -26856,63 +26871,241 @@ def _learn_url_card() -> rx.Component:
 
 
 def _learn_transcript_problem() -> rx.Component:
-    """Shown when transcript fetch fails. Lets the user paste a transcript manually."""
+    """Shown when transcript fetch fails — clean card with paste fallback and how-to guide."""
+    step_style = {
+        "background": "rgba(255,255,255,0.04)",
+        "border": "1px solid rgba(255,255,255,0.07)",
+        "border_radius": "8px",
+        "padding": "8px 12px",
+        "font_size": "0.8rem",
+        "color": "rgba(240,244,248,0.72)",
+        "line_height": "1.5",
+    }
     return rx.vstack(
-        rx.hstack(
-            rx.icon(tag="triangle_alert", size=14, color="rgba(250,204,21,0.85)"),
-            rx.text(
-                LearnState.transcript_error,
-                color="rgba(250,204,21,0.85)",
-                font_size="0.82rem",
-                line_height="1.5",
+        # ── Header ───────────────────────────────────────────────────
+        rx.box(
+            rx.hstack(
+                rx.icon(tag="triangle_alert", size=14, color="rgba(250,204,21,0.85)"),
+                rx.text(
+                    "Auto-transcript blocked by YouTube",
+                    color="rgba(250,204,21,0.9)",
+                    font_size="0.82rem",
+                    font_weight="600",
+                ),
+                spacing="2", align="center",
             ),
-            spacing="2",
-            align="start",
+            rx.text(
+                "Our server IP is on a cloud provider — YouTube blocks transcript access from those. "
+                "Paste the transcript manually and all AI features will work normally.",
+                color="rgba(240,244,248,0.55)",
+                font_size="0.78rem",
+                line_height="1.5",
+                margin_top="4px",
+            ),
+            padding="10px 12px",
+            background="rgba(250,204,21,0.05)",
+            border="1px solid rgba(250,204,21,0.15)",
+            border_radius="10px",
             width="100%",
         ),
+        # ── How-to steps ──────────────────────────────────────────────
+        rx.cond(
+            ~LearnState.transcript_paste_open,
+            rx.vstack(
+                rx.text(
+                    "How to get the transcript:",
+                    color="rgba(240,244,248,0.5)",
+                    font_size="0.75rem",
+                    font_weight="600",
+                    letter_spacing="0.05em",
+                    text_transform="uppercase",
+                ),
+                rx.vstack(
+                    rx.box(
+                        rx.hstack(
+                            rx.box(
+                                rx.text("1", color="rgba(250,204,21,0.9)", font_size="0.72rem", font_weight="700"),
+                                background="rgba(250,204,21,0.12)",
+                                border_radius="50%",
+                                width="20px",
+                                height="20px",
+                                display="flex",
+                                align_items="center",
+                                justify_content="center",
+                                flex_shrink="0",
+                            ),
+                            rx.text(
+                                "Open the video on YouTube (link below) → click the",
+                                color="rgba(240,244,248,0.72)",
+                                font_size="0.8rem",
+                            ),
+                            rx.box(
+                                rx.text("⋮", font_size="0.85rem", color="rgba(240,244,248,0.9)"),
+                                background="rgba(255,255,255,0.08)",
+                                border_radius="4px",
+                                padding="1px 6px",
+                            ),
+                            rx.text("menu below the video", color="rgba(240,244,248,0.72)", font_size="0.8rem"),
+                            spacing="2",
+                            align="center",
+                            flex_wrap="wrap",
+                        ),
+                        **step_style,
+                    ),
+                    rx.box(
+                        rx.hstack(
+                            rx.box(
+                                rx.text("2", color="rgba(250,204,21,0.9)", font_size="0.72rem", font_weight="700"),
+                                background="rgba(250,204,21,0.12)",
+                                border_radius="50%",
+                                width="20px",
+                                height="20px",
+                                display="flex",
+                                align_items="center",
+                                justify_content="center",
+                                flex_shrink="0",
+                            ),
+                            rx.text(
+                                'Select "Show transcript" → a panel opens on the right',
+                                color="rgba(240,244,248,0.72)",
+                                font_size="0.8rem",
+                            ),
+                            spacing="2", align="center",
+                        ),
+                        **step_style,
+                    ),
+                    rx.box(
+                        rx.hstack(
+                            rx.box(
+                                rx.text("3", color="rgba(250,204,21,0.9)", font_size="0.72rem", font_weight="700"),
+                                background="rgba(250,204,21,0.12)",
+                                border_radius="50%",
+                                width="20px",
+                                height="20px",
+                                display="flex",
+                                align_items="center",
+                                justify_content="center",
+                                flex_shrink="0",
+                            ),
+                            rx.text(
+                                "Select all the transcript text → Copy → Paste below",
+                                color="rgba(240,244,248,0.72)",
+                                font_size="0.8rem",
+                            ),
+                            spacing="2", align="center",
+                        ),
+                        **step_style,
+                    ),
+                    spacing="1",
+                    width="100%",
+                ),
+                # Open-on-YouTube link + paste button side-by-side
+                rx.hstack(
+                    rx.el.a(
+                        rx.hstack(
+                            rx.icon(tag="external_link", size=13),
+                            rx.text("Open on YouTube", font_size="0.8rem", font_weight="500"),
+                            spacing="1", align="center",
+                        ),
+                        href=LearnState.video_watch_url,
+                        target="_blank",
+                        rel="noopener noreferrer",
+                        style={
+                            "display": "inline-flex",
+                            "align_items": "center",
+                            "gap": "6px",
+                            "padding": "6px 12px",
+                            "border_radius": "8px",
+                            "background": "rgba(255,0,0,0.12)",
+                            "border": "1px solid rgba(255,80,80,0.3)",
+                            "color": "rgba(255,160,160,0.95)",
+                            "text_decoration": "none",
+                            "cursor": "pointer",
+                            "_hover": {"background": "rgba(255,0,0,0.2)"},
+                            "transition": "background 0.15s",
+                        },
+                    ),
+                    rx.button(
+                        rx.hstack(
+                            rx.icon(tag="clipboard_paste", size=13),
+                            rx.text("Paste transcript", font_weight="500", font_size="0.8rem"),
+                            spacing="1", align="center",
+                        ),
+                        on_click=LearnState.open_transcript_paste,
+                        size="2",
+                        style={
+                            "background": "rgba(250,204,21,0.1)",
+                            "border": "1px solid rgba(250,204,21,0.3)",
+                            "color": "rgba(250,204,21,0.95)",
+                            "border_radius": "8px",
+                            "padding": "6px 14px",
+                            "cursor": "pointer",
+                            "_hover": {"background": "rgba(250,204,21,0.18)"},
+                        },
+                    ),
+                    spacing="2",
+                    flex_wrap="wrap",
+                ),
+                spacing="2",
+                align="stretch",
+                width="100%",
+            ),
+        ),
+        # ── Paste area (expanded) ──────────────────────────────────────
         rx.cond(
             LearnState.transcript_paste_open,
             rx.vstack(
+                rx.text(
+                    "Paste the transcript text below:",
+                    color="rgba(240,244,248,0.65)",
+                    font_size="0.8rem",
+                    font_weight="500",
+                ),
                 rx.text_area(
-                    placeholder="Paste the video transcript here…",
+                    placeholder="Paste the transcript here — can be a YouTube transcript, your own notes, or any text about the video topic…",
                     value=LearnState.transcript_paste_draft,
                     on_change=LearnState.set_transcript_paste_draft,
                     rows="8",
                     style={
                         "background": "rgba(255,255,255,0.04)",
-                        "border": "1px solid rgba(255,255,255,0.08)",
+                        "border": "1px solid rgba(255,255,255,0.10)",
                         "color": "rgba(240,244,248,0.92)",
                         "border_radius": "10px",
-                        "font_size": "0.85rem",
-                        "padding": "10px",
+                        "font_size": "0.84rem",
+                        "padding": "10px 12px",
+                        "resize": "vertical",
+                        "_focus": {"border_color": "rgba(250,204,21,0.4)", "outline": "none"},
                     },
                     width="100%",
                 ),
                 rx.hstack(
                     rx.button(
-                        rx.text("Use this transcript", font_weight="600"),
+                        rx.hstack(
+                            rx.icon(tag="check", size=14),
+                            rx.text("Enable AI features", font_weight="600"),
+                            spacing="1", align="center",
+                        ),
                         on_click=LearnState.submit_transcript_paste,
-                        size="2",
                         style={
                             "background": "linear-gradient(135deg, rgba(52,211,153,0.95), rgba(34,197,94,0.95))",
                             "color": "#0a1f15",
                             "border": "none",
                             "border_radius": "8px",
-                            "padding": "6px 14px",
+                            "padding": "7px 16px",
                             "cursor": "pointer",
-                            "_hover": {"opacity": "0.92"},
+                            "font_size": "0.84rem",
+                            "_hover": {"opacity": "0.9"},
                         },
                     ),
                     rx.button(
-                        rx.text("Cancel", font_weight="500"),
+                        rx.text("Cancel", font_weight="500", font_size="0.82rem"),
                         on_click=LearnState.close_transcript_paste,
-                        size="2",
                         variant="ghost",
                         style={
-                            "color": "rgba(240,244,248,0.65)",
-                            "border": "1px solid rgba(255,255,255,0.08)",
+                            "color": "rgba(240,244,248,0.55)",
+                            "border": "1px solid rgba(255,255,255,0.07)",
                             "border_radius": "8px",
-                            "padding": "6px 14px",
+                            "padding": "7px 14px",
                             "_hover": {"background": "rgba(255,255,255,0.05)"},
                         },
                     ),
@@ -26922,30 +27115,14 @@ def _learn_transcript_problem() -> rx.Component:
                 align="stretch",
                 width="100%",
             ),
-            rx.button(
-                rx.hstack(
-                    rx.icon(tag="clipboard_paste", size=14),
-                    rx.text("Paste transcript manually", font_weight="500"),
-                    spacing="2", align="center",
-                ),
-                on_click=LearnState.open_transcript_paste,
-                size="2",
-                variant="ghost",
-                style={
-                    "color": "rgba(250,204,21,0.95)",
-                    "background": "rgba(250,204,21,0.05)",
-                    "border": "1px solid rgba(250,204,21,0.25)",
-                    "border_radius": "8px",
-                    "padding": "6px 12px",
-                    "cursor": "pointer",
-                    "_hover": {"background": "rgba(250,204,21,0.1)"},
-                    "align_self": "start",
-                },
-            ),
         ),
-        spacing="2",
+        spacing="3",
         align="stretch",
         width="100%",
+        padding="12px",
+        background="rgba(0,0,0,0.25)",
+        border="1px solid rgba(255,255,255,0.06)",
+        border_radius="12px",
     )
 
 
