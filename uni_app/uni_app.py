@@ -28790,7 +28790,9 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
-        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        # strict-origin-when-cross-origin: sends origin on cross-site requests
+        # (needed for YouTube iframe embeds — no-referrer breaks Error 153).
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")
         return response
@@ -28832,7 +28834,7 @@ gtag('config', 'G-H5G0QBSY2M');
         rx.el.link(rel="apple-touch-icon", sizes="180x180", href=APPLE_TOUCH_ICON),
         rx.el.link(rel="manifest", href=SITE_WEBMANIFEST),
         rx.el.meta(name="theme-color", content="#050506"),
-        rx.el.meta(name="referrer", content="no-referrer"),
+        rx.el.meta(name="referrer", content="strict-origin-when-cross-origin"),
         # Make the layout viewport shrink with the on-screen keyboard so
         # fixed/absolute elements stay anchored to the *visible* area
         # instead of being scrolled up by the browser. Supported on Android
@@ -28987,7 +28989,7 @@ async def google_callback(request: Request):
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="referrer" content="no-referrer">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="Cache-Control" content="no-store, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -29012,7 +29014,7 @@ async def google_callback(request: Request):
                 "Cache-Control": "no-store, max-age=0",
                 "Pragma": "no-cache",
                 "Expires": "0",
-                "Referrer-Policy": "no-referrer",
+                "Referrer-Policy": "strict-origin-when-cross-origin",
             },
         )
         response.delete_cookie(GOOGLE_STATE_COOKIE_NAME)
