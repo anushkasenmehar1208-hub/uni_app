@@ -26332,6 +26332,10 @@ class LearnState(AppState):
         return len(self.chat_messages)
 
     @rx.var
+    def can_send_chat(self) -> bool:
+        return bool((self.chat_input or "").strip()) and not self.chat_busy and bool(self.video_id)
+
+    @rx.var
     def quiz_score(self) -> str:
         if not self.quiz_questions:
             return ""
@@ -26346,6 +26350,10 @@ class LearnState(AppState):
     def set_chat_input(self, v: str): self.chat_input = v
     def set_note_draft(self, v: str): self.note_draft = v
     def set_active_tab(self, v: str): self.active_tab = v
+
+    def handle_chat_enter(self, key: str):
+        if key == "Enter" and self.can_send_chat:
+            return LearnState.send_chat
 
     def reset_session(self):
         """Clear current session — back to URL input."""
@@ -27396,6 +27404,7 @@ def _learn_chat_panel() -> rx.Component:
                 ),
                 value=LearnState.chat_input,
                 on_change=LearnState.set_chat_input,
+                on_key_up=LearnState.handle_chat_enter,
                 size="3",
                 style={
                     "background": "rgba(255,255,255,0.04)",
@@ -27408,7 +27417,7 @@ def _learn_chat_panel() -> rx.Component:
             rx.icon_button(
                 rx.icon(tag="send", size=16),
                 on_click=LearnState.send_chat,
-                disabled=LearnState.chat_busy | (LearnState.chat_input == ""),
+                disabled=~LearnState.can_send_chat,
                 size="3",
                 style={
                     "background": "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
