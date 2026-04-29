@@ -27127,9 +27127,16 @@ def _learn_transcript_problem() -> rx.Component:
 
 
 def _learn_video_player() -> rx.Component:
-    """Embedded YouTube iframe with premium framing."""
+    """Embedded YouTube iframe with error-detection overlay.
+
+    YouTube Error 150/151/153 = embedding disabled by video owner.
+    We detect this via postMessage and swap to a 'watch on YouTube' card
+    so the user isn't left staring at a broken player.
+    """
     return rx.box(
+        # ── The iframe ──────────────────────────────────────────────
         rx.el.iframe(
+            id="yt-learn-iframe",
             src=LearnState.video_url,
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
             allow_fullscreen=True,
@@ -27142,6 +27149,127 @@ def _learn_video_player() -> rx.Component:
                 "display": "block",
             },
         ),
+        # ── "Can't embed" overlay — hidden until JS reveals it ──────
+        rx.box(
+            rx.vstack(
+                rx.icon(tag="youtube", size=40, color="rgba(255,80,80,0.7)"),
+                rx.text(
+                    "This video can't be embedded",
+                    color="rgba(240,244,248,0.85)",
+                    font_size="1rem",
+                    font_weight="600",
+                    text_align="center",
+                ),
+                rx.text(
+                    "The video owner has disabled embedding. "
+                    "Watch it on YouTube while using AI features here.",
+                    color="rgba(240,244,248,0.5)",
+                    font_size="0.82rem",
+                    text_align="center",
+                    line_height="1.5",
+                    max_width="320px",
+                ),
+                rx.el.a(
+                    rx.hstack(
+                        rx.icon(tag="external_link", size=14),
+                        rx.text("Watch on YouTube", font_weight="600"),
+                        spacing="2", align="center",
+                    ),
+                    href=LearnState.video_watch_url,
+                    target="_blank",
+                    rel="noopener noreferrer",
+                    style={
+                        "display": "inline-flex",
+                        "align_items": "center",
+                        "gap": "8px",
+                        "padding": "10px 20px",
+                        "border_radius": "10px",
+                        "background": "rgba(255,0,0,0.18)",
+                        "border": "1px solid rgba(255,80,80,0.4)",
+                        "color": "rgba(255,160,160,0.95)",
+                        "text_decoration": "none",
+                        "margin_top": "8px",
+                        "_hover": {"background": "rgba(255,0,0,0.28)"},
+                        "transition": "background 0.15s",
+                    },
+                ),
+                rx.text(
+                    "✓ AI features (chat, quiz, guide) still work below",
+                    color="rgba(52,211,153,0.8)",
+                    font_size="0.78rem",
+                    text_align="center",
+                ),
+                spacing="3",
+                align="center",
+                padding="32px 24px",
+            ),
+            id="yt-embed-error-overlay",
+            display="none",   # JS sets this to "flex" on embed error
+            width="100%",
+            style={
+                "aspect_ratio": "16 / 9",
+                "border_radius": "14px",
+                "background": "rgba(0,0,0,0.6)",
+                "border": "1px solid rgba(255,80,80,0.2)",
+                "align_items": "center",
+                "justify_content": "center",
+                "flex_direction": "column",
+            },
+        ),
+        # ── "Watch on YouTube" link always visible below player ─────
+        rx.el.a(
+            rx.hstack(
+                rx.icon(tag="external_link", size=12),
+                rx.text("Open in YouTube", font_size="0.75rem"),
+                spacing="1", align="center",
+            ),
+            href=LearnState.video_watch_url,
+            target="_blank",
+            rel="noopener noreferrer",
+            style={
+                "display": "inline-flex",
+                "align_items": "center",
+                "gap": "5px",
+                "padding": "3px 8px",
+                "border_radius": "5px",
+                "color": "rgba(240,244,248,0.4)",
+                "text_decoration": "none",
+                "font_size": "0.72rem",
+                "margin_top": "4px",
+                "_hover": {"color": "rgba(240,244,248,0.7)"},
+            },
+        ),
+        # ── JavaScript: detect YouTube embed errors via postMessage ──
+        rx.script("""
+(function() {
+  function setupYTErrorDetect() {
+    window.addEventListener('message', function(e) {
+      if (e.origin !== 'https://www.youtube.com') return;
+      try {
+        var d = JSON.parse(typeof e.data === 'string' ? e.data : JSON.stringify(e.data));
+        var isError = false;
+        // Format 1: {event:"onError", info: 150|151|153}
+        if (d.event === 'onError' && [100, 101, 150, 151, 153].includes(d.info)) isError = true;
+        // Format 2: {event:"video-player-error", errorCode: 153}
+        if (d.event === 'video-player-error') isError = true;
+        // Format 3: info object with playerState -1 and errorCode
+        if (d.info && d.info.errorCode && [100, 101, 150, 151, 153].includes(d.info.errorCode)) isError = true;
+        if (isError) {
+          var iframe = document.getElementById('yt-learn-iframe');
+          var overlay = document.getElementById('yt-embed-error-overlay');
+          if (iframe) iframe.style.display = 'none';
+          if (overlay) overlay.style.display = 'flex';
+        }
+      } catch(ex) {}
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupYTErrorDetect);
+  } else {
+    setupYTErrorDetect();
+  }
+})();
+"""),
         width="100%",
         style={
             "border_radius": "16px",
