@@ -26288,6 +26288,9 @@ class LearnState(AppState):
     transcript: str = ""
     transcript_loading: bool = False
     transcript_error: str = ""
+    transcript_blocked: bool = False        # True when YouTube blocks server IP
+    transcript_paste_open: bool = False     # Whether the manual-paste UI is visible
+    transcript_paste_draft: str = ""        # The user's pasted transcript before save
 
     # ── Summary ───────────────────────────────────────────────
     summary: str = ""
@@ -26346,6 +26349,9 @@ class LearnState(AppState):
         self.session_id = 0
         self.transcript = ""
         self.transcript_error = ""
+        self.transcript_blocked = False
+        self.transcript_paste_open = False
+        self.transcript_paste_draft = ""
         self.summary = ""
         self.chat_messages = []
         self.chat_input = ""
@@ -26355,6 +26361,42 @@ class LearnState(AppState):
         self.notes_saved = False
         self.url_error = ""
         self.active_tab = "chat"
+
+    # ── Manual transcript paste fallback ─────────────────────
+    def set_transcript_paste_draft(self, v: str):
+        self.transcript_paste_draft = v
+
+    def open_transcript_paste(self):
+        self.transcript_paste_open = True
+
+    def close_transcript_paste(self):
+        self.transcript_paste_open = False
+        self.transcript_paste_draft = ""
+
+    def submit_transcript_paste(self):
+        text = (self.transcript_paste_draft or "").strip()
+        if len(text) < 30:
+            return  # too short to be useful
+        self.transcript = text
+        self.transcript_error = ""
+        self.transcript_blocked = False
+        self.transcript_paste_open = False
+        self.transcript_paste_draft = ""
+        self._persist_session_transcript()
+
+    def _persist_session_transcript(self):
+        sid = self.session_id
+        if not sid:
+            return
+        try:
+            with rx.session() as session:
+                row = session.get(LearnVideoSession, sid)
+                if row:
+                    row.transcript_cached = self.transcript or ""
+                    session.add(row)
+                    session.commit()
+        except Exception as e:
+            logger.error(f"transcript cache save error (manual): {e}")
 
     # ── Load a video (parse URL → fetch/load session row) ────
     @rx.event(background=True)
@@ -26437,21 +26479,38 @@ class LearnState(AppState):
             async with self:
                 self.transcript_loading = True
                 self.transcript_error = ""
+                self.transcript_blocked = False
             try:
                 # Run the sync transcript fetch in a thread
-                fetched = await asyncio.to_thread(youtube_utils.fetch_transcript, current_vid)
+                fetched, reason = await asyncio.to_thread(
+                    youtube_utils.fetch_transcript, current_vid
+                )
             except Exception as e:
-                fetched = None
+                fetched, reason = None, "unknown"
                 logger.warning(f"transcript fetch threw: {e}")
             async with self:
                 self.transcript_loading = False
                 if fetched:
                     self.transcript = fetched
                 else:
-                    self.transcript_error = (
-                        "No transcript available for this video — chat & quiz "
-                        "may be limited. Try a video with captions enabled."
-                    )
+                    if reason == "youtube_blocked":
+                        self.transcript_blocked = True
+                        self.transcript_error = (
+                            "YouTube is blocking transcript fetches from our server "
+                            "(common on cloud hosts). Paste the transcript below to enable AI features."
+                        )
+                    elif reason == "no_transcript":
+                        self.transcript_error = (
+                            "This video doesn't have captions. Paste a transcript "
+                            "yourself below, or pick a video with captions enabled."
+                        )
+                    elif reason == "video_unavailable":
+                        self.transcript_error = "This video is unavailable or private."
+                    else:
+                        self.transcript_error = (
+                            "Couldn't load the transcript. Paste it below to "
+                            "enable chat, summary, and quiz."
+                        )
 
             # Save transcript to session row
             if fetched and current_sid:
@@ -26793,6 +26852,100 @@ def _learn_url_card() -> rx.Component:
             "border_radius": "20px",
             "box_shadow": "0 30px 80px -40px rgba(0,0,0,0.6)",
         },
+    )
+
+
+def _learn_transcript_problem() -> rx.Component:
+    """Shown when transcript fetch fails. Lets the user paste a transcript manually."""
+    return rx.vstack(
+        rx.hstack(
+            rx.icon(tag="triangle_alert", size=14, color="rgba(250,204,21,0.85)"),
+            rx.text(
+                LearnState.transcript_error,
+                color="rgba(250,204,21,0.85)",
+                font_size="0.82rem",
+                line_height="1.5",
+            ),
+            spacing="2",
+            align="start",
+            width="100%",
+        ),
+        rx.cond(
+            LearnState.transcript_paste_open,
+            rx.vstack(
+                rx.text_area(
+                    placeholder="Paste the video transcript here…",
+                    value=LearnState.transcript_paste_draft,
+                    on_change=LearnState.set_transcript_paste_draft,
+                    rows="8",
+                    style={
+                        "background": "rgba(255,255,255,0.04)",
+                        "border": "1px solid rgba(255,255,255,0.08)",
+                        "color": "rgba(240,244,248,0.92)",
+                        "border_radius": "10px",
+                        "font_size": "0.85rem",
+                        "padding": "10px",
+                    },
+                    width="100%",
+                ),
+                rx.hstack(
+                    rx.button(
+                        rx.text("Use this transcript", font_weight="600"),
+                        on_click=LearnState.submit_transcript_paste,
+                        size="2",
+                        style={
+                            "background": "linear-gradient(135deg, rgba(52,211,153,0.95), rgba(34,197,94,0.95))",
+                            "color": "#0a1f15",
+                            "border": "none",
+                            "border_radius": "8px",
+                            "padding": "6px 14px",
+                            "cursor": "pointer",
+                            "_hover": {"opacity": "0.92"},
+                        },
+                    ),
+                    rx.button(
+                        rx.text("Cancel", font_weight="500"),
+                        on_click=LearnState.close_transcript_paste,
+                        size="2",
+                        variant="ghost",
+                        style={
+                            "color": "rgba(240,244,248,0.65)",
+                            "border": "1px solid rgba(255,255,255,0.08)",
+                            "border_radius": "8px",
+                            "padding": "6px 14px",
+                            "_hover": {"background": "rgba(255,255,255,0.05)"},
+                        },
+                    ),
+                    spacing="2",
+                ),
+                spacing="2",
+                align="stretch",
+                width="100%",
+            ),
+            rx.button(
+                rx.hstack(
+                    rx.icon(tag="clipboard_paste", size=14),
+                    rx.text("Paste transcript manually", font_weight="500"),
+                    spacing="2", align="center",
+                ),
+                on_click=LearnState.open_transcript_paste,
+                size="2",
+                variant="ghost",
+                style={
+                    "color": "rgba(250,204,21,0.95)",
+                    "background": "rgba(250,204,21,0.05)",
+                    "border": "1px solid rgba(250,204,21,0.25)",
+                    "border_radius": "8px",
+                    "padding": "6px 12px",
+                    "cursor": "pointer",
+                    "_hover": {"background": "rgba(250,204,21,0.1)"},
+                    "align_self": "start",
+                },
+            ),
+        ),
+        spacing="2",
+        align="stretch",
+        width="100%",
     )
 
 
@@ -27463,12 +27616,7 @@ def _learn_session_view() -> rx.Component:
                 ),
                 rx.cond(
                     LearnState.transcript_error != "",
-                    rx.text(
-                        LearnState.transcript_error,
-                        color="rgba(250,204,21,0.85)",
-                        font_size="0.82rem",
-                        line_height="1.4",
-                    ),
+                    _learn_transcript_problem(),
                     rx.cond(
                         LearnState.has_transcript,
                         rx.hstack(

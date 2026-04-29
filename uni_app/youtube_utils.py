@@ -85,42 +85,94 @@ def thumbnail_url(video_id: str) -> str:
     return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
 
 
-def fetch_transcript(video_id: str, lang_priority: tuple[str, ...] = ("en", "en-US", "en-GB")) -> Optional[str]:
+def _build_proxy_config():
+    """Build a youtube-transcript-api proxy config from env vars, if set.
+
+    Supports:
+      - YOUTUBE_TRANSCRIPT_PROXY_URL: a single http(s) proxy URL
+      - WEBSHARE_PROXY_USERNAME + WEBSHARE_PROXY_PASSWORD: Webshare residential
+        proxy auth (the library has built-in support)
+
+    Returns a ProxyConfig instance the api accepts, or None.
+    """
+    import os
+    try:
+        from youtube_transcript_api.proxies import GenericProxyConfig, WebshareProxyConfig
+    except Exception:
+        return None
+
+    ws_user = os.getenv("WEBSHARE_PROXY_USERNAME", "").strip()
+    ws_pass = os.getenv("WEBSHARE_PROXY_PASSWORD", "").strip()
+    if ws_user and ws_pass:
+        try:
+            return WebshareProxyConfig(proxy_username=ws_user, proxy_password=ws_pass)
+        except Exception as e:
+            logger.warning(f"WebshareProxyConfig init failed: {e}")
+
+    proxy_url = os.getenv("YOUTUBE_TRANSCRIPT_PROXY_URL", "").strip()
+    if proxy_url:
+        try:
+            return GenericProxyConfig(http_url=proxy_url, https_url=proxy_url)
+        except Exception as e:
+            logger.warning(f"GenericProxyConfig init failed: {e}")
+
+    return None
+
+
+def fetch_transcript(video_id: str, lang_priority: tuple[str, ...] = ("en", "en-US", "en-GB")) -> tuple[Optional[str], str]:
     """Fetch the transcript as a single plain-text string.
 
-    Tries languages in priority order, then falls back to whatever's available
-    (auto-generated included). Returns None if no transcript exists or the
-    library isn't installed.
+    Returns (text, reason). On success: (text, ""). On failure: (None, reason)
+    where `reason` is a short human-readable explanation suitable for showing
+    to the user (e.g. "youtube_blocked", "no_transcript", "unknown").
+
+    Tries languages in priority order, then falls back to any available track.
+    Honours proxy config from env vars (see _build_proxy_config).
     """
     try:
         from youtube_transcript_api import YouTubeTranscriptApi
     except ImportError:
         logger.warning("youtube-transcript-api not installed; transcripts disabled")
-        return None
+        return None, "library_missing"
+
+    proxy_config = _build_proxy_config()
 
     try:
-        # New API: instance-based, returns FetchedTranscript
-        api = YouTubeTranscriptApi()
+        api = YouTubeTranscriptApi(proxy_config=proxy_config) if proxy_config else YouTubeTranscriptApi()
         try:
             fetched = api.fetch(video_id, languages=list(lang_priority))
-        except Exception:
-            # Last resort — list available, take the first
-            transcript_list = api.list(video_id)
-            available = list(transcript_list)
-            if not available:
-                return None
-            fetched = available[0].fetch()
+        except Exception as inner:
+            # Last resort — list available tracks and take the first
+            try:
+                transcript_list = api.list(video_id)
+                available = list(transcript_list)
+                if not available:
+                    return None, "no_transcript"
+                fetched = available[0].fetch()
+            except Exception:
+                raise inner
 
-        # FetchedTranscript supports iteration; each item has .text
         parts: list[str] = []
         for snippet in fetched:
             text = getattr(snippet, "text", None) or (snippet.get("text") if isinstance(snippet, dict) else None)
             if text:
                 parts.append(text.strip())
-        return " ".join(parts).strip() or None
+        joined = " ".join(parts).strip()
+        if joined:
+            return joined, ""
+        return None, "empty_transcript"
     except Exception as e:
-        logger.info(f"transcript fetch failed for {video_id}: {e}")
-        return None
+        msg = str(e).lower()
+        if "blocking" in msg or "blocked" in msg or "ipblocked" in msg or "requestblocked" in msg:
+            reason = "youtube_blocked"
+        elif "transcriptsdisabled" in msg or "no transcripts" in msg:
+            reason = "no_transcript"
+        elif "videounavailable" in msg or "video unavailable" in msg:
+            reason = "video_unavailable"
+        else:
+            reason = "unknown"
+        logger.info(f"transcript fetch failed for {video_id} ({reason}): {e!r}"[:400])
+        return None, reason
 
 
 def truncate_for_llm(text: str, max_chars: int = 12000) -> str:
