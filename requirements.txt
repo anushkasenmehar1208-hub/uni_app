@@ -14,3 +14,4 @@ ddgs
 dodopayments[webhooks]
 markdown>=3.5
 nh3>=0.2.18
+youtube-transcript-api>=0.6.2

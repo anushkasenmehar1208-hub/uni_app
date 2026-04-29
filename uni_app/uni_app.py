@@ -87,6 +87,7 @@ from .alex_openrouter_prompts import (
     ALEX_UNIFIED_TEACHING_FORMAT_V1,
 )
 from . import alex_routing
+from . import youtube_utils
 
 APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Asia/Colombo").strip() or "Asia/Colombo"
 
@@ -4201,6 +4202,23 @@ class StudentNote(rx.Model, table=True):  # type: ignore
     body: str = Field(default="", nullable=False)
     attachments_json: str = Field(default="[]", nullable=False)
     source_message_db_id: int = Field(default=0, nullable=False)
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    )
+    updated_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    )
+
+
+class LearnVideoSession(rx.Model, table=True):  # type: ignore
+    """One row per (user, YouTube video) — caches transcript, summary, chat, quiz."""
+    user_id: int = Field(index=True, nullable=False)
+    video_id: str = Field(index=True, default="", nullable=False)  # 11-char YouTube ID
+    title: str = Field(default="", nullable=False)                 # User-supplied or autodetected
+    transcript_cached: str = Field(default="", nullable=False)     # Plain-text transcript
+    summary_cached: str = Field(default="", nullable=False)        # NotebookLM-style overview
+    chat_history_json: str = Field(default="[]", nullable=False)   # JSON list of {role, content, ts}
+    quiz_json: str = Field(default="", nullable=False)             # Cached quiz JSON
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
@@ -21411,7 +21429,7 @@ def nav_rail() -> rx.Component:
         _nav_rail_btn("search", AppState.toggle_global_search),
         _nav_rail_btn("notebook", AppState.toggle_notes_panel),
         _nav_rail_btn("list_checks", rx.redirect("/tracker")),
-        _nav_rail_btn("clapperboard", rx.redirect("/video")),
+        _nav_rail_btn("youtube", rx.redirect("/learn")),
         rx.spacer(),
         # ── Bottom group ──
         _nav_rail_btn("settings", rx.redirect("/settings")),
@@ -26230,6 +26248,1327 @@ def tracker_page():
 
 
 # ============================================================
+# /learn — YouTube-powered learning hub (embed + AI chat + quiz + notes)
+# ============================================================
+
+
+class LearnState(AppState):
+    """State for the /learn page — paste a YouTube URL, get an AI-powered study session."""
+
+    # ── Form ──────────────────────────────────────────────────
+    url_input: str = ""
+    url_error: str = ""
+
+    # ── Loaded video ──────────────────────────────────────────
+    video_id: str = ""
+    video_url: str = ""        # canonical embed URL
+    video_title: str = ""
+
+    # ── Active session row id (for the LearnVideoSession table) ──
+    session_id: int = 0
+
+    # ── Transcript ────────────────────────────────────────────
+    transcript: str = ""
+    transcript_loading: bool = False
+    transcript_error: str = ""
+
+    # ── Summary ───────────────────────────────────────────────
+    summary: str = ""
+    summary_loading: bool = False
+
+    # ── Chat ──────────────────────────────────────────────────
+    chat_messages: list[dict] = []   # [{role: 'user'|'assistant', content: str, ts: int}]
+    chat_input: str = ""
+    chat_busy: bool = False
+
+    # ── Quiz ──────────────────────────────────────────────────
+    quiz_questions: list[dict] = []  # [{q: str, choices: [str], answer: int, explain: str, picked: int}]
+    quiz_loading: bool = False
+    quiz_revealed: bool = False
+
+    # ── Notes (AI suggestions + user-editable) ───────────────
+    note_draft: str = ""
+    notes_saved: bool = False        # Flash flag after saving
+
+    # ── Active right-panel tab: chat | summary | quiz | notes ──
+    active_tab: str = "chat"
+
+    @rx.var
+    def has_video(self) -> bool:
+        return bool(self.video_id)
+
+    @rx.var
+    def has_transcript(self) -> bool:
+        return bool(self.transcript) and not self.transcript_error
+
+    @rx.var
+    def chat_count(self) -> int:
+        return len(self.chat_messages)
+
+    @rx.var
+    def quiz_score(self) -> str:
+        if not self.quiz_questions:
+            return ""
+        correct = sum(
+            1 for q in self.quiz_questions
+            if q.get("picked", -1) == q.get("answer", -2)
+        )
+        return f"{correct}/{len(self.quiz_questions)}"
+
+    # ── Setters ──────────────────────────────────────────────
+    def set_url_input(self, v: str): self.url_input = v
+    def set_chat_input(self, v: str): self.chat_input = v
+    def set_note_draft(self, v: str): self.note_draft = v
+    def set_active_tab(self, v: str): self.active_tab = v
+
+    def reset_session(self):
+        """Clear current session — back to URL input."""
+        self.video_id = ""
+        self.video_url = ""
+        self.video_title = ""
+        self.session_id = 0
+        self.transcript = ""
+        self.transcript_error = ""
+        self.summary = ""
+        self.chat_messages = []
+        self.chat_input = ""
+        self.quiz_questions = []
+        self.quiz_revealed = False
+        self.note_draft = ""
+        self.notes_saved = False
+        self.url_error = ""
+        self.active_tab = "chat"
+
+    # ── Load a video (parse URL → fetch/load session row) ────
+    @rx.event(background=True)
+    async def load_video(self):
+        async with self:
+            url = (self.url_input or "").strip()
+            if not url:
+                self.url_error = "Paste a YouTube link first."
+                return
+            vid = youtube_utils.extract_video_id(url)
+            if not vid:
+                self.url_error = "That doesn't look like a YouTube link."
+                return
+            self.url_error = ""
+            self.video_id = vid
+            self.video_url = youtube_utils.embed_url(vid)
+            self.video_title = ""
+            self.transcript = ""
+            self.summary = ""
+            self.chat_messages = []
+            self.quiz_questions = []
+            self.quiz_revealed = False
+            self.note_draft = ""
+            self.notes_saved = False
+            self.active_tab = "chat"
+            uid = self._uid()
+
+        if uid < 0:
+            return
+
+        # Load or create the session row
+        try:
+            with rx.session() as session:
+                row = session.exec(
+                    select(LearnVideoSession)
+                    .where(LearnVideoSession.user_id == uid)
+                    .where(LearnVideoSession.video_id == vid)
+                    .limit(1)
+                ).first()
+                if row is None:
+                    row = LearnVideoSession(
+                        user_id=uid,
+                        video_id=vid,
+                        title="",
+                        transcript_cached="",
+                        summary_cached="",
+                        chat_history_json="[]",
+                        quiz_json="",
+                    )
+                    session.add(row)
+                    session.commit()
+                    session.refresh(row)
+                # Load cached state
+                async with self:
+                    self.session_id = row.id or 0
+                    self.video_title = row.title or ""
+                    self.transcript = row.transcript_cached or ""
+                    self.summary = row.summary_cached or ""
+                    try:
+                        self.chat_messages = json.loads(row.chat_history_json or "[]")
+                    except Exception:
+                        self.chat_messages = []
+                    try:
+                        if row.quiz_json:
+                            qd = json.loads(row.quiz_json)
+                            if isinstance(qd, list):
+                                self.quiz_questions = qd
+                    except Exception:
+                        self.quiz_questions = []
+        except Exception as e:
+            logger.error(f"load_video session error: {e}")
+
+        # If no transcript cached, fetch it now
+        async with self:
+            need_transcript = not self.transcript
+            current_vid = self.video_id
+            current_sid = self.session_id
+
+        if need_transcript and current_vid:
+            async with self:
+                self.transcript_loading = True
+                self.transcript_error = ""
+            try:
+                # Run the sync transcript fetch in a thread
+                fetched = await asyncio.to_thread(youtube_utils.fetch_transcript, current_vid)
+            except Exception as e:
+                fetched = None
+                logger.warning(f"transcript fetch threw: {e}")
+            async with self:
+                self.transcript_loading = False
+                if fetched:
+                    self.transcript = fetched
+                else:
+                    self.transcript_error = (
+                        "No transcript available for this video — chat & quiz "
+                        "may be limited. Try a video with captions enabled."
+                    )
+
+            # Save transcript to session row
+            if fetched and current_sid:
+                try:
+                    with rx.session() as session:
+                        row = session.get(LearnVideoSession, current_sid)
+                        if row:
+                            row.transcript_cached = fetched
+                            session.add(row)
+                            session.commit()
+                except Exception as e:
+                    logger.error(f"transcript cache save error: {e}")
+
+    # ── Persist state to DB row ──────────────────────────────
+    def _persist_session(self, *, chat: bool = False, summary: bool = False, quiz: bool = False):
+        """Best-effort save of the in-memory state to the session row."""
+        sid = self.session_id
+        if not sid:
+            return
+        try:
+            with rx.session() as session:
+                row = session.get(LearnVideoSession, sid)
+                if row is None:
+                    return
+                if chat:
+                    row.chat_history_json = json.dumps(self.chat_messages or [])
+                if summary:
+                    row.summary_cached = self.summary or ""
+                if quiz:
+                    row.quiz_json = json.dumps(self.quiz_questions or [])
+                session.add(row)
+                session.commit()
+        except Exception as e:
+            logger.error(f"learn session persist error: {e}")
+
+    # ── AI: send a chat message ──────────────────────────────
+    @rx.event(background=True)
+    async def send_chat(self):
+        async with self:
+            user_msg = (self.chat_input or "").strip()
+            if not user_msg or self.chat_busy or not self.video_id:
+                return
+            self.chat_busy = True
+            self.chat_input = ""
+            self.chat_messages = self.chat_messages + [
+                {"role": "user", "content": user_msg, "ts": int(time.time())}
+            ]
+            transcript = self.transcript
+            history = list(self.chat_messages)
+
+        # Build LLM messages with the transcript as system context
+        system = (
+            "You are an expert tutor helping a student learn from a YouTube video. "
+            "Answer their questions clearly, accurately, and concisely (2-4 short paragraphs). "
+            "Use the transcript below to ground your answers — quote specifics when relevant. "
+            "If the answer isn't in the transcript, say so honestly and offer a general explanation.\n\n"
+            f"TRANSCRIPT:\n{youtube_utils.truncate_for_llm(transcript, 10000)}\n"
+        )
+        messages = [{"role": "system", "content": system}]
+        for m in history[-10:]:
+            messages.append({"role": m["role"], "content": m["content"]})
+
+        try:
+            resp = await asyncio.to_thread(
+                _openrouter_complete, OPENROUTER_TEACHER_MODEL, messages, 1024, 0.5
+            )
+            reply = (resp.text or "").strip() or "I couldn't think of an answer just now."
+        except Exception as e:
+            reply = f"Couldn't reach the AI: {e}"
+
+        async with self:
+            self.chat_messages = self.chat_messages + [
+                {"role": "assistant", "content": reply, "ts": int(time.time())}
+            ]
+            self.chat_busy = False
+            self._persist_session(chat=True)
+
+    # ── AI: generate NotebookLM-style summary ────────────────
+    @rx.event(background=True)
+    async def generate_summary(self):
+        async with self:
+            if self.summary_loading or not self.video_id:
+                return
+            if not self.transcript:
+                self.summary = "No transcript available — can't summarize this video."
+                return
+            self.summary_loading = True
+            transcript = self.transcript
+
+        system = (
+            "You are creating a comprehensive study guide for a YouTube video, "
+            "in the style of Google's NotebookLM. Output well-formatted Markdown with:\n\n"
+            "1. **TL;DR** — one or two sentences capturing the core point.\n"
+            "2. **Key concepts** — 4-7 bulleted concepts, each with a short explanation.\n"
+            "3. **Detailed walkthrough** — 3-5 paragraphs explaining the content in order.\n"
+            "4. **Why it matters** — 2-3 sentences on real-world relevance or applications.\n"
+            "5. **Things to remember** — 3-5 punchy takeaways.\n\n"
+            "Be accurate, clear, and aim for the level of a strong textbook."
+        )
+        user = f"Generate the study guide for this video transcript:\n\n{youtube_utils.truncate_for_llm(transcript, 10000)}"
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+        try:
+            resp = await asyncio.to_thread(_openrouter_complete, OPENROUTER_TEACHER_MODEL, messages, 1800, 0.4)
+            text = (resp.text or "").strip() or "Couldn't generate a summary right now."
+        except Exception as e:
+            text = f"Couldn't reach the AI: {e}"
+
+        async with self:
+            self.summary = text
+            self.summary_loading = False
+            self._persist_session(summary=True)
+
+    # ── AI: generate a 5-question multiple-choice quiz ──────
+    @rx.event(background=True)
+    async def generate_quiz(self):
+        async with self:
+            if self.quiz_loading or not self.video_id:
+                return
+            if not self.transcript:
+                self.quiz_questions = []
+                return
+            self.quiz_loading = True
+            self.quiz_revealed = False
+            transcript = self.transcript
+
+        system = (
+            "You are creating a 5-question multiple-choice quiz to test understanding "
+            "of a YouTube video. Output ONLY valid JSON in this exact shape:\n\n"
+            "{\n"
+            "  \"questions\": [\n"
+            "    {\"q\": \"question text?\", \"choices\": [\"A\", \"B\", \"C\", \"D\"], \"answer\": 0, \"explain\": \"why A is right\"},\n"
+            "    ...\n"
+            "  ]\n"
+            "}\n\n"
+            "Rules:\n"
+            "- Exactly 5 questions.\n"
+            "- 4 choices per question.\n"
+            "- 'answer' is the 0-based index of the correct choice.\n"
+            "- 'explain' is one short sentence.\n"
+            "- Test conceptual understanding, not trivia.\n"
+            "- Output ONLY the JSON, no surrounding text."
+        )
+        user = f"Generate the quiz from this transcript:\n\n{youtube_utils.truncate_for_llm(transcript, 9000)}"
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+        questions: list[dict] = []
+        try:
+            resp = await asyncio.to_thread(_openrouter_complete, OPENROUTER_TEACHER_MODEL, messages, 1500, 0.3)
+            raw = (resp.text or "").strip()
+            # Extract JSON object even if wrapped in fences/commentary
+            m = re.search(r"\{[\s\S]*\}", raw)
+            if m:
+                data = json.loads(m.group(0))
+                qs = data.get("questions") if isinstance(data, dict) else None
+                if isinstance(qs, list):
+                    for q in qs[:5]:
+                        if not isinstance(q, dict):
+                            continue
+                        text_q = str(q.get("q", "")).strip()
+                        choices = q.get("choices") or []
+                        if not isinstance(choices, list) or len(choices) != 4:
+                            continue
+                        ans = int(q.get("answer", 0))
+                        if ans < 0 or ans > 3:
+                            ans = 0
+                        questions.append({
+                            "q": text_q,
+                            "choices": [str(c) for c in choices],
+                            "answer": ans,
+                            "explain": str(q.get("explain", "")).strip(),
+                            "picked": -1,
+                        })
+        except Exception as e:
+            logger.warning(f"quiz parse error: {e}")
+
+        async with self:
+            self.quiz_questions = questions
+            self.quiz_loading = False
+            self._persist_session(quiz=True)
+
+    def quiz_pick(self, q_index: int, choice_index: int):
+        """User picks an answer for question q_index."""
+        if q_index < 0 or q_index >= len(self.quiz_questions):
+            return
+        new_qs = list(self.quiz_questions)
+        q = dict(new_qs[q_index])
+        q["picked"] = int(choice_index)
+        new_qs[q_index] = q
+        self.quiz_questions = new_qs
+
+    def quiz_reveal(self):
+        self.quiz_revealed = True
+        self._persist_session(quiz=True)
+
+    def quiz_reset(self):
+        if not self.quiz_questions:
+            return
+        new_qs = []
+        for q in self.quiz_questions:
+            qq = dict(q)
+            qq["picked"] = -1
+            new_qs.append(qq)
+        self.quiz_questions = new_qs
+        self.quiz_revealed = False
+        self._persist_session(quiz=True)
+
+    # ── AI: copy last assistant reply into the note draft ──
+    def copy_last_reply_to_note(self):
+        for m in reversed(self.chat_messages):
+            if m.get("role") == "assistant":
+                addition = (m.get("content") or "").strip()
+                if not addition:
+                    return
+                if self.note_draft.strip():
+                    self.note_draft = self.note_draft.rstrip() + "\n\n" + addition
+                else:
+                    self.note_draft = addition
+                self.active_tab = "notes"
+                return
+
+    def copy_summary_to_note(self):
+        if not self.summary.strip():
+            return
+        if self.note_draft.strip():
+            self.note_draft = self.note_draft.rstrip() + "\n\n" + self.summary
+        else:
+            self.note_draft = self.summary
+        self.active_tab = "notes"
+
+    # ── Save current note draft into the StudentNote workspace ──
+    def save_note_to_workspace(self):
+        text = (self.note_draft or "").strip()
+        if not text:
+            return
+        uid = self._uid()
+        if uid < 0:
+            return
+        title = (self.video_title or f"YouTube — {self.video_id}").strip()[:120]
+        # Add the source link at the bottom of the note
+        source = f"\n\n---\nSource: https://www.youtube.com/watch?v={self.video_id}"
+        body = text + source
+        try:
+            with rx.session() as session:
+                row = StudentNote(
+                    user_id=uid,
+                    scope=f"learn:{self.video_id}",  # Distinguishable scope
+                    title=title,
+                    body=body,
+                    attachments_json="[]",
+                    source_message_db_id=0,
+                )
+                session.add(row)
+                session.commit()
+            self.notes_saved = True
+        except Exception as e:
+            logger.error(f"save_note_to_workspace error: {e}")
+            self.notes_saved = False
+
+    def clear_notes_saved_flash(self):
+        self.notes_saved = False
+
+
+# ──────────────────────────────────────────────────────────────────
+# /learn page UI
+# ──────────────────────────────────────────────────────────────────
+
+
+def _learn_url_card() -> rx.Component:
+    """Empty state — paste a URL to get started."""
+    return rx.vstack(
+        rx.hstack(
+            rx.icon(tag="youtube", size=28, color="rgba(244,63,94,0.95)"),
+            rx.heading(
+                "Learn from any YouTube video",
+                size="6",
+                color="rgba(240,244,248,0.95)",
+                font_weight="700",
+            ),
+            spacing="3", align="center",
+        ),
+        rx.text(
+            "Paste a YouTube link. Get an AI study guide, ask questions, take a quiz, and save notes.",
+            color="rgba(240,244,248,0.6)",
+            font_size="0.95rem",
+        ),
+        rx.input(
+            placeholder="https://www.youtube.com/watch?v=…",
+            value=LearnState.url_input,
+            on_change=LearnState.set_url_input,
+            size="3",
+            style={
+                "background": "rgba(255,255,255,0.04)",
+                "border": "1px solid rgba(255,255,255,0.10)",
+                "color": "rgba(240,244,248,0.95)",
+                "border_radius": "10px",
+                "font_size": "0.95rem",
+            },
+            width="100%",
+        ),
+        rx.cond(
+            LearnState.url_error != "",
+            rx.text(LearnState.url_error, color="rgba(248,113,113,0.95)", font_size="0.85rem"),
+            rx.fragment(),
+        ),
+        rx.button(
+            rx.hstack(
+                rx.icon(tag="sparkles", size=16),
+                rx.text("Open with AI", font_size="0.95rem", font_weight="600"),
+                spacing="2", align="center",
+            ),
+            on_click=LearnState.load_video,
+            size="3",
+            style={
+                "background": "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
+                "color": "white",
+                "border": "none",
+                "border_radius": "10px",
+                "padding": "10px 22px",
+                "cursor": "pointer",
+                "font_weight": "600",
+                "_hover": {"opacity": "0.92"},
+            },
+            width="100%",
+        ),
+        rx.text(
+            "Tip: works with regular videos, Shorts, and embed links.",
+            color="rgba(240,244,248,0.4)",
+            font_size="0.8rem",
+        ),
+        spacing="4",
+        align="stretch",
+        width="100%",
+        max_width="640px",
+        padding="36px",
+        style={
+            "background": "rgba(255,255,255,0.02)",
+            "border": "1px solid rgba(255,255,255,0.08)",
+            "border_radius": "20px",
+            "box_shadow": "0 30px 80px -40px rgba(0,0,0,0.6)",
+        },
+    )
+
+
+def _learn_video_player() -> rx.Component:
+    """Embedded YouTube iframe with premium framing."""
+    return rx.box(
+        rx.el.iframe(
+            src=LearnState.video_url,
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+            allow_fullscreen=True,
+            style={
+                "width": "100%",
+                "aspect_ratio": "16 / 9",
+                "border": "0",
+                "border_radius": "14px",
+                "background": "#000",
+                "display": "block",
+            },
+        ),
+        width="100%",
+        style={
+            "border_radius": "16px",
+            "background": "linear-gradient(135deg, rgba(244,63,94,0.06), rgba(99,102,241,0.06))",
+            "padding": "8px",
+            "box_shadow": "0 30px 70px -40px rgba(244,63,94,0.45)",
+        },
+    )
+
+
+def _chat_message(msg: rx.Var) -> rx.Component:
+    is_user = msg["role"] == "user"
+    return rx.box(
+        rx.hstack(
+            rx.cond(
+                is_user,
+                rx.fragment(),
+                rx.box(
+                    rx.text("AI", font_size="0.7rem", font_weight="700", color="white"),
+                    width="28px", height="28px",
+                    border_radius="50%",
+                    background="linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    flex_shrink="0",
+                ),
+            ),
+            rx.box(
+                rx.text(
+                    msg["content"],
+                    color="rgba(240,244,248,0.95)",
+                    font_size="0.92rem",
+                    line_height="1.55",
+                    white_space="pre-wrap",
+                ),
+                padding="10px 14px",
+                style={
+                    "background": rx.cond(
+                        is_user,
+                        "rgba(99,102,241,0.18)",
+                        "rgba(255,255,255,0.04)",
+                    ),
+                    "border": rx.cond(
+                        is_user,
+                        "1px solid rgba(99,102,241,0.35)",
+                        "1px solid rgba(255,255,255,0.06)",
+                    ),
+                    "border_radius": "12px",
+                    "max_width": "78%",
+                },
+            ),
+            rx.cond(
+                is_user,
+                rx.box(
+                    rx.text("YOU", font_size="0.6rem", font_weight="700", color="white"),
+                    width="28px", height="28px",
+                    border_radius="50%",
+                    background="rgba(99,102,241,0.7)",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    flex_shrink="0",
+                ),
+                rx.fragment(),
+            ),
+            spacing="2",
+            align="start",
+            width="100%",
+            justify=rx.cond(is_user, "end", "start"),
+        ),
+        width="100%",
+        margin_bottom="12px",
+    )
+
+
+def _learn_chat_panel() -> rx.Component:
+    return rx.vstack(
+        rx.box(
+            rx.cond(
+                LearnState.chat_count == 0,
+                rx.vstack(
+                    rx.icon(tag="message_circle", size=42, color="rgba(255,255,255,0.18)"),
+                    rx.text(
+                        "Ask anything about this video",
+                        color="rgba(240,244,248,0.55)",
+                        font_size="0.95rem",
+                        font_weight="500",
+                    ),
+                    rx.text(
+                        "AI uses the video's transcript to ground its answers.",
+                        color="rgba(240,244,248,0.35)",
+                        font_size="0.82rem",
+                    ),
+                    spacing="3",
+                    align="center",
+                    width="100%",
+                    padding="40px 16px",
+                ),
+                rx.foreach(LearnState.chat_messages, _chat_message),
+            ),
+            flex="1",
+            overflow_y="auto",
+            padding="16px 14px",
+            width="100%",
+        ),
+        rx.cond(
+            LearnState.chat_busy,
+            rx.hstack(
+                rx.spinner(size="2", color="rgba(244,63,94,0.85)"),
+                rx.text("AI is thinking…", color="rgba(240,244,248,0.6)", font_size="0.85rem"),
+                spacing="2", align="center",
+                padding="6px 14px",
+            ),
+            rx.fragment(),
+        ),
+        # Composer
+        rx.hstack(
+            rx.input(
+                placeholder=rx.cond(
+                    LearnState.has_transcript,
+                    "Ask about the video…",
+                    "Ask anything (no transcript available)…",
+                ),
+                value=LearnState.chat_input,
+                on_change=LearnState.set_chat_input,
+                size="3",
+                style={
+                    "background": "rgba(255,255,255,0.04)",
+                    "border": "1px solid rgba(255,255,255,0.08)",
+                    "color": "rgba(240,244,248,0.95)",
+                    "border_radius": "10px",
+                    "flex": "1",
+                },
+            ),
+            rx.icon_button(
+                rx.icon(tag="send", size=16),
+                on_click=LearnState.send_chat,
+                disabled=LearnState.chat_busy | (LearnState.chat_input == ""),
+                size="3",
+                style={
+                    "background": "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
+                    "color": "white",
+                    "border": "none",
+                    "border_radius": "10px",
+                    "_hover": {"opacity": "0.92"},
+                    "_disabled": {"opacity": "0.4", "cursor": "not-allowed"},
+                },
+            ),
+            rx.cond(
+                LearnState.chat_count > 0,
+                rx.icon_button(
+                    rx.icon(tag="bookmark_plus", size=16),
+                    on_click=LearnState.copy_last_reply_to_note,
+                    title="Copy last reply to notes",
+                    size="3",
+                    variant="ghost",
+                    style={
+                        "color": "rgba(240,244,248,0.6)",
+                        "border": "1px solid rgba(255,255,255,0.08)",
+                        "border_radius": "10px",
+                        "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.06)"},
+                    },
+                ),
+                rx.fragment(),
+            ),
+            spacing="2",
+            width="100%",
+            padding="12px 14px",
+            border_top="1px solid rgba(255,255,255,0.06)",
+        ),
+        spacing="0",
+        height="100%",
+        width="100%",
+    )
+
+
+def _learn_summary_panel() -> rx.Component:
+    return rx.vstack(
+        rx.cond(
+            LearnState.summary == "",
+            # Empty state — generate button
+            rx.vstack(
+                rx.icon(tag="book_open", size=42, color="rgba(255,255,255,0.2)"),
+                rx.text(
+                    "Get a NotebookLM-style study guide",
+                    color="rgba(240,244,248,0.85)",
+                    font_size="1rem",
+                    font_weight="600",
+                ),
+                rx.text(
+                    "AI reads the whole transcript and produces a structured guide: TL;DR, key concepts, walkthrough, and takeaways.",
+                    color="rgba(240,244,248,0.55)",
+                    font_size="0.88rem",
+                    text_align="center",
+                ),
+                rx.button(
+                    rx.cond(
+                        LearnState.summary_loading,
+                        rx.hstack(rx.spinner(size="2"), rx.text("Generating…"), spacing="2", align="center"),
+                        rx.hstack(rx.icon(tag="sparkles", size=14), rx.text("Generate study guide"), spacing="2", align="center"),
+                    ),
+                    on_click=LearnState.generate_summary,
+                    disabled=LearnState.summary_loading | ~LearnState.has_transcript,
+                    size="3",
+                    style={
+                        "background": "linear-gradient(135deg, rgba(99,102,241,0.95), rgba(124,58,237,0.95))",
+                        "color": "white",
+                        "border": "none",
+                        "border_radius": "10px",
+                        "padding": "10px 22px",
+                        "font_weight": "600",
+                        "cursor": "pointer",
+                        "_hover": {"opacity": "0.92"},
+                        "_disabled": {"opacity": "0.5"},
+                    },
+                ),
+                spacing="3",
+                align="center",
+                width="100%",
+                padding="40px 20px",
+            ),
+            # Summary loaded
+            rx.vstack(
+                rx.hstack(
+                    rx.icon(tag="book_open", size=18, color="rgba(99,102,241,0.95)"),
+                    rx.text("Study guide", font_size="0.95rem", font_weight="600", color="rgba(240,244,248,0.9)"),
+                    rx.spacer(),
+                    rx.icon_button(
+                        rx.icon(tag="bookmark_plus", size=14),
+                        on_click=LearnState.copy_summary_to_note,
+                        size="2",
+                        variant="ghost",
+                        title="Save to notes",
+                        style={
+                            "color": "rgba(240,244,248,0.55)",
+                            "border": "1px solid rgba(255,255,255,0.08)",
+                            "border_radius": "8px",
+                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.05)"},
+                        },
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="rotate_ccw", size=14),
+                        on_click=LearnState.generate_summary,
+                        disabled=LearnState.summary_loading,
+                        size="2",
+                        variant="ghost",
+                        title="Regenerate",
+                        style={
+                            "color": "rgba(240,244,248,0.55)",
+                            "border": "1px solid rgba(255,255,255,0.08)",
+                            "border_radius": "8px",
+                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.05)"},
+                        },
+                    ),
+                    spacing="2",
+                    width="100%",
+                    align="center",
+                ),
+                rx.box(
+                    rx.markdown(LearnState.summary),
+                    style={
+                        "color": "rgba(240,244,248,0.88)",
+                        "font_size": "0.92rem",
+                        "line_height": "1.65",
+                    },
+                    width="100%",
+                ),
+                spacing="3",
+                align="stretch",
+                width="100%",
+            ),
+        ),
+        flex="1",
+        overflow_y="auto",
+        padding="16px",
+        width="100%",
+        height="100%",
+    )
+
+
+def _quiz_choice(q_index: rx.Var, q: rx.Var, choice_index: int) -> rx.Component:
+    is_picked = q["picked"] == choice_index
+    is_correct = q["answer"] == choice_index
+    revealed = LearnState.quiz_revealed
+    return rx.button(
+        rx.hstack(
+            rx.text(
+                rx.cond(choice_index == 0, "A", rx.cond(choice_index == 1, "B", rx.cond(choice_index == 2, "C", "D"))),
+                font_weight="700",
+                font_size="0.85rem",
+                color="rgba(240,244,248,0.6)",
+                width="22px",
+            ),
+            rx.text(q["choices"][choice_index], font_size="0.92rem", color="rgba(240,244,248,0.95)", text_align="left"),
+            spacing="3", align="center", width="100%",
+        ),
+        on_click=lambda: LearnState.quiz_pick(q_index, choice_index),
+        disabled=revealed,
+        variant="ghost",
+        style={
+            "background": rx.cond(
+                revealed & is_correct,
+                "rgba(34,197,94,0.18)",
+                rx.cond(
+                    revealed & is_picked & ~is_correct,
+                    "rgba(248,113,113,0.18)",
+                    rx.cond(is_picked, "rgba(99,102,241,0.18)", "rgba(255,255,255,0.03)"),
+                ),
+            ),
+            "border": rx.cond(
+                revealed & is_correct,
+                "1px solid rgba(34,197,94,0.55)",
+                rx.cond(
+                    revealed & is_picked & ~is_correct,
+                    "1px solid rgba(248,113,113,0.55)",
+                    rx.cond(is_picked, "1px solid rgba(99,102,241,0.55)", "1px solid rgba(255,255,255,0.08)"),
+                ),
+            ),
+            "border_radius": "10px",
+            "padding": "12px 14px",
+            "width": "100%",
+            "cursor": "pointer",
+            "text_align": "left",
+            "justify_content": "flex-start",
+            "_hover": {"background": "rgba(255,255,255,0.06)"},
+        },
+    )
+
+
+def _quiz_question(q: rx.Var, idx: int) -> rx.Component:
+    return rx.vstack(
+        rx.text(
+            f"Question {idx + 1}",
+            font_size="0.78rem",
+            font_weight="600",
+            color="rgba(244,63,94,0.85)",
+        ),
+        rx.text(
+            q["q"],
+            font_size="0.98rem",
+            color="rgba(240,244,248,0.95)",
+            font_weight="500",
+            line_height="1.4",
+        ),
+        _quiz_choice(idx, q, 0),
+        _quiz_choice(idx, q, 1),
+        _quiz_choice(idx, q, 2),
+        _quiz_choice(idx, q, 3),
+        rx.cond(
+            LearnState.quiz_revealed,
+            rx.box(
+                rx.text(q["explain"], font_size="0.85rem", color="rgba(240,244,248,0.65)", line_height="1.5"),
+                padding="10px 12px",
+                margin_top="6px",
+                style={
+                    "background": "rgba(255,255,255,0.03)",
+                    "border": "1px solid rgba(255,255,255,0.06)",
+                    "border_radius": "8px",
+                },
+            ),
+            rx.fragment(),
+        ),
+        spacing="2",
+        align="stretch",
+        width="100%",
+        padding="14px",
+        margin_bottom="14px",
+        style={
+            "background": "rgba(255,255,255,0.02)",
+            "border": "1px solid rgba(255,255,255,0.06)",
+            "border_radius": "12px",
+        },
+    )
+
+
+def _learn_quiz_panel() -> rx.Component:
+    return rx.vstack(
+        rx.cond(
+            LearnState.quiz_questions.length() == 0,
+            # Empty state
+            rx.vstack(
+                rx.icon(tag="circle_help", size=42, color="rgba(255,255,255,0.2)"),
+                rx.text(
+                    "Test what you learned",
+                    color="rgba(240,244,248,0.85)",
+                    font_size="1rem",
+                    font_weight="600",
+                ),
+                rx.text(
+                    "AI generates a 5-question quiz about the video.",
+                    color="rgba(240,244,248,0.55)",
+                    font_size="0.88rem",
+                ),
+                rx.button(
+                    rx.cond(
+                        LearnState.quiz_loading,
+                        rx.hstack(rx.spinner(size="2"), rx.text("Generating…"), spacing="2", align="center"),
+                        rx.hstack(rx.icon(tag="sparkles", size=14), rx.text("Generate quiz"), spacing="2", align="center"),
+                    ),
+                    on_click=LearnState.generate_quiz,
+                    disabled=LearnState.quiz_loading | ~LearnState.has_transcript,
+                    size="3",
+                    style={
+                        "background": "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
+                        "color": "white",
+                        "border": "none",
+                        "border_radius": "10px",
+                        "padding": "10px 22px",
+                        "font_weight": "600",
+                        "cursor": "pointer",
+                        "_hover": {"opacity": "0.92"},
+                        "_disabled": {"opacity": "0.5"},
+                    },
+                ),
+                spacing="3",
+                align="center",
+                width="100%",
+                padding="40px 20px",
+            ),
+            rx.vstack(
+                rx.hstack(
+                    rx.icon(tag="circle_help", size=18, color="rgba(244,63,94,0.95)"),
+                    rx.text("Mini quiz", font_size="0.95rem", font_weight="600", color="rgba(240,244,248,0.9)"),
+                    rx.spacer(),
+                    rx.cond(
+                        LearnState.quiz_revealed,
+                        rx.text(
+                            LearnState.quiz_score,
+                            font_size="0.95rem", font_weight="700", color="rgba(52,211,153,0.95)",
+                        ),
+                        rx.fragment(),
+                    ),
+                    spacing="2", width="100%", align="center",
+                ),
+                rx.foreach(LearnState.quiz_questions, _quiz_question),
+                rx.hstack(
+                    rx.cond(
+                        LearnState.quiz_revealed,
+                        rx.button(
+                            rx.hstack(rx.icon(tag="rotate_ccw", size=14), rx.text("Try again"), spacing="2", align="center"),
+                            on_click=LearnState.quiz_reset,
+                            size="3",
+                            variant="ghost",
+                            style={
+                                "color": "rgba(240,244,248,0.85)",
+                                "border": "1px solid rgba(255,255,255,0.08)",
+                                "border_radius": "10px",
+                                "padding": "8px 16px",
+                                "_hover": {"background": "rgba(255,255,255,0.05)"},
+                            },
+                        ),
+                        rx.button(
+                            rx.text("Reveal answers", font_weight="600"),
+                            on_click=LearnState.quiz_reveal,
+                            size="3",
+                            style={
+                                "background": "linear-gradient(135deg, rgba(99,102,241,0.95), rgba(124,58,237,0.95))",
+                                "color": "white",
+                                "border": "none",
+                                "border_radius": "10px",
+                                "padding": "8px 18px",
+                                "_hover": {"opacity": "0.92"},
+                            },
+                        ),
+                    ),
+                    rx.button(
+                        rx.text("New quiz", font_weight="500"),
+                        on_click=LearnState.generate_quiz,
+                        disabled=LearnState.quiz_loading,
+                        size="3",
+                        variant="ghost",
+                        style={
+                            "color": "rgba(240,244,248,0.6)",
+                            "border": "1px solid rgba(255,255,255,0.08)",
+                            "border_radius": "10px",
+                            "padding": "8px 16px",
+                            "_hover": {"background": "rgba(255,255,255,0.05)"},
+                        },
+                    ),
+                    spacing="3",
+                    justify="end",
+                    width="100%",
+                ),
+                spacing="2",
+                align="stretch",
+                width="100%",
+            ),
+        ),
+        flex="1",
+        overflow_y="auto",
+        padding="16px",
+        width="100%",
+        height="100%",
+    )
+
+
+def _learn_notes_panel() -> rx.Component:
+    return rx.vstack(
+        rx.hstack(
+            rx.icon(tag="notebook_pen", size=18, color="rgba(52,211,153,0.95)"),
+            rx.text("Notes", font_size="0.95rem", font_weight="600", color="rgba(240,244,248,0.9)"),
+            rx.spacer(),
+            rx.cond(
+                LearnState.notes_saved,
+                rx.hstack(
+                    rx.icon(tag="check", size=14, color="rgba(52,211,153,0.95)"),
+                    rx.text("Saved", color="rgba(52,211,153,0.95)", font_size="0.82rem"),
+                    on_click=LearnState.clear_notes_saved_flash,
+                    spacing="1",
+                    align="center",
+                    style={"cursor": "pointer"},
+                ),
+                rx.fragment(),
+            ),
+            spacing="2", width="100%", align="center",
+        ),
+        rx.text(
+            "AI suggestions and your own notes. Save to add this video to your study workspace.",
+            color="rgba(240,244,248,0.5)",
+            font_size="0.82rem",
+        ),
+        rx.text_area(
+            placeholder="Write your notes here, or use the bookmark icon next to chat replies and the summary to add AI-suggested notes…",
+            value=LearnState.note_draft,
+            on_change=LearnState.set_note_draft,
+            rows="14",
+            style={
+                "background": "rgba(255,255,255,0.04)",
+                "border": "1px solid rgba(255,255,255,0.08)",
+                "color": "rgba(240,244,248,0.95)",
+                "border_radius": "10px",
+                "font_size": "0.92rem",
+                "line_height": "1.55",
+                "padding": "14px",
+                "flex": "1",
+            },
+            width="100%",
+        ),
+        rx.hstack(
+            rx.button(
+                rx.hstack(
+                    rx.icon(tag="save", size=14),
+                    rx.text("Save to my notes", font_weight="600"),
+                    spacing="2", align="center",
+                ),
+                on_click=LearnState.save_note_to_workspace,
+                disabled=LearnState.note_draft == "",
+                size="3",
+                style={
+                    "background": "linear-gradient(135deg, rgba(52,211,153,0.95), rgba(34,197,94,0.95))",
+                    "color": "#0a1f15",
+                    "border": "none",
+                    "border_radius": "10px",
+                    "padding": "8px 18px",
+                    "cursor": "pointer",
+                    "font_weight": "600",
+                    "_hover": {"opacity": "0.92"},
+                    "_disabled": {"opacity": "0.5", "cursor": "not-allowed"},
+                },
+            ),
+            spacing="2",
+        ),
+        spacing="3",
+        align="stretch",
+        flex="1",
+        height="100%",
+        width="100%",
+        padding="16px",
+    )
+
+
+def _learn_tab_button(value: str, label: str, icon: str) -> rx.Component:
+    is_active = LearnState.active_tab == value
+    return rx.button(
+        rx.hstack(
+            rx.icon(tag=icon, size=14),
+            rx.text(label, font_size="0.85rem", font_weight="500"),
+            spacing="2", align="center",
+        ),
+        on_click=LearnState.set_active_tab(value),
+        variant="ghost",
+        style={
+            "background": rx.cond(is_active, "rgba(244,63,94,0.16)", "transparent"),
+            "color": rx.cond(is_active, "rgba(255,225,230,0.95)", "rgba(240,244,248,0.6)"),
+            "border": "none",
+            "border_radius": "8px",
+            "padding": "8px 14px",
+            "cursor": "pointer",
+            "_hover": {"background": "rgba(255,255,255,0.05)"},
+        },
+    )
+
+
+def _learn_session_view() -> rx.Component:
+    """Two-column layout: video on left, AI tools on right."""
+    return rx.hstack(
+        # ── LEFT: video + URL bar ──
+        rx.vstack(
+            rx.hstack(
+                rx.icon_button(
+                    rx.icon("arrow_left", size=18),
+                    on_click=LearnState.reset_session,
+                    variant="ghost",
+                    title="Load another video",
+                    size="2",
+                    style={
+                        "color": "rgba(240,244,248,0.6)",
+                        "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
+                        "border_radius": "8px",
+                    },
+                ),
+                rx.input(
+                    value=LearnState.url_input,
+                    on_change=LearnState.set_url_input,
+                    placeholder="Paste another YouTube link…",
+                    size="2",
+                    style={
+                        "background": "rgba(255,255,255,0.04)",
+                        "border": "1px solid rgba(255,255,255,0.08)",
+                        "color": "rgba(240,244,248,0.85)",
+                        "border_radius": "8px",
+                        "flex": "1",
+                    },
+                ),
+                rx.icon_button(
+                    rx.icon(tag="arrow_right", size=14),
+                    on_click=LearnState.load_video,
+                    size="2",
+                    style={
+                        "background": "rgba(244,63,94,0.18)",
+                        "color": "rgba(255,225,230,0.95)",
+                        "border": "1px solid rgba(244,63,94,0.4)",
+                        "border_radius": "8px",
+                        "_hover": {"background": "rgba(244,63,94,0.28)"},
+                    },
+                ),
+                spacing="2",
+                width="100%",
+                align="center",
+            ),
+            _learn_video_player(),
+            rx.cond(
+                LearnState.transcript_loading,
+                rx.hstack(
+                    rx.spinner(size="2", color="rgba(244,63,94,0.85)"),
+                    rx.text("Fetching transcript…", color="rgba(240,244,248,0.55)", font_size="0.85rem"),
+                    spacing="2", align="center",
+                ),
+                rx.cond(
+                    LearnState.transcript_error != "",
+                    rx.text(
+                        LearnState.transcript_error,
+                        color="rgba(250,204,21,0.85)",
+                        font_size="0.82rem",
+                        line_height="1.4",
+                    ),
+                    rx.cond(
+                        LearnState.has_transcript,
+                        rx.hstack(
+                            rx.icon(tag="check", size=14, color="rgba(52,211,153,0.85)"),
+                            rx.text("Transcript loaded", color="rgba(240,244,248,0.5)", font_size="0.82rem"),
+                            spacing="1", align="center",
+                        ),
+                        rx.fragment(),
+                    ),
+                ),
+            ),
+            spacing="3",
+            align="stretch",
+            width="100%",
+            flex=rx.breakpoints(initial="1", md="1.6"),
+            min_width="0",
+            padding=rx.breakpoints(initial="14px", md="20px"),
+        ),
+
+        # ── RIGHT: tabbed AI tools ──
+        rx.vstack(
+            rx.hstack(
+                _learn_tab_button("chat", "Chat", "message_circle"),
+                _learn_tab_button("summary", "Guide", "book_open"),
+                _learn_tab_button("quiz", "Quiz", "circle_help"),
+                _learn_tab_button("notes", "Notes", "notebook_pen"),
+                spacing="1",
+                width="100%",
+                padding="8px 12px",
+                border_bottom="1px solid rgba(255,255,255,0.06)",
+            ),
+            rx.box(
+                rx.cond(
+                    LearnState.active_tab == "chat",
+                    _learn_chat_panel(),
+                    rx.cond(
+                        LearnState.active_tab == "summary",
+                        _learn_summary_panel(),
+                        rx.cond(
+                            LearnState.active_tab == "quiz",
+                            _learn_quiz_panel(),
+                            _learn_notes_panel(),
+                        ),
+                    ),
+                ),
+                flex="1",
+                overflow="hidden",
+                width="100%",
+                display="flex",
+                flex_direction="column",
+            ),
+            spacing="0",
+            align="stretch",
+            flex="1",
+            min_width="0",
+            height="100%",
+            style={
+                "background": "rgba(255,255,255,0.015)",
+                "border_left": "1px solid rgba(255,255,255,0.05)",
+            },
+        ),
+        spacing="0",
+        width="100%",
+        height="100vh",
+        overflow="hidden",
+        align="stretch",
+    )
+
+
+def learn_page_content() -> rx.Component:
+    return rx.cond(
+        LearnState.has_video,
+        _learn_session_view(),
+        # Empty state — paste a URL
+        rx.box(
+            _learn_url_card(),
+            display="flex",
+            justify_content="center",
+            align_items="center",
+            flex_direction="column",
+            height="100vh",
+            overflow_y="auto",
+            background="#191919",
+            flex="1",
+            min_width="0",
+            padding="20px",
+        ),
+    )
+
+
+@rx.page(
+    route="/learn",
+    title="Learn — Alex AI",
+    image=FAVICON_32,
+)
+@require_app_login
+def learn_page():
+    return rx.box(
+        rx.hstack(
+            rx.box(
+                nav_rail(),
+                display=rx.breakpoints(initial="none", md="flex"),
+            ),
+            learn_page_content(),
+            width="100%",
+            height="100vh",
+            spacing="0",
+            align="stretch",
+        ),
+        background="#191919",
+        width="100%",
+        height="100vh",
+        overflow="hidden",
+    )
+
+
+# ============================================================
 # /video — Manim-powered cinematic explainer video generator
 # ============================================================
 
@@ -26392,6 +27731,111 @@ def _video_style_chip(value: str, label: str, emoji: str) -> rx.Component:
 
 
 def video_page_content() -> rx.Component:
+    # ── LOCKED — feature paused while we rebuild ──
+    return rx.box(
+        rx.vstack(
+            rx.vstack(
+                rx.hstack(
+                    rx.icon_button(
+                        rx.icon("arrow_left", size=18),
+                        on_click=rx.redirect("/"),
+                        variant="ghost",
+                        size="2",
+                        style={
+                            "color": "rgba(240,244,248,0.6)",
+                            "cursor": "pointer",
+                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
+                            "border_radius": "8px",
+                        },
+                    ),
+                    rx.text("🎬", font_size="1.6rem"),
+                    rx.heading(
+                        "Make a video",
+                        size="6",
+                        color="rgba(240,244,248,0.95)",
+                        font_weight="700",
+                    ),
+                    spacing="2", align="center",
+                ),
+                rx.text(
+                    "We're rebuilding this — try Learn from YouTube instead.",
+                    color="rgba(240,244,248,0.55)",
+                    font_size="0.92rem",
+                ),
+                align="start",
+                spacing="1",
+                width="100%",
+            ),
+
+            # Coming-soon panel
+            rx.vstack(
+                rx.hstack(
+                    rx.icon(tag="lock", size=22, color="rgba(250,204,21,0.85)"),
+                    rx.text(
+                        "Paused for an upgrade",
+                        color="rgba(240,244,248,0.95)",
+                        font_size="1.15rem",
+                        font_weight="600",
+                    ),
+                    spacing="3", align="center",
+                ),
+                rx.text(
+                    "AI-generated explainer videos are temporarily disabled while we rework them. "
+                    "In the meantime, learn from real YouTube videos with full AI assistance — "
+                    "summaries, quizzes, chat, and notes — on the new Learn page.",
+                    color="rgba(240,244,248,0.7)",
+                    font_size="0.95rem",
+                    line_height="1.6",
+                ),
+                rx.button(
+                    rx.hstack(
+                        rx.icon(tag="play", size=16),
+                        rx.text("Open Learn from YouTube", font_size="0.95rem", font_weight="600"),
+                        spacing="2", align="center",
+                    ),
+                    on_click=rx.redirect("/learn"),
+                    size="3",
+                    style={
+                        "background": "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
+                        "color": "white",
+                        "border": "none",
+                        "border_radius": "10px",
+                        "padding": "10px 22px",
+                        "cursor": "pointer",
+                        "font_weight": "600",
+                        "_hover": {"opacity": "0.92"},
+                    },
+                ),
+                spacing="4",
+                align="start",
+                width="100%",
+                padding="32px",
+                style={
+                    "background": "rgba(255,255,255,0.02)",
+                    "border": "1px solid rgba(250,204,21,0.18)",
+                    "border_radius": "16px",
+                },
+            ),
+            spacing="5",
+            align="stretch",
+            width="100%",
+            max_width="780px",
+            padding="36px 28px 60px 28px",
+        ),
+        display="flex",
+        justify_content="center",
+        flex_direction="column",
+        align_items="center",
+        height="100vh",
+        overflow_y="auto",
+        background="#191919",
+        flex="1",
+        min_width="0",
+    )
+
+
+def _video_page_content_legacy_DISABLED() -> rx.Component:
+    """Old video generation UI — kept for reference, not rendered."""
     return rx.box(
         rx.vstack(
             # Header
@@ -29383,7 +30827,7 @@ def free_sidebar_content() -> rx.Component:
         _nav_row("search", "Search chats", AppState.toggle_global_search),
         _nav_row("notebook", "Notes", AppState.toggle_notes_panel),
         _nav_row("list_checks", "Tracker", rx.redirect("/tracker")),
-        _nav_row("clapperboard", "Make a video", rx.redirect("/video")),
+        _nav_row("youtube", "Learn from video", rx.redirect("/learn")),
 
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.07)", margin_y="4px"),
 
