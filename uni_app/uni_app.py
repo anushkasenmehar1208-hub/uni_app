@@ -27307,12 +27307,28 @@ def _chat_message(msg: rx.Var) -> rx.Component:
                 ),
             ),
             rx.box(
-                rx.text(
-                    msg["content"],
-                    color="rgba(240,244,248,0.95)",
-                    font_size="0.92rem",
-                    line_height="1.55",
-                    white_space="pre-wrap",
+                rx.cond(
+                    is_user,
+                    rx.text(
+                        msg["content"],
+                        color="rgba(240,244,248,0.95)",
+                        font_size="0.92rem",
+                        line_height="1.55",
+                        white_space="pre-wrap",
+                    ),
+                    rx.markdown(
+                        msg["content"],
+                        color="rgba(240,244,248,0.92)",
+                        font_size="0.92rem",
+                        line_height="1.6",
+                        component_map={
+                            "p": lambda *c, **p: rx.text(*c, margin_bottom="8px", line_height="1.6", **p),
+                            "strong": lambda *c, **p: rx.text(*c, as_="strong", font_weight="700", color="rgba(255,255,255,0.98)", **p),
+                            "li": lambda *c, **p: rx.el.li(*c, margin_bottom="4px", **p),
+                            "ul": lambda *c, **p: rx.el.ul(*c, padding_left="18px", margin_bottom="8px", **p),
+                            "ol": lambda *c, **p: rx.el.ol(*c, padding_left="18px", margin_bottom="8px", **p),
+                        },
+                    ),
                 ),
                 padding="10px 14px",
                 style={
@@ -27327,7 +27343,7 @@ def _chat_message(msg: rx.Var) -> rx.Component:
                         "1px solid rgba(255,255,255,0.06)",
                     ),
                     "border_radius": "12px",
-                    "max_width": "78%",
+                    "max_width": "82%",
                 },
             ),
             rx.cond(
