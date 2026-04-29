@@ -22,7 +22,7 @@ from fastapi import Request
 from pathlib import Path
 from datetime import datetime, date, timedelta, timezone
 from zoneinfo import ZoneInfo
-from typing import Any, Optional
+from typing import Any, Optional, TypedDict
 
 import logging
 import traceback
@@ -26252,6 +26252,23 @@ def tracker_page():
 # ============================================================
 
 
+# Reflex needs typed structures for `foreach` to know how to iterate.
+# Plain `list[dict]` is rejected as "untyped" — use TypedDict instead.
+
+class LearnChatMessage(TypedDict):
+    role: str        # "user" | "assistant"
+    content: str
+    ts: int
+
+
+class LearnQuizQuestion(TypedDict):
+    q: str
+    choices: list[str]
+    answer: int      # 0..3 — index of correct choice
+    explain: str
+    picked: int      # -1 if not picked yet, else 0..3
+
+
 class LearnState(AppState):
     """State for the /learn page — paste a YouTube URL, get an AI-powered study session."""
 
@@ -26277,12 +26294,12 @@ class LearnState(AppState):
     summary_loading: bool = False
 
     # ── Chat ──────────────────────────────────────────────────
-    chat_messages: list[dict] = []   # [{role: 'user'|'assistant', content: str, ts: int}]
+    chat_messages: list[LearnChatMessage] = []
     chat_input: str = ""
     chat_busy: bool = False
 
     # ── Quiz ──────────────────────────────────────────────────
-    quiz_questions: list[dict] = []  # [{q: str, choices: [str], answer: int, explain: str, picked: int}]
+    quiz_questions: list[LearnQuizQuestion] = []
     quiz_loading: bool = False
     quiz_revealed: bool = False
 
