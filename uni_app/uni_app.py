@@ -3588,6 +3588,350 @@ SE_CURRICULUM = {
     },
 }
 
+# ── UK Computer Science (generic 3-year BCS-accredited structure) ──
+UK_CS_CURRICULUM = {
+    "Year 1": {
+        "Semester 1": [
+            "CS:Introduction to Programming",
+            "CS:Computer Systems and Architecture",
+            "CS:Discrete Mathematics",
+            "CS:Digital Logic and Electronics",
+        ],
+        "Semester 2": [
+            "CS:Data Structures and Algorithms",
+            "CS:Object-Oriented Programming",
+            "CS:Mathematics for Computer Science",
+            "CS:Web Development Fundamentals",
+        ],
+    },
+    "Year 2": {
+        "Semester 3": [
+            "CS:Operating Systems",
+            "CS:Database Systems",
+            "CS:Computer Networks",
+            "CS:Software Engineering Principles",
+        ],
+        "Semester 4": [
+            "CS:Artificial Intelligence",
+            "CS:Theory of Computation",
+            "CS:Computer Security",
+            "CS:Human-Computer Interaction",
+        ],
+    },
+    "Year 3": {
+        "Semester 5": [
+            "CS:Machine Learning",
+            "CS:Distributed Systems",
+            "CS:Compiler Design",
+            "CS:Final Year Project I",
+        ],
+        "Semester 6": [
+            "CS:Cloud Computing",
+            "CS:Advanced AI and Deep Learning",
+            "CS:Cybersecurity and Cryptography",
+            "CS:Final Year Project II",
+        ],
+    },
+}
+
+# ── UK Software Engineering (generic 3-year BEng/MEng structure) ──
+UK_SE_CURRICULUM = {
+    "Year 1": {
+        "Semester 1": [
+            "SE:Introduction to Software Development",
+            "SE:Computer Systems Fundamentals",
+            "SE:Mathematics for Engineers",
+            "SE:Professional Skills for Engineers",
+        ],
+        "Semester 2": [
+            "SE:Data Structures and Algorithms",
+            "SE:Object-Oriented Design",
+            "SE:Database Design",
+            "SE:Web Application Basics",
+        ],
+    },
+    "Year 2": {
+        "Semester 3": [
+            "SE:Software Requirements Engineering",
+            "SE:Software Architecture and Design",
+            "SE:Operating Systems",
+            "SE:Computer Networks",
+        ],
+        "Semester 4": [
+            "SE:Software Testing and Quality Assurance",
+            "SE:Agile and Project Management",
+            "SE:Mobile Application Development",
+            "SE:Human-Computer Interaction",
+        ],
+    },
+    "Year 3": {
+        "Semester 5": [
+            "SE:Cloud and DevOps Engineering",
+            "SE:Artificial Intelligence for Engineers",
+            "SE:Cybersecurity Engineering",
+            "SE:Final Year Project I",
+        ],
+        "Semester 6": [
+            "SE:Distributed Systems and Microservices",
+            "SE:Machine Learning Applications",
+            "SE:Software Entrepreneurship",
+            "SE:Final Year Project II",
+        ],
+    },
+}
+
+# ── US Computer Science (generic 4-year ACM/IEEE CS2013 structure) ──
+US_CS_CURRICULUM = {
+    "Year 1": {
+        "Semester 1": [
+            "CS:Introduction to Computer Science",
+            "CS:Calculus I",
+            "CS:Discrete Mathematics",
+            "CS:University Physics I",
+        ],
+        "Semester 2": [
+            "CS:Data Structures",
+            "CS:Calculus II",
+            "CS:Logic Design and Digital Systems",
+            "CS:University Physics II",
+        ],
+    },
+    "Year 2": {
+        "Semester 3": [
+            "CS:Algorithms Analysis and Design",
+            "CS:Computer Organization and Architecture",
+            "CS:Linear Algebra",
+            "CS:Software Engineering",
+        ],
+        "Semester 4": [
+            "CS:Database Management Systems",
+            "CS:Computer Networks",
+            "CS:Probability and Statistics",
+            "CS:Programming Languages and Paradigms",
+        ],
+    },
+    "Year 3": {
+        "Semester 5": [
+            "CS:Operating Systems",
+            "CS:Artificial Intelligence",
+            "CS:Theory of Computation",
+            "CS:Technical Elective I",
+        ],
+        "Semester 6": [
+            "CS:Machine Learning",
+            "CS:Computer Security",
+            "CS:Distributed Systems",
+            "CS:Technical Elective II",
+        ],
+    },
+    "Year 4": {
+        "Semester 7": [
+            "CS:Senior Capstone Project I",
+            "CS:Cloud Computing",
+            "CS:Compilers",
+            "CS:Elective III",
+        ],
+        "Semester 8": [
+            "CS:Senior Capstone Project II",
+            "CS:Deep Learning",
+            "CS:Ethics in Computing",
+            "CS:Elective IV",
+        ],
+    },
+}
+
+# ── US Computer Engineering (generic 4-year ABET-accredited structure) ──
+US_CE_CURRICULUM = {
+    "Year 1": {
+        "Semester 1": [
+            "CE:Introduction to Programming",
+            "CE:Calculus I",
+            "CE:Engineering Physics I",
+            "CE:Engineering Drawing and Design",
+        ],
+        "Semester 2": [
+            "CE:Digital Logic Design",
+            "CE:Calculus II",
+            "CE:Engineering Physics II",
+            "CE:Circuits and Electronics",
+        ],
+    },
+    "Year 2": {
+        "Semester 3": [
+            "CE:Data Structures and Algorithms",
+            "CE:Computer Organization",
+            "CE:Discrete Mathematics",
+            "CE:Signals and Systems",
+        ],
+        "Semester 4": [
+            "CE:Microprocessors and Embedded Systems",
+            "CE:Computer Architecture",
+            "CE:Linear Algebra and Differential Equations",
+            "CE:Software Engineering",
+        ],
+    },
+    "Year 3": {
+        "Semester 5": [
+            "CE:Operating Systems",
+            "CE:Computer Networks",
+            "CE:VLSI Design",
+            "CE:Technical Elective I",
+        ],
+        "Semester 6": [
+            "CE:Real-Time Systems",
+            "CE:Digital Signal Processing",
+            "CE:Computer Security",
+            "CE:Technical Elective II",
+        ],
+    },
+    "Year 4": {
+        "Semester 7": [
+            "CE:Senior Design Project I",
+            "CE:Internet of Things",
+            "CE:Machine Learning for Engineers",
+            "CE:Elective III",
+        ],
+        "Semester 8": [
+            "CE:Senior Design Project II",
+            "CE:Cloud and Edge Computing",
+            "CE:Engineering Ethics and Professionalism",
+            "CE:Elective IV",
+        ],
+    },
+}
+
+# ── India B.Tech Computer Science (generic 4-year structure based on common Indian university syllabi) ──
+IN_CSE_CURRICULUM = {
+    "Year 1": {
+        "Semester 1": [
+            "CSE:Engineering Mathematics I",
+            "CSE:Programming in C",
+            "CSE:Digital Electronics and Logic Design",
+            "CSE:Engineering Physics",
+            "CSE:Environmental Science",
+        ],
+        "Semester 2": [
+            "CSE:Engineering Mathematics II",
+            "CSE:Data Structures",
+            "CSE:Object-Oriented Programming with Java",
+            "CSE:Computer Organization",
+            "CSE:English Communication Skills",
+        ],
+    },
+    "Year 2": {
+        "Semester 3": [
+            "CSE:Discrete Mathematics",
+            "CSE:Design and Analysis of Algorithms",
+            "CSE:Database Management Systems",
+            "CSE:Computer Architecture",
+            "CSE:Probability and Statistics",
+        ],
+        "Semester 4": [
+            "CSE:Operating Systems",
+            "CSE:Computer Networks",
+            "CSE:Software Engineering",
+            "CSE:Theory of Computation",
+            "CSE:Web Technologies",
+        ],
+    },
+    "Year 3": {
+        "Semester 5": [
+            "CSE:Artificial Intelligence",
+            "CSE:Machine Learning",
+            "CSE:Compiler Design",
+            "CSE:Open Elective I",
+            "CSE:Professional Elective I",
+        ],
+        "Semester 6": [
+            "CSE:Cloud Computing",
+            "CSE:Cryptography and Network Security",
+            "CSE:Mobile Application Development",
+            "CSE:Open Elective II",
+            "CSE:Professional Elective II",
+        ],
+    },
+    "Year 4": {
+        "Semester 7": [
+            "CSE:Deep Learning",
+            "CSE:Big Data Analytics",
+            "CSE:Internet of Things",
+            "CSE:Professional Elective III",
+            "CSE:Seminar",
+        ],
+        "Semester 8": [
+            "CSE:Project Work",
+            "CSE:Internship",
+            "CSE:Professional Elective IV",
+        ],
+    },
+}
+
+# ── India B.Tech Information Technology ──
+IN_IT_CURRICULUM = {
+    "Year 1": {
+        "Semester 1": [
+            "IT:Engineering Mathematics I",
+            "IT:Programming Fundamentals",
+            "IT:Digital Logic and Computer Organization",
+            "IT:Engineering Physics",
+            "IT:Communication Skills",
+        ],
+        "Semester 2": [
+            "IT:Engineering Mathematics II",
+            "IT:Data Structures Using C",
+            "IT:Object-Oriented Programming",
+            "IT:Computer Networks Fundamentals",
+            "IT:Environmental Studies",
+        ],
+    },
+    "Year 2": {
+        "Semester 3": [
+            "IT:Discrete Mathematics",
+            "IT:Database Management Systems",
+            "IT:Operating Systems",
+            "IT:Computer Architecture",
+            "IT:Probability and Queueing Theory",
+        ],
+        "Semester 4": [
+            "IT:Software Engineering",
+            "IT:Internet and Web Technologies",
+            "IT:Theory of Computation",
+            "IT:Design and Analysis of Algorithms",
+            "IT:Statistics and Numerical Methods",
+        ],
+    },
+    "Year 3": {
+        "Semester 5": [
+            "IT:Artificial Intelligence",
+            "IT:Information Security",
+            "IT:Mobile Computing",
+            "IT:Open Elective I",
+            "IT:Professional Elective I",
+        ],
+        "Semester 6": [
+            "IT:Cloud Computing",
+            "IT:Data Mining and Warehousing",
+            "IT:Machine Learning",
+            "IT:Open Elective II",
+            "IT:Professional Elective II",
+        ],
+    },
+    "Year 4": {
+        "Semester 7": [
+            "IT:Internet of Things",
+            "IT:Big Data Technologies",
+            "IT:Software Project Management",
+            "IT:Professional Elective III",
+            "IT:Seminar",
+        ],
+        "Semester 8": [
+            "IT:Project Work",
+            "IT:Internship",
+            "IT:Professional Elective IV",
+        ],
+    },
+}
+
 KELANIYA_SENG_CURRICULUM: dict[str, dict[str, list[dict[str, Any]]]] = {
     "Year 1": {
         "Semester 1": [
@@ -4061,10 +4405,47 @@ def subject_code_display_name(code: str) -> str:
 # ── Degrees that use the subject-based (multi-subject) curriculum model ──
 MULTI_SUBJECT_DEGREES: set[str] = {"Physical Science", "Biological Science"}
 
+# ── Flat degree → curriculum mapping (single-subject degrees like SE) ──
+FLAT_DEGREE_CURRICULUM: dict[str, dict] = {
+    "Software Engineering":       SE_CURRICULUM,
+    "Computer Science (UK)":      UK_CS_CURRICULUM,
+    "Software Engineering (UK)":  UK_SE_CURRICULUM,
+    "Computer Science (US)":      US_CS_CURRICULUM,
+    "Computer Engineering (US)":  US_CE_CURRICULUM,
+    "B.Tech Computer Science":    IN_CSE_CURRICULUM,
+    "B.Tech Information Technology": IN_IT_CURRICULUM,
+}
+
+# ── Flat degree → discipline label for AI context ──
+FLAT_DEGREE_DISCIPLINE: dict[str, str] = {
+    "Software Engineering":       "Software Engineering",
+    "Computer Science (UK)":      "Computer Science",
+    "Software Engineering (UK)":  "Software Engineering",
+    "Computer Science (US)":      "Computer Science",
+    "Computer Engineering (US)":  "Computer Engineering",
+    "B.Tech Computer Science":    "Computer Science Engineering",
+    "B.Tech Information Technology": "Information Technology",
+}
+
+# ── Per-region degree choices shown in onboarding ──
+REGION_DEGREE_OPTIONS: dict[str, list[str]] = {
+    "LK":     ["Software Engineering", "Physical Science", "Biological Science"],
+    "UK":     ["Computer Science (UK)", "Software Engineering (UK)"],
+    "US":     ["Computer Science (US)", "Computer Engineering (US)"],
+    "IN":     ["B.Tech Computer Science", "B.Tech Information Technology"],
+    "custom": [],
+}
+
 # ── All available degree options ──
 CUSTOM_DEGREE = "Custom"
 LEGACY_CUSTOM_DEGREE = "Others"  # Still honored for existing stored profiles
-DEGREE_OPTIONS: list[str] = ["Software Engineering", "Physical Science", "Biological Science", CUSTOM_DEGREE]
+DEGREE_OPTIONS: list[str] = [
+    "Software Engineering", "Physical Science", "Biological Science",
+    "Computer Science (UK)", "Software Engineering (UK)",
+    "Computer Science (US)", "Computer Engineering (US)",
+    "B.Tech Computer Science", "B.Tech Information Technology",
+    CUSTOM_DEGREE,
+]
 
 
 def _degree_is_custom(degree: str) -> bool:
@@ -6486,8 +6867,8 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def _semester_courses(self, year: str, semester: str) -> list[str]:
         """Return modules for current semester.
-        - SE: flat list from SE_CURRICULUM
         - Multi-subject degrees: modules for the active_subject only
+        - All other flat degrees: look up FLAT_DEGREE_CURRICULUM
         """
         if self._is_multi_subject_degree() and self.active_subject:
             return (
@@ -6496,7 +6877,8 @@ class AppState(reflex_local_auth.LocalAuthState):
                 .get(year, {})
                 .get(semester, [])
             )
-        return SE_CURRICULUM.get(year, {}).get(semester, [])
+        curriculum = FLAT_DEGREE_CURRICULUM.get(self.degree, SE_CURRICULUM)
+        return curriculum.get(year, {}).get(semester, [])
 
     def _semester_courses_for_subject(self, subject: str, year: str, semester: str) -> list[str]:
         """Return modules for a specific subject in a semester (multi-subject degrees)."""
@@ -6592,10 +6974,20 @@ class AppState(reflex_local_auth.LocalAuthState):
                 f"Subject teaching guidance:\n{guidance or '- No subject guidance loaded'}"
             )
         course_units = self._semester_course_units(year, semester)
-        guidance = f"- Software Engineering: {SE_TEACHING_STYLE['discipline']}; {SE_TEACHING_STYLE['emphasis']}"
+        discipline = FLAT_DEGREE_DISCIPLINE.get(self.degree, "Software Engineering")
+        if self.degree == "Software Engineering":
+            guidance = f"- Software Engineering: {SE_TEACHING_STYLE['discipline']}; {SE_TEACHING_STYLE['emphasis']}"
+            source_line = f"Official curriculum source: {UNIVERSITY_NAME} Faculty of Science Student Handbook 2024/2025 ({KELANIYA_SCIENCE_HANDBOOK_URL})"
+        else:
+            guidance = f"- {discipline}: teach core concepts clearly with practical examples; balance theory and applied problem-solving."
+            source_line = f"Degree: {self.degree} | Discipline: {discipline} | Generic international curriculum"
         block = self._course_unit_list_text(course_units)
+        courses = FLAT_DEGREE_CURRICULUM.get(self.degree, SE_CURRICULUM).get(year, {}).get(semester, [])
+        courses_text = "\n".join(f"  - {c.split(':', 1)[-1]}" for c in courses) if courses else ""
+        if not block and courses_text:
+            block = courses_text
         return (
-            f"Official curriculum source: {UNIVERSITY_NAME} Faculty of Science Student Handbook 2024/2025 ({KELANIYA_SCIENCE_HANDBOOK_URL})\n"
+            f"{source_line}\n"
             f"Official course units for {year} {semester}:\n{block or '- No official course units loaded'}\n"
             f"Subject teaching guidance:\n{guidance}"
         )
@@ -10724,14 +11116,11 @@ Quality rules:
         self.onboarding_region = region
         self.degree = ""
         self.other_degree_text = ""
-        if region == "UK":
-            self.other_degree_text = "UK University"
-        elif region == "US":
-            self.other_degree_text = "US University"
-        elif region == "IN":
-            self.other_degree_text = "India University"
-        if region in ("UK", "US", "IN", "custom"):
+        region_degrees = REGION_DEGREE_OPTIONS.get(region, [])
+        self.options = region_degrees + [CUSTOM_DEGREE] if region_degrees else DEGREE_OPTIONS
+        if region == "custom":
             self.degree = CUSTOM_DEGREE
+            self.options = DEGREE_OPTIONS
 
     def _build_alex_voice_boot_script(self, *, auto_start_voice: bool) -> str:
         """Build JS that configures voice APIs and loads alex_voice.js (optionally starts the call)."""
@@ -19370,7 +19759,7 @@ def onboarding_page():
                 width="100%",
             ),
 
-            # ── Sri Lanka degrees (shown when LK selected) ──
+            # ── Sri Lanka degrees ──
             rx.cond(
                 AppState.onboarding_region == "LK",
                 rx.vstack(
@@ -19380,9 +19769,39 @@ def onboarding_page():
                 rx.fragment(),
             ),
 
-            # ── Custom card (shown when UK/US/IN/custom region selected) ──
+            # ── UK degrees ──
             rx.cond(
-                (AppState.onboarding_region != "LK") & (AppState.onboarding_region != "") & ~custom_selected,
+                AppState.onboarding_region == "UK",
+                rx.vstack(
+                    *[degree_btn(d) for d in ["Computer Science (UK)", "Software Engineering (UK)"]],
+                    spacing="2", width="100%",
+                ),
+                rx.fragment(),
+            ),
+
+            # ── US degrees ──
+            rx.cond(
+                AppState.onboarding_region == "US",
+                rx.vstack(
+                    *[degree_btn(d) for d in ["Computer Science (US)", "Computer Engineering (US)"]],
+                    spacing="2", width="100%",
+                ),
+                rx.fragment(),
+            ),
+
+            # ── India degrees ──
+            rx.cond(
+                AppState.onboarding_region == "IN",
+                rx.vstack(
+                    *[degree_btn(d) for d in ["B.Tech Computer Science", "B.Tech Information Technology"]],
+                    spacing="2", width="100%",
+                ),
+                rx.fragment(),
+            ),
+
+            # ── Custom card (shown for any region: button when not selected, expanded card when selected) ──
+            rx.cond(
+                (AppState.onboarding_region != "") & ~custom_selected,
                 rx.button(
                     rx.hstack(
                         rx.box(
