@@ -19152,7 +19152,7 @@ def onboarding_page():
                     rx.hstack(
                         rx.icon(tag="globe", size=14, color="rgba(56,189,248,0.7)", flex_shrink="0"),
                         rx.text(
-                            "Students from UK, US, India and anywhere else — pick your country below or use 'My Own'.",
+                            "University students from UK, US, India and anywhere else — pick your country or use 'My Own'.",
                             color="rgba(56,189,248,0.7)",
                             font_size="0.78rem",
                             font_weight="500",
@@ -19369,9 +19369,9 @@ def onboarding_page():
                                 _hover={"background": "rgba(56,189,248,0.08)", "border": "1px solid rgba(56,189,248,0.25)"},
                             )
                             for flag, label, preset in [
-                                ("🇬🇧", "UK / A-Levels", "UK A-Levels"),
-                                ("🇺🇸", "US / AP", "US College"),
-                                ("🇮🇳", "India / JEE", "India B.Tech / JEE"),
+                                ("🇬🇧", "UK Uni", "UK University"),
+                                ("🇺🇸", "US Uni", "US University"),
+                                ("🇮🇳", "India Uni", "India University"),
                                 ("✏️", "My Own", ""),
                             ]
                         ],
@@ -19481,7 +19481,7 @@ def onboarding_page():
                             align="center",
                         ),
                         rx.input(
-                            placeholder="e.g. UK A-Levels, US Computer Science, India B.Tech, Medicine...",
+                            placeholder="e.g. Computer Science, Medicine, Law, Engineering...",
                             value=AppState.other_degree_text,
                             on_change=AppState.set_other_degree_text,
                             size="2",
