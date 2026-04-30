@@ -29540,9 +29540,42 @@ _APP_TOASTER = rx.fragment(
 app = rx.App(
     toaster=_APP_TOASTER,
     head_components=[
-        # Set the body background immediately so the browser never shows a white/default flash
-        # before React mounts. Must be first so it applies before any other paint.
+        # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        # Native loading splash — runs before React.
+        # Creates a dark overlay + animated top bar as soon as the DOM is ready,
+        # then watches for React to render content and fades itself out.
+        rx.el.script("""
+(function(){
+  var CSS='@keyframes __ubr{0%{transform:translateX(-100%)}50%{transform:translateX(0)}100%{transform:translateX(100%)}}'+
+    '#__uni_sp{position:fixed;inset:0;background:#0a0a0c;z-index:99999;pointer-events:none;transition:opacity .25s ease}'+
+    '#__uni_sp.out{opacity:0}'+
+    '#__uni_tb{position:fixed;top:0;left:0;right:0;height:3px;z-index:100000;overflow:hidden;pointer-events:none}'+
+    '#__uni_tb div{height:100%;width:40%;background:linear-gradient(90deg,transparent,rgba(56,189,248,.95),transparent);animation:__ubr 1.4s cubic-bezier(.4,0,.2,1) infinite;box-shadow:0 0 12px rgba(56,189,248,.5)}';
+  function inject(){
+    if(document.getElementById('__uni_sp')) return;
+    var st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
+    var sp=document.createElement('div');sp.id='__uni_sp';
+    var tb=document.createElement('div');tb.id='__uni_tb';tb.innerHTML='<div></div>';
+    document.body.appendChild(sp);document.body.appendChild(tb);
+    var done=false;
+    function remove(){
+      if(done) return; done=true;
+      sp.classList.add('out');
+      setTimeout(function(){sp.remove();tb.remove();st.remove();},300);
+    }
+    // Remove when React has rendered page content
+    var ob=new MutationObserver(function(){
+      var el=document.querySelector('[data-is-root-theme]');
+      if(el&&el.children.length>0){remove();ob.disconnect();}
+    });
+    ob.observe(document.body,{childList:true,subtree:true});
+    // Failsafe: always remove after 6s
+    setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},6000);
+  }
+  if(document.body){inject();}else{document.addEventListener('DOMContentLoaded',inject);}
+})();
+"""),
         rx.script(src="https://www.googletagmanager.com/gtag/js?id=G-H5G0QBSY2M"),
         rx.script(
             """
