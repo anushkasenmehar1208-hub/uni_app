@@ -19937,9 +19937,9 @@ def onboarding_page():
                 ),
             ),
 
-            # ── Pathway Selection (only when NOT custom path) ──
+            # ── Pathway Selection (only when degree selected and NOT custom path) ──
             rx.cond(
-                ~custom_selected,
+                ~custom_selected & (AppState.degree != "") & (AppState.onboarding_region != ""),
                 rx.cond(
                     AppState.needs_pathway_selection,
                     rx.vstack(
@@ -19958,9 +19958,9 @@ def onboarding_page():
                 rx.fragment(),
             ),
 
-            # ── Semester (only when NOT custom path) ──
+            # ── Semester (only when region + degree selected, NOT custom path) ──
             rx.cond(
-                ~custom_selected,
+                ~custom_selected & (AppState.degree != "") & (AppState.onboarding_region != ""),
                 rx.vstack(
                     rx.box(height="1"),
                     desc_text("Select your semester"),
@@ -19980,14 +19980,24 @@ def onboarding_page():
                 rx.fragment(),
             ),
 
-            # ── CTA button — changes label for custom path ──
-            rx.vstack(
-                rx.box(height="2"),
-                rx.cond(
-                    custom_selected,
-                    _onboarding_cta_button("See Alex ➜", AppState.submit_onboarding),
-                    _onboarding_cta_button("Let Alex Build My Plan ➜", AppState.submit_onboarding),
+            # ── CTA button ──
+            # Custom/Others: show once region is selected
+            # Normal path: show once region + degree + semester are all picked
+            rx.cond(
+                AppState.onboarding_region != "",
+                rx.vstack(
+                    rx.box(height="2"),
+                    rx.cond(
+                        custom_selected,
+                        _onboarding_cta_button("See Alex ➜", AppState.submit_onboarding),
+                        rx.cond(
+                            (AppState.degree != "") & (AppState.selected_semester != ""),
+                            _onboarding_cta_button("Let Alex Build My Plan ➜", AppState.submit_onboarding),
+                            rx.fragment(),
+                        ),
+                    ),
                 ),
+                rx.fragment(),
             ),
 
             onboarding_feedback(),
