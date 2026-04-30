@@ -19616,8 +19616,9 @@ def onboarding_page():
     # ── Combined Single-Page Onboarding Form ──
     def combined_form() -> rx.Component:
         # Individual degree option button (non-custom path)
-        def degree_btn(label: str) -> rx.Component:
+        def degree_btn(label: str, display: str = "") -> rx.Component:
             is_sel = AppState.degree == label
+            display = display or label
             return rx.button(
                 rx.hstack(
                     rx.cond(
@@ -19640,7 +19641,7 @@ def onboarding_page():
                         ),
                     ),
                     rx.text(
-                        label,
+                        display,
                         color=rx.cond(is_sel, "white", "rgba(220,230,240,0.82)"),
                         font_weight=rx.cond(is_sel, "700", "400"),
                         font_size="0.83rem",
@@ -19773,7 +19774,8 @@ def onboarding_page():
             rx.cond(
                 AppState.onboarding_region == "UK",
                 rx.vstack(
-                    *[degree_btn(d) for d in ["Computer Science (UK)", "Software Engineering (UK)"]],
+                    degree_btn("Computer Science (UK)", "Computer Science"),
+                    degree_btn("Software Engineering (UK)", "Software Engineering"),
                     spacing="2", width="100%",
                 ),
                 rx.fragment(),
@@ -19783,7 +19785,8 @@ def onboarding_page():
             rx.cond(
                 AppState.onboarding_region == "US",
                 rx.vstack(
-                    *[degree_btn(d) for d in ["Computer Science (US)", "Computer Engineering (US)"]],
+                    degree_btn("Computer Science (US)", "Computer Science"),
+                    degree_btn("Computer Engineering (US)", "Computer Engineering"),
                     spacing="2", width="100%",
                 ),
                 rx.fragment(),
@@ -19793,15 +19796,16 @@ def onboarding_page():
             rx.cond(
                 AppState.onboarding_region == "IN",
                 rx.vstack(
-                    *[degree_btn(d) for d in ["B.Tech Computer Science", "B.Tech Information Technology"]],
+                    degree_btn("B.Tech Computer Science", "B.Tech Computer Science"),
+                    degree_btn("B.Tech Information Technology", "B.Tech IT"),
                     spacing="2", width="100%",
                 ),
                 rx.fragment(),
             ),
 
-            # ── Custom card (only for LK/UK/US/IN — not shown for "Others" region) ──
+            # ── Custom card (only for LK — UK/US/IN use Others chip for custom) ──
             rx.cond(
-                (AppState.onboarding_region != "") & (AppState.onboarding_region != "custom") & ~custom_selected,
+                (AppState.onboarding_region == "LK") & ~custom_selected,
                 rx.button(
                     rx.hstack(
                         rx.box(
@@ -19838,9 +19842,9 @@ def onboarding_page():
                     transition="all 0.25s ease",
                     _hover={"background": "rgba(167,139,250,0.10)", "border": "1px solid rgba(167,139,250,0.35)"},
                 ),
-                # Custom selected in LK/UK/US/IN — show full custom card (not for "Others" region)
+                # Custom selected in LK — show full custom card
                 rx.cond(
-                    custom_selected & (AppState.onboarding_region != "custom"),
+                    custom_selected & (AppState.onboarding_region == "LK"),
                     rx.box(
                     rx.vstack(
                         rx.hstack(
