@@ -4722,8 +4722,8 @@ class DayProgress(rx.Model, table=True):  # type: ignore
 
 
 def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Component:
-    """Top progress bar (YouTube/GitHub style) — runs left to right while the app hydrates."""
-    return rx.box(
+    """Top progress bar only — does not take over the screen. Visible while app hydrates."""
+    return rx.fragment(
         rx.el.style("""
             @keyframes alex-topbar-slide {
                 0%   { transform: translateX(-100%); }
@@ -4739,6 +4739,7 @@ def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Compone
                 background: rgba(255,255,255,0.04);
                 z-index: 99999;
                 overflow: hidden;
+                pointer-events: none;
             }
             .alex-topbar-fill {
                 height: 100%;
@@ -4752,9 +4753,6 @@ def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Compone
             rx.box(class_name="alex-topbar-fill"),
             class_name="alex-topbar-track",
         ),
-        width="100%",
-        height="100vh",
-        background="#0a0a0c",
     )
 
 
