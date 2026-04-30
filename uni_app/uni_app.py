@@ -10702,6 +10702,11 @@ Quality rules:
     def set_other_degree_text(self, value: str):
         self.other_degree_text = value
 
+    def apply_international_preset(self, preset: str):
+        """Select Custom degree and pre-fill with an international curriculum preset."""
+        self.degree = CUSTOM_DEGREE
+        self.other_degree_text = preset
+
     def _build_alex_voice_boot_script(self, *, auto_start_voice: bool) -> str:
         """Build JS that configures voice APIs and loads alex_voice.js (optionally starts the call)."""
         import secrets as _secrets
@@ -19135,9 +19140,9 @@ def onboarding_page():
                 desc_text("Choose your degree program to get started with your personalized study plan."),
                 rx.box(
                     rx.hstack(
-                        rx.icon(tag="info", size=14, color="rgba(56,189,248,0.7)", flex_shrink="0"),
+                        rx.icon(tag="globe", size=14, color="rgba(56,189,248,0.7)", flex_shrink="0"),
                         rx.text(
-                            "More degree programs are on the way.",
+                            "Students from UK, US, India and anywhere else — pick your country below or use 'My Own'.",
                             color="rgba(56,189,248,0.7)",
                             font_size="0.78rem",
                             font_weight="500",
@@ -19297,10 +19302,74 @@ def onboarding_page():
             # ── Degree label ──
             desc_text("Choose your degree program"),
 
-            # ── Regular degree buttons (fade out when Custom is picked) ──
-            rx.box(
-                *[degree_btn(d) for d in ["Software Engineering", "Physical Science", "Biological Science"]],
-                class_name=rx.cond(custom_selected, "ob-degree-grid others-mode", "ob-degree-grid"),
+            # ── Sri Lanka programs ──
+            rx.cond(
+                ~custom_selected,
+                rx.vstack(
+                    rx.hstack(
+                        rx.text(
+                            "🇱🇰  Sri Lanka",
+                            color="rgba(240,244,248,0.35)",
+                            font_size="0.7rem",
+                            font_weight="600",
+                            letter_spacing="0.08em",
+                            text_transform="uppercase",
+                        ),
+                        rx.box(flex="1", height="1px", background="rgba(255,255,255,0.06)"),
+                        spacing="2", align="center", width="100%",
+                    ),
+                    *[degree_btn(d) for d in ["Software Engineering", "Physical Science", "Biological Science"]],
+                    spacing="2", width="100%",
+                ),
+                rx.fragment(),
+            ),
+
+            # ── International quick-picks ──
+            rx.cond(
+                ~custom_selected,
+                rx.vstack(
+                    rx.hstack(
+                        rx.text(
+                            "🌍  International",
+                            color="rgba(240,244,248,0.35)",
+                            font_size="0.7rem",
+                            font_weight="600",
+                            letter_spacing="0.08em",
+                            text_transform="uppercase",
+                        ),
+                        rx.box(flex="1", height="1px", background="rgba(255,255,255,0.06)"),
+                        spacing="2", align="center", width="100%",
+                    ),
+                    rx.hstack(
+                        *[
+                            rx.button(
+                                rx.vstack(
+                                    rx.text(flag, font_size="1.2rem"),
+                                    rx.text(label, font_size="0.72rem", color="rgba(220,230,240,0.75)", font_weight="500", text_align="center"),
+                                    spacing="1", align="center",
+                                ),
+                                on_click=AppState.apply_international_preset(preset),
+                                type="button",
+                                flex="1",
+                                padding="10px 6px",
+                                border_radius="11px",
+                                border="1px solid rgba(255,255,255,0.07)",
+                                background="rgba(255,255,255,0.025)",
+                                cursor="pointer",
+                                _hover={"background": "rgba(56,189,248,0.08)", "border": "1px solid rgba(56,189,248,0.25)"},
+                            )
+                            for flag, label, preset in [
+                                ("🇬🇧", "UK / A-Levels", "UK A-Levels"),
+                                ("🇺🇸", "US / AP", "US College"),
+                                ("🇮🇳", "India / JEE", "India B.Tech / JEE"),
+                                ("✏️", "My Own", ""),
+                            ]
+                        ],
+                        spacing="2", width="100%",
+                    ),
+                    spacing="2", width="100%",
+                ),
+                rx.fragment(),
             ),
 
             # ── Custom button (always visible) ──
@@ -19385,7 +19454,7 @@ def onboarding_page():
                         ),
                         rx.hstack(
                             rx.text(
-                                "What would you like to study?",
+                                "Your degree / program",
                                 color="rgba(220,220,240,0.75)",
                                 font_size="0.78rem",
                                 font_weight="500",
@@ -19402,7 +19471,7 @@ def onboarding_page():
                             align="center",
                         ),
                         rx.input(
-                            placeholder="e.g. Psychology, Medicine, Law...",
+                            placeholder="e.g. UK A-Levels, US Computer Science, India B.Tech, Medicine...",
                             value=AppState.other_degree_text,
                             on_change=AppState.set_other_degree_text,
                             size="2",
