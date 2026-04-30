@@ -101,7 +101,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
 if not OPENROUTER_API_KEY:
     logger.warning("OPENROUTER_API_KEY is not set — AI features are disabled until the env var is configured.")
 
-OPENROUTER_TEACHER_MODEL = os.getenv("OPENROUTER_TEACHER_MODEL", "deepseek/deepseek-chat").strip() or "deepseek/deepseek-chat"
+OPENROUTER_TEACHER_MODEL = os.getenv("OPENROUTER_TEACHER_MODEL", "google/gemini-2.0-flash-001").strip() or "google/gemini-2.0-flash-001"
 OPENROUTER_REASONING_MODEL = os.getenv("OPENROUTER_REASONING_MODEL", "deepseek/deepseek-r1").strip() or "deepseek/deepseek-r1"
 OPENROUTER_PREMIUM_MODEL = os.getenv("OPENROUTER_PREMIUM_MODEL", "anthropic/claude-opus-4-7").strip() or "anthropic/claude-opus-4-7"
 OPENROUTER_AUX_MODEL = os.getenv("OPENROUTER_AUX_MODEL", "").strip() or OPENROUTER_TEACHER_MODEL
