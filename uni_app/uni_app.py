@@ -12471,10 +12471,10 @@ Quality rules:
         try:
             if is_intl_degree:
                 discipline = FLAT_DEGREE_DISCIPLINE.get(degree, degree)
-                university_label = f"a typical {discipline} program"
+                expert_intro = f"You are a university curriculum expert building study plans for a typical {discipline} ({degree}) student."
             else:
-                university_label = UNIVERSITY_NAME
-            prompt = f"""You are a university curriculum expert building study plans for {university_label} {degree} students.
+                expert_intro = f"You are a university curriculum expert building study plans for {UNIVERSITY_NAME} {degree} students."
+            prompt = f"""{expert_intro}
 Generate a realistic detailed 110 day study plan for {target_year} {target_semester}.
 Use only the official semester course units below and do not include content from any other semester.
 If the official data does not list fine-grained weekly topics, infer subtopics conservatively from the official title, prerequisite chain, and discipline guidance. Do not invent unrelated units.
