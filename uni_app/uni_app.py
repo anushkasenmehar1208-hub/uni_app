@@ -106,9 +106,10 @@ OPENROUTER_REASONING_MODEL = os.getenv("OPENROUTER_REASONING_MODEL", "deepseek/d
 OPENROUTER_PREMIUM_MODEL = os.getenv("OPENROUTER_PREMIUM_MODEL", "anthropic/claude-opus-4-7").strip() or "anthropic/claude-opus-4-7"
 OPENROUTER_AUX_MODEL = os.getenv("OPENROUTER_AUX_MODEL", "").strip() or OPENROUTER_TEACHER_MODEL
 # Fallback model used when OPENROUTER_AUX_MODEL is rate-limited (429) or returns an error.
+# Default: Claude Haiku 4.5 — fast, reliable, different provider so won't share Google rate limits.
 OPENROUTER_AUX_FALLBACK_MODEL = (
     os.getenv("OPENROUTER_AUX_FALLBACK_MODEL", "").strip()
-    or "meta-llama/llama-3.3-70b-instruct"
+    or "anthropic/claude-haiku-4.5"
 )
 OPENROUTER_VISION_MODEL = os.getenv("OPENROUTER_VISION_MODEL", "openai/gpt-5.5-pro").strip() or "openai/gpt-5.5-pro"
 OPENROUTER_DRAW_MODEL = os.getenv("OPENROUTER_DRAW_MODEL", "openai/gpt-5.5-pro").strip() or "openai/gpt-5.5-pro"
