@@ -28906,11 +28906,35 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
-        # strict-origin-when-cross-origin: sends origin on cross-site requests
-        # (needed for YouTube iframe embeds — no-referrer breaks Error 153).
-        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")
+        h = response.headers
+        # Prevent MIME-type sniffing
+        h.setdefault("X-Content-Type-Options", "nosniff")
+        # strict-origin-when-cross-origin lets YouTube iframes work
+        # (no-referrer breaks YouTube embed Error 153)
+        h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        # Block clickjacking — only allow our own domain to frame us
+        h.setdefault("X-Frame-Options", "SAMEORIGIN")
+        # Force HTTPS for 1 year (only sent over HTTPS)
+        h.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+        # Restrict browser features
+        h.setdefault("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")
+        # Content Security Policy — allows YouTube iframes + our own assets
+        h.setdefault(
+            "Content-Security-Policy",
+            (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+                "  https://www.googletagmanager.com https://www.google-analytics.com "
+                "  https://www.youtube.com https://s.ytimg.com; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: blob: https: http:; "
+                "media-src 'self' blob:; "
+                "frame-src https://www.youtube.com https://www.youtube-nocookie.com; "
+                "connect-src 'self' wss: ws: https:; "
+                "worker-src 'self' blob:; "
+            ),
+        )
         return response
 
 
