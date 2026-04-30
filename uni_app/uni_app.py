@@ -19748,11 +19748,11 @@ def onboarding_page():
                         _hover={"background": "rgba(56,189,248,0.08)", "border": "1px solid rgba(56,189,248,0.3)"},
                     )
                     for flag, label, code in [
-                        ("🇱🇰", "Sri Lanka", "LK"),
-                        ("🇬🇧", "UK", "UK"),
                         ("🇺🇸", "US", "US"),
+                        ("🇬🇧", "UK", "UK"),
                         ("🇮🇳", "India", "IN"),
-                        ("✏️", "My Own", "custom"),
+                        ("🇱🇰", "Sri Lanka", "LK"),
+                        ("✏️", "Others", "custom"),
                     ]
                 ],
                 spacing="2",
@@ -19799,9 +19799,9 @@ def onboarding_page():
                 rx.fragment(),
             ),
 
-            # ── Custom card (shown for any region: button when not selected, expanded card when selected) ──
+            # ── Custom card (only for LK/UK/US/IN — not shown for "Others" region) ──
             rx.cond(
-                (AppState.onboarding_region != "") & ~custom_selected,
+                (AppState.onboarding_region != "") & (AppState.onboarding_region != "custom") & ~custom_selected,
                 rx.button(
                     rx.hstack(
                         rx.box(
@@ -19838,8 +19838,10 @@ def onboarding_page():
                     transition="all 0.25s ease",
                     _hover={"background": "rgba(167,139,250,0.10)", "border": "1px solid rgba(167,139,250,0.35)"},
                 ),
-                # Custom is selected — show full custom card
-                rx.box(
+                # Custom selected in LK/UK/US/IN — show full custom card (not for "Others" region)
+                rx.cond(
+                    custom_selected & (AppState.onboarding_region != "custom"),
+                    rx.box(
                     rx.vstack(
                         rx.hstack(
                             rx.box(
@@ -19926,6 +19928,8 @@ def onboarding_page():
                     background="rgba(167,139,250,0.06)",
                     border="1px solid rgba(167,139,250,0.25)",
                     width="100%",
+                    ),
+                    rx.fragment(),
                 ),
             ),
 
