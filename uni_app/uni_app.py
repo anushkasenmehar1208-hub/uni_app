@@ -27318,15 +27318,10 @@ def _chat_message(msg: rx.Var) -> rx.Component:
                     ),
                     rx.markdown(
                         msg["content"],
-                        color="rgba(240,244,248,0.92)",
-                        font_size="0.92rem",
-                        line_height="1.6",
-                        component_map={
-                            "p": lambda *c, **p: rx.text(*c, margin_bottom="8px", line_height="1.6", **p),
-                            "strong": lambda *c, **p: rx.text(*c, as_="strong", font_weight="700", color="rgba(255,255,255,0.98)", **p),
-                            "li": lambda *c, **p: rx.el.li(*c, margin_bottom="4px", **p),
-                            "ul": lambda *c, **p: rx.el.ul(*c, padding_left="18px", margin_bottom="8px", **p),
-                            "ol": lambda *c, **p: rx.el.ol(*c, padding_left="18px", margin_bottom="8px", **p),
+                        style={
+                            "color": "rgba(240,244,248,0.92)",
+                            "font_size": "0.92rem",
+                            "line_height": "1.6",
                         },
                     ),
                 ),
