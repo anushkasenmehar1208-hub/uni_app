@@ -4747,6 +4747,9 @@ class AppState(reflex_local_auth.LocalAuthState):
     login_error: str = ""
     register_error: str = ""
     register_success: bool = False
+    show_login_pw: bool = False
+    show_reg_pw: bool = False
+    show_reg_confirm_pw: bool = False
     reset_error: str = ""
     reset_success: bool = False
 
@@ -5839,12 +5842,19 @@ class AppState(reflex_local_auth.LocalAuthState):
             return False
         return hmac.compare_digest(token, expected)
     
+    def toggle_login_pw(self): self.show_login_pw = not self.show_login_pw
+    def toggle_reg_pw(self): self.show_reg_pw = not self.show_reg_pw
+    def toggle_reg_confirm_pw(self): self.show_reg_confirm_pw = not self.show_reg_confirm_pw
+
     @rx.event
     def init_auth_forms(self):
         self._ensure_auth_csrf()
         self.login_error = ""
         self.register_error = ""
         self.reset_error = ""
+        self.show_login_pw = False
+        self.show_reg_pw = False
+        self.show_reg_confirm_pw = False
 
     @rx.event
     def auth_redir(self):
@@ -22048,6 +22058,43 @@ def _auth_header(subtitle: str = "Welcome Back") -> rx.Component:
     )
 
 
+def _pw_input(field_id: str, show_var, toggle_handler, input_style: dict) -> rx.Component:
+    """Password input with show/hide eye toggle."""
+    return rx.box(
+        rx.input(
+            id=field_id,
+            name=field_id,
+            type=rx.cond(show_var, "text", "password"),
+            placeholder="........",
+            **input_style,
+            style={**input_style, "padding_right": "40px"},
+        ),
+        rx.button(
+            rx.cond(
+                show_var,
+                rx.icon(tag="eye_off", size=15, color="rgba(255,255,255,0.35)"),
+                rx.icon(tag="eye", size=15, color="rgba(255,255,255,0.35)"),
+            ),
+            on_click=toggle_handler,
+            type="button",
+            position="absolute",
+            right="10px",
+            top="50%",
+            transform="translateY(-50%)",
+            background="none",
+            border="none",
+            padding="0",
+            cursor="pointer",
+            _hover={"color": "rgba(255,255,255,0.7)"},
+            height="20px",
+            display="flex",
+            align_items="center",
+        ),
+        position="relative",
+        width="100%",
+    )
+
+
 def secure_login_form() -> rx.Component:
     input_style = {
         "background": "rgba(255,255,255,0.04)",
@@ -22078,12 +22125,12 @@ def secure_login_form() -> rx.Component:
                 
                 rx.vstack(
                     rx.text("Password", **label_style),
-                    rx.input(id="password", name="password", type="password", placeholder="........", **input_style),
+                    _pw_input("password", AppState.show_login_pw, AppState.toggle_login_pw, input_style),
                     align_items="start",
                     width="100%",
                     spacing="1",
                 ),
-                
+
                 _csrf_field(),
                 rx.button(
                     "Sign In",
@@ -22152,12 +22199,12 @@ def secure_register_form() -> rx.Component:
                 ),
                 rx.vstack(
                     rx.text("Password", **label_style),
-                    rx.input(id="password", name="password", type="password", placeholder="........", **input_style),
+                    _pw_input("password", AppState.show_reg_pw, AppState.toggle_reg_pw, input_style),
                     align_items="start", width="100%", spacing="1",
                 ),
                 rx.vstack(
                     rx.text("Confirm Password", **label_style),
-                    rx.input(id="confirm_password", name="confirm_password", type="password", placeholder="........", **input_style),
+                    _pw_input("confirm_password", AppState.show_reg_confirm_pw, AppState.toggle_reg_confirm_pw, input_style),
                     align_items="start", width="100%", spacing="1",
                 ),
                 _csrf_field(),
