@@ -6946,7 +6946,11 @@ class AppState(reflex_local_auth.LocalAuthState):
     def _semester_course_units(self, year: str, semester: str) -> list[dict[str, Any]]:
         if self._is_multi_subject_degree() and self.active_subject:
             return self._semester_course_units_for_subject(self.active_subject, year, semester)
-        return KELANIYA_SENG_CURRICULUM.get(year, {}).get(semester, [])
+        # Detailed Kelaniya course units only apply to SL Software Engineering.
+        # International degrees use the flat FLAT_DEGREE_CURRICULUM via _semester_courses fallback.
+        if self.degree == "Software Engineering":
+            return KELANIYA_SENG_CURRICULUM.get(year, {}).get(semester, [])
+        return []
 
     def _all_semester_course_units_ps(self, year: str, semester: str) -> list[dict[str, Any]]:
         names = self._multi_subject_full_names()
@@ -8143,10 +8147,13 @@ class AppState(reflex_local_auth.LocalAuthState):
             session.commit()
 
     def _ensure_progress_for_year(self, uid: int, year: str) -> None:
-        if uid < 0 or year not in FULL_CURRICULUM:
+        if uid < 0:
+            return
+        curriculum = FLAT_DEGREE_CURRICULUM.get(self.degree, FULL_CURRICULUM)
+        if year not in curriculum:
             return
         items, idx = [], 0
-        for semester, courses in FULL_CURRICULUM[year].items():
+        for semester, courses in curriculum[year].items():
             for course in courses:
                 items.append((semester, course, idx)); idx += 1
         with rx.session() as session:
@@ -12425,14 +12432,23 @@ Quality rules:
                 return
 
         # ── Web search for latest syllabus/curriculum info ──
+        is_intl_degree = degree in _INTL_DEGREES
         search_context = ""
         if DDG_SEARCH_ENABLED:
             try:
                 print("[PLAN-GEN] Searching web for latest curriculum info...", flush=True)
-                search_queries = [
-                    f"site:science.kln.ac.lk University of Kelaniya {degree} {target_year} {target_semester} curriculum syllabus",
-                    f"site:science.kln.ac.lk {courses_text.splitlines()[0] if courses_text.strip() else degree} University of Kelaniya course outline",
-                ]
+                if is_intl_degree:
+                    discipline = FLAT_DEGREE_DISCIPLINE.get(degree, degree)
+                    first_course = courses_text.splitlines()[0] if courses_text.strip() else discipline
+                    search_queries = [
+                        f"{discipline} {target_year} {target_semester} curriculum syllabus topics",
+                        f"{first_course} course outline university syllabus",
+                    ]
+                else:
+                    search_queries = [
+                        f"site:science.kln.ac.lk University of Kelaniya {degree} {target_year} {target_semester} curriculum syllabus",
+                        f"site:science.kln.ac.lk {courses_text.splitlines()[0] if courses_text.strip() else degree} University of Kelaniya course outline",
+                    ]
                 all_snippets = []
                 all_results = []
                 for sq in search_queries:
@@ -12453,7 +12469,12 @@ Quality rules:
         # ── AI call outside lock — page stays fully interactive ──
         print(f"[PLAN-GEN] Calling OpenRouter for {target_scope}...", flush=True)
         try:
-            prompt = f"""You are a university curriculum expert building study plans for {UNIVERSITY_NAME} {degree} students.
+            if is_intl_degree:
+                discipline = FLAT_DEGREE_DISCIPLINE.get(degree, degree)
+                university_label = f"a typical {discipline} program"
+            else:
+                university_label = UNIVERSITY_NAME
+            prompt = f"""You are a university curriculum expert building study plans for {university_label} {degree} students.
 Generate a realistic detailed 110 day study plan for {target_year} {target_semester}.
 Use only the official semester course units below and do not include content from any other semester.
 If the official data does not list fine-grained weekly topics, infer subtopics conservatively from the official title, prerequisite chain, and discipline guidance. Do not invent unrelated units.
