@@ -4479,6 +4479,22 @@ LOCKED_YEARS = {"Year 3", "Year 4"}
 LOCKED_SEMESTERS = {"Semester 5", "Semester 6", "Semester 7", "Semester 8"}
 COMING_SOON_MSG = "Year 3 and Year 4 content is being prepared and will be available soon. Stay tuned \u2014 we'll notify you as soon as it's ready!"
 
+# \u2500\u2500 International degrees have all content built \u2014 nothing locked \u2500\u2500
+_INTL_DEGREES: set[str] = {
+    "Computer Science (UK)", "Software Engineering (UK)",
+    "Computer Science (US)", "Computer Engineering (US)",
+    "B.Tech Computer Science", "B.Tech Information Technology",
+}
+
+
+def _locked_years_for_degree(degree: str) -> set[str]:
+    """Return locked years for a degree (empty for international degrees)."""
+    return set() if degree in _INTL_DEGREES else LOCKED_YEARS
+
+
+def _locked_semesters_for_degree(degree: str) -> set[str]:
+    return set() if degree in _INTL_DEGREES else LOCKED_SEMESTERS
+
 # ── Route-based scope mapping ──
 # Each scope gets its own URL so navigation = full page reload = no stale state.
 SCOPE_ROUTE_MAP: dict[str, dict[str, str]] = {}
@@ -5314,6 +5330,36 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def custom_degree_selected(self) -> bool:
         return _degree_is_custom(self.degree)
+
+    def _available_semesters_for_degree(self, degree: str) -> list[str]:
+        """Return semesters available for a given degree based on its curriculum."""
+        if _degree_is_custom(degree) or not degree:
+            return []
+        curriculum = FLAT_DEGREE_CURRICULUM.get(degree)
+        if curriculum is not None:
+            available_years = set(curriculum.keys())
+        elif degree in MULTI_SUBJECT_DEGREES:
+            locked = _locked_years_for_degree(degree)
+            available_years = set(SEMESTER_NAVIGATION.keys()) - locked
+        else:
+            available_years = set(SEMESTER_NAVIGATION.keys()) - LOCKED_YEARS
+        return [
+            sem
+            for yr, sems in SEMESTER_NAVIGATION.items()
+            if yr in available_years
+            for sem in sems
+        ]
+
+    @rx.var
+    def onboarding_semester_options(self) -> list[str]:
+        """Semester list for the onboarding dropdown — matches the degree's actual year count."""
+        return self._available_semesters_for_degree(self.degree)
+
+    @rx.var
+    def sidebar_semester_options(self) -> list[str]:
+        """Semester list for the sidebar dropdown — degree-aware."""
+        opts = self._available_semesters_for_degree(self.degree)
+        return opts if opts else list(SIDEBAR_SEMESTER_SELECT_OPTIONS)
 
     @rx.var
     def is_home_scope_active(self) -> bool:
@@ -12062,13 +12108,14 @@ Quality rules:
     def choose_onboarding_semester(self, semester: str):
         uid = self._uid()
         try:
-        # 1. Define the mapping so we don't have to ask for the year
+        # Build full semester→year mapping from SEMESTER_NAVIGATION
             semester_to_year = {
-                "Semester 1": "Year 1", "Semester 2": "Year 1",
-                "Semester 3": "Year 2", "Semester 4": "Year 2",
+                sem: yr
+                for yr, sems in SEMESTER_NAVIGATION.items()
+                for sem in sems
             }
-        
-        # 2. Automatically set the year based on the semester picked
+
+        # Automatically set the year based on the semester picked
             inferred_year = semester_to_year.get(semester)
             if not inferred_year:
                 self.onboarding_message = "Please select a valid semester."
@@ -12282,7 +12329,7 @@ Quality rules:
         uid = self._uid()
         if uid < 0:
             return
-        if semester in LOCKED_SEMESTERS:
+        if semester in _locked_semesters_for_degree(self.degree):
             yield rx.call_script(
                 """
                 (function(){
@@ -19965,7 +20012,7 @@ def onboarding_page():
                     rx.box(height="1"),
                     desc_text("Select your semester"),
                     rx.select(
-                        all_semesters,
+                        AppState.onboarding_semester_options,
                         placeholder="Which semester are you starting from?",
                         default_value=AppState.selected_semester,
                         on_change=AppState.choose_onboarding_semester,
@@ -20960,7 +21007,7 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             text_transform="uppercase",
         ),
         rx.select(
-            SIDEBAR_SEMESTER_SELECT_OPTIONS,
+            AppState.sidebar_semester_options,
             placeholder="Choose semester",
             value=AppState.sidebar_semester_select_value,
             on_change=AppState.sidebar_select_semester,
