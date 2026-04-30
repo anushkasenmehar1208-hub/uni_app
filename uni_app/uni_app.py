@@ -26248,6 +26248,48 @@ def tracker_page():
 
 
 # ============================================================
+# Rate limiter — in-memory, per-user fixed window
+# Works fine for a single Railway instance. Upgrade to Redis
+# if you ever run multiple instances.
+# ============================================================
+
+import threading as _threading
+from collections import defaultdict as _defaultdict
+
+class _RateLimiter:
+    """Fixed-window in-memory rate limiter keyed by arbitrary strings."""
+
+    def __init__(self):
+        self._counts: dict[str, list[float]] = _defaultdict(list)
+        self._lock = _threading.Lock()
+
+    def is_allowed(self, key: str, max_calls: int, window_seconds: int) -> bool:
+        """Return True and record the call if under the limit, else False."""
+        now = time.time()
+        with self._lock:
+            bucket = self._counts[key]
+            # Drop timestamps outside the current window
+            self._counts[key] = bucket = [t for t in bucket if now - t < window_seconds]
+            if len(bucket) < max_calls:
+                bucket.append(now)
+                return True
+            return False
+
+    def seconds_until_reset(self, key: str, window_seconds: int) -> int:
+        """How many seconds until the oldest entry expires."""
+        now = time.time()
+        with self._lock:
+            bucket = self._counts.get(key, [])
+            if not bucket:
+                return 0
+            oldest = min(bucket)
+            return max(0, int(window_seconds - (now - oldest)) + 1)
+
+
+_rl = _RateLimiter()
+
+
+# ============================================================
 # /learn — YouTube-powered learning hub (embed + AI chat + quiz + notes)
 # ============================================================
 
@@ -26313,6 +26355,9 @@ class LearnState(AppState):
     # ── Active right-panel tab: chat | summary | quiz | notes ──
     active_tab: str = "chat"
 
+    # ── Rate-limit feedback ───────────────────────────────────
+    rate_limit_msg: str = ""      # Non-empty → show banner
+
     @rx.var
     def has_video(self) -> bool:
         return bool(self.video_id)
@@ -26350,6 +26395,9 @@ class LearnState(AppState):
     def set_chat_input(self, v: str): self.chat_input = v
     def set_note_draft(self, v: str): self.note_draft = v
     def set_active_tab(self, v: str): self.active_tab = v
+
+    def set_rate_limit_msg(self, v: str):
+        self.rate_limit_msg = v
 
     def handle_chat_enter(self, key: str):
         if key == "Enter" and self.can_send_chat:
@@ -26567,6 +26615,13 @@ class LearnState(AppState):
             user_msg = (self.chat_input or "").strip()
             if not user_msg or self.chat_busy or not self.video_id:
                 return
+            uid = self._uid()
+            # 20 messages per minute per user
+            if not _rl.is_allowed(f"chat:{uid}", 20, 60):
+                wait = _rl.seconds_until_reset(f"chat:{uid}", 60)
+                self.rate_limit_msg = f"Slow down — you've sent a lot of messages. Try again in {wait}s."
+                return
+            self.rate_limit_msg = ""
             self.chat_busy = True
             self.chat_input = ""
             self.chat_messages = self.chat_messages + [
@@ -26620,6 +26675,13 @@ class LearnState(AppState):
             if not self.transcript:
                 self.summary = "No transcript available — can't summarize this video."
                 return
+            uid = self._uid()
+            # 5 summaries per hour per user
+            if not _rl.is_allowed(f"summary:{uid}", 5, 3600):
+                wait = _rl.seconds_until_reset(f"summary:{uid}", 3600)
+                self.rate_limit_msg = f"Summary limit reached. Try again in {wait // 60}m."
+                return
+            self.rate_limit_msg = ""
             self.summary_loading = True
             transcript = self.transcript
 
@@ -26656,6 +26718,13 @@ class LearnState(AppState):
             if not self.transcript:
                 self.quiz_questions = []
                 return
+            uid = self._uid()
+            # 10 quiz generations per hour per user
+            if not _rl.is_allowed(f"quiz:{uid}", 10, 3600):
+                wait = _rl.seconds_until_reset(f"quiz:{uid}", 3600)
+                self.rate_limit_msg = f"Quiz limit reached. Try again in {wait // 60}m."
+                return
+            self.rate_limit_msg = ""
             self.quiz_loading = True
             self.quiz_revealed = False
             transcript = self.transcript
@@ -27972,6 +28041,33 @@ def _learn_session_view() -> rx.Component:
                 width="100%",
                 padding="8px 12px",
                 border_bottom="1px solid rgba(255,255,255,0.06)",
+            ),
+            # Rate-limit warning banner
+            rx.cond(
+                LearnState.rate_limit_msg != "",
+                rx.hstack(
+                    rx.icon(tag="shield_alert", size=14, color="rgba(250,204,21,0.9)"),
+                    rx.text(
+                        LearnState.rate_limit_msg,
+                        font_size="0.8rem",
+                        color="rgba(250,204,21,0.9)",
+                        flex="1",
+                    ),
+                    rx.icon_button(
+                        rx.icon(tag="x", size=12),
+                        on_click=LearnState.set_rate_limit_msg(""),
+                        size="1",
+                        variant="ghost",
+                        style={"color": "rgba(250,204,21,0.7)", "_hover": {"color": "white"}},
+                    ),
+                    spacing="2",
+                    align="center",
+                    width="100%",
+                    padding="6px 12px",
+                    background="rgba(250,204,21,0.07)",
+                    border_bottom="1px solid rgba(250,204,21,0.2)",
+                ),
+                rx.fragment(),
             ),
             rx.box(
                 rx.cond(
