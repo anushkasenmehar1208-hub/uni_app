@@ -105,6 +105,11 @@ OPENROUTER_TEACHER_MODEL = os.getenv("OPENROUTER_TEACHER_MODEL", "google/gemini-
 OPENROUTER_REASONING_MODEL = os.getenv("OPENROUTER_REASONING_MODEL", "deepseek/deepseek-r1").strip() or "deepseek/deepseek-r1"
 OPENROUTER_PREMIUM_MODEL = os.getenv("OPENROUTER_PREMIUM_MODEL", "anthropic/claude-opus-4-7").strip() or "anthropic/claude-opus-4-7"
 OPENROUTER_AUX_MODEL = os.getenv("OPENROUTER_AUX_MODEL", "").strip() or OPENROUTER_TEACHER_MODEL
+# Fallback model used when OPENROUTER_AUX_MODEL is rate-limited (429) or returns an error.
+OPENROUTER_AUX_FALLBACK_MODEL = (
+    os.getenv("OPENROUTER_AUX_FALLBACK_MODEL", "").strip()
+    or "meta-llama/llama-3.3-70b-instruct"
+)
 OPENROUTER_VISION_MODEL = os.getenv("OPENROUTER_VISION_MODEL", "openai/gpt-5.5-pro").strip() or "openai/gpt-5.5-pro"
 OPENROUTER_DRAW_MODEL = os.getenv("OPENROUTER_DRAW_MODEL", "openai/gpt-5.5-pro").strip() or "openai/gpt-5.5-pro"
 OPENROUTER_SPEC_MODEL = os.getenv("OPENROUTER_SPEC_MODEL", "deepseek/deepseek-chat").strip() or "deepseek/deepseek-chat"
@@ -2004,6 +2009,25 @@ def _openrouter_complete(
 def _openrouter_generate_user_prompt(model: str, contents: str, max_tokens: int = 2048) -> Any:
     """Non-streaming completion with a single user message (replaces legacy Groq helper)."""
     return _openrouter_complete(model, [{"role": "user", "content": contents}], max_tokens=max_tokens)
+
+
+def _openrouter_generate_with_fallback(
+    primary_model: str, contents: str, max_tokens: int = 2048,
+    fallback_model: str = OPENROUTER_AUX_FALLBACK_MODEL,
+) -> Any:
+    """Try primary model first. If rate-limited or returns rate-limit text, retry with fallback."""
+    try:
+        resp = _openrouter_generate_user_prompt(primary_model, contents, max_tokens)
+        text = (getattr(resp, "text", "") or "").strip()
+        if text and not _is_rate_limit_text(text):
+            return resp
+        logger.warning(
+            "Primary model %s rate-limited or empty; falling back to %s",
+            primary_model, fallback_model,
+        )
+    except Exception as e:
+        logger.warning("Primary model %s failed (%s); trying fallback %s", primary_model, e, fallback_model)
+    return _openrouter_generate_user_prompt(fallback_model, contents, max_tokens)
 
 
 _SVG_DRAWING_SYSTEM_PROMPT = """You are an expert educational SVG illustrator for university tutoring.
@@ -12489,7 +12513,7 @@ Each item: {{"day":<1-110>,"subject":"<n>","unit":"<unit>","topics":["<t1>","<t2
 Official curriculum context:\n{curriculum_context}
 
 Course units to cover:\n{courses_text}"""
-            resp = await asyncio.to_thread(_openrouter_generate_user_prompt, OPENROUTER_AUX_MODEL, prompt, 8192)
+            resp = await asyncio.to_thread(_openrouter_generate_with_fallback, OPENROUTER_AUX_MODEL, prompt, 8192)
             raw_text = (getattr(resp, "text", "") or "").strip()
             print(f"[PLAN-GEN] OpenRouter response len={len(raw_text)} first100='{raw_text[:100]}'", flush=True)
         except Exception as e:
