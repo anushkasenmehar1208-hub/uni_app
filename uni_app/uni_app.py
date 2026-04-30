@@ -4722,19 +4722,21 @@ class DayProgress(rx.Model, table=True):  # type: ignore
 
 
 def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Component:
-    """Top progress bar only — does not take over the screen. Visible while app hydrates."""
-    return rx.fragment(
+    """Full-screen splash with a top progress bar. Covers the blank body during WebSocket hydration."""
+    return rx.box(
         rx.el.style("""
             @keyframes alex-topbar-slide {
                 0%   { transform: translateX(-100%); }
                 50%  { transform: translateX(0%); }
                 100% { transform: translateX(100%); }
             }
+            @keyframes alex-gate-fade {
+                0%   { opacity: 0.6; }
+                100% { opacity: 1; }
+            }
             .alex-topbar-track {
                 position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
+                top: 0; left: 0; right: 0;
                 height: 3px;
                 background: rgba(255,255,255,0.04);
                 z-index: 99999;
@@ -4742,17 +4744,34 @@ def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Compone
                 pointer-events: none;
             }
             .alex-topbar-fill {
-                height: 100%;
-                width: 40%;
+                height: 100%; width: 40%;
                 background: linear-gradient(90deg, rgba(56,189,248,0) 0%, rgba(56,189,248,0.95) 50%, rgba(167,139,250,0) 100%);
                 animation: alex-topbar-slide 1.4s cubic-bezier(0.4,0,0.2,1) infinite;
                 box-shadow: 0 0 12px rgba(56,189,248,0.5);
             }
         """),
-        rx.box(
-            rx.box(class_name="alex-topbar-fill"),
-            class_name="alex-topbar-track",
+        # Top progress bar
+        rx.box(rx.box(class_name="alex-topbar-fill"), class_name="alex-topbar-track"),
+        # Centered brand mark
+        rx.vstack(
+            rx.text(
+                "UniSense",
+                font_size="1.5rem",
+                font_weight="700",
+                letter_spacing="-0.02em",
+                color="rgba(255,255,255,0.18)",
+                font_family="'Space Grotesk', sans-serif",
+            ),
+            position="fixed",
+            top="0", left="0", right="0", bottom="0",
+            align_items="center",
+            justify_content="center",
+            pointer_events="none",
         ),
+        position="fixed",
+        top="0", left="0", right="0", bottom="0",
+        background="#0a0a0c",
+        z_index="9998",
     )
 
 
@@ -29521,6 +29540,9 @@ _APP_TOASTER = rx.fragment(
 app = rx.App(
     toaster=_APP_TOASTER,
     head_components=[
+        # Set the body background immediately so the browser never shows a white/default flash
+        # before React mounts. Must be first so it applies before any other paint.
+        rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
         rx.script(src="https://www.googletagmanager.com/gtag/js?id=G-H5G0QBSY2M"),
         rx.script(
             """
