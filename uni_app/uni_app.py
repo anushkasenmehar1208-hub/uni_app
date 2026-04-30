@@ -4750,6 +4750,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     show_login_pw: bool = False
     show_reg_pw: bool = False
     show_reg_confirm_pw: bool = False
+    onboarding_region: str = ""   # "LK" | "UK" | "US" | "IN" | "custom"
     reset_error: str = ""
     reset_success: bool = False
 
@@ -5855,6 +5856,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.show_login_pw = False
         self.show_reg_pw = False
         self.show_reg_confirm_pw = False
+        self.onboarding_region = ""
 
     @rx.event
     def auth_redir(self):
@@ -10716,6 +10718,20 @@ Quality rules:
         """Select Custom degree and pre-fill with an international curriculum preset."""
         self.degree = CUSTOM_DEGREE
         self.other_degree_text = preset
+
+    def set_onboarding_region(self, region: str):
+        """Select a region chip — clears degree so user picks fresh."""
+        self.onboarding_region = region
+        self.degree = ""
+        self.other_degree_text = ""
+        if region == "UK":
+            self.other_degree_text = "UK University"
+        elif region == "US":
+            self.other_degree_text = "US University"
+        elif region == "IN":
+            self.other_degree_text = "India University"
+        if region in ("UK", "US", "IN", "custom"):
+            self.degree = CUSTOM_DEGREE
 
     def _build_alex_voice_boot_script(self, *, auto_start_voice: bool) -> str:
         """Build JS that configures voice APIs and loads alex_voice.js (optionally starts the call)."""
@@ -19312,79 +19328,61 @@ def onboarding_page():
             # ── Degree label ──
             desc_text("Choose your degree program"),
 
-            # ── Sri Lanka programs ──
-            rx.cond(
-                ~custom_selected,
-                rx.vstack(
-                    rx.hstack(
-                        rx.text(
-                            "🇱🇰  Sri Lanka",
-                            color="rgba(240,244,248,0.35)",
-                            font_size="0.7rem",
-                            font_weight="600",
-                            letter_spacing="0.08em",
-                            text_transform="uppercase",
+            # ── Region chips (always visible) ──
+            rx.hstack(
+                *[
+                    rx.button(
+                        rx.vstack(
+                            rx.text(flag, font_size="1.1rem", line_height="1"),
+                            rx.text(label, font_size="0.68rem", font_weight="600", text_align="center",
+                                color=rx.cond(AppState.onboarding_region == code, "white", "rgba(220,230,240,0.65)"),
+                            ),
+                            spacing="1", align="center",
                         ),
-                        rx.box(flex="1", height="1px", background="rgba(255,255,255,0.06)"),
-                        spacing="2", align="center", width="100%",
-                    ),
+                        on_click=AppState.set_onboarding_region(code),
+                        type="button",
+                        flex="1",
+                        padding="10px 4px",
+                        border_radius="12px",
+                        border=rx.cond(
+                            AppState.onboarding_region == code,
+                            "1px solid rgba(56,189,248,0.6)",
+                            "1px solid rgba(255,255,255,0.07)",
+                        ),
+                        background=rx.cond(
+                            AppState.onboarding_region == code,
+                            "rgba(8,47,73,0.85)",
+                            "rgba(255,255,255,0.025)",
+                        ),
+                        cursor="pointer",
+                        transition="all 0.2s ease",
+                        _hover={"background": "rgba(56,189,248,0.08)", "border": "1px solid rgba(56,189,248,0.3)"},
+                    )
+                    for flag, label, code in [
+                        ("🇱🇰", "Sri Lanka", "LK"),
+                        ("🇬🇧", "UK", "UK"),
+                        ("🇺🇸", "US", "US"),
+                        ("🇮🇳", "India", "IN"),
+                        ("✏️", "My Own", "custom"),
+                    ]
+                ],
+                spacing="2",
+                width="100%",
+            ),
+
+            # ── Sri Lanka degrees (shown when LK selected) ──
+            rx.cond(
+                AppState.onboarding_region == "LK",
+                rx.vstack(
                     *[degree_btn(d) for d in ["Software Engineering", "Physical Science", "Biological Science"]],
                     spacing="2", width="100%",
                 ),
                 rx.fragment(),
             ),
 
-            # ── International quick-picks ──
+            # ── Custom card (shown when UK/US/IN/custom region selected) ──
             rx.cond(
-                ~custom_selected,
-                rx.vstack(
-                    rx.hstack(
-                        rx.text(
-                            "🌍  International",
-                            color="rgba(240,244,248,0.35)",
-                            font_size="0.7rem",
-                            font_weight="600",
-                            letter_spacing="0.08em",
-                            text_transform="uppercase",
-                        ),
-                        rx.box(flex="1", height="1px", background="rgba(255,255,255,0.06)"),
-                        spacing="2", align="center", width="100%",
-                    ),
-                    rx.hstack(
-                        *[
-                            rx.button(
-                                rx.vstack(
-                                    rx.text(flag, font_size="1.2rem"),
-                                    rx.text(label, font_size="0.72rem", color="rgba(220,230,240,0.75)", font_weight="500", text_align="center"),
-                                    spacing="1", align="center",
-                                ),
-                                on_click=AppState.apply_international_preset(preset),
-                                type="button",
-                                flex="1",
-                                padding="10px 6px",
-                                border_radius="11px",
-                                border="1px solid rgba(255,255,255,0.07)",
-                                background="rgba(255,255,255,0.025)",
-                                cursor="pointer",
-                                _hover={"background": "rgba(56,189,248,0.08)", "border": "1px solid rgba(56,189,248,0.25)"},
-                            )
-                            for flag, label, preset in [
-                                ("🇬🇧", "UK Uni", "UK University"),
-                                ("🇺🇸", "US Uni", "US University"),
-                                ("🇮🇳", "India Uni", "India University"),
-                                ("✏️", "My Own", ""),
-                            ]
-                        ],
-                        spacing="2", width="100%",
-                    ),
-                    spacing="2", width="100%",
-                ),
-                rx.fragment(),
-            ),
-
-            # ── Custom button (always visible) ──
-            rx.cond(
-                ~custom_selected,
+                (AppState.onboarding_region != "LK") & (AppState.onboarding_region != "") & ~custom_selected,
                 rx.button(
                     rx.hstack(
                         rx.box(
