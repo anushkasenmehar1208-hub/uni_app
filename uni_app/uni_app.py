@@ -4750,24 +4750,8 @@ def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Compone
                 box-shadow: 0 0 12px rgba(56,189,248,0.5);
             }
         """),
-        # Top progress bar
+        # Top progress bar only — no text, just the bar on dark background
         rx.box(rx.box(class_name="alex-topbar-fill"), class_name="alex-topbar-track"),
-        # Centered brand mark
-        rx.vstack(
-            rx.text(
-                "UniSense",
-                font_size="1.5rem",
-                font_weight="700",
-                letter_spacing="-0.02em",
-                color="rgba(255,255,255,0.18)",
-                font_family="'Space Grotesk', sans-serif",
-            ),
-            position="fixed",
-            top="0", left="0", right="0", bottom="0",
-            align_items="center",
-            justify_content="center",
-            pointer_events="none",
-        ),
         position="fixed",
         top="0", left="0", right="0", bottom="0",
         background="#0a0a0c",
