@@ -223,8 +223,8 @@
       '  position: absolute;',
       '  left: 50%;',
       '  top: 50%;',
-      '  transform: translate(-50%, -58%);',
-      '  width: 320px; height: 520px;',
+      '  transform: translate(-50%, -56%);',
+      '  width: 360px; height: 580px;',
       '  max-width: 92vw;',
       '  pointer-events: auto;',
       '  cursor: grab;',
@@ -241,10 +241,13 @@
       '#' + canvasId + '.alex-avatar-ready { opacity: 1; }',
       // Once avatar is ready, strongly dim the old orb core so only a soft halo remains around the avatar.
       '#' + targetId + '.alex-avatar-active .orb-core { opacity: .15; }',
+      '#' + targetId + '.alex-avatar-active .orb-ring { opacity: .08; }',
       '#' + targetId + '.alex-avatar-active.ai-speaking .orb-core,',
       '#' + targetId + '.alex-avatar-active.user-speaking .orb-core { opacity: .30; }',
+      '#' + targetId + '.alex-avatar-active.ai-speaking .orb-ring,',
+      '#' + targetId + '.alex-avatar-active.user-speaking .orb-ring { opacity: .16; }',
       '@media (max-width: 520px) {',
-      '  #' + canvasId + ' { width: 280px; height: 460px; }',
+      '  #' + canvasId + ' { width: 320px; height: 500px; }',
       '}'
     ].join('\n');
     document.head.appendChild(st);
@@ -332,21 +335,22 @@
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.90;
+    renderer.toneMappingExposure = 0.82;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     sizeToCanvas();
 
     // Flattering three-point lighting for skin.
-    var key = new THREE.DirectionalLight(0xfff8f0, 1.4);
-    key.position.set(1.2, 2.5, 2.5);
+    var key = new THREE.DirectionalLight(0xfff4ea, 1.15);
+    key.position.set(1.0, 2.3, 2.1);
     scene.add(key);
-    var fill = new THREE.DirectionalLight(0xe8eeff, 0.5);
-    fill.position.set(-2.0, 1.2, 1.5);
+    var fill = new THREE.DirectionalLight(0xd9e8ff, 0.34);
+    fill.position.set(-1.5, 1.6, 1.3);
     scene.add(fill);
-    var rim = new THREE.DirectionalLight(0xffffff, 0.6);
-    rim.position.set(0.2, 2.5, -2.0);
+    var rim = new THREE.DirectionalLight(0xf7fbff, 0.42);
+    rim.position.set(-0.4, 2.1, -1.8);
     scene.add(rim);
-    scene.add(new THREE.AmbientLight(0xfff5ee, 0.55));
+    scene.add(new THREE.HemisphereLight(0xcfe2ff, 0x1b1410, 0.48));
+    scene.add(new THREE.AmbientLight(0xfff3ea, 0.24));
 
     // State container.
     var rig = {
@@ -446,8 +450,8 @@
 
               // Shirt: white collared shirt (keep textures for fold/seam detail)
               if (mat.name === 'Wolf3D_Outfit_Top') {
-                if (mat.color && mat.color.set) mat.color.set(0xf5f0ea);
-                mat.roughness = 0.75;
+                if (mat.color && mat.color.set) mat.color.set(0xe8e1d8);
+                mat.roughness = 0.90;
                 mat.metalness = 0.0;
                 if (mat.emissive && mat.emissive.set) mat.emissive.set(0x000000);
                 mat.emissiveIntensity = 0.0;
@@ -460,9 +464,11 @@
                            nm.indexOf('head') !== -1 || nm.indexOf('face') !== -1 ||
                            mat.name === 'Wolf3D_Skin' || mat.name === 'Wolf3D_Body';
               if (isSkin && mat.color && mat.color.set) {
-                mat.color.set(0xfae0c8); // fair/white warm skin tone
-                mat.roughness = 0.50;
+                mat.color.set(0xf0cfb5); // warmer skin tone with more facial contrast
+                mat.roughness = 0.62;
                 mat.metalness = 0.0;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x1a0e08);
+                mat.emissiveIntensity = 0.02;
                 mat.needsUpdate = true;
               }
 
@@ -487,11 +493,11 @@
                           nm.indexOf('eye') !== -1 && nm.indexOf('white') === -1;
               if (isEye && mat.color && mat.color.set) {
                 rig.hasNativeEyes = true;
-                mat.color.set(0x1a0a00); // very dark brown iris
-                mat.roughness = 0.05;
+                mat.color.set(0x241208); // richer brown iris
+                mat.roughness = 0.12;
                 mat.metalness = 0.0;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x050200);
-                mat.emissiveIntensity = 0.3;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x0c0502);
+                mat.emissiveIntensity = 0.12;
                 mat.needsUpdate = true;
               }
 
@@ -499,8 +505,8 @@
               var isEyeWhite = nm.indexOf('eyewhite') !== -1 || nm.indexOf('eye_white') !== -1 ||
                                nm.indexOf('sclera') !== -1 || mat.name === 'Wolf3D_EyeWhite';
               if (isEyeWhite && mat.color && mat.color.set) {
-                mat.color.set(0xf8f4f0);
-                mat.roughness = 0.10;
+                mat.color.set(0xf2eee9);
+                mat.roughness = 0.18;
                 mat.metalness = 0.0;
                 mat.needsUpdate = true;
               }
@@ -571,6 +577,15 @@
       rig.root = avatar;
       scene.add(avatar);
 
+      // Slightly enlarge the head so the face reads better at small on-screen sizes.
+      try {
+        if (rig.head && rig.head.scale && rig.head.scale.multiplyScalar) {
+          rig.head.scale.multiplyScalar(1.08);
+        }
+      } catch (eHeadScale) {
+        warn('head scale tweak failed:', eHeadScale && eHeadScale.message);
+      }
+
       // ── Apply natural rest pose (fix RPM's default T-pose) ──────────────
       // Verified empirically against the Wolf3D/RPM bind pose: the arm bone's
       // local +X axis rotates it from "straight out to the side" down toward
@@ -583,15 +598,15 @@
           b.rotation.set(x, y, z);
         }
         // Upper arms: the main "bring T-pose arms down" rotation.
-        setRot('leftArm',       1.25,  0.10,  0.00);
-        setRot('rightArm',      1.25, -0.10,  0.00);
+        setRot('leftArm',       1.18,  0.08, -0.06);
+        setRot('rightArm',      1.18, -0.08,  0.06);
         // Forearms: a subtle relaxed bend so hands sit just in front of the
         // thighs instead of locked flat.
-        setRot('leftForeArm',   0.20, -0.10,  0.00);
-        setRot('rightForeArm',  0.20,  0.10,  0.00);
+        setRot('leftForeArm',   0.30, -0.04, -0.04);
+        setRot('rightForeArm',  0.30,  0.04,  0.04);
         // Hands: neutral (the avatar's bind hand shape is already relaxed).
-        setRot('leftHand',      0.00,  0.00,  0.00);
-        setRot('rightHand',     0.00,  0.00,  0.00);
+        setRot('leftHand',      0.08,  0.00, -0.10);
+        setRot('rightHand',     0.08,  0.00,  0.10);
 
         // Record rest rotations so animations can modulate AROUND them rather
         // than overwriting (otherwise the arms snap back to T-pose).
@@ -795,7 +810,7 @@
             : faceYBias;
           // Frame a touch taller than the full body so the shoulders sit in
           // the upper third and the legs fade into the wall below.
-          frameHeight = postSize.y * 1.15;
+          frameHeight = postSize.y * 0.98;
         } else {
           // Head/face scan — frame the face with a bit of padding.
           headY = faceCenter.y;
@@ -803,7 +818,7 @@
         }
 
         var fov = camera.fov * Math.PI / 180;
-        var dist = (frameHeight / 2) / Math.tan(fov / 2) * 1.15;
+        var dist = (frameHeight / 2) / Math.tan(fov / 2) * 1.06;
         camera.position.set(0, headY, dist);
         camera.lookAt(0, headY, 0);
         camera.near = Math.max(0.001, dist * 0.02);
