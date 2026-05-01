@@ -28539,9 +28539,9 @@ def _learn_mobile_view() -> rx.Component:
     return rx.box(
         # ── Inject one-time CSS ───────────────────────────────────────────
         rx.el.style("""
-            #lmv-video-wrap { flex-shrink: 0; width: 100vw; margin-left: calc(-50vw + 50%); overflow: hidden; padding: 0; }
-            #lmv-video-wrap div { padding: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; }
-            #lmv-video-wrap iframe { width: 100vw !important; aspect-ratio:16/9; border:0 !important; border-radius:0 !important; display:block; background:#000; }
+            #lmv-video-wrap { flex-shrink: 0; width: 100% !important; margin: 0 !important; padding: 0 !important; background: #000; display: block; line-height: 0; }
+            #lmv-video-wrap iframe { width: 100% !important; aspect-ratio: 16/9; border: 0 !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important; display: block !important; background: #000; }
+            #lmv-top { padding: 0 !important; margin: 0 !important; }
             #lmv-panels { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; border-top:1px solid rgba(255,255,255,0.06); }
             #lmv-dots { display:flex; align-items:center; justify-content:center; gap:8px; padding:7px 0 6px; flex-shrink:0; }
             #lmv-track-wrap { flex:1; min-height:0; overflow:hidden; position:relative; }
@@ -28575,7 +28575,32 @@ def _learn_mobile_view() -> rx.Component:
                 spacing="2", width="100%", align="center",
                 padding="8px 10px 6px",
             ),
-            rx.box(_learn_video_player(), id="lmv-video-wrap"),
+            rx.box(
+                rx.el.iframe(
+                    id="yt-learn-iframe-mobile",
+                    src=LearnState.video_url,
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+                    allow_fullscreen=True,
+                    style={
+                        "width": "100%",
+                        "aspect_ratio": "16 / 9",
+                        "border": "0",
+                        "display": "block",
+                        "background": "#000",
+                        "margin": "0",
+                        "padding": "0",
+                    },
+                ),
+                id="lmv-video-wrap",
+                style={
+                    "width": "100%",
+                    "margin": "0",
+                    "padding": "0",
+                    "background": "#000",
+                    "display": "block",
+                    "line_height": "0",
+                },
+            ),
             rx.hstack(
                 rx.cond(
                     LearnState.transcript_loading,
