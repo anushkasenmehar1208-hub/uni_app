@@ -29,14 +29,15 @@
   // Quality params: ARKit/Oculus visemes for lipsync, atlased 1024 textures, highest mesh LOD,
   // A-pose (more natural than T), full hand bones. These dramatically increase detail vs. the
   // default URL which returns a low-LOD, low-texture stylized variant.
+  // NOTE: do NOT use textureAtlas — it merges all materials into a single
+  // atlas, destroying the Wolf3D_Outfit_Top / _Hair / _Skin names that our
+  // material-override code needs to identify and recolour each body part.
   var RPM_QUALITY_PARAMS =
     '?morphTargets=ARKit,Oculus%20Visemes' +
-    '&textureAtlas=1024' +
     '&textureSizeLimit=1024' +
     '&meshLod=0' +
     '&pose=A' +
-    '&useHands=true' +
-    '&textureFormat=png';
+    '&useHands=true';
   var REALISTIC_AVATAR_URL = 'https://models.readyplayer.me/6185a4acfb622cf1cdc49348.glb' + RPM_QUALITY_PARAMS;
   var LOCAL_AVATAR_URL = REALISTIC_AVATAR_URL;
   var LOCAL_AVATAR_FALLBACK_URL = AVATAR_URL_BASE + 'models/teacher_naoki.glb';
@@ -487,6 +488,8 @@
             for (var mi = 0; mi < mats.length; mi++) {
               var mat = mats[mi];
               if (!mat || !mat.name) continue;
+              // Debug: dump every material name so we can verify matching.
+              log('mesh:', node.name, '→ material:', mat.name);
               var nm = mat.name.toLowerCase();
 
               // Suit jacket: deep charcoal-navy.
