@@ -352,6 +352,8 @@
     var rig = {
       root: null,
       head: null,
+      hasNativeEyes: false,
+      nativeEyeNodes: [],
       bones: {},             // named bones: leftArm, rightArm, leftForeArm, rightForeArm, leftHand, rightHand, spine, spine1, spine2, neck
       rest: {},              // captured rest-pose rotations (Euler copies) per bone key
       morphMeshes: [],       // meshes with morphTargetDictionary
@@ -411,8 +413,26 @@
 
     function onLoaded(gltf) {
       var avatar = gltf.scene;
+      function isEyeNodeName(name) {
+        var nm = (name || '').toLowerCase();
+        if (!nm) return false;
+        return (
+          nm === 'eyeleft' ||
+          nm === 'eyeright' ||
+          nm === 'lefteye' ||
+          nm === 'righteye' ||
+          nm.indexOf('eyeleft') !== -1 ||
+          nm.indexOf('eyeright') !== -1 ||
+          nm.indexOf('lefteye') !== -1 ||
+          nm.indexOf('righteye') !== -1
+        );
+      }
       avatar.traverse(function (node) {
         if (node.isMesh) {
+          if (isEyeNodeName(node.name)) {
+            rig.hasNativeEyes = true;
+            rig.nativeEyeNodes.push(node.name || node.uuid);
+          }
           node.castShadow = false;
           node.receiveShadow = false;
           node.frustumCulled = false;
@@ -466,6 +486,7 @@
               var isEye = mat.name === 'Wolf3D_Eye' || nm === 'wolf3d_eye' ||
                           nm.indexOf('eye') !== -1 && nm.indexOf('white') === -1;
               if (isEye && mat.color && mat.color.set) {
+                rig.hasNativeEyes = true;
                 mat.color.set(0x1a0a00); // very dark brown iris
                 mat.roughness = 0.05;
                 mat.metalness = 0.0;
@@ -608,6 +629,10 @@
       // so the avatar always has visible eyes regardless of GLB structure.
       (function addProceduralEyes() {
         try {
+          if (rig.hasNativeEyes) {
+            log('native eye meshes/materials detected; skipping procedural eyes', rig.nativeEyeNodes);
+            return;
+          }
           if (!rig.head) {
             warn('no head bone — skipping procedural eyes');
             return;
