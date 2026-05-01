@@ -424,10 +424,10 @@
               if (!mat || !mat.name) continue;
               var nm = mat.name.toLowerCase();
 
-              // Shirt: keep original textures, tint to dark navy blue
+              // Shirt: white collared shirt (keep textures for fold/seam detail)
               if (mat.name === 'Wolf3D_Outfit_Top') {
-                if (mat.color && mat.color.set) mat.color.set(0x1a2744);
-                mat.roughness = 0.70;
+                if (mat.color && mat.color.set) mat.color.set(0xf5f0ea);
+                mat.roughness = 0.75;
                 mat.metalness = 0.0;
                 if (mat.emissive && mat.emissive.set) mat.emissive.set(0x000000);
                 mat.emissiveIntensity = 0.0;
@@ -435,31 +435,30 @@
                 mat.needsUpdate = true;
               }
 
-              // Skin/body: if no texture map loaded, apply natural skin tone fallback
+              // Skin: very fair/white skin tone (always override for consistency)
               var isSkin = nm.indexOf('skin') !== -1 || nm.indexOf('body') !== -1 ||
                            nm.indexOf('head') !== -1 || nm.indexOf('face') !== -1 ||
                            mat.name === 'Wolf3D_Skin' || mat.name === 'Wolf3D_Body';
               if (isSkin && mat.color && mat.color.set) {
-                // Light/fair skin tone
-                mat.color.set(0xfde8d0);
-                mat.roughness = 0.55;
+                mat.color.set(0xfae0c8); // fair/white warm skin tone
+                mat.roughness = 0.50;
                 mat.metalness = 0.0;
                 mat.needsUpdate = true;
               }
 
-              // Hair: dark brown if no texture
+              // Hair: warm brown
               var isHair = nm.indexOf('hair') !== -1 || mat.name === 'Wolf3D_Hair';
-              if (isHair && mat.color && mat.color.set && !mat.map) {
-                mat.color.set(0x2c1810); // dark brown hair
-                mat.roughness = 0.80;
+              if (isHair && mat.color && mat.color.set) {
+                mat.color.set(0x3d1f0e); // warm dark brown hair
+                mat.roughness = 0.82;
                 mat.needsUpdate = true;
               }
 
-              // Pants: dark if no texture
+              // Pants: very dark / near-black
               var isPants = nm.indexOf('outfit_bottom') !== -1 || mat.name === 'Wolf3D_Outfit_Bottom';
-              if (isPants && mat.color && mat.color.set && !mat.map) {
-                mat.color.set(0x1a1a2e); // dark navy pants
-                mat.roughness = 0.75;
+              if (isPants && mat.color && mat.color.set) {
+                mat.color.set(0x111118); // near-black dark pants
+                mat.roughness = 0.78;
                 mat.needsUpdate = true;
               }
             }
