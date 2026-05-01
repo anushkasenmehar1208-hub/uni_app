@@ -25,9 +25,12 @@
       return '';
     })();
   var AVATAR_URL_BASE = AVATAR_SCRIPT_SRC.replace(/[^/?#]*(\?.*)?(#.*)?$/, '');
-  // Default avatar: full-body Ready Player Me character (dressed, with hair + ARKit/Oculus visemes).
-  var LOCAL_AVATAR_URL = AVATAR_URL_BASE + 'models/alex_body.glb';
-  // Fallback CDN copy — used only if the local file is missing.
+  // Default avatar: official Ready Player Me sample with a more realistic adult male face.
+  var REALISTIC_AVATAR_URL = 'https://models.readyplayer.me/6185a4acfb622cf1cdc49348.glb';
+  var LOCAL_AVATAR_URL = REALISTIC_AVATAR_URL;
+  var LOCAL_AVATAR_FALLBACK_URL = AVATAR_URL_BASE + 'models/teacher_naoki.glb';
+  var LOCAL_AVATAR_SECONDARY_FALLBACK_URL = AVATAR_URL_BASE + 'models/alex_body.glb';
+  // Final CDN copy — used only if the preferred avatar and local fallbacks fail.
   var REMOTE_AVATAR_URL =
     'https://raw.githubusercontent.com/wass08/r3f-virtual-girlfriend-frontend/main/public/models/64f1a714fe61576b46f27ca2.glb';
   var AVATAR_URL =
@@ -174,10 +177,11 @@
       boot.textContent = [
         "import * as THREE from 'three';",
         "import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';",
+        "import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';",
         "import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';",
         "import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';",
         "import { OrbitControls } from 'three/addons/controls/OrbitControls.js';",
-        "window.__alexAvatarTHREE = { THREE: THREE, GLTFLoader: GLTFLoader, KTX2Loader: KTX2Loader, MeshoptDecoder: MeshoptDecoder, OrbitControls: OrbitControls };",
+        "window.__alexAvatarTHREE = { THREE: THREE, GLTFLoader: GLTFLoader, DRACOLoader: DRACOLoader, KTX2Loader: KTX2Loader, MeshoptDecoder: MeshoptDecoder, OrbitControls: OrbitControls };",
         "window.dispatchEvent(new Event('alex-avatar-three-ready'));"
       ].join('\n');
       boot.onerror = function (e) { reject(new Error('three module load error')); };
@@ -315,6 +319,7 @@
     targetId = targetId || 'alex-orb';
     var THREE = mods.THREE;
     var GLTFLoader = mods.GLTFLoader;
+    var DRACOLoader = mods.DRACOLoader;
     var KTX2Loader = mods.KTX2Loader;
     var MeshoptDecoder = mods.MeshoptDecoder;
     var OrbitControls = mods.OrbitControls;
@@ -385,8 +390,13 @@
 
     // Load avatar — try local GLB first, then remote fallback if local is missing.
     var loader = new GLTFLoader();
-    // facecap.glb uses KTX2 compressed textures and meshopt-compressed buffers; wire the decoders.
+    // Some bundled avatars use Draco/KTX2/Meshopt compression; wire the decoders.
     try {
+      if (DRACOLoader) {
+        var draco = new DRACOLoader()
+          .setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+        loader.setDRACOLoader(draco);
+      }
       if (KTX2Loader) {
         var ktx2 = new KTX2Loader()
           .setTranscoderPath(AVATAR_URL_BASE + 'basis/')
@@ -431,8 +441,21 @@
           nm.indexOf('righteye') !== -1
         );
       }
+      function looksLikeEyeMorphDictionary(dict) {
+        if (!dict) return false;
+        for (var key in dict) {
+          if (!Object.prototype.hasOwnProperty.call(dict, key)) continue;
+          var nm = key.toLowerCase();
+          if (nm.indexOf('eye') !== -1 || nm.indexOf('eyes') !== -1) return true;
+        }
+        return false;
+      }
       avatar.traverse(function (node) {
         if (node.isMesh) {
+          if ((node.name || '').toLowerCase().indexOf('glasses') !== -1) {
+            node.visible = false;
+            return;
+          }
           if (isEyeNodeName(node.name)) {
             rig.hasNativeEyes = true;
             rig.nativeEyeNodes.push(node.name || node.uuid);
@@ -460,15 +483,15 @@
               }
 
               // Skin: very fair/white skin tone (always override for consistency)
-              var isSkin = nm.indexOf('skin') !== -1 || nm.indexOf('body') !== -1 ||
+              var isSkin = nm.indexOf('skin') !== -1 ||
                            nm.indexOf('head') !== -1 || nm.indexOf('face') !== -1 ||
                            mat.name === 'Wolf3D_Skin' || mat.name === 'Wolf3D_Body';
               if (isSkin && mat.color && mat.color.set) {
-                mat.color.set(0xf0cfb5); // warmer skin tone with more facial contrast
-                mat.roughness = 0.62;
+                mat.color.set(0xf3c7a6); // warmer, healthier skin tone
+                if ('roughness' in mat) mat.roughness = 0.58;
                 mat.metalness = 0.0;
                 if (mat.emissive && mat.emissive.set) mat.emissive.set(0x1a0e08);
-                mat.emissiveIntensity = 0.02;
+                mat.emissiveIntensity = 0.015;
                 mat.needsUpdate = true;
               }
 
@@ -525,13 +548,19 @@
             rig.morphMeshes.push(node);
             // Pick best available jaw/open morph by priority.
             var dict = node.morphTargetDictionary;
+            if (looksLikeEyeMorphDictionary(dict)) {
+              rig.hasNativeEyes = true;
+              rig.nativeEyeNodes.push(node.name || node.uuid);
+            }
             var priorities = [
               'jawOpen',        // ARKit (facecap + RPM ARKit)
               'mouthOpen',
               'viseme_aa',      // Oculus Visemes
               'viseme_O',
               'viseme_E',
-              'viseme_U'
+              'viseme_U',
+              'AH',
+              'OH'
             ];
             for (var i = 0; i < priorities.length; i++) {
               if (priorities[i] in dict) {
@@ -543,7 +572,7 @@
         }
         if (node.isBone || node.type === 'Bone') {
           var nm = (node.name || '').toLowerCase();
-          if (!rig.head && (nm === 'head' || nm === 'mixamorig:head')) {
+          if (!rig.head && (nm === 'head' || nm.indexOf(':head') !== -1 || nm.endsWith('head'))) {
             rig.head = node;
           }
           // RPM / Mixamo bone map — capture the upper body bones we need for posing
@@ -878,7 +907,9 @@
     }
 
     var urls = [AVATAR_URL];
-    if (AVATAR_URL_FALLBACK && AVATAR_URL_FALLBACK !== AVATAR_URL) urls.push(AVATAR_URL_FALLBACK);
+    if (LOCAL_AVATAR_FALLBACK_URL && LOCAL_AVATAR_FALLBACK_URL !== AVATAR_URL) urls.push(LOCAL_AVATAR_FALLBACK_URL);
+    if (LOCAL_AVATAR_SECONDARY_FALLBACK_URL && urls.indexOf(LOCAL_AVATAR_SECONDARY_FALLBACK_URL) === -1) urls.push(LOCAL_AVATAR_SECONDARY_FALLBACK_URL);
+    if (AVATAR_URL_FALLBACK && urls.indexOf(AVATAR_URL_FALLBACK) === -1) urls.push(AVATAR_URL_FALLBACK);
     loadWithFallback(urls);
 
     function startObservers() {
