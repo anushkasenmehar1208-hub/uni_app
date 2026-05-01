@@ -492,18 +492,54 @@
               log('mesh:', node.name, '→ material:', mat.name);
               var nm = mat.name.toLowerCase();
 
-              // Suit jacket: deep charcoal-navy.
-              // Match all common RPM/Wolf3D outfit-top naming variants.
-              var isTop = mat.name === 'Wolf3D_Outfit_Top' ||
-                          nm === 'wolf3d_outfit_top' ||
-                          nm.indexOf('outfit_top') !== -1 ||
-                          nm.indexOf('outfittop')  !== -1 ||
-                          nm.indexOf('cloth_top')  !== -1 ||
-                          nm.indexOf('shirt')      !== -1 ||
-                          nm.indexOf('top')        !== -1 && nm.indexOf('outfit') !== -1;
+              // ── Classify each material so we can override its colour/roughness.
+              // Must handle BOTH naming conventions:
+              //   RPM (Wolf3D):  Wolf3D_Outfit_Top, Wolf3D_Skin, Wolf3D_Hair, …
+              //   teacher_naoki: MAT-Body, MAT-skin, MAT-Hair, MAT-Body/Shoes, …
+
+              // Skin (face/hands) — MUST be checked first so MAT-Body doesn't
+              // get misclassified as "body" before we look for "skin".
+              var isSkin = nm.indexOf('skin') !== -1 ||
+                           nm.indexOf('head') !== -1 || nm.indexOf('face') !== -1 ||
+                           mat.name === 'Wolf3D_Skin';
+
+              // Hair
+              var isHair = nm.indexOf('hair') !== -1;
+
+              // Footwear / shoes
+              var isFootwear = nm.indexOf('shoe') !== -1 ||
+                               nm.indexOf('footwear') !== -1;
+
+              // Eyes
+              var isEye = (nm.indexOf('eye') !== -1 && nm.indexOf('white') === -1 &&
+                           nm.indexOf('brow') === -1);
+              var isEyeWhite = nm.indexOf('eyewhite') !== -1 ||
+                               nm.indexOf('eye_white') !== -1 ||
+                               nm.indexOf('sclera') !== -1;
+              // Teeth
+              var isTeeth = nm.indexOf('teeth') !== -1 || nm.indexOf('tooth') !== -1;
+
+              // Pants / bottom
+              var isPants = nm.indexOf('outfit_bottom') !== -1 ||
+                            nm.indexOf('bottom') !== -1;
+
+              // Suit jacket / body / outfit top — CATCH-ALL for anything covering
+              // the torso that isn't skin, hair, eyes, teeth, shoes, or pants.
+              // This handles RPM "Wolf3D_Outfit_Top" AND teacher_naoki "MAT-Body".
+              var isTop = !isSkin && !isHair && !isFootwear && !isEye &&
+                          !isEyeWhite && !isTeeth && !isPants && (
+                            nm.indexOf('outfit_top') !== -1 ||
+                            nm.indexOf('outfittop')  !== -1 ||
+                            nm.indexOf('shirt')      !== -1 ||
+                            nm.indexOf('body')       !== -1 ||    // MAT-Body
+                            mat.name === 'Wolf3D_Outfit_Top' ||
+                            mat.name === 'Wolf3D_Body'            // RPM combined body
+                          );
+
+              // Apply suit jacket.
               if (isTop) {
+                log('  → suit jacket override on:', mat.name);
                 if (mat.color && mat.color.set) mat.color.set(0x1c2230);
-                // Remove albedo map so the colour overrides cleanly (not tinted by a white tee texture).
                 try { mat.map = null; } catch (e) {}
                 mat.roughness = 0.78;
                 mat.metalness = 0.04;
@@ -513,55 +549,47 @@
                 mat.needsUpdate = true;
               }
 
-              // Skin: warm, healthy mid-tone with subtle subsurface red.
-              var isSkin = nm.indexOf('skin') !== -1 ||
-                           nm.indexOf('head') !== -1 || nm.indexOf('face') !== -1 ||
-                           mat.name === 'Wolf3D_Skin' || mat.name === 'Wolf3D_Body';
+              // Apply skin tone.
               if (isSkin && mat.color && mat.color.set) {
-                mat.color.set(0xefb892); // warm mid-tone, more "matinee idol" than washed-out
+                log('  → skin override on:', mat.name);
+                mat.color.set(0xefb892);
                 if ('roughness' in mat) mat.roughness = 0.52;
                 mat.metalness = 0.0;
                 if (mat.emissive && mat.emissive.set) mat.emissive.set(0x2a160c);
-                mat.emissiveIntensity = 0.025; // faint subsurface warmth
+                mat.emissiveIntensity = 0.025;
                 mat.needsUpdate = true;
               }
 
-              // Hair: rich dark brown with a slight sheen — anchors the face.
-              var isHair = nm.indexOf('hair') !== -1 || mat.name === 'Wolf3D_Hair';
+              // Apply hair.
               if (isHair && mat.color && mat.color.set) {
-                mat.color.set(0x2a160a); // deeper brown, almost espresso
-                mat.roughness = 0.62;     // a bit glossier so the hair-light catches it
+                log('  → hair override on:', mat.name);
+                mat.color.set(0x2a160a);
+                mat.roughness = 0.62;
                 mat.metalness = 0.05;
                 mat.needsUpdate = true;
               }
 
-              // Pants: dark suit trousers matching the jacket.
-              var isPants = nm.indexOf('outfit_bottom') !== -1 || mat.name === 'Wolf3D_Outfit_Bottom';
+              // Apply pants.
               if (isPants && mat.color && mat.color.set) {
-                mat.color.set(0x141926); // matches jacket, slightly darker
-                if (mat.map) mat.map = null;
+                mat.color.set(0x141926);
+                try { mat.map = null; } catch (e) {}
                 mat.roughness = 0.82;
                 mat.metalness = 0.0;
                 mat.needsUpdate = true;
               }
 
-              // Footwear: black dress shoes.
-              var isFootwear = nm.indexOf('outfit_footwear') !== -1 ||
-                               nm.indexOf('shoe') !== -1 ||
-                               mat.name === 'Wolf3D_Outfit_Footwear';
+              // Apply shoes.
               if (isFootwear && mat.color && mat.color.set) {
                 mat.color.set(0x0a0a0e);
-                mat.roughness = 0.40;     // polished leather sheen
+                mat.roughness = 0.40;
                 mat.metalness = 0.10;
                 mat.needsUpdate = true;
               }
 
               // Eyes iris/pupil: sharp dark brown iris
-              var isEye = mat.name === 'Wolf3D_Eye' || nm === 'wolf3d_eye' ||
-                          nm.indexOf('eye') !== -1 && nm.indexOf('white') === -1;
               if (isEye && mat.color && mat.color.set) {
                 rig.hasNativeEyes = true;
-                mat.color.set(0x241208); // richer brown iris
+                mat.color.set(0x241208);
                 mat.roughness = 0.12;
                 mat.metalness = 0.0;
                 if (mat.emissive && mat.emissive.set) mat.emissive.set(0x0c0502);
@@ -570,8 +598,6 @@
               }
 
               // Eye whites: bright white sclera
-              var isEyeWhite = nm.indexOf('eyewhite') !== -1 || nm.indexOf('eye_white') !== -1 ||
-                               nm.indexOf('sclera') !== -1 || mat.name === 'Wolf3D_EyeWhite';
               if (isEyeWhite && mat.color && mat.color.set) {
                 mat.color.set(0xf2eee9);
                 mat.roughness = 0.18;
@@ -580,7 +606,6 @@
               }
 
               // Teeth: clean white
-              var isTeeth = nm.indexOf('teeth') !== -1 || nm.indexOf('tooth') !== -1;
               if (isTeeth && mat.color && mat.color.set) {
                 mat.color.set(0xeeeae4);
                 mat.roughness = 0.30;
