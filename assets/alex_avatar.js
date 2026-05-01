@@ -489,14 +489,19 @@
               if (!mat || !mat.name) continue;
               var nm = mat.name.toLowerCase();
 
-              // Suit jacket: deep charcoal-navy, slight subsurface depth.
-              // The RPM "outfit top" mesh covers the torso; recoloring it to a
-              // dark suit fabric (low-saturation blue-grey, high roughness, tiny
-              // anisotropic specular) reads as a tailored blazer instead of the
-              // default tee/polo.
-              if (mat.name === 'Wolf3D_Outfit_Top') {
+              // Suit jacket: deep charcoal-navy.
+              // Match all common RPM/Wolf3D outfit-top naming variants.
+              var isTop = mat.name === 'Wolf3D_Outfit_Top' ||
+                          nm === 'wolf3d_outfit_top' ||
+                          nm.indexOf('outfit_top') !== -1 ||
+                          nm.indexOf('outfittop')  !== -1 ||
+                          nm.indexOf('cloth_top')  !== -1 ||
+                          nm.indexOf('shirt')      !== -1 ||
+                          nm.indexOf('top')        !== -1 && nm.indexOf('outfit') !== -1;
+              if (isTop) {
                 if (mat.color && mat.color.set) mat.color.set(0x1c2230);
-                if (mat.map) mat.map = null; // drop the original tee texture so the suit colour reads cleanly
+                // Remove albedo map so the colour overrides cleanly (not tinted by a white tee texture).
+                try { mat.map = null; } catch (e) {}
                 mat.roughness = 0.78;
                 mat.metalness = 0.04;
                 if (mat.emissive && mat.emissive.set) mat.emissive.set(0x05070d);
@@ -695,106 +700,58 @@
         }
       })();
 
-      // ── Procedural shirt collar + tie ─────────────────────────────────
-      // The RPM "outfit top" is a single-piece mesh with no separate collar/tie
-      // geometry. To turn the recoloured dark blazer into a proper professional
-      // suit-and-tie look, we attach two small meshes anchored to the neck/spine
-      // bones: a white V-shaped collar peeking out at the throat, and a slim
-      // dark tie running down the chest. Anchoring to bones means the collar
-      // and tie inherit head/torso animation automatically.
-      (function addProceduralSuitDetails() {
+      // ── Procedural tie (post-normalization, added after auto-frame) ──────
+      // Stored on rig so startLoop() can call it once the avatar is scaled.
+      rig._pendingSuitDetails = function () {
         try {
-          var anchorBone = rig.bones.neck || rig.bones.spine2 || rig.bones.spine1 || rig.bones.spine || rig.head;
-          if (!anchorBone) {
-            warn('no neck/spine bone — skipping suit collar/tie');
-            return;
-          }
+          var anchorBone = rig.bones.neck || rig.bones.spine2 || rig.bones.spine1 || rig.bones.spine;
+          if (!anchorBone) return;
 
-          // Measure head height to scale collar/tie proportionally to the avatar.
-          var headSize = 0.10;
-          if (rig.morphMeshes.length) {
-            var bb = new THREE.Box3();
-            rig.morphMeshes.forEach(function (m) {
-              if (!m.geometry) return;
-              if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
-              if (m.geometry.boundingBox) bb.union(m.geometry.boundingBox);
-            });
-            if (!bb.isEmpty()) {
-              var s = bb.getSize(new THREE.Vector3());
-              headSize = Math.max(s.x, s.y, s.z) * 0.5;
-            }
-          }
+          // Use a FIXED world-space size (avatar is normalised to 1 unit tall).
+          // Neck bone sits at roughly 0.85–0.90 world units in a normalised RPM rig.
+          // All geometry is in bone-LOCAL space, so we need bone-to-world scale.
+          // Simplest approach: use a tiny fixed local unit = 0.06 (≈ shirt-collar width).
+          var u = 0.06;
 
-          // Crisp dress-shirt fabric.
-          var shirtMat = new THREE.MeshStandardMaterial({
-            color: 0xf5f1e8,
-            roughness: 0.55,
-            metalness: 0.0
-          });
-          // Burgundy silk tie — classic against a charcoal suit, reads "polished" not "stiff".
           var tieMat = new THREE.MeshStandardMaterial({
-            color: 0x6e1a22,
-            roughness: 0.32,
-            metalness: 0.10,
-            emissive: 0x180407,
-            emissiveIntensity: 0.10
+            color: 0x6e1a22, roughness: 0.30, metalness: 0.10,
+            emissive: 0x1a050a, emissiveIntensity: 0.15
           });
-          // Tie knot — slightly darker for shading separation.
           var knotMat = new THREE.MeshStandardMaterial({
-            color: 0x55141c,
-            roughness: 0.34,
-            metalness: 0.10
+            color: 0x50121a, roughness: 0.32, metalness: 0.10
+          });
+          var shirtMat = new THREE.MeshStandardMaterial({
+            color: 0xf0ece4, roughness: 0.55, metalness: 0.0
           });
 
-          // Collar: a flattened cylinder hugging the neck. We angle it open
-          // slightly at the front so it reads as a V notch instead of a turtle-neck.
-          var collarRadius = headSize * 0.45;
-          var collarGeom = new THREE.CylinderGeometry(
-            collarRadius * 1.05, collarRadius * 1.20, headSize * 0.55, 24, 1, true
-          );
+          // Shirt collar band — thin open cylinder, sits right at neck.
+          var collarGeom = new THREE.CylinderGeometry(u * 0.95, u * 1.05, u * 0.55, 20, 1, true);
           var collar = new THREE.Mesh(collarGeom, shirtMat);
-          collar.position.set(0, -headSize * 0.55, headSize * 0.05);
+          collar.position.set(0, -u * 0.30, u * 0.05);
           collar.renderOrder = 5;
 
-          // Tie blade — a flat trapezoid that widens as it descends.
-          var tieLen = headSize * 1.55;
-          var tieTopW = headSize * 0.16;
-          var tieBotW = headSize * 0.30;
-          var tieShape = new THREE.Shape();
-          tieShape.moveTo(-tieTopW * 0.5, 0);
-          tieShape.lineTo( tieTopW * 0.5, 0);
-          tieShape.lineTo( tieBotW * 0.5, -tieLen + tieBotW * 0.5);
-          tieShape.lineTo( 0,             -tieLen);
-          tieShape.lineTo(-tieBotW * 0.5, -tieLen + tieBotW * 0.5);
-          tieShape.lineTo(-tieTopW * 0.5, 0);
-          var tieGeom = new THREE.ExtrudeGeometry(tieShape, {
-            depth: headSize * 0.04,
-            bevelEnabled: true,
-            bevelSegments: 2,
-            bevelSize: headSize * 0.01,
-            bevelThickness: headSize * 0.012,
-            curveSegments: 6
-          });
-          var tie = new THREE.Mesh(tieGeom, tieMat);
-          tie.position.set(0, -headSize * 0.78, headSize * 0.42);
-          tie.rotation.x = -0.06; // slight forward lean so it follows the chest curvature
-          tie.renderOrder = 6;
-
-          // Tie knot — small rounded box at the throat.
-          var knotGeom = new THREE.BoxGeometry(headSize * 0.22, headSize * 0.20, headSize * 0.10);
+          // Tie knot.
+          var knotGeom = new THREE.BoxGeometry(u * 0.70, u * 0.55, u * 0.32);
           var knot = new THREE.Mesh(knotGeom, knotMat);
-          knot.position.set(0, -headSize * 0.62, headSize * 0.45);
-          knot.renderOrder = 7;
+          knot.position.set(0, -u * 0.88, u * 1.10);
+          knot.renderOrder = 6;
+
+          // Tie blade — simple flat box that tapers slightly.
+          var tieGeom = new THREE.BoxGeometry(u * 0.52, u * 2.40, u * 0.08);
+          var tie = new THREE.Mesh(tieGeom, tieMat);
+          tie.position.set(0, -u * 2.30, u * 1.05);
+          tie.rotation.x = 0.08;
+          tie.renderOrder = 6;
 
           anchorBone.add(collar);
           anchorBone.add(knot);
           anchorBone.add(tie);
           rig.suit = { collar: collar, knot: knot, tie: tie };
-          log('procedural suit collar + tie attached, anchor:', anchorBone.name);
+          log('suit details attached (fixed-unit)');
         } catch (e) {
-          warn('procedural suit details failed:', e && e.message);
+          warn('suit details failed:', e && e.message);
         }
-      })();
+      };
 
       // ── Procedural eyes ────────────────────────────────────────────────
       // The GLB's eye materials may not be detected by name, OR the eye geometry
@@ -1024,6 +981,9 @@
       } catch (e) {
         warn('OrbitControls init failed:', e && e.message);
       }
+
+      // Attach tie + collar now that the avatar is normalised to 1 unit tall.
+      if (rig._pendingSuitDetails) { rig._pendingSuitDetails(); rig._pendingSuitDetails = null; }
 
       // Expose rig for debugging (window.AlexAvatar.__rig).
       try { window.AlexAvatar = window.AlexAvatar || {}; window.AlexAvatar.__rig = rig; window.AlexAvatar.__camera = camera; } catch (e) {}
