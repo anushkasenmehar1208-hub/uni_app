@@ -24294,7 +24294,6 @@ def landing_page():
                 rx.script(
                     "(function(){"
                     "window.ALEX_AVATAR_TARGET_ID='landing-teacher-orb';"
-                    "window.ALEX_AVATAR_URL='/models/teacher_naoki.glb';"
                     "function patchLanding(){"
                     "  var existing=document.getElementById('landing-avatar-crop');"
                     "  var s=existing||document.createElement('style');"
@@ -31840,7 +31839,6 @@ def alex_voice_overlay_panel() -> rx.Component:
         rx.script(
             "(function(){"
             "window.ALEX_AVATAR_TARGET_ID='alex-orb';"
-            "window.ALEX_AVATAR_URL='/models/teacher_naoki.glb';"
             "function mount(){try{if(window.AlexAvatarMount)window.AlexAvatarMount('alex-orb');}catch(e){}}"
             "function poll(){"
               "var tries=0;"
@@ -31854,7 +31852,7 @@ def alex_voice_overlay_panel() -> rx.Component:
             "if(existing){existing.addEventListener('load',function(){mount();poll();});return;}"
             "var av=document.createElement('script');"
             "av.id='_alex_avatar_script';"
-            "av.src='/alex_avatar.js?v=4';"
+            "av.src='/alex_avatar.js?v='+Date.now();"
             "av.onload=function(){mount();poll();};"
             "av.onerror=function(){console.warn('[AlexAvatar] failed to load /alex_avatar.js');};"
             "document.head.appendChild(av);"
