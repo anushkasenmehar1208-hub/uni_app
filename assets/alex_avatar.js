@@ -25,8 +25,19 @@
       return '';
     })();
   var AVATAR_URL_BASE = AVATAR_SCRIPT_SRC.replace(/[^/?#]*(\?.*)?(#.*)?$/, '');
-  // Default avatar: official Ready Player Me sample with a more realistic adult male face.
-  var REALISTIC_AVATAR_URL = 'https://models.readyplayer.me/6185a4acfb622cf1cdc49348.glb';
+  // Default avatar: official Ready Player Me sample with a realistic adult male face.
+  // Quality params: ARKit/Oculus visemes for lipsync, atlased 1024 textures, highest mesh LOD,
+  // A-pose (more natural than T), full hand bones. These dramatically increase detail vs. the
+  // default URL which returns a low-LOD, low-texture stylized variant.
+  var RPM_QUALITY_PARAMS =
+    '?morphTargets=ARKit,Oculus%20Visemes' +
+    '&textureAtlas=1024' +
+    '&textureSizeLimit=1024' +
+    '&meshLod=0' +
+    '&pose=A' +
+    '&useHands=true' +
+    '&textureFormat=png';
+  var REALISTIC_AVATAR_URL = 'https://models.readyplayer.me/6185a4acfb622cf1cdc49348.glb' + RPM_QUALITY_PARAMS;
   var LOCAL_AVATAR_URL = REALISTIC_AVATAR_URL;
   var LOCAL_AVATAR_FALLBACK_URL = AVATAR_URL_BASE + 'models/teacher_naoki.glb';
   var LOCAL_AVATAR_SECONDARY_FALLBACK_URL = AVATAR_URL_BASE + 'models/alex_body.glb';
@@ -340,22 +351,29 @@
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.82;
+    renderer.toneMappingExposure = 1.05; // slightly hot — gives skin a magazine-cover lift
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     sizeToCanvas();
 
-    // Flattering three-point lighting for skin.
-    var key = new THREE.DirectionalLight(0xfff4ea, 1.15);
-    key.position.set(1.0, 2.3, 2.1);
+    // Cinematic three-point lighting for an executive-portrait look.
+    // Key: warm, strong, high-angle from the right — gives skin warmth & shape.
+    var key = new THREE.DirectionalLight(0xfff1e0, 1.55);
+    key.position.set(1.2, 2.4, 2.2);
     scene.add(key);
-    var fill = new THREE.DirectionalLight(0xd9e8ff, 0.34);
-    fill.position.set(-1.5, 1.6, 1.3);
+    // Fill: cool, soft, from camera-left — softens shadow side without flattening.
+    var fill = new THREE.DirectionalLight(0xc8d8f0, 0.55);
+    fill.position.set(-1.7, 1.5, 1.4);
     scene.add(fill);
-    var rim = new THREE.DirectionalLight(0xf7fbff, 0.42);
-    rim.position.set(-0.4, 2.1, -1.8);
+    // Rim: bright back-light, high & slightly behind — separates head/shoulders from BG.
+    var rim = new THREE.DirectionalLight(0xffffff, 0.85);
+    rim.position.set(-0.6, 2.2, -1.9);
     scene.add(rim);
-    scene.add(new THREE.HemisphereLight(0xcfe2ff, 0x1b1410, 0.48));
-    scene.add(new THREE.AmbientLight(0xfff3ea, 0.24));
+    // Subtle hair light from above-back to make the dark hair catch a highlight.
+    var hairLight = new THREE.DirectionalLight(0xfff5e8, 0.6);
+    hairLight.position.set(0.5, 3.0, -1.2);
+    scene.add(hairLight);
+    scene.add(new THREE.HemisphereLight(0xcfe2ff, 0x10141c, 0.42));
+    scene.add(new THREE.AmbientLight(0xfff3ea, 0.18));
 
     // State container.
     var rig = {
@@ -471,43 +489,62 @@
               if (!mat || !mat.name) continue;
               var nm = mat.name.toLowerCase();
 
-              // Shirt: white collared shirt (keep textures for fold/seam detail)
+              // Suit jacket: deep charcoal-navy, slight subsurface depth.
+              // The RPM "outfit top" mesh covers the torso; recoloring it to a
+              // dark suit fabric (low-saturation blue-grey, high roughness, tiny
+              // anisotropic specular) reads as a tailored blazer instead of the
+              // default tee/polo.
               if (mat.name === 'Wolf3D_Outfit_Top') {
-                if (mat.color && mat.color.set) mat.color.set(0xe8e1d8);
-                mat.roughness = 0.90;
-                mat.metalness = 0.0;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x000000);
-                mat.emissiveIntensity = 0.0;
+                if (mat.color && mat.color.set) mat.color.set(0x1c2230);
+                if (mat.map) mat.map = null; // drop the original tee texture so the suit colour reads cleanly
+                mat.roughness = 0.78;
+                mat.metalness = 0.04;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x05070d);
+                mat.emissiveIntensity = 0.05;
                 mat.side = THREE.DoubleSide;
                 mat.needsUpdate = true;
               }
 
-              // Skin: very fair/white skin tone (always override for consistency)
+              // Skin: warm, healthy mid-tone with subtle subsurface red.
               var isSkin = nm.indexOf('skin') !== -1 ||
                            nm.indexOf('head') !== -1 || nm.indexOf('face') !== -1 ||
                            mat.name === 'Wolf3D_Skin' || mat.name === 'Wolf3D_Body';
               if (isSkin && mat.color && mat.color.set) {
-                mat.color.set(0xf3c7a6); // warmer, healthier skin tone
-                if ('roughness' in mat) mat.roughness = 0.58;
+                mat.color.set(0xefb892); // warm mid-tone, more "matinee idol" than washed-out
+                if ('roughness' in mat) mat.roughness = 0.52;
                 mat.metalness = 0.0;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x1a0e08);
-                mat.emissiveIntensity = 0.015;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x2a160c);
+                mat.emissiveIntensity = 0.025; // faint subsurface warmth
                 mat.needsUpdate = true;
               }
 
-              // Hair: warm brown
+              // Hair: rich dark brown with a slight sheen — anchors the face.
               var isHair = nm.indexOf('hair') !== -1 || mat.name === 'Wolf3D_Hair';
               if (isHair && mat.color && mat.color.set) {
-                mat.color.set(0x3d1f0e); // warm dark brown hair
-                mat.roughness = 0.82;
+                mat.color.set(0x2a160a); // deeper brown, almost espresso
+                mat.roughness = 0.62;     // a bit glossier so the hair-light catches it
+                mat.metalness = 0.05;
                 mat.needsUpdate = true;
               }
 
-              // Pants: very dark / near-black
+              // Pants: dark suit trousers matching the jacket.
               var isPants = nm.indexOf('outfit_bottom') !== -1 || mat.name === 'Wolf3D_Outfit_Bottom';
               if (isPants && mat.color && mat.color.set) {
-                mat.color.set(0x111118); // near-black dark pants
-                mat.roughness = 0.78;
+                mat.color.set(0x141926); // matches jacket, slightly darker
+                if (mat.map) mat.map = null;
+                mat.roughness = 0.82;
+                mat.metalness = 0.0;
+                mat.needsUpdate = true;
+              }
+
+              // Footwear: black dress shoes.
+              var isFootwear = nm.indexOf('outfit_footwear') !== -1 ||
+                               nm.indexOf('shoe') !== -1 ||
+                               mat.name === 'Wolf3D_Outfit_Footwear';
+              if (isFootwear && mat.color && mat.color.set) {
+                mat.color.set(0x0a0a0e);
+                mat.roughness = 0.40;     // polished leather sheen
+                mat.metalness = 0.10;
                 mat.needsUpdate = true;
               }
 
@@ -658,12 +695,104 @@
         }
       })();
 
-      // ── Procedural full sleeves ─────────────────────────────────────────
-      (function addProceduralSleeves() {
+      // ── Procedural shirt collar + tie ─────────────────────────────────
+      // The RPM "outfit top" is a single-piece mesh with no separate collar/tie
+      // geometry. To turn the recoloured dark blazer into a proper professional
+      // suit-and-tie look, we attach two small meshes anchored to the neck/spine
+      // bones: a white V-shaped collar peeking out at the throat, and a slim
+      // dark tie running down the chest. Anchoring to bones means the collar
+      // and tie inherit head/torso animation automatically.
+      (function addProceduralSuitDetails() {
         try {
-          return;
-        } catch (eSl) {
-          warn('procedural sleeves failed:', eSl && eSl.message);
+          var anchorBone = rig.bones.neck || rig.bones.spine2 || rig.bones.spine1 || rig.bones.spine || rig.head;
+          if (!anchorBone) {
+            warn('no neck/spine bone — skipping suit collar/tie');
+            return;
+          }
+
+          // Measure head height to scale collar/tie proportionally to the avatar.
+          var headSize = 0.10;
+          if (rig.morphMeshes.length) {
+            var bb = new THREE.Box3();
+            rig.morphMeshes.forEach(function (m) {
+              if (!m.geometry) return;
+              if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+              if (m.geometry.boundingBox) bb.union(m.geometry.boundingBox);
+            });
+            if (!bb.isEmpty()) {
+              var s = bb.getSize(new THREE.Vector3());
+              headSize = Math.max(s.x, s.y, s.z) * 0.5;
+            }
+          }
+
+          // Crisp dress-shirt fabric.
+          var shirtMat = new THREE.MeshStandardMaterial({
+            color: 0xf5f1e8,
+            roughness: 0.55,
+            metalness: 0.0
+          });
+          // Burgundy silk tie — classic against a charcoal suit, reads "polished" not "stiff".
+          var tieMat = new THREE.MeshStandardMaterial({
+            color: 0x6e1a22,
+            roughness: 0.32,
+            metalness: 0.10,
+            emissive: 0x180407,
+            emissiveIntensity: 0.10
+          });
+          // Tie knot — slightly darker for shading separation.
+          var knotMat = new THREE.MeshStandardMaterial({
+            color: 0x55141c,
+            roughness: 0.34,
+            metalness: 0.10
+          });
+
+          // Collar: a flattened cylinder hugging the neck. We angle it open
+          // slightly at the front so it reads as a V notch instead of a turtle-neck.
+          var collarRadius = headSize * 0.45;
+          var collarGeom = new THREE.CylinderGeometry(
+            collarRadius * 1.05, collarRadius * 1.20, headSize * 0.55, 24, 1, true
+          );
+          var collar = new THREE.Mesh(collarGeom, shirtMat);
+          collar.position.set(0, -headSize * 0.55, headSize * 0.05);
+          collar.renderOrder = 5;
+
+          // Tie blade — a flat trapezoid that widens as it descends.
+          var tieLen = headSize * 1.55;
+          var tieTopW = headSize * 0.16;
+          var tieBotW = headSize * 0.30;
+          var tieShape = new THREE.Shape();
+          tieShape.moveTo(-tieTopW * 0.5, 0);
+          tieShape.lineTo( tieTopW * 0.5, 0);
+          tieShape.lineTo( tieBotW * 0.5, -tieLen + tieBotW * 0.5);
+          tieShape.lineTo( 0,             -tieLen);
+          tieShape.lineTo(-tieBotW * 0.5, -tieLen + tieBotW * 0.5);
+          tieShape.lineTo(-tieTopW * 0.5, 0);
+          var tieGeom = new THREE.ExtrudeGeometry(tieShape, {
+            depth: headSize * 0.04,
+            bevelEnabled: true,
+            bevelSegments: 2,
+            bevelSize: headSize * 0.01,
+            bevelThickness: headSize * 0.012,
+            curveSegments: 6
+          });
+          var tie = new THREE.Mesh(tieGeom, tieMat);
+          tie.position.set(0, -headSize * 0.78, headSize * 0.42);
+          tie.rotation.x = -0.06; // slight forward lean so it follows the chest curvature
+          tie.renderOrder = 6;
+
+          // Tie knot — small rounded box at the throat.
+          var knotGeom = new THREE.BoxGeometry(headSize * 0.22, headSize * 0.20, headSize * 0.10);
+          var knot = new THREE.Mesh(knotGeom, knotMat);
+          knot.position.set(0, -headSize * 0.62, headSize * 0.45);
+          knot.renderOrder = 7;
+
+          anchorBone.add(collar);
+          anchorBone.add(knot);
+          anchorBone.add(tie);
+          rig.suit = { collar: collar, knot: knot, tie: tie };
+          log('procedural suit collar + tie attached, anchor:', anchorBone.name);
+        } catch (e) {
+          warn('procedural suit details failed:', e && e.message);
         }
       })();
 
@@ -828,18 +957,20 @@
 
         var headY, frameHeight;
         if (isFullBody) {
-          // Full body framing: prefer to aim at the ACTUAL face mesh center so the
-          // camera's gaze is horizontal with the eyes (no perspective foreshortening
-          // that would make the character look like they're craning their neck).
+          // Executive-portrait framing: aim at the face and frame just the
+          // upper torso (head + shoulders + tie). This shows off the suit
+          // instead of zooming out to the full body where details disappear.
           // faceCenter.y was measured above from the face mesh's world bbox.
-          // Fallback: 82% up from the body's vertical span (upper chest/face line).
-          var faceYBias = postBox.min.y + postSize.y * 0.82;
+          var faceYBias = postBox.min.y + postSize.y * 0.86;
           headY = (faceCenter && isFinite(faceCenter.y))
             ? faceCenter.y
             : faceYBias;
-          // Frame a touch taller than the full body so the shoulders sit in
-          // the upper third and the legs fade into the wall below.
-          frameHeight = postSize.y * 0.98;
+          // Pull the focal point down a touch so the shoulders sit in the
+          // lower third of the frame instead of below it.
+          headY -= postSize.y * 0.04;
+          // Frame about a third of the body's height — head, shoulders, and
+          // the top of the chest where the tie + collar will read clearly.
+          frameHeight = postSize.y * 0.42;
         } else {
           // Head/face scan — frame the face with a bit of padding.
           headY = faceCenter.y;
