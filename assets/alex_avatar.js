@@ -332,21 +332,21 @@
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 0.90;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     sizeToCanvas();
 
     // Flattering three-point lighting for skin.
-    var key = new THREE.DirectionalLight(0xffffff, 2.4);
+    var key = new THREE.DirectionalLight(0xfff5e8, 1.6);
     key.position.set(1.2, 2.2, 2.5);
     scene.add(key);
-    var fill = new THREE.DirectionalLight(0xdbe6ff, 0.9);
+    var fill = new THREE.DirectionalLight(0xdbe6ff, 0.55);
     fill.position.set(-2.0, 1.2, 1.5);
     scene.add(fill);
-    var rim = new THREE.DirectionalLight(0xffffff, 1.1);
+    var rim = new THREE.DirectionalLight(0xffffff, 0.7);
     rim.position.set(0.2, 2.0, -2.0);
     scene.add(rim);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    scene.add(new THREE.AmbientLight(0xffeedd, 0.45));
 
     // State container.
     var rig = {
@@ -416,32 +416,56 @@
           node.castShadow = false;
           node.receiveShadow = false;
           node.frustumCulled = false;
-          // ── Outfit restyle: clean dark shirt, natural shading ───────────
-          // Keep the original texture maps for realism (folds/seams), but tint
-          // the shirt to a deeper, more premium navy tone.
+          // ── Material fixes: proper skin tone + dark shirt ──────────────
           try {
             var mats = Array.isArray(node.material) ? node.material : [node.material];
             for (var mi = 0; mi < mats.length; mi++) {
               var mat = mats[mi];
               if (!mat || !mat.name) continue;
+              var nm = mat.name.toLowerCase();
+
+              // Shirt: keep original textures, tint to dark navy blue
               if (mat.name === 'Wolf3D_Outfit_Top') {
-                // Strip baked textures so the plain color isn't blended dark.
-                ['map','roughnessMap','metalnessMap','normalMap','aoMap','emissiveMap'].forEach(function(k){
-                  if (mat[k]) { try { mat[k].dispose(); } catch(e){} mat[k] = null; }
-                });
-                // Custom shirt color: clean white.
-                if (mat.color && mat.color.set) mat.color.set(0xeef0f2);
-                mat.roughness = 0.72;
+                if (mat.color && mat.color.set) mat.color.set(0x1a2744);
+                mat.roughness = 0.70;
                 mat.metalness = 0.0;
                 if (mat.emissive && mat.emissive.set) mat.emissive.set(0x000000);
                 mat.emissiveIntensity = 0.0;
-                mat.envMapIntensity = 0.20;
                 mat.side = THREE.DoubleSide;
                 mat.needsUpdate = true;
-                rig.shirtColorHex = 0xeef0f2;
+              }
+
+              // Skin/body: if no texture map loaded, apply natural skin tone fallback
+              var isSkin = nm.indexOf('skin') !== -1 || nm.indexOf('body') !== -1 ||
+                           nm.indexOf('head') !== -1 || nm.indexOf('face') !== -1 ||
+                           mat.name === 'Wolf3D_Skin' || mat.name === 'Wolf3D_Body';
+              if (isSkin && mat.color && mat.color.set) {
+                // Only apply fallback color if the texture map is missing
+                if (!mat.map) {
+                  mat.color.set(0xc68642); // natural medium skin tone
+                  mat.roughness = 0.65;
+                  mat.metalness = 0.0;
+                  mat.needsUpdate = true;
+                }
+              }
+
+              // Hair: dark brown if no texture
+              var isHair = nm.indexOf('hair') !== -1 || mat.name === 'Wolf3D_Hair';
+              if (isHair && mat.color && mat.color.set && !mat.map) {
+                mat.color.set(0x2c1810); // dark brown hair
+                mat.roughness = 0.80;
+                mat.needsUpdate = true;
+              }
+
+              // Pants: dark if no texture
+              var isPants = nm.indexOf('outfit_bottom') !== -1 || mat.name === 'Wolf3D_Outfit_Bottom';
+              if (isPants && mat.color && mat.color.set && !mat.map) {
+                mat.color.set(0x1a1a2e); // dark navy pants
+                mat.roughness = 0.75;
+                mat.needsUpdate = true;
               }
             }
-          } catch (e) { warn('shirt retint failed', e); }
+          } catch (e) { warn('material fix failed', e); }
           if (node.morphTargetDictionary && node.morphTargetInfluences) {
             rig.morphMeshes.push(node);
             // Pick best available jaw/open morph by priority.
