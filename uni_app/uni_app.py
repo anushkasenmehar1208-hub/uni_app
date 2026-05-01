@@ -28867,6 +28867,11 @@ def learn_page_content() -> rx.Component:
         rx.box(
             rx.box(_learn_mobile_view(), display=rx.breakpoints(initial="flex", md="none"), flex_direction="column", width="100%", height="100vh"),
             rx.box(_learn_session_view(), display=rx.breakpoints(initial="none", md="flex"), width="100%", height="100vh"),
+            width="100%",
+            flex="1",
+            min_width="0",
+            height="100vh",
+            overflow="hidden",
         ),
         # Empty state — paste a URL
         rx.box(
