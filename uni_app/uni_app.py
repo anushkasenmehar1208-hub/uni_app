@@ -28525,164 +28525,158 @@ def _learn_tab_button(value: str, label: str, icon: str) -> rx.Component:
 
 
 def _learn_mobile_view() -> rx.Component:
-    """Mobile layout: full-width video top + horizontally swipeable panels below."""
-    _TAB_ORDER = ["chat", "summary", "quiz", "notes"]
+    """Mobile layout: video capped at 40vh, swipe panels fill the rest."""
 
     def _dot(tab: str) -> rx.Component:
         active = LearnState.active_tab == tab
         return rx.box(
-            width="7px", height="7px",
-            border_radius="50%",
-            background=rx.cond(active, "rgba(56,189,248,0.95)", "rgba(255,255,255,0.18)"),
-            style={"transition": "background 0.25s ease, transform 0.25s ease"},
-            transform=rx.cond(active, "scale(1.25)", "scale(1)"),
+            width="7px", height="7px", border_radius="50%",
+            background=rx.cond(active, "#38bdf8", "rgba(255,255,255,0.2)"),
+            flex_shrink="0",
+            style={"transition": "background 0.22s ease"},
         )
 
-    return rx.vstack(
-        # ── Top: video + URL bar ──────────────────────────────────────────
-        rx.vstack(
+    return rx.box(
+        # ── Inject one-time CSS ───────────────────────────────────────────
+        rx.el.style("""
+            #lmv-video-wrap { flex-shrink: 0; width: 100%; max-height: 40vh; overflow: hidden; }
+            #lmv-video-wrap iframe { width:100%; aspect-ratio:16/9; max-height:36vh; border:0; border-radius:10px; display:block; background:#000; }
+            #lmv-panels { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; border-top:1px solid rgba(255,255,255,0.06); }
+            #lmv-dots { display:flex; align-items:center; justify-content:center; gap:8px; padding:7px 0 6px; flex-shrink:0; }
+            #lmv-track-wrap { flex:1; min-height:0; overflow:hidden; position:relative; }
+            #lmv-track { display:flex; flex-direction:row; width:400%; height:100%; will-change:transform; transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); touch-action:pan-y; }
+            #lmv-track > div { flex:0 0 25%; min-width:0; height:100%; overflow:hidden; display:flex; flex-direction:column; }
+        """),
+
+        # ── TOP: video section (max 40 vh) ───────────────────────────────
+        rx.box(
             rx.hstack(
                 rx.icon_button(
                     rx.icon("arrow_left", size=16),
                     on_click=LearnState.reset_session,
                     variant="ghost", size="2",
-                    style={
-                        "color": "rgba(240,244,248,0.6)",
-                        "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
-                        "border_radius": "8px",
-                    },
+                    style={"color": "rgba(240,244,248,0.6)", "border_radius": "8px",
+                           "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"}},
                 ),
                 rx.input(
                     value=LearnState.url_input, on_change=LearnState.set_url_input,
                     placeholder="Paste another YouTube link…", size="2",
-                    style={
-                        "background": "rgba(255,255,255,0.04)",
-                        "border": "1px solid rgba(255,255,255,0.08)",
-                        "color": "rgba(240,244,248,0.85)",
-                        "border_radius": "8px", "flex": "1",
-                    },
+                    style={"background": "rgba(255,255,255,0.04)", "border": "1px solid rgba(255,255,255,0.08)",
+                           "color": "rgba(240,244,248,0.85)", "border_radius": "8px", "flex": "1"},
                 ),
                 rx.icon_button(
                     rx.icon(tag="arrow_right", size=14),
                     on_click=LearnState.load_video, size="2",
-                    style={
-                        "background": "rgba(244,63,94,0.18)",
-                        "color": "rgba(255,225,230,0.95)",
-                        "border": "1px solid rgba(244,63,94,0.4)",
-                        "border_radius": "8px",
-                        "_hover": {"background": "rgba(244,63,94,0.28)"},
-                    },
+                    style={"background": "rgba(244,63,94,0.18)", "color": "rgba(255,225,230,0.95)",
+                           "border": "1px solid rgba(244,63,94,0.4)", "border_radius": "8px",
+                           "_hover": {"background": "rgba(244,63,94,0.28)"}},
                 ),
                 spacing="2", width="100%", align="center",
+                padding="8px 10px 6px",
             ),
-            _learn_video_player(),
-            rx.cond(
-                LearnState.transcript_loading,
-                rx.hstack(
-                    rx.spinner(size="2", color="rgba(244,63,94,0.85)"),
-                    rx.text("Fetching transcript…", color="rgba(240,244,248,0.45)", font_size="0.8rem"),
-                    spacing="2", align="center",
-                ),
+            rx.box(_learn_video_player(), id="lmv-video-wrap"),
+            rx.hstack(
                 rx.cond(
-                    LearnState.transcript_error != "",
-                    _learn_transcript_problem(),
+                    LearnState.transcript_loading,
+                    rx.hstack(rx.spinner(size="1", color="rgba(244,63,94,0.8)"),
+                              rx.text("Loading transcript…", color="rgba(255,255,255,0.4)", font_size="0.75rem"),
+                              spacing="1", align="center"),
                     rx.cond(
                         LearnState.has_transcript,
-                        rx.hstack(
-                            rx.icon(tag="check", size=13, color="rgba(52,211,153,0.85)"),
-                            rx.text("Transcript loaded", color="rgba(240,244,248,0.45)", font_size="0.8rem"),
-                            spacing="1", align="center",
-                        ),
+                        rx.hstack(rx.icon(tag="check", size=12, color="rgba(52,211,153,0.8)"),
+                                  rx.text("Transcript loaded", color="rgba(255,255,255,0.4)", font_size="0.75rem"),
+                                  spacing="1", align="center"),
                         rx.fragment(),
                     ),
                 ),
+                padding="2px 10px 4px", width="100%",
             ),
-            spacing="2", width="100%", padding="10px 12px 6px",
+            id="lmv-top",
+            width="100%", flex_shrink="0",
+            background="#0a0a0c",
         ),
 
-        # ── Bottom: swipeable panel carousel ─────────────────────────────
+        # ── BOTTOM: swipe carousel ────────────────────────────────────────
         rx.box(
-            # Dot indicators
-            rx.hstack(
+            # Dot indicators (centered)
+            rx.box(
                 _dot("chat"), _dot("summary"), _dot("quiz"), _dot("notes"),
-                spacing="2", justify="center", width="100%",
-                padding="5px 0 7px",
+                id="lmv-dots",
             ),
-            # Hidden sync element — JS reads data-idx to stay in sync with Reflex state
-            rx.el.span(
-                id="__lm_idx",
-                data_idx=LearnState.mobile_panel_index.to_string(),
-                display="none",
-            ),
-            # Hidden trigger buttons — JS clicks these to fire Reflex events
-            rx.button("", id="__lmb0", on_click=LearnState.set_active_tab("chat"),   display="none"),
+            # Hidden state sync
+            rx.el.span(id="__lm_idx", data_idx=LearnState.mobile_panel_index.to_string(), display="none"),
+            rx.button("", id="__lmb0", on_click=LearnState.set_active_tab("chat"),    display="none"),
             rx.button("", id="__lmb1", on_click=LearnState.set_active_tab("summary"), display="none"),
-            rx.button("", id="__lmb2", on_click=LearnState.set_active_tab("quiz"),   display="none"),
-            rx.button("", id="__lmb3", on_click=LearnState.set_active_tab("notes"),  display="none"),
-            # Sliding track (all 4 panels rendered, translate to show active one)
+            rx.button("", id="__lmb2", on_click=LearnState.set_active_tab("quiz"),    display="none"),
+            rx.button("", id="__lmb3", on_click=LearnState.set_active_tab("notes"),   display="none"),
+            # Sliding track
             rx.box(
                 rx.box(
-                    rx.box(_learn_chat_panel(),    style={"flex": "0 0 25%", "min_width": "0", "overflow": "hidden"}),
-                    rx.box(_learn_summary_panel(), style={"flex": "0 0 25%", "min_width": "0", "overflow": "hidden"}),
-                    rx.box(_learn_quiz_panel(),    style={"flex": "0 0 25%", "min_width": "0", "overflow": "hidden"}),
-                    rx.box(_learn_notes_panel(),   style={"flex": "0 0 25%", "min_width": "0", "overflow": "hidden"}),
-                    id="__lm_track",
-                    style={
-                        "display": "flex",
-                        "flex_direction": "row",
-                        "width": "400%",
-                        "height": "100%",
-                        "will_change": "transform",
-                        "transition": "transform 0.32s cubic-bezier(0.4,0,0.2,1)",
-                    },
+                    rx.box(_learn_chat_panel()),
+                    rx.box(_learn_summary_panel()),
+                    rx.box(_learn_quiz_panel()),
+                    rx.box(_learn_notes_panel()),
+                    id="lmv-track",
                 ),
-                width="100%", height="100%", overflow="hidden",
+                id="lmv-track-wrap",
             ),
-            # Touch-swipe + circular navigation script
-            rx.el.style("""
-                #__lm_track { touch-action: pan-y; }
-            """),
+            # Swipe + circular JS + MutationObserver to slide track
             rx.script("""
 (function () {
     var PANELS = 4;
 
-    function go(n) {
-        n = ((n % PANELS) + PANELS) % PANELS;
-        var btn = document.getElementById('__lmb' + n);
-        if (btn) btn.click();
+    function applyTransform(n) {
+        var t = document.getElementById('lmv-track');
+        if (t) t.style.transform = 'translateX(-' + (n * 25) + '%)';
     }
 
-    function currentIdx() {
+    function go(n) {
+        n = ((n % PANELS) + PANELS) % PANELS;
+        applyTransform(n);
+        var b = document.getElementById('__lmb' + n);
+        if (b) b.click();
+    }
+
+    function cur() {
         var el = document.getElementById('__lm_idx');
         return el ? (parseInt(el.getAttribute('data-idx')) || 0) : 0;
     }
 
+    function watchIdx() {
+        var el = document.getElementById('__lm_idx');
+        if (!el) { setTimeout(watchIdx, 80); return; }
+        // Apply initial transform
+        applyTransform(parseInt(el.getAttribute('data-idx')) || 0);
+        // Watch for Reflex state updates
+        var ob = new MutationObserver(function() {
+            applyTransform(parseInt(el.getAttribute('data-idx')) || 0);
+        });
+        ob.observe(el, { attributes: true, attributeFilter: ['data-idx'] });
+    }
+
     function setup() {
-        var track = document.getElementById('__lm_track');
-        if (!track) { setTimeout(setup, 120); return; }
-        var ts = 0, ty = 0;
-        track.addEventListener('touchstart', function (e) {
-            ts = e.touches[0].clientX;
-            ty = e.touches[0].clientY;
-        }, { passive: true });
-        track.addEventListener('touchend', function (e) {
-            var dx = e.changedTouches[0].clientX - ts;
-            var dy = e.changedTouches[0].clientY - ty;
-            if (Math.abs(dx) < 38 || Math.abs(dy) > Math.abs(dx) * 1.5) return;
-            if (dx < 0) go(currentIdx() + 1);   /* swipe left  = next */
-            else        go(currentIdx() - 1);   /* swipe right = prev */
-        }, { passive: true });
+        var t = document.getElementById('lmv-track');
+        if (!t) { setTimeout(setup, 100); return; }
+        var sx = 0, sy = 0;
+        t.addEventListener('touchstart', function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; }, {passive:true});
+        t.addEventListener('touchend', function(e){
+            var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+            if (Math.abs(dx)<36 || Math.abs(dy)>Math.abs(dx)*1.4) return;
+            go(dx<0 ? cur()+1 : cur()-1);
+        }, {passive:true});
+        watchIdx();
     }
     setup();
 })();
 """),
-            display="flex", flex_direction="column",
-            flex="1", overflow="hidden",
-            position="relative",
+            id="lmv-panels",
         ),
-        spacing="0",
-        height="100vh", width="100%", overflow="hidden",
-        background="#0a0a0c",
+
+        # Outer container
+        id="lmv-root",
+        display="flex", flex_direction="column",
+        width="100%", height="100vh",
+        overflow="hidden", background="#0a0a0c",
     )
 
 
