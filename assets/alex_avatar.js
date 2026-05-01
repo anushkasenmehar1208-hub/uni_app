@@ -594,19 +594,101 @@
       })();
 
       // ── Procedural full sleeves ─────────────────────────────────────────
-      // The base GLB has a short-sleeve polo. We can't change geometry of
-      // baked vertices, so we attach lightweight tapered cylinders to the
-      // upper-arm and forearm bones. Because they're parented to the bones,
-      // they follow every pose / gesture / breathing animation perfectly.
-      // The cylinders are slightly larger in radius than the underlying skin
-      // arm so the skin is fully covered (looks like a fitted long sleeve).
       (function addProceduralSleeves() {
         try {
-          // Disable synthetic sleeve geometry; it looks unnatural on this rig.
-          // Better visual quality comes from keeping the base mesh silhouette.
           return;
         } catch (eSl) {
           warn('procedural sleeves failed:', eSl && eSl.message);
+        }
+      })();
+
+      // ── Procedural eyes ────────────────────────────────────────────────
+      // The GLB's eye materials may not be detected by name, OR the eye geometry
+      // may not exist at all. Attach two sphere meshes directly to the head bone
+      // so the avatar always has visible eyes regardless of GLB structure.
+      (function addProceduralEyes() {
+        try {
+          if (!rig.head) {
+            warn('no head bone — skipping procedural eyes');
+            return;
+          }
+          // Find the face mesh to scale eyes proportional to head size.
+          var headSize = 0.10; // sensible default in unit-scaled avatar space
+          if (rig.morphMeshes.length) {
+            var bb = new THREE.Box3();
+            rig.morphMeshes.forEach(function (m) {
+              if (!m.geometry) return;
+              if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+              if (m.geometry.boundingBox) bb.union(m.geometry.boundingBox);
+            });
+            if (!bb.isEmpty()) {
+              var s = bb.getSize(new THREE.Vector3());
+              headSize = Math.max(s.x, s.y, s.z) * 0.5;
+            }
+          }
+          // Eye dimensions — small relative to head.
+          var eyeR = headSize * 0.085;          // sclera radius
+          var irisR = eyeR * 0.55;              // iris disc radius
+          var pupilR = eyeR * 0.22;             // pupil dot radius
+          // Position relative to head bone's local frame. RPM head bones have
+          // +Y up, +Z forward (face direction). Eyes sit slightly above origin
+          // and forward of the head bone.
+          var eyeY = headSize * 0.22;
+          var eyeZ = headSize * 0.62;
+          var eyeX = headSize * 0.18;
+
+          // Sclera (white) material
+          var scleraMat = new THREE.MeshStandardMaterial({
+            color: 0xfaf6f0,
+            roughness: 0.18,
+            metalness: 0.0,
+          });
+          // Iris (warm light blue/grey for sharp gaze)
+          var irisMat = new THREE.MeshStandardMaterial({
+            color: 0x6b8ca8,
+            roughness: 0.15,
+            metalness: 0.0,
+            emissive: 0x162028,
+            emissiveIntensity: 0.4,
+          });
+          // Pupil (deep black)
+          var pupilMat = new THREE.MeshStandardMaterial({
+            color: 0x050505,
+            roughness: 0.05,
+            metalness: 0.0,
+          });
+
+          var sphereGeom = new THREE.SphereGeometry(eyeR, 24, 18);
+          var irisGeom = new THREE.CircleGeometry(irisR, 24);
+          var pupilGeom = new THREE.CircleGeometry(pupilR, 20);
+
+          function makeEye(side) {
+            var group = new THREE.Group();
+            var sclera = new THREE.Mesh(sphereGeom, scleraMat);
+            group.add(sclera);
+            var iris = new THREE.Mesh(irisGeom, irisMat);
+            iris.position.z = eyeR * 0.94;
+            group.add(iris);
+            var pupil = new THREE.Mesh(pupilGeom, pupilMat);
+            pupil.position.z = eyeR * 0.96;
+            group.add(pupil);
+            group.position.set(side * eyeX, eyeY, eyeZ);
+            // Make eyes render on top of head mesh so they don't z-fight.
+            group.renderOrder = 10;
+            sclera.renderOrder = 10;
+            iris.renderOrder = 11;
+            pupil.renderOrder = 12;
+            return group;
+          }
+
+          var leftEye = makeEye(-1);
+          var rightEye = makeEye(1);
+          rig.head.add(leftEye);
+          rig.head.add(rightEye);
+          rig.eyes = { left: leftEye, right: rightEye };
+          log('procedural eyes attached, headSize:', headSize.toFixed(3));
+        } catch (e) {
+          warn('procedural eyes failed:', e && e.message);
         }
       })();
 
