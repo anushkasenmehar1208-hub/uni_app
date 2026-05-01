@@ -337,16 +337,16 @@
     sizeToCanvas();
 
     // Flattering three-point lighting for skin.
-    var key = new THREE.DirectionalLight(0xfff5e8, 1.6);
-    key.position.set(1.2, 2.2, 2.5);
+    var key = new THREE.DirectionalLight(0xfff8f0, 1.4);
+    key.position.set(1.2, 2.5, 2.5);
     scene.add(key);
-    var fill = new THREE.DirectionalLight(0xdbe6ff, 0.55);
+    var fill = new THREE.DirectionalLight(0xe8eeff, 0.5);
     fill.position.set(-2.0, 1.2, 1.5);
     scene.add(fill);
-    var rim = new THREE.DirectionalLight(0xffffff, 0.7);
-    rim.position.set(0.2, 2.0, -2.0);
+    var rim = new THREE.DirectionalLight(0xffffff, 0.6);
+    rim.position.set(0.2, 2.5, -2.0);
     scene.add(rim);
-    scene.add(new THREE.AmbientLight(0xffeedd, 0.45));
+    scene.add(new THREE.AmbientLight(0xfff5ee, 0.55));
 
     // State container.
     var rig = {
@@ -440,13 +440,11 @@
                            nm.indexOf('head') !== -1 || nm.indexOf('face') !== -1 ||
                            mat.name === 'Wolf3D_Skin' || mat.name === 'Wolf3D_Body';
               if (isSkin && mat.color && mat.color.set) {
-                // Only apply fallback color if the texture map is missing
-                if (!mat.map) {
-                  mat.color.set(0xc68642); // natural medium skin tone
-                  mat.roughness = 0.65;
-                  mat.metalness = 0.0;
-                  mat.needsUpdate = true;
-                }
+                // Light/fair skin tone
+                mat.color.set(0xfde8d0);
+                mat.roughness = 0.55;
+                mat.metalness = 0.0;
+                mat.needsUpdate = true;
               }
 
               // Hair: dark brown if no texture
