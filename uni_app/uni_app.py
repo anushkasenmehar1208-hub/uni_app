@@ -28539,8 +28539,8 @@ def _learn_mobile_view() -> rx.Component:
     return rx.box(
         # ── Inject one-time CSS ───────────────────────────────────────────
         rx.el.style("""
-            #lmv-video-wrap { flex-shrink: 0; width: 100%; max-height: 40vh; overflow: hidden; }
-            #lmv-video-wrap iframe { width:100%; aspect-ratio:16/9; max-height:36vh; border:0; border-radius:10px; display:block; background:#000; }
+            #lmv-video-wrap { flex-shrink: 0; width: 100%; overflow: hidden; padding: 0 6px; box-sizing: border-box; }
+            #lmv-video-wrap iframe { width:100%; aspect-ratio:16/9; border:0; border-radius:10px; display:block; background:#000; }
             #lmv-panels { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; border-top:1px solid rgba(255,255,255,0.06); }
             #lmv-dots { display:flex; align-items:center; justify-content:center; gap:8px; padding:7px 0 6px; flex-shrink:0; }
             #lmv-track-wrap { flex:1; min-height:0; overflow:hidden; position:relative; }
