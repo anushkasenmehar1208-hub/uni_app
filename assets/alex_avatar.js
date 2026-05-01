@@ -461,6 +461,37 @@
                 mat.roughness = 0.78;
                 mat.needsUpdate = true;
               }
+
+              // Eyes iris/pupil: sharp dark brown iris
+              var isEye = mat.name === 'Wolf3D_Eye' || nm === 'wolf3d_eye' ||
+                          nm.indexOf('eye') !== -1 && nm.indexOf('white') === -1;
+              if (isEye && mat.color && mat.color.set) {
+                mat.color.set(0x1a0a00); // very dark brown iris
+                mat.roughness = 0.05;
+                mat.metalness = 0.0;
+                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x050200);
+                mat.emissiveIntensity = 0.3;
+                mat.needsUpdate = true;
+              }
+
+              // Eye whites: bright white sclera
+              var isEyeWhite = nm.indexOf('eyewhite') !== -1 || nm.indexOf('eye_white') !== -1 ||
+                               nm.indexOf('sclera') !== -1 || mat.name === 'Wolf3D_EyeWhite';
+              if (isEyeWhite && mat.color && mat.color.set) {
+                mat.color.set(0xf8f4f0);
+                mat.roughness = 0.10;
+                mat.metalness = 0.0;
+                mat.needsUpdate = true;
+              }
+
+              // Teeth: clean white
+              var isTeeth = nm.indexOf('teeth') !== -1 || nm.indexOf('tooth') !== -1;
+              if (isTeeth && mat.color && mat.color.set) {
+                mat.color.set(0xeeeae4);
+                mat.roughness = 0.30;
+                mat.metalness = 0.0;
+                mat.needsUpdate = true;
+              }
             }
           } catch (e) { warn('material fix failed', e); }
           if (node.morphTargetDictionary && node.morphTargetInfluences) {
