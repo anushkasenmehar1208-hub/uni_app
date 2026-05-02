@@ -15775,6 +15775,7 @@ def image_preview_modal() -> rx.Component:
                 rx.button(
                     "✕",
                     on_click=AppState.close_image_modal,
+                    custom_attrs={"aria-label": "Close preview", "title": "Close preview"},
                     position="absolute",
                     top="14px",
                     right="14px",
@@ -16316,6 +16317,7 @@ def chat_input_field() -> rx.Component:
                         rx.clear_selected_files("composer_shell"),
                         rx.clear_selected_files("image_upload_zone"),
                     ],
+                    custom_attrs={"aria-label": "Remove image", "title": "Remove image"},
                     width="20px",
                     height="20px",
                     min_width="20px",
@@ -16388,6 +16390,7 @@ def chat_input_field() -> rx.Component:
                         AppState.clear_document,
                         rx.clear_selected_files("document_upload_zone"),
                     ],
+                    custom_attrs={"aria-label": "Remove document", "title": "Remove document"},
                     width="22px",
                     height="22px",
                     min_width="22px",
@@ -16538,6 +16541,7 @@ def chat_input_field() -> rx.Component:
                                 align_self="flex-end",
                                 margin_bottom="5px",
                                 margin_left="6px",
+                                custom_attrs={"aria-label": "Add image", "title": "Add image"},
                                 style={
                                     "background": "transparent",
                                     "border": "1px solid rgba(255,255,255,0.12)",
@@ -16597,6 +16601,7 @@ def chat_input_field() -> rx.Component:
                                 align_self="flex-end",
                                 margin_bottom="5px",
                                 margin_left="8px",
+                                custom_attrs={"aria-label": "Add document", "title": "Add document"},
                                 style={
                                     "background": "transparent",
                                     "border": "1px solid rgba(255,255,255,0.12)",
@@ -16678,65 +16683,75 @@ def chat_input_field() -> rx.Component:
                 },
             ),
             # Mic — opens voice chat immediately (fullscreen overlay)
-            rx.box(
-                rx.icon(tag="mic", size=15, color="rgba(255,255,255,0.45)"),
-                on_click=AppState.open_voice_chat,
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                width="34px",
-                height="34px",
-                border_radius="12px",
-                flex_shrink="0",
-                align_self="flex-end",
-                margin_bottom="6px",
-                role="button",
-                aria_label="Start voice chat",
-                style={
-                    "background": "rgba(255,255,255,0.06)",
-                    "border": "none",
-                    "cursor": "pointer",
-                    "transition": "all 0.15s ease",
-                    "_hover": {
-                        "background": "rgba(0,255,255,0.12)",
-                        "& svg": {"color": "#00FFFF"},
+            app_tooltip(
+                rx.box(
+                    rx.icon(tag="mic", size=15, color="rgba(255,255,255,0.45)"),
+                    on_click=AppState.open_voice_chat,
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                    width="34px",
+                    height="34px",
+                    border_radius="12px",
+                    flex_shrink="0",
+                    align_self="flex-end",
+                    margin_bottom="6px",
+                    role="button",
+                    aria_label="Start voice chat",
+                    custom_attrs={"title": "Start voice chat"},
+                    style={
+                        "background": "rgba(255,255,255,0.06)",
+                        "border": "none",
+                        "cursor": "pointer",
+                        "transition": "all 0.15s ease",
+                        "_hover": {
+                            "background": "rgba(0,255,255,0.12)",
+                            "& svg": {"color": "#00FFFF"},
+                        },
                     },
-                },
-            ),
-            rx.button(
-                rx.cond(
-                    AppState.is_processing,
-                    rx.spinner(size="1", color="rgba(255,255,255,0.4)"),
-                    rx.icon(tag="arrow_up", size=15, color="white"),
                 ),
-                id="chat_send_btn",
-                on_click=AppState.send_message,
-                is_disabled=AppState.is_processing,
-                width="34px",
-                height="34px",
-                border_radius="12px",
-                flex_shrink="0",
-                align_self="flex-end",
-                margin_bottom="6px",
-                margin_right="6px",
-                style={
-                    "background": rx.cond(
+                "Start voice chat",
+                "top",
+            ),
+            app_tooltip(
+                rx.button(
+                    rx.cond(
                         AppState.is_processing,
-                        "rgba(255,255,255,0.05)",
-                        "rgba(255,255,255,0.12)",
+                        rx.spinner(size="1", color="rgba(255,255,255,0.4)"),
+                        rx.icon(tag="arrow_up", size=15, color="white"),
                     ),
-                    "border": "none",
-                    "cursor": "pointer",
-                    "transition": "all 0.15s ease",
-                    "_hover": {
-                        "background": "rgba(255,255,255,0.2)",
+                    id="chat_send_btn",
+                    on_click=AppState.send_message,
+                    is_disabled=AppState.is_processing,
+                    custom_attrs={"aria-label": "Send message", "title": "Send message"},
+                    width="34px",
+                    height="34px",
+                    border_radius="12px",
+                    flex_shrink="0",
+                    align_self="flex-end",
+                    margin_bottom="6px",
+                    margin_right="6px",
+                    style={
+                        "background": rx.cond(
+                            AppState.is_processing,
+                            "rgba(255,255,255,0.05)",
+                            "rgba(255,255,255,0.12)",
+                        ),
+                        "border": "none",
+                        "cursor": "pointer",
+                        "transition": "all 0.15s ease",
+                        "_hover": {
+                            "background": "rgba(255,255,255,0.2)",
+                        },
+                        "_active": {"transform": "scale(0.95)"},
+                        "_disabled": {
+                            "opacity": "0.25",
+                            "cursor": "not-allowed",
+                        },
                     },
-                    "_active": {"transform": "scale(0.95)"},
-                    "_disabled": {
-                        "opacity": "0.25",
-                        "cursor": "not-allowed",
-                    },
-                },
+                ),
+                "Send message",
+                "top",
             ),
             align="end",
             spacing="0",
@@ -18249,21 +18264,26 @@ def interactive_canvas_panel() -> rx.Component:
                         border="1px solid rgba(125,211,252,0.16)",
                         box_shadow="0 0 30px rgba(56,189,248,0.12)",
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="x", size=18),
-                        on_click=AppState.close_visual_canvas,
-                        variant="ghost",
-                        style={
-                            "color": "rgba(255,255,255,0.55)",
-                            "background": "rgba(255,255,255,0.03)",
-                            "border": "1px solid rgba(255,255,255,0.06)",
-                            "border_radius": "999px",
-                            "cursor": "pointer",
-                            "_hover": {
-                                "color": "rgba(255,255,255,0.96)",
-                                "background": "rgba(255,255,255,0.08)",
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="x", size=18),
+                            on_click=AppState.close_visual_canvas,
+                            variant="ghost",
+                            custom_attrs={"aria-label": "Close canvas", "title": "Close canvas"},
+                            style={
+                                "color": "rgba(255,255,255,0.55)",
+                                "background": "rgba(255,255,255,0.03)",
+                                "border": "1px solid rgba(255,255,255,0.06)",
+                                "border_radius": "999px",
+                                "cursor": "pointer",
+                                "_hover": {
+                                    "color": "rgba(255,255,255,0.96)",
+                                    "background": "rgba(255,255,255,0.08)",
+                                },
                             },
-                        },
+                        ),
+                        "Close canvas",
+                        "bottom",
                     ),
                     spacing="3",
                     align="start",
@@ -20615,6 +20635,15 @@ def guest_auth_buttons() -> rx.Component:
     )
 
 
+def app_tooltip(child: rx.Component, label: str, side: str = "right") -> rx.Component:
+    return rx.tooltip(
+        child,
+        content=label,
+        side=side,
+        delay_duration=260,
+    )
+
+
 
 
 # ──────────────────────────────────────────────────────────────
@@ -20630,40 +20659,50 @@ def home_page():
         # ── Mobile header (Claude-style: hamburger + new-chat) ──
         rx.box(
             rx.hstack(
-                rx.button(
-                    rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
-                    on_click=AppState.toggle_semester_sidebar,
-                    width="40px",
-                    height="40px",
-                    min_width="40px",
-                    border_radius="12px",
-                    display="inline-flex",
-                    align_items="center",
-                    justify_content="center",
-                    style={
-                        "background": "transparent",
-                        "border": "none",
-                        "cursor": "pointer",
-                        "_hover": {"background": "rgba(255,255,255,0.06)"},
-                    },
+                app_tooltip(
+                    rx.button(
+                        rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
+                        on_click=AppState.toggle_semester_sidebar,
+                        width="40px",
+                        height="40px",
+                        min_width="40px",
+                        border_radius="12px",
+                        display="inline-flex",
+                        align_items="center",
+                        justify_content="center",
+                        custom_attrs={"aria-label": "Open sidebar", "title": "Open sidebar"},
+                        style={
+                            "background": "transparent",
+                            "border": "none",
+                            "cursor": "pointer",
+                            "_hover": {"background": "rgba(255,255,255,0.06)"},
+                        },
+                    ),
+                    "Open sidebar",
+                    "bottom",
                 ),
                 rx.spacer(),
-                rx.button(
-                    rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
-                    on_click=AppState.new_chat,
-                    width="40px",
-                    height="40px",
-                    min_width="40px",
-                    border_radius="12px",
-                    display="inline-flex",
-                    align_items="center",
-                    justify_content="center",
-                    style={
-                        "background": "transparent",
-                        "border": "none",
-                        "cursor": "pointer",
-                        "_hover": {"background": "rgba(255,255,255,0.06)"},
-                    },
+                app_tooltip(
+                    rx.button(
+                        rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
+                        on_click=AppState.new_chat,
+                        width="40px",
+                        height="40px",
+                        min_width="40px",
+                        border_radius="12px",
+                        display="inline-flex",
+                        align_items="center",
+                        justify_content="center",
+                        custom_attrs={"aria-label": "New chat", "title": "New chat"},
+                        style={
+                            "background": "transparent",
+                            "border": "none",
+                            "cursor": "pointer",
+                            "_hover": {"background": "rgba(255,255,255,0.06)"},
+                        },
+                    ),
+                    "New chat",
+                    "bottom",
                 ),
                 width="100%",
                 align="center",
@@ -20900,19 +20939,29 @@ def semester_chat_history_list() -> rx.Component:
                             "outline": "none",
                         },
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="check", size=11),
-                        on_click=AppState.confirm_rename_session,
-                        variant="ghost",
-                        size="1",
-                        style={"color": "rgba(52,211,153,0.8)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="check", size=11),
+                            on_click=AppState.confirm_rename_session,
+                            variant="ghost",
+                            size="1",
+                            custom_attrs={"aria-label": "Save name", "title": "Save name"},
+                            style={"color": "rgba(52,211,153,0.8)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                        ),
+                        "Save name",
+                        "top",
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="x", size=11),
-                        on_click=AppState.cancel_rename_session,
-                        variant="ghost",
-                        size="1",
-                        style={"color": "rgba(255,100,100,0.7)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="x", size=11),
+                            on_click=AppState.cancel_rename_session,
+                            variant="ghost",
+                            size="1",
+                            custom_attrs={"aria-label": "Cancel rename", "title": "Cancel rename"},
+                            style={"color": "rgba(255,100,100,0.7)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                        ),
+                        "Cancel rename",
+                        "top",
                     ),
                     width="100%",
                     align="center",
@@ -20950,22 +20999,32 @@ def semester_chat_history_list() -> rx.Component:
                         display="none",
                         custom_attrs={"data-mobile-actions-trigger": "1"},
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="pencil", size=11),
-                        on_click=AppState.start_rename_session(s["id"], False),
-                        variant="ghost",
-                        size="1",
-                        display=rx.breakpoints(initial="none", md="inline-flex"),
-                        style={"opacity": "0.4", "_hover": {"opacity": "0.9"}, "color": "rgba(255,255,255,0.5)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="pencil", size=11),
+                            on_click=AppState.start_rename_session(s["id"], False),
+                            variant="ghost",
+                            size="1",
+                            display=rx.breakpoints(initial="none", md="inline-flex"),
+                            custom_attrs={"aria-label": "Rename chat", "title": "Rename chat"},
+                            style={"opacity": "0.4", "_hover": {"opacity": "0.9"}, "color": "rgba(255,255,255,0.5)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                        ),
+                        "Rename chat",
+                        "top",
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="trash_2", size=11),
-                        on_click=AppState.delete_session(s["id"]),
-                        variant="ghost",
-                        color_scheme="red",
-                        size="1",
-                        display=rx.breakpoints(initial="none", md="inline-flex"),
-                        style={"opacity": "0.4", "_hover": {"opacity": "0.9"}},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="trash_2", size=11),
+                            on_click=AppState.delete_session(s["id"]),
+                            variant="ghost",
+                            color_scheme="red",
+                            size="1",
+                            display=rx.breakpoints(initial="none", md="inline-flex"),
+                            custom_attrs={"aria-label": "Delete chat", "title": "Delete chat"},
+                            style={"opacity": "0.4", "_hover": {"opacity": "0.9"}},
+                        ),
+                        "Delete chat",
+                        "top",
                     ),
                     width="100%",
                     align="center",
@@ -21009,19 +21068,29 @@ def alex_chat_history_list() -> rx.Component:
                             "outline": "none",
                         },
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="check", size=11),
-                        on_click=AppState.confirm_rename_session,
-                        variant="ghost",
-                        size="1",
-                        style={"color": "rgba(52,211,153,0.8)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="check", size=11),
+                            on_click=AppState.confirm_rename_session,
+                            variant="ghost",
+                            size="1",
+                            custom_attrs={"aria-label": "Save name", "title": "Save name"},
+                            style={"color": "rgba(52,211,153,0.8)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                        ),
+                        "Save name",
+                        "top",
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="x", size=11),
-                        on_click=AppState.cancel_rename_session,
-                        variant="ghost",
-                        size="1",
-                        style={"color": "rgba(255,100,100,0.7)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="x", size=11),
+                            on_click=AppState.cancel_rename_session,
+                            variant="ghost",
+                            size="1",
+                            custom_attrs={"aria-label": "Cancel rename", "title": "Cancel rename"},
+                            style={"color": "rgba(255,100,100,0.7)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                        ),
+                        "Cancel rename",
+                        "top",
                     ),
                     width="100%",
                     align="center",
@@ -21078,22 +21147,32 @@ def alex_chat_history_list() -> rx.Component:
                         display="none",
                         custom_attrs={"data-mobile-actions-trigger": "1"},
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="pencil", size=11),
-                        on_click=AppState.start_rename_session(s["id"], True),
-                        variant="ghost",
-                        size="1",
-                        display=rx.breakpoints(initial="none", md="inline-flex"),
-                        style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0", "color": "rgba(255,255,255,0.5)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="pencil", size=11),
+                            on_click=AppState.start_rename_session(s["id"], True),
+                            variant="ghost",
+                            size="1",
+                            display=rx.breakpoints(initial="none", md="inline-flex"),
+                            custom_attrs={"aria-label": "Rename chat", "title": "Rename chat"},
+                            style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0", "color": "rgba(255,255,255,0.5)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                        ),
+                        "Rename chat",
+                        "top",
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="trash_2", size=11),
-                        on_click=AppState.delete_home_session(s["id"]),
-                        variant="ghost",
-                        color_scheme="red",
-                        size="1",
-                        display=rx.breakpoints(initial="none", md="inline-flex"),
-                        style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0"},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="trash_2", size=11),
+                            on_click=AppState.delete_home_session(s["id"]),
+                            variant="ghost",
+                            color_scheme="red",
+                            size="1",
+                            display=rx.breakpoints(initial="none", md="inline-flex"),
+                            custom_attrs={"aria-label": "Delete chat", "title": "Delete chat"},
+                            style={"opacity": "0", "_hover": {"opacity": "0.9"}, "flex_shrink": "0"},
+                        ),
+                        "Delete chat",
+                        "top",
                     ),
                     width="100%",
                     align="center",
@@ -21263,27 +21342,31 @@ def mobile_chat_actions_sheet() -> rx.Component:
 
 
 def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
-    _sidebar_global_search_btn = rx.icon_button(
-        rx.icon(tag="search", size=18),
-        on_click=AppState.open_global_search,
-        variant="ghost",
-        size="2",
-        custom_attrs={"aria-label": "Search all chats"},
-        style={
-            "color": "rgba(218,226,236,0.55)",
-            "background": "transparent",
-            "border": "none",
-            "border_radius": "10px",
-            "width": "44px",
-            "height": "44px",
-            "min_width": "44px",
-            "min_height": "44px",
-            "cursor": "pointer",
-            "_hover": {
-                "color": "rgba(240,244,248,0.92)",
-                "background": "rgba(255,255,255,0.08)",
+    _sidebar_global_search_btn = app_tooltip(
+        rx.icon_button(
+            rx.icon(tag="search", size=18),
+            on_click=AppState.open_global_search,
+            variant="ghost",
+            size="2",
+            custom_attrs={"aria-label": "Search all chats", "title": "Search all chats"},
+            style={
+                "color": "rgba(218,226,236,0.55)",
+                "background": "transparent",
+                "border": "none",
+                "border_radius": "10px",
+                "width": "44px",
+                "height": "44px",
+                "min_width": "44px",
+                "min_height": "44px",
+                "cursor": "pointer",
+                "_hover": {
+                    "color": "rgba(240,244,248,0.92)",
+                    "background": "rgba(255,255,255,0.08)",
+                },
             },
-        },
+        ),
+        "Search all chats",
+        "bottom",
     )
     header_blocks: list[rx.Component] = []
     if show_close_button:
@@ -21291,26 +21374,31 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             rx.hstack(
                 _sidebar_global_search_btn,
                 rx.spacer(),
-                rx.icon_button(
-                    rx.icon(tag="panel_left", size=18),
-                    on_click=AppState.close_semester_sidebar,
-                    variant="ghost",
-                    size="2",
-                    style={
-                        "color": "rgba(200,210,220,0.45)",
-                        "background": "transparent",
-                        "border": "none",
-                        "border_radius": "10px",
-                        "width": "44px",
-                        "height": "44px",
-                        "min_width": "44px",
-                        "min_height": "44px",
-                        "cursor": "pointer",
-                        "_hover": {
-                            "color": "rgba(220,230,240,0.85)",
-                            "background": "rgba(255,255,255,0.06)",
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon(tag="panel_left", size=18),
+                        on_click=AppState.close_semester_sidebar,
+                        variant="ghost",
+                        size="2",
+                        custom_attrs={"aria-label": "Close sidebar", "title": "Close sidebar"},
+                        style={
+                            "color": "rgba(200,210,220,0.45)",
+                            "background": "transparent",
+                            "border": "none",
+                            "border_radius": "10px",
+                            "width": "44px",
+                            "height": "44px",
+                            "min_width": "44px",
+                            "min_height": "44px",
+                            "cursor": "pointer",
+                            "_hover": {
+                                "color": "rgba(220,230,240,0.85)",
+                                "background": "rgba(255,255,255,0.06)",
+                            },
                         },
-                    },
+                    ),
+                    "Close sidebar",
+                    "bottom",
                 ),
                 width="100%",
                 align="center",
@@ -21382,21 +21470,26 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
             rx.spacer(),
             rx.cond(
                 AppState.is_home_scope_active,
-                rx.icon_button(
-                    rx.icon(tag="plus", size=14),
-                    on_click=AppState.new_chat,
-                    variant="ghost",
-                    size="1",
-                    style={
-                        "color": "rgba(255,255,255,0.35)",
-                        "background": "transparent",
-                        "border": "none",
-                        "cursor": "pointer",
-                        "_hover": {
-                            "color": "rgba(255,255,255,0.7)",
-                            "background": "rgba(255,255,255,0.06)",
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon(tag="plus", size=14),
+                        on_click=AppState.new_chat,
+                        variant="ghost",
+                        size="1",
+                        custom_attrs={"aria-label": "New chat", "title": "New chat"},
+                        style={
+                            "color": "rgba(255,255,255,0.35)",
+                            "background": "transparent",
+                            "border": "none",
+                            "cursor": "pointer",
+                            "_hover": {
+                                "color": "rgba(255,255,255,0.7)",
+                                "background": "rgba(255,255,255,0.06)",
+                            },
                         },
-                    },
+                    ),
+                    "New chat",
+                    "top",
                 ),
                 rx.fragment(),
             ),
@@ -21501,18 +21594,23 @@ def global_search_panel() -> rx.Component:
                                 "&::placeholder": {"color": "rgba(255,255,255,0.22)"},
                             },
                         ),
-                        rx.icon_button(
-                            rx.icon(tag="x", size=14),
-                            on_click=AppState.close_global_search,
-                            variant="ghost",
-                            style={
-                                "color": "rgba(255,255,255,0.35)",
-                                "background": "transparent",
-                                "border": "none",
-                                "cursor": "pointer",
-                                "flex_shrink": "0",
-                                "_hover": {"color": "rgba(255,255,255,0.7)"},
-                            },
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="x", size=14),
+                                on_click=AppState.close_global_search,
+                                variant="ghost",
+                                custom_attrs={"aria-label": "Close search", "title": "Close search"},
+                                style={
+                                    "color": "rgba(255,255,255,0.35)",
+                                    "background": "transparent",
+                                    "border": "none",
+                                    "cursor": "pointer",
+                                    "flex_shrink": "0",
+                                    "_hover": {"color": "rgba(255,255,255,0.7)"},
+                                },
+                            ),
+                            "Close search",
+                            "bottom",
                         ),
                         width="100%",
                         align="center",
@@ -21672,22 +21770,27 @@ def notes_panel() -> rx.Component:
                             align="center",
                         ),
                         rx.spacer(),
-                        rx.icon_button(
-                            rx.icon(tag="panel_left", size=16),
-                            on_click=AppState.toggle_notes_library_drawer,
-                            variant="ghost",
-                            display=rx.breakpoints(initial="inline-flex", md="none"),
-                            style={
-                                "color": "rgba(190,205,220,0.7)",
-                                "background": "rgba(255,255,255,0.03)",
-                                "border": "1px solid rgba(255,255,255,0.08)",
-                                "border_radius": "10px",
-                                "cursor": "pointer",
-                                "_hover": {
-                                    "background": "rgba(255,255,255,0.08)",
-                                    "color": "rgba(230,238,246,0.9)",
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="panel_left", size=16),
+                                on_click=AppState.toggle_notes_library_drawer,
+                                variant="ghost",
+                                display=rx.breakpoints(initial="inline-flex", md="none"),
+                                custom_attrs={"aria-label": "Open notes library", "title": "Open notes library"},
+                                style={
+                                    "color": "rgba(190,205,220,0.7)",
+                                    "background": "rgba(255,255,255,0.03)",
+                                    "border": "1px solid rgba(255,255,255,0.08)",
+                                    "border_radius": "10px",
+                                    "cursor": "pointer",
+                                    "_hover": {
+                                        "background": "rgba(255,255,255,0.08)",
+                                        "color": "rgba(230,238,246,0.9)",
+                                    },
                                 },
-                            },
+                            ),
+                            "Open notes library",
+                            "bottom",
                         ),
                         rx.button(
                             "New note",
@@ -21707,17 +21810,22 @@ def notes_panel() -> rx.Component:
                                 },
                             },
                         ),
-                        rx.icon_button(
-                            rx.icon(tag="x", size=16),
-                            on_click=AppState.close_notes_panel,
-                            variant="ghost",
-                            style={
-                                "color": "rgba(255,255,255,0.4)",
-                                "background": "transparent",
-                                "border": "none",
-                                "cursor": "pointer",
-                                "_hover": {"color": "rgba(255,255,255,0.85)"},
-                            },
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="x", size=16),
+                                on_click=AppState.close_notes_panel,
+                                variant="ghost",
+                                custom_attrs={"aria-label": "Close notes", "title": "Close notes"},
+                                style={
+                                    "color": "rgba(255,255,255,0.4)",
+                                    "background": "transparent",
+                                    "border": "none",
+                                    "cursor": "pointer",
+                                    "_hover": {"color": "rgba(255,255,255,0.85)"},
+                                },
+                            ),
+                            "Close notes",
+                            "bottom",
                         ),
                         width="100%",
                         align="center",
@@ -22119,16 +22227,21 @@ def notes_panel() -> rx.Component:
                                         font_weight="700",
                                     ),
                                     rx.spacer(),
-                                    rx.icon_button(
-                                        rx.icon(tag="x", size=15),
-                                        on_click=AppState.close_notes_library_drawer,
-                                        variant="ghost",
-                                        style={
-                                            "color": "rgba(255,255,255,0.55)",
-                                            "background": "transparent",
-                                            "border": "none",
-                                            "cursor": "pointer",
-                                        },
+                                    app_tooltip(
+                                        rx.icon_button(
+                                            rx.icon(tag="x", size=15),
+                                            on_click=AppState.close_notes_library_drawer,
+                                            variant="ghost",
+                                            custom_attrs={"aria-label": "Close library", "title": "Close library"},
+                                            style={
+                                                "color": "rgba(255,255,255,0.55)",
+                                                "background": "transparent",
+                                                "border": "none",
+                                                "cursor": "pointer",
+                                            },
+                                        ),
+                                        "Close library",
+                                        "bottom",
                                     ),
                                     width="100%",
                                     align="center",
@@ -22291,87 +22404,97 @@ def semester_sidebar_drawer() -> rx.Component:
 
 
 # ── Claude-style navigation rail ──────────────────────────────
-def _nav_rail_btn(icon_tag: str, on_click, tooltip: str = "") -> rx.Component:
-    return rx.icon_button(
-        rx.icon(tag=icon_tag, size=18),
-        on_click=on_click,
-        variant="ghost",
-        size="2",
-        style={
-            "color": "rgba(200,210,220,0.45)",
-            "background": "transparent",
-            "border": "none",
-            "border_radius": "8px",
-            "width": "36px",
-            "height": "36px",
-            "cursor": "pointer",
-            "_hover": {
-                "color": "rgba(220,230,240,0.85)",
-                "background": "rgba(255,255,255,0.06)",
+def _nav_rail_btn(icon_tag: str, on_click, label: str, side: str = "right") -> rx.Component:
+    return app_tooltip(
+        rx.icon_button(
+            rx.icon(tag=icon_tag, size=18),
+            on_click=on_click,
+            variant="ghost",
+            size="2",
+            custom_attrs={"aria-label": label, "title": label},
+            style={
+                "color": "rgba(200,210,220,0.45)",
+                "background": "transparent",
+                "border": "none",
+                "border_radius": "8px",
+                "width": "36px",
+                "height": "36px",
+                "cursor": "pointer",
+                "_hover": {
+                    "color": "rgba(220,230,240,0.85)",
+                    "background": "rgba(255,255,255,0.06)",
+                },
             },
-        },
+        ),
+        label,
+        side,
     )
 
 
-def _locked_nav_rail_btn(icon_tag: str, on_click) -> rx.Component:
-    return rx.button(
-        rx.box(
-            rx.icon(tag=icon_tag, size=17, color="rgba(200,210,220,0.42)"),
+def _locked_nav_rail_btn(icon_tag: str, on_click, label: str, side: str = "right") -> rx.Component:
+    return app_tooltip(
+        rx.button(
             rx.box(
-                rx.icon(tag="lock", size=8, color="rgba(255,255,255,0.72)"),
-                position="absolute",
-                right="-3px",
-                bottom="-2px",
-                width="14px",
-                height="14px",
-                border_radius="999px",
-                background="rgba(20,20,22,0.96)",
-                border="1px solid rgba(255,255,255,0.16)",
+                rx.icon(tag=icon_tag, size=17, color="rgba(200,210,220,0.42)"),
+                rx.box(
+                    rx.icon(tag="lock", size=8, color="rgba(255,255,255,0.72)"),
+                    position="absolute",
+                    right="-3px",
+                    bottom="-2px",
+                    width="14px",
+                    height="14px",
+                    border_radius="999px",
+                    background="rgba(20,20,22,0.96)",
+                    border="1px solid rgba(255,255,255,0.16)",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
+                ),
+                position="relative",
+                width="18px",
+                height="18px",
                 display="flex",
                 align_items="center",
                 justify_content="center",
             ),
-            position="relative",
-            width="18px",
-            height="18px",
-            display="flex",
-            align_items="center",
-            justify_content="center",
-        ),
-        on_click=on_click,
-        width="36px",
-        height="36px",
-        min_width="36px",
-        padding="0",
-        border_radius="8px",
-        cursor="pointer",
-        style={
-            "background": "transparent",
-            "border": "none",
-            "_hover": {
-                "background": "rgba(255,255,255,0.06)",
+            on_click=on_click,
+            width="36px",
+            height="36px",
+            min_width="36px",
+            padding="0",
+            border_radius="8px",
+            cursor="pointer",
+            custom_attrs={"aria-label": label, "title": label},
+            style={
+                "background": "transparent",
+                "border": "none",
+                "_hover": {
+                    "background": "rgba(255,255,255,0.06)",
+                },
             },
-        },
+        ),
+        label,
+        side,
     )
 
 
 def nav_rail() -> rx.Component:
     return rx.vstack(
         # ── Top group ──
-        _nav_rail_btn("panel_left", AppState.toggle_semester_sidebar),
+        _nav_rail_btn("panel_left", AppState.toggle_semester_sidebar, "Open sidebar"),
         rx.cond(
             AppState.is_home_scope_active,
-            _nav_rail_btn("square_pen", AppState.new_chat),
+            _nav_rail_btn("square_pen", AppState.new_chat, "New chat"),
             rx.fragment(),
         ),
-        _nav_rail_btn("search", AppState.toggle_global_search),
-        _nav_rail_btn("notebook", AppState.toggle_notes_panel),
-        _nav_rail_btn("list_checks", rx.redirect("/tracker")),
-        _nav_rail_btn("youtube", rx.redirect("/learn")),
-        _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon),
+        _nav_rail_btn("search", AppState.toggle_global_search, "Search chats"),
+        _nav_rail_btn("notebook", AppState.toggle_notes_panel, "Notes"),
+        _nav_rail_btn("list_checks", rx.redirect("/tracker"), "Tracker"),
+        _nav_rail_btn("youtube", rx.redirect("/learn"), "Learn from video"),
+        _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
         rx.spacer(),
         # ── Bottom group ──
-        _nav_rail_btn("settings", rx.redirect("/settings")),
+        _nav_rail_btn("settings", rx.redirect("/settings"), "Settings"),
         # User avatar
         rx.box(
             rx.text(
@@ -22571,22 +22694,27 @@ def semester_page():
             # ── Mobile header (Claude-style: topic + scope + progress bar) ──
             rx.box(
                 rx.hstack(
-                    rx.button(
-                        rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
-                        on_click=AppState.toggle_semester_sidebar,
-                        width="40px",
-                        height="40px",
-                        min_width="40px",
-                        border_radius="12px",
-                        display="inline-flex",
-                        align_items="center",
-                        justify_content="center",
-                        style={
-                            "background": "transparent",
-                            "border": "none",
-                            "cursor": "pointer",
-                            "_hover": {"background": "rgba(255,255,255,0.06)"},
-                        },
+                    app_tooltip(
+                        rx.button(
+                            rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
+                            on_click=AppState.toggle_semester_sidebar,
+                            width="40px",
+                            height="40px",
+                            min_width="40px",
+                            border_radius="12px",
+                            display="inline-flex",
+                            align_items="center",
+                            justify_content="center",
+                            custom_attrs={"aria-label": "Open sidebar", "title": "Open sidebar"},
+                            style={
+                                "background": "transparent",
+                                "border": "none",
+                                "cursor": "pointer",
+                                "_hover": {"background": "rgba(255,255,255,0.06)"},
+                            },
+                        ),
+                        "Open sidebar",
+                        "bottom",
                     ),
                     rx.vstack(
                         rx.text(
@@ -22611,21 +22739,26 @@ def semester_page():
                         min_width="0",
                     ),
                     rx.spacer(),
-                    rx.icon_button(
-                        rx.icon(tag="notebook", size=18, color="rgba(200,210,220,0.55)"),
-                        on_click=AppState.toggle_notes_panel,
-                        variant="ghost",
-                        display=rx.breakpoints(initial="inline-flex", md="none"),
-                        style={
-                            "width": "40px",
-                            "height": "40px",
-                            "border_radius": "12px",
-                            "color": "rgba(200,210,220,0.55)",
-                            "background": "transparent",
-                            "border": "none",
-                            "cursor": "pointer",
-                            "_hover": {"background": "rgba(255,255,255,0.06)", "color": "rgba(240,244,248,0.85)"},
-                        },
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="notebook", size=18, color="rgba(200,210,220,0.55)"),
+                            on_click=AppState.toggle_notes_panel,
+                            variant="ghost",
+                            display=rx.breakpoints(initial="inline-flex", md="none"),
+                            custom_attrs={"aria-label": "Notes", "title": "Notes"},
+                            style={
+                                "width": "40px",
+                                "height": "40px",
+                                "border_radius": "12px",
+                                "color": "rgba(200,210,220,0.55)",
+                                "background": "transparent",
+                                "border": "none",
+                                "cursor": "pointer",
+                                "_hover": {"background": "rgba(255,255,255,0.06)", "color": "rgba(240,244,248,0.85)"},
+                            },
+                        ),
+                        "Notes",
+                        "bottom",
                     ),
                     subject_switcher_trigger(),
                     width="100%",
@@ -26553,12 +26686,17 @@ def _tracker_create_modal() -> rx.Component:
                     rx.hstack(
                         rx.text("New Tracker", font_size="1.1rem", font_weight="700", color="white"),
                         rx.spacer(),
-                        rx.icon_button(
-                            rx.icon(tag="x", size=14),
-                            on_click=TrackerState.close_create_modal,
-                            variant="ghost", size="1",
-                            color="rgba(255,255,255,0.45)",
-                            style={"_hover": {"color": "white"}},
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="x", size=14),
+                                on_click=TrackerState.close_create_modal,
+                                variant="ghost", size="1",
+                                color="rgba(255,255,255,0.45)",
+                                custom_attrs={"aria-label": "Close", "title": "Close"},
+                                style={"_hover": {"color": "white"}},
+                            ),
+                            "Close",
+                            "bottom",
                         ),
                         align="center", width="100%",
                     ),
@@ -26706,34 +26844,43 @@ def _tracker_lists_panel() -> rx.Component:
                     ),
                     # Right: action buttons (separate click zone — no propagation to switch)
                     rx.hstack(
-                        rx.icon_button(
-                            rx.icon(tag="calendar_plus", size=16),
-                            on_click=TrackerState.set_increase_days_id(meta.id),
-                            variant="ghost",
-                            size="2",
-                            radius="full",
-                            style={
-                                "color": "rgba(255,255,255,0.45)",
-                                "_hover": {
-                                    "color": "rgba(35,131,226,0.95)",
-                                    "background": "rgba(35,131,226,0.12)",
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="calendar_plus", size=16),
+                                on_click=TrackerState.set_increase_days_id(meta.id),
+                                variant="ghost",
+                                size="2",
+                                radius="full",
+                                custom_attrs={"aria-label": "Add more days", "title": "Add more days"},
+                                style={
+                                    "color": "rgba(255,255,255,0.45)",
+                                    "_hover": {
+                                        "color": "rgba(35,131,226,0.95)",
+                                        "background": "rgba(35,131,226,0.12)",
+                                    },
                                 },
-                            },
-                            title="Add more days",
+                            ),
+                            "Add more days",
+                            "top",
                         ),
-                        rx.icon_button(
-                            rx.icon(tag="trash_2", size=16),
-                            on_click=TrackerState.delete_tracker(meta.id),
-                            variant="ghost",
-                            size="2",
-                            radius="full",
-                            style={
-                                "color": "rgba(255,80,80,0.45)",
-                                "_hover": {
-                                    "color": "rgba(255,80,80,0.95)",
-                                    "background": "rgba(255,80,80,0.12)",
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="trash_2", size=16),
+                                on_click=TrackerState.delete_tracker(meta.id),
+                                variant="ghost",
+                                size="2",
+                                radius="full",
+                                custom_attrs={"aria-label": "Delete tracker", "title": "Delete tracker"},
+                                style={
+                                    "color": "rgba(255,80,80,0.45)",
+                                    "_hover": {
+                                        "color": "rgba(255,80,80,0.95)",
+                                        "background": "rgba(255,80,80,0.12)",
+                                    },
                                 },
-                            },
+                            ),
+                            "Delete tracker",
+                            "top",
                         ),
                         spacing="1", align="center",
                     ),
@@ -26807,12 +26954,17 @@ def _tracker_lists_panel() -> rx.Component:
                         rx.icon(tag="layers", size=15, color="rgba(180,190,200,0.6)"),
                         rx.text("My Trackers", font_size="0.95rem", font_weight="600", color="white"),
                         rx.spacer(),
-                        rx.icon_button(
-                            rx.icon(tag="x", size=14),
-                            on_click=TrackerState.toggle_lists_panel,
-                            variant="ghost", size="1",
-                            color="rgba(255,255,255,0.4)",
-                            style={"_hover": {"color": "white"}},
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="x", size=14),
+                                on_click=TrackerState.toggle_lists_panel,
+                                variant="ghost", size="1",
+                                color="rgba(255,255,255,0.4)",
+                                custom_attrs={"aria-label": "Close trackers", "title": "Close trackers"},
+                                style={"_hover": {"color": "white"}},
+                            ),
+                            "Close trackers",
+                            "bottom",
                         ),
                         spacing="2", align="center", width="100%",
                     ),
@@ -27020,14 +27172,19 @@ td.group{-webkit-touch-callout:none;user-select:none;}
         _tracker_lists_panel(),
         # ── Header ──
         rx.hstack(
-            rx.icon_button(
-                rx.icon(tag="arrow_left", size=16),
-                on_click=rx.call_script(
-                    "if (window.history.length > 1) { window.history.back(); } else { window.location.assign('/app'); }"
+            app_tooltip(
+                rx.icon_button(
+                    rx.icon(tag="arrow_left", size=16),
+                    on_click=rx.call_script(
+                        "if (window.history.length > 1) { window.history.back(); } else { window.location.assign('/app'); }"
+                    ),
+                    variant="ghost", size="2",
+                    color="rgba(255,255,255,0.45)",
+                    custom_attrs={"aria-label": "Back", "title": "Back"},
+                    style={"_hover": {"color": "white"}},
                 ),
-                variant="ghost", size="2",
-                color="rgba(255,255,255,0.45)",
-                style={"_hover": {"color": "white"}},
+                "Back",
+                "bottom",
             ),
             # Title (editable)
             rx.cond(
@@ -27082,13 +27239,17 @@ td.group{-webkit-touch-callout:none;user-select:none;}
                 transition="background .12s",
             ),
             # ── Lists icon (opens panel) ──
-            rx.icon_button(
-                rx.icon(tag="layers", size=16),
-                on_click=TrackerState.toggle_lists_panel,
-                variant="ghost", size="2",
-                color="rgba(180,190,200,0.55)",
-                style={"_hover": {"color": "white"}},
-                title="All my trackers",
+            app_tooltip(
+                rx.icon_button(
+                    rx.icon(tag="layers", size=16),
+                    on_click=TrackerState.toggle_lists_panel,
+                    variant="ghost", size="2",
+                    color="rgba(180,190,200,0.55)",
+                    custom_attrs={"aria-label": "All my trackers", "title": "All my trackers"},
+                    style={"_hover": {"color": "white"}},
+                ),
+                "All my trackers",
+                "bottom",
             ),
             align="center",
             width="100%",
@@ -28494,34 +28655,43 @@ def _learn_chat_panel() -> rx.Component:
                     "flex": "1",
                 },
             ),
-            rx.icon_button(
-                rx.icon(tag="send", size=16),
-                on_click=LearnState.send_chat,
-                disabled=~LearnState.can_send_chat,
-                size="3",
-                style={
-                    "background": "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
-                    "color": "white",
-                    "border": "none",
-                    "border_radius": "10px",
-                    "_hover": {"opacity": "0.92"},
-                    "_disabled": {"opacity": "0.4", "cursor": "not-allowed"},
-                },
+            app_tooltip(
+                rx.icon_button(
+                    rx.icon(tag="send", size=16),
+                    on_click=LearnState.send_chat,
+                    disabled=~LearnState.can_send_chat,
+                    size="3",
+                    custom_attrs={"aria-label": "Send question", "title": "Send question"},
+                    style={
+                        "background": "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
+                        "color": "white",
+                        "border": "none",
+                        "border_radius": "10px",
+                        "_hover": {"opacity": "0.92"},
+                        "_disabled": {"opacity": "0.4", "cursor": "not-allowed"},
+                    },
+                ),
+                "Send question",
+                "top",
             ),
             rx.cond(
                 LearnState.chat_count > 0,
-                rx.icon_button(
-                    rx.icon(tag="bookmark_plus", size=16),
-                    on_click=LearnState.copy_last_reply_to_note,
-                    title="Copy last reply to notes",
-                    size="3",
-                    variant="ghost",
-                    style={
-                        "color": "rgba(240,244,248,0.6)",
-                        "border": "1px solid rgba(255,255,255,0.08)",
-                        "border_radius": "10px",
-                        "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.06)"},
-                    },
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon(tag="bookmark_plus", size=16),
+                        on_click=LearnState.copy_last_reply_to_note,
+                        size="3",
+                        variant="ghost",
+                        custom_attrs={"aria-label": "Copy last reply to notes", "title": "Copy last reply to notes"},
+                        style={
+                            "color": "rgba(240,244,248,0.6)",
+                            "border": "1px solid rgba(255,255,255,0.08)",
+                            "border_radius": "10px",
+                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.06)"},
+                        },
+                    ),
+                    "Copy last reply to notes",
+                    "top",
                 ),
                 rx.fragment(),
             ),
@@ -28587,32 +28757,40 @@ def _learn_summary_panel() -> rx.Component:
                     rx.icon(tag="book_open", size=18, color="rgba(99,102,241,0.95)"),
                     rx.text("Study guide", font_size="0.95rem", font_weight="600", color="rgba(240,244,248,0.9)"),
                     rx.spacer(),
-                    rx.icon_button(
-                        rx.icon(tag="bookmark_plus", size=14),
-                        on_click=LearnState.copy_summary_to_note,
-                        size="2",
-                        variant="ghost",
-                        title="Save to notes",
-                        style={
-                            "color": "rgba(240,244,248,0.55)",
-                            "border": "1px solid rgba(255,255,255,0.08)",
-                            "border_radius": "8px",
-                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.05)"},
-                        },
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="bookmark_plus", size=14),
+                            on_click=LearnState.copy_summary_to_note,
+                            size="2",
+                            variant="ghost",
+                            custom_attrs={"aria-label": "Save to notes", "title": "Save to notes"},
+                            style={
+                                "color": "rgba(240,244,248,0.55)",
+                                "border": "1px solid rgba(255,255,255,0.08)",
+                                "border_radius": "8px",
+                                "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.05)"},
+                            },
+                        ),
+                        "Save to notes",
+                        "top",
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="rotate_ccw", size=14),
-                        on_click=LearnState.generate_summary,
-                        disabled=LearnState.summary_loading,
-                        size="2",
-                        variant="ghost",
-                        title="Regenerate",
-                        style={
-                            "color": "rgba(240,244,248,0.55)",
-                            "border": "1px solid rgba(255,255,255,0.08)",
-                            "border_radius": "8px",
-                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.05)"},
-                        },
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="rotate_ccw", size=14),
+                            on_click=LearnState.generate_summary,
+                            disabled=LearnState.summary_loading,
+                            size="2",
+                            variant="ghost",
+                            custom_attrs={"aria-label": "Regenerate", "title": "Regenerate"},
+                            style={
+                                "color": "rgba(240,244,248,0.55)",
+                                "border": "1px solid rgba(255,255,255,0.08)",
+                                "border_radius": "8px",
+                                "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.05)"},
+                            },
+                        ),
+                        "Regenerate",
+                        "top",
                     ),
                     spacing="2",
                     width="100%",
@@ -28981,12 +29159,17 @@ def _learn_mobile_view() -> rx.Component:
         # ── TOP: video section (max 40 vh) ───────────────────────────────
         rx.box(
             rx.hstack(
-                rx.icon_button(
-                    rx.icon("arrow_left", size=16),
-                    on_click=LearnState.reset_session,
-                    variant="ghost", size="2",
-                    style={"color": "rgba(240,244,248,0.6)", "border_radius": "8px",
-                           "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"}},
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon("arrow_left", size=16),
+                        on_click=LearnState.reset_session,
+                        variant="ghost", size="2",
+                        custom_attrs={"aria-label": "Load another video", "title": "Load another video"},
+                        style={"color": "rgba(240,244,248,0.6)", "border_radius": "8px",
+                               "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"}},
+                    ),
+                    "Load another video",
+                    "bottom",
                 ),
                 rx.input(
                     value=LearnState.url_input, on_change=LearnState.set_url_input,
@@ -28994,12 +29177,17 @@ def _learn_mobile_view() -> rx.Component:
                     style={"background": "rgba(255,255,255,0.04)", "border": "1px solid rgba(255,255,255,0.08)",
                            "color": "rgba(240,244,248,0.85)", "border_radius": "8px", "flex": "1"},
                 ),
-                rx.icon_button(
-                    rx.icon(tag="arrow_right", size=14),
-                    on_click=LearnState.load_video, size="2",
-                    style={"background": "rgba(244,63,94,0.18)", "color": "rgba(255,225,230,0.95)",
-                           "border": "1px solid rgba(244,63,94,0.4)", "border_radius": "8px",
-                           "_hover": {"background": "rgba(244,63,94,0.28)"}},
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon(tag="arrow_right", size=14),
+                        on_click=LearnState.load_video, size="2",
+                        custom_attrs={"aria-label": "Load video", "title": "Load video"},
+                        style={"background": "rgba(244,63,94,0.18)", "color": "rgba(255,225,230,0.95)",
+                               "border": "1px solid rgba(244,63,94,0.4)", "border_radius": "8px",
+                               "_hover": {"background": "rgba(244,63,94,0.28)"}},
+                    ),
+                    "Load video",
+                    "bottom",
                 ),
                 spacing="2", width="100%", align="center",
                 padding="8px 10px 6px",
@@ -29141,17 +29329,21 @@ def _learn_session_view() -> rx.Component:
         # ── LEFT: video + URL bar ──
         rx.vstack(
             rx.hstack(
-                rx.icon_button(
-                    rx.icon("arrow_left", size=18),
-                    on_click=LearnState.reset_session,
-                    variant="ghost",
-                    title="Load another video",
-                    size="2",
-                    style={
-                        "color": "rgba(240,244,248,0.6)",
-                        "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
-                        "border_radius": "8px",
-                    },
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon("arrow_left", size=18),
+                        on_click=LearnState.reset_session,
+                        variant="ghost",
+                        size="2",
+                        custom_attrs={"aria-label": "Load another video", "title": "Load another video"},
+                        style={
+                            "color": "rgba(240,244,248,0.6)",
+                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
+                            "border_radius": "8px",
+                        },
+                    ),
+                    "Load another video",
+                    "bottom",
                 ),
                 rx.input(
                     value=LearnState.url_input,
@@ -29166,17 +29358,22 @@ def _learn_session_view() -> rx.Component:
                         "flex": "1",
                     },
                 ),
-                rx.icon_button(
-                    rx.icon(tag="arrow_right", size=14),
-                    on_click=LearnState.load_video,
-                    size="2",
-                    style={
-                        "background": "rgba(244,63,94,0.18)",
-                        "color": "rgba(255,225,230,0.95)",
-                        "border": "1px solid rgba(244,63,94,0.4)",
-                        "border_radius": "8px",
-                        "_hover": {"background": "rgba(244,63,94,0.28)"},
-                    },
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon(tag="arrow_right", size=14),
+                        on_click=LearnState.load_video,
+                        size="2",
+                        custom_attrs={"aria-label": "Load video", "title": "Load video"},
+                        style={
+                            "background": "rgba(244,63,94,0.18)",
+                            "color": "rgba(255,225,230,0.95)",
+                            "border": "1px solid rgba(244,63,94,0.4)",
+                            "border_radius": "8px",
+                            "_hover": {"background": "rgba(244,63,94,0.28)"},
+                        },
+                    ),
+                    "Load video",
+                    "bottom",
                 ),
                 spacing="2",
                 width="100%",
@@ -29235,12 +29432,17 @@ def _learn_session_view() -> rx.Component:
                         color="rgba(250,204,21,0.9)",
                         flex="1",
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="x", size=12),
-                        on_click=LearnState.set_rate_limit_msg(""),
-                        size="1",
-                        variant="ghost",
-                        style={"color": "rgba(250,204,21,0.7)", "_hover": {"color": "white"}},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="x", size=12),
+                            on_click=LearnState.set_rate_limit_msg(""),
+                            size="1",
+                            variant="ghost",
+                            custom_attrs={"aria-label": "Dismiss", "title": "Dismiss"},
+                            style={"color": "rgba(250,204,21,0.7)", "_hover": {"color": "white"}},
+                        ),
+                        "Dismiss",
+                        "bottom",
                     ),
                     spacing="2",
                     align="center",
@@ -29513,17 +29715,22 @@ def video_page_content() -> rx.Component:
         rx.vstack(
             rx.vstack(
                 rx.hstack(
-                    rx.icon_button(
-                        rx.icon("arrow_left", size=18),
-                        on_click=rx.redirect("/"),
-                        variant="ghost",
-                        size="2",
-                        style={
-                            "color": "rgba(240,244,248,0.6)",
-                            "cursor": "pointer",
-                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
-                            "border_radius": "8px",
-                        },
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon("arrow_left", size=18),
+                            on_click=rx.redirect("/"),
+                            variant="ghost",
+                            size="2",
+                            custom_attrs={"aria-label": "Back", "title": "Back"},
+                            style={
+                                "color": "rgba(240,244,248,0.6)",
+                                "cursor": "pointer",
+                                "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
+                                "border_radius": "8px",
+                            },
+                        ),
+                        "Back",
+                        "bottom",
                     ),
                     rx.text("🎬", font_size="1.6rem"),
                     rx.heading(
@@ -29618,17 +29825,22 @@ def _video_page_content_legacy_DISABLED() -> rx.Component:
             # Header
             rx.vstack(
                 rx.hstack(
-                    rx.icon_button(
-                        rx.icon("arrow_left", size=18),
-                        on_click=rx.redirect("/"),
-                        variant="ghost",
-                        size="2",
-                        style={
-                            "color": "rgba(240,244,248,0.6)",
-                            "cursor": "pointer",
-                            "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
-                            "border_radius": "8px",
-                        },
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon("arrow_left", size=18),
+                            on_click=rx.redirect("/"),
+                            variant="ghost",
+                            size="2",
+                            custom_attrs={"aria-label": "Back", "title": "Back"},
+                            style={
+                                "color": "rgba(240,244,248,0.6)",
+                                "cursor": "pointer",
+                                "_hover": {"color": "rgba(240,244,248,0.95)", "background": "rgba(255,255,255,0.07)"},
+                                "border_radius": "8px",
+                            },
+                        ),
+                        "Back",
+                        "bottom",
                     ),
                     rx.text("🎬", font_size="1.6rem"),
                     rx.heading(
@@ -29994,13 +30206,18 @@ def settings_page():
         rx.box(
             # Mobile top bar: back + "Settings"
             rx.hstack(
-                rx.icon_button(
-                    rx.icon(tag="arrow_left", size=18),
-                    on_click=AppState.navigate_back_from_settings,
-                    variant="ghost",
-                    size="1",
-                    color="rgba(255,255,255,0.6)",
-                    style={"_hover": {"color": "white"}},
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon(tag="arrow_left", size=18),
+                        on_click=AppState.navigate_back_from_settings,
+                        variant="ghost",
+                        size="1",
+                        color="rgba(255,255,255,0.6)",
+                        custom_attrs={"aria-label": "Back", "title": "Back"},
+                        style={"_hover": {"color": "white"}},
+                    ),
+                    "Back",
+                    "bottom",
                 ),
                 rx.text("Settings", color="white", font_size="1.15rem", font_weight="700"),
                 spacing="2",
@@ -30031,13 +30248,18 @@ def settings_page():
             # Left sidebar nav
             rx.vstack(
                 rx.hstack(
-                    rx.icon_button(
-                        rx.icon(tag="arrow_left", size=16),
-                        on_click=AppState.navigate_back_from_settings,
-                        variant="ghost",
-                        size="1",
-                        color="rgba(255,255,255,0.5)",
-                        style={"_hover": {"color": "white"}},
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="arrow_left", size=16),
+                            on_click=AppState.navigate_back_from_settings,
+                            variant="ghost",
+                            size="1",
+                            color="rgba(255,255,255,0.5)",
+                            custom_attrs={"aria-label": "Back", "title": "Back"},
+                            style={"_hover": {"color": "white"}},
+                        ),
+                        "Back",
+                        "bottom",
                     ),
                     rx.text("Settings", color="white", font_size="1.3rem", font_weight="700"),
                     spacing="2",
@@ -32598,19 +32820,25 @@ def free_sidebar_content() -> rx.Component:
         "transition": "background 0.15s ease",
     }
 
-    def _icon_btn(tag: str, on_click=None) -> rx.Component:
-        return rx.icon_button(
-            rx.icon(tag=tag, size=16),
-            on_click=on_click,
-            variant="ghost",
-            style={
-                **_btn_base,
-                "color": "rgba(255,255,255,0.5)",
-                "width": "32px",
-                "height": "32px",
-                "min_width": "32px",
-                "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.06)"},
-            },
+    def _icon_btn(tag: str, on_click=None, label: str = "") -> rx.Component:
+        text = label or tag.replace("_", " ").title()
+        return app_tooltip(
+            rx.icon_button(
+                rx.icon(tag=tag, size=16),
+                on_click=on_click,
+                variant="ghost",
+                custom_attrs={"aria-label": text, "title": text},
+                style={
+                    **_btn_base,
+                    "color": "rgba(255,255,255,0.5)",
+                    "width": "32px",
+                    "height": "32px",
+                    "min_width": "32px",
+                    "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.06)"},
+                },
+            ),
+            text,
+            "bottom",
         )
 
     def _nav_row(icon_tag: str, label: str, on_click=None) -> rx.Component:
@@ -32691,10 +32919,30 @@ def free_sidebar_content() -> rx.Component:
                         "outline": "none",
                     },
                 ),
-                rx.icon_button(rx.icon(tag="check", size=11), on_click=AppState.confirm_rename_session, variant="ghost", size="1",
-                               style={"color": "rgba(52,211,153,0.8)", "background": "transparent", "border": "none", "cursor": "pointer"}),
-                rx.icon_button(rx.icon(tag="x", size=11), on_click=AppState.cancel_rename_session, variant="ghost", size="1",
-                               style={"color": "rgba(255,100,100,0.7)", "background": "transparent", "border": "none", "cursor": "pointer"}),
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon(tag="check", size=11),
+                        on_click=AppState.confirm_rename_session,
+                        variant="ghost",
+                        size="1",
+                        custom_attrs={"aria-label": "Save name", "title": "Save name"},
+                        style={"color": "rgba(52,211,153,0.8)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    ),
+                    "Save name",
+                    "top",
+                ),
+                app_tooltip(
+                    rx.icon_button(
+                        rx.icon(tag="x", size=11),
+                        on_click=AppState.cancel_rename_session,
+                        variant="ghost",
+                        size="1",
+                        custom_attrs={"aria-label": "Cancel rename", "title": "Cancel rename"},
+                        style={"color": "rgba(255,100,100,0.7)", "background": "transparent", "border": "none", "cursor": "pointer"},
+                    ),
+                    "Cancel rename",
+                    "top",
+                ),
                 width="100%", align="center", spacing="1", padding="0 4px",
             ),
             rx.box(
@@ -32710,19 +32958,29 @@ def free_sidebar_content() -> rx.Component:
                         color=rx.cond(is_active, "rgba(255,255,255,0.95)", "rgba(255,255,255,0.55)"),
                     ),
                     rx.hstack(
-                        rx.icon_button(
-                            rx.icon(tag="pencil", size=11),
-                            on_click=AppState.start_rename_session(s["id"], True),
-                            variant="ghost", size="1",
-                            style={"color": "rgba(255,255,255,0.45)", "background": "transparent", "border": "none", "cursor": "pointer", "border_radius": "4px",
-                                   "_hover": {"color": "white", "background": "rgba(255,255,255,0.08)"}},
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="pencil", size=11),
+                                on_click=AppState.start_rename_session(s["id"], True),
+                                variant="ghost", size="1",
+                                custom_attrs={"aria-label": "Rename chat", "title": "Rename chat"},
+                                style={"color": "rgba(255,255,255,0.45)", "background": "transparent", "border": "none", "cursor": "pointer", "border_radius": "4px",
+                                       "_hover": {"color": "white", "background": "rgba(255,255,255,0.08)"}},
+                            ),
+                            "Rename chat",
+                            "top",
                         ),
-                        rx.icon_button(
-                            rx.icon(tag="trash_2", size=11),
-                            on_click=AppState.delete_home_session(s["id"]),
-                            variant="ghost", size="1",
-                            style={"color": "rgba(255,80,80,0.5)", "background": "transparent", "border": "none", "cursor": "pointer", "border_radius": "4px",
-                                   "_hover": {"color": "rgba(255,100,100,0.9)", "background": "rgba(255,80,80,0.08)"}},
+                        app_tooltip(
+                            rx.icon_button(
+                                rx.icon(tag="trash_2", size=11),
+                                on_click=AppState.delete_home_session(s["id"]),
+                                variant="ghost", size="1",
+                                custom_attrs={"aria-label": "Delete chat", "title": "Delete chat"},
+                                style={"color": "rgba(255,80,80,0.5)", "background": "transparent", "border": "none", "cursor": "pointer", "border_radius": "4px",
+                                       "_hover": {"color": "rgba(255,100,100,0.9)", "background": "rgba(255,80,80,0.08)"}},
+                            ),
+                            "Delete chat",
+                            "top",
                         ),
                         spacing="0",
                         opacity="0",
@@ -32775,7 +33033,7 @@ def free_sidebar_content() -> rx.Component:
                 align="center",
             ),
             rx.spacer(),
-            _icon_btn("panel_left", AppState.toggle_free_sidebar),
+            _icon_btn("panel_left", AppState.toggle_free_sidebar, "Collapse sidebar"),
             width="100%",
             align="center",
             padding="4px 4px 12px 4px",
@@ -32867,36 +33125,46 @@ def free_page():
             # ── Mobile header ──
             rx.box(
                 rx.hstack(
-                    rx.button(
-                        rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
-                        on_click=AppState.toggle_semester_sidebar,
-                        width="40px", height="40px", min_width="40px",
-                        border_radius="12px",
-                        display="inline-flex",
-                        align_items="center",
-                        justify_content="center",
-                        style={
-                            "background": "transparent",
-                            "border": "none",
-                            "cursor": "pointer",
-                            "_hover": {"background": "rgba(255,255,255,0.06)"},
-                        },
+                    app_tooltip(
+                        rx.button(
+                            rx.icon(tag="menu", size=20, color="rgba(255,255,255,0.7)"),
+                            on_click=AppState.toggle_semester_sidebar,
+                            width="40px", height="40px", min_width="40px",
+                            border_radius="12px",
+                            display="inline-flex",
+                            align_items="center",
+                            justify_content="center",
+                            custom_attrs={"aria-label": "Open sidebar", "title": "Open sidebar"},
+                            style={
+                                "background": "transparent",
+                                "border": "none",
+                                "cursor": "pointer",
+                                "_hover": {"background": "rgba(255,255,255,0.06)"},
+                            },
+                        ),
+                        "Open sidebar",
+                        "bottom",
                     ),
                     rx.spacer(),
-                    rx.button(
-                        rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
-                        on_click=AppState.new_chat,
-                        width="40px", height="40px", min_width="40px",
-                        border_radius="12px",
-                        display="inline-flex",
-                        align_items="center",
-                        justify_content="center",
-                        style={
-                            "background": "transparent",
-                            "border": "none",
-                            "cursor": "pointer",
-                            "_hover": {"background": "rgba(255,255,255,0.06)"},
-                        },
+                    app_tooltip(
+                        rx.button(
+                            rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
+                            on_click=AppState.new_chat,
+                            width="40px", height="40px", min_width="40px",
+                            border_radius="12px",
+                            display="inline-flex",
+                            align_items="center",
+                            justify_content="center",
+                            custom_attrs={"aria-label": "New chat", "title": "New chat"},
+                            style={
+                                "background": "transparent",
+                                "border": "none",
+                                "cursor": "pointer",
+                                "_hover": {"background": "rgba(255,255,255,0.06)"},
+                            },
+                        ),
+                        "New chat",
+                        "bottom",
                     ),
                     width="100%", align="center", padding="8px 12px",
                 ),
@@ -32953,103 +33221,13 @@ def free_page():
                         rx.vstack(
                             # Top icons
                             rx.vstack(
-                                # Expand button
-                                rx.icon_button(
-                                    rx.icon(tag="panel_left", size=16),
-                                    on_click=AppState.toggle_free_sidebar,
-                                    variant="ghost",
-                                    style={
-                                        "color": "rgba(255,255,255,0.5)",
-                                        "background": "transparent",
-                                        "border": "none",
-                                        "border_radius": "8px",
-                                        "cursor": "pointer",
-                                        "width": "36px",
-                                        "height": "36px",
-                                        "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.07)"},
-                                    },
-                                ),
-                                # New chat
-                                rx.icon_button(
-                                    rx.icon(tag="square_pen", size=16),
-                                    on_click=AppState.new_chat,
-                                    variant="ghost",
-                                    style={
-                                        "color": "rgba(255,255,255,0.5)",
-                                        "background": "transparent",
-                                        "border": "none",
-                                        "border_radius": "8px",
-                                        "cursor": "pointer",
-                                        "width": "36px",
-                                        "height": "36px",
-                                        "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.07)"},
-                                    },
-                                ),
-                                # Search
-                                rx.icon_button(
-                                    rx.icon(tag="search", size=16),
-                                    on_click=AppState.open_global_search,
-                                    variant="ghost",
-                                    style={
-                                        "color": "rgba(255,255,255,0.5)",
-                                        "background": "transparent",
-                                        "border": "none",
-                                        "border_radius": "8px",
-                                        "cursor": "pointer",
-                                        "width": "36px",
-                                        "height": "36px",
-                                        "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.07)"},
-                                    },
-                                ),
-                                # Notes
-                                rx.icon_button(
-                                    rx.icon(tag="notebook", size=16),
-                                    on_click=AppState.toggle_notes_panel,
-                                    variant="ghost",
-                                    style={
-                                        "color": "rgba(255,255,255,0.5)",
-                                        "background": "transparent",
-                                        "border": "none",
-                                        "border_radius": "8px",
-                                        "cursor": "pointer",
-                                        "width": "36px",
-                                        "height": "36px",
-                                        "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.07)"},
-                                    },
-                                ),
-                                # Tracker
-                                rx.icon_button(
-                                    rx.icon(tag="list_checks", size=16),
-                                    on_click=rx.redirect("/tracker"),
-                                    variant="ghost",
-                                    style={
-                                        "color": "rgba(255,255,255,0.5)",
-                                        "background": "transparent",
-                                        "border": "none",
-                                        "border_radius": "8px",
-                                        "cursor": "pointer",
-                                        "width": "36px",
-                                        "height": "36px",
-                                        "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.07)"},
-                                    },
-                                ),
-                                # Learn from video
-                                rx.icon_button(
-                                    rx.icon(tag="youtube", size=16),
-                                    on_click=rx.redirect("/learn"),
-                                    variant="ghost",
-                                    style={
-                                        "color": "rgba(255,255,255,0.5)",
-                                        "background": "transparent",
-                                        "border": "none",
-                                        "border_radius": "8px",
-                                        "cursor": "pointer",
-                                        "width": "36px",
-                                        "height": "36px",
-                                        "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.07)"},
-                                    },
-                                ),
-                                _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon),
+                                _nav_rail_btn("panel_left", AppState.toggle_free_sidebar, "Open sidebar"),
+                                _nav_rail_btn("square_pen", AppState.new_chat, "New chat"),
+                                _nav_rail_btn("search", AppState.open_global_search, "Search chats"),
+                                _nav_rail_btn("notebook", AppState.toggle_notes_panel, "Notes"),
+                                _nav_rail_btn("list_checks", rx.redirect("/tracker"), "Tracker"),
+                                _nav_rail_btn("youtube", rx.redirect("/learn"), "Learn from video"),
+                                _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
                                 spacing="1",
                                 align_items="center",
                             ),
