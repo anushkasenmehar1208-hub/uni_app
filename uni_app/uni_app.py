@@ -3163,6 +3163,10 @@ GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS = max(
     60, int(os.getenv("GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS", "600"))
 )
 APP_DASHBOARD_ROUTE = "/app"
+SELECTION_ROUTE = "/select"
+GUEST_TOKEN_LOCAL_STORAGE_KEY = "alex_guest_token"
+GUEST_USER_ID_BASE = 1_500_000_000
+GUEST_USER_ID_SPAN = 450_000_000
 BUSINESS_NAME = "Alex AI"
 SUPPORT_EMAIL = "support.alexstudies@gmail.com"
 SUPPORT_PHONE = "+94 767104776"
@@ -5077,6 +5081,7 @@ async def health_check(request):
 # ============================
 class AppState(reflex_local_auth.LocalAuthState):
     app_auth_token: str = rx.LocalStorage(name=AUTH_TOKEN_LOCAL_STORAGE_KEY)
+    guest_token: str = rx.LocalStorage(name=GUEST_TOKEN_LOCAL_STORAGE_KEY)
     auth_csrf_token: str = rx.Cookie(
         "",
         name="alex_auth_csrf",
@@ -5743,7 +5748,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def set_chat_search(self, value: str):
         self.chat_search_query = value
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not value.strip():
             self._chat_search_content_ids = []
             return
@@ -6254,7 +6259,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                 return "/free"
             if self.selected_year and self.selected_semester:
                 target_scope = self._scope_key(self.selected_year, self.selected_semester)
-                if target_scope in SCOPE_ROUTE_MAP:
+                if target_scope.split(":", 1)[0] in SCOPE_ROUTE_MAP:
                     return scope_to_route(target_scope)
             return scope_to_route("home")
         return APP_DASHBOARD_ROUTE
@@ -6314,6 +6319,11 @@ class AppState(reflex_local_auth.LocalAuthState):
         uid = self._uid()
         self._cached_uid = uid
         if uid < 0:
+            guest_uid = self._guest_uid(create=False)
+            if guest_uid >= 0:
+                self._load_guest_memory(guest_uid)
+                if self.is_started:
+                    yield rx.redirect(self._authenticated_landing_route())
             return
 
         try:
@@ -6337,6 +6347,26 @@ class AppState(reflex_local_auth.LocalAuthState):
             print(f"[AUTH BRIDGE] redirect load error: {e}")
             target_route = APP_DASHBOARD_ROUTE
         yield rx.redirect(target_route)
+
+    @rx.event
+    async def on_load_selection(self):
+        uid = self._uid()
+        self._cached_uid = uid
+        if uid >= 0:
+            try:
+                target_route = self._preload_root_workspace_target(uid)
+            except Exception as e:
+                print(f"[SELECT] preload error: {e}")
+                target_route = APP_DASHBOARD_ROUTE
+            if self.is_started:
+                yield rx.redirect(target_route)
+            return
+
+        guest_uid = self._active_data_uid()
+        self._cached_uid = -1
+        self._load_guest_memory(guest_uid)
+        if self.is_started:
+            yield rx.redirect(self._authenticated_landing_route())
 
     @rx.event
     def handle_login(self, form_data: dict[str, Any]):
@@ -6378,6 +6408,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._login(int(user.id))
         self._cached_uid = int(user.id)
         self.app_auth_token = self.auth_token
+        self._migrate_guest_data_to_user(int(user.id))
         self._load_profile(int(user.id))
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
@@ -6501,6 +6532,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._login(resolved_uid)
         self._cached_uid = resolved_uid
         self.app_auth_token = self.auth_token
+        self._migrate_guest_data_to_user(resolved_uid)
         self._load_profile(resolved_uid)
         self.login_error = ""
         self.auth_csrf_token = secrets.token_urlsafe(24)
@@ -6511,6 +6543,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         (function() {{
             try {{
                 localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
+                localStorage.removeItem({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)});
             }} catch(e) {{}}
             setTimeout(function() {{ window.location.replace('/'); }}, 60);
         }})();
@@ -6556,6 +6589,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._login(resolved_uid)
         self._cached_uid = resolved_uid
         self.app_auth_token = self.auth_token
+        self._migrate_guest_data_to_user(resolved_uid)
         self._load_profile(resolved_uid)
         new_token = self.auth_token
 
@@ -6580,6 +6614,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     (function() {{
         try {{
             localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
+            localStorage.removeItem({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)});
         }} catch(e) {{}}
         setTimeout(function() {{ window.location.replace('/'); }}, 150);
     }})();
@@ -6623,10 +6658,18 @@ class AppState(reflex_local_auth.LocalAuthState):
             )
             session.add(new_user)
             session.commit()
+            session.refresh(new_user)
 
         self.register_success = True
         self.auth_csrf_token = secrets.token_urlsafe(24)
-        return [rx.redirect(auth_routes.LOGIN_ROUTE)]
+        if new_user.id is None:
+            return [rx.redirect(auth_routes.LOGIN_ROUTE)]
+        self._login(int(new_user.id))
+        self._cached_uid = int(new_user.id)
+        self.app_auth_token = self.auth_token
+        self._migrate_guest_data_to_user(int(new_user.id))
+        self._load_profile(int(new_user.id))
+        return [rx.redirect(APP_DASHBOARD_ROUTE)]
 
     @rx.event
     def handle_password_reset(self, form_data: dict[str, Any]):
@@ -6716,7 +6759,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     def set_name(self, value: str):
         self.name = _normalize_person_name(value)
         self.onboarding_message = ""
-        uid = self._uid()
+        uid = self._active_data_uid()
         self._save_memory(uid)
 
     @rx.var
@@ -6747,6 +6790,222 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"ERROR uid lookup: {e}")
         return -1
+
+    def _guest_uid_from_token(self, token: str) -> int:
+        cleaned = (token or "").strip()
+        if not cleaned:
+            return -1
+        digest = hashlib.sha256(f"alex-guest:{cleaned}".encode("utf-8")).hexdigest()
+        return GUEST_USER_ID_BASE + (int(digest[:12], 16) % GUEST_USER_ID_SPAN)
+
+    def _ensure_guest_token(self) -> str:
+        token = (self.guest_token or "").strip()
+        if not token:
+            token = f"g_{secrets.token_urlsafe(24)}"
+            self.guest_token = token
+        return token
+
+    def _guest_uid(self, *, create: bool = False) -> int:
+        token = self._ensure_guest_token() if create else (self.guest_token or "").strip()
+        return self._guest_uid_from_token(token)
+
+    def _active_data_uid(self) -> int:
+        uid = self._uid()
+        if uid >= 0:
+            return uid
+        return self._guest_uid(create=True)
+
+    def _load_guest_memory(self, uid: int) -> None:
+        if uid < 0:
+            return
+        with rx.session() as session:
+            memory = session.exec(
+                select(UserMemory).where(UserMemory.user_id == uid)
+            ).one_or_none()
+        if memory is None:
+            self.step = 0
+            self.degree = ""
+            self.pathway = ""
+            self.active_subject = ""
+            self.is_started = False
+            self.selected_year = ""
+            self.selected_semester = ""
+            self.memory_summary = ""
+            self.other_degree_text = ""
+            self._sync_pathway_options()
+            return
+        self.step = int(memory.step or 0)
+        self.name = _normalize_person_name(memory.name)
+        self.degree = memory.degree or ""
+        self.pathway = memory.pathway or ""
+        self.active_subject = memory.active_subject or ""
+        self.is_started = bool(memory.is_started)
+        self.selected_year = memory.selected_year or ""
+        self.selected_semester = memory.selected_semester or ""
+        self.memory_summary = memory.summary or ""
+        self.other_degree_text = getattr(memory, "other_degree_text", "") or ""
+        if self.pathway:
+            self.pathway = canonical_pathway_label(self.degree, self.pathway)
+        self._sync_pathway_options()
+
+    def _migrate_guest_data_to_user(self, uid: int) -> None:
+        guest_uid = self._guest_uid(create=False)
+        if uid < 0 or guest_uid < 0 or guest_uid == uid:
+            return
+
+        def newer(a: Any, b: Any) -> bool:
+            av = getattr(a, "updated_at", None) or getattr(a, "created_at", None)
+            bv = getattr(b, "updated_at", None) or getattr(b, "created_at", None)
+            if av is None or bv is None:
+                return True
+            return av >= bv
+
+        try:
+            with rx.session() as session:
+                guest_mem = session.exec(select(UserMemory).where(UserMemory.user_id == guest_uid)).one_or_none()
+                if guest_mem is not None:
+                    real_mem = session.exec(select(UserMemory).where(UserMemory.user_id == uid)).one_or_none()
+                    if real_mem is None:
+                        guest_mem.user_id = uid
+                        session.add(guest_mem)
+                    else:
+                        if guest_mem.is_started or not real_mem.is_started:
+                            real_mem.step = guest_mem.step
+                            real_mem.name = guest_mem.name
+                            real_mem.degree = guest_mem.degree
+                            real_mem.pathway = guest_mem.pathway
+                            real_mem.active_subject = guest_mem.active_subject
+                            real_mem.is_started = guest_mem.is_started
+                            real_mem.selected_year = guest_mem.selected_year
+                            real_mem.selected_semester = guest_mem.selected_semester
+                            real_mem.other_degree_text = guest_mem.other_degree_text
+                        if (guest_mem.summary or "").strip():
+                            real_mem.summary = guest_mem.summary
+                        session.add(real_mem)
+                        session.delete(guest_mem)
+
+                for model in (ChatMessage, ChatSession, ChatMessage2, MessageFeedback, StudentNote, TodoTracker):
+                    for row in session.exec(select(model).where(model.user_id == guest_uid)).all():
+                        row.user_id = uid
+                        session.add(row)
+
+                for row in session.exec(select(ScopeMemory).where(ScopeMemory.user_id == guest_uid)).all():
+                    real = session.exec(
+                        select(ScopeMemory)
+                        .where(ScopeMemory.user_id == uid)
+                        .where(ScopeMemory.scope == row.scope)
+                    ).first()
+                    if real is None:
+                        row.user_id = uid
+                        session.add(row)
+                    else:
+                        guest_summary = (row.summary or "").strip()
+                        real_summary = (real.summary or "").strip()
+                        if guest_summary and guest_summary not in real_summary:
+                            real.summary = ((real_summary + "\n\n" + guest_summary).strip())[:4000]
+                        session.add(real)
+                        session.delete(row)
+
+                for row in session.exec(select(SemesterStudyPlan).where(SemesterStudyPlan.user_id == guest_uid)).all():
+                    real = session.exec(
+                        select(SemesterStudyPlan)
+                        .where(SemesterStudyPlan.user_id == uid)
+                        .where(SemesterStudyPlan.scope == row.scope)
+                    ).first()
+                    if real is None:
+                        row.user_id = uid
+                        session.add(row)
+                    else:
+                        if (not real.plan_json) or newer(row, real):
+                            real.plan_json = row.plan_json
+                            session.add(real)
+                        session.delete(row)
+
+                for row in session.exec(select(SemesterPlanGenerationState).where(SemesterPlanGenerationState.user_id == guest_uid)).all():
+                    real = session.exec(
+                        select(SemesterPlanGenerationState)
+                        .where(SemesterPlanGenerationState.user_id == uid)
+                        .where(SemesterPlanGenerationState.scope == row.scope)
+                    ).first()
+                    if real is None:
+                        row.user_id = uid
+                        session.add(row)
+                    else:
+                        if newer(row, real):
+                            real.status = row.status
+                            real.error_message = row.error_message
+                            session.add(real)
+                        session.delete(row)
+
+                for row in session.exec(select(DayProgress).where(DayProgress.user_id == guest_uid)).all():
+                    real = session.exec(
+                        select(DayProgress)
+                        .where(DayProgress.user_id == uid)
+                        .where(DayProgress.scope == row.scope)
+                    ).first()
+                    if real is None:
+                        row.user_id = uid
+                        session.add(row)
+                    else:
+                        if newer(row, real):
+                            real.current_day = row.current_day
+                            real.current_topic_index = row.current_topic_index
+                            session.add(real)
+                        session.delete(row)
+
+                for row in session.exec(select(StudyProgress).where(StudyProgress.user_id == guest_uid)).all():
+                    real = session.exec(
+                        select(StudyProgress)
+                        .where(StudyProgress.user_id == uid)
+                        .where(StudyProgress.year == row.year)
+                        .where(StudyProgress.semester == row.semester)
+                        .where(StudyProgress.course == row.course)
+                    ).first()
+                    if real is None:
+                        row.user_id = uid
+                        session.add(row)
+                    else:
+                        if row.status == "done" and real.status != "done":
+                            real.status = "done"
+                            real.last_done_at = row.last_done_at
+                        if (row.notes or "").strip() and not (real.notes or "").strip():
+                            real.notes = row.notes
+                        session.add(real)
+                        session.delete(row)
+
+                for row in session.exec(select(LearnVideoSession).where(LearnVideoSession.user_id == guest_uid)).all():
+                    real = session.exec(
+                        select(LearnVideoSession)
+                        .where(LearnVideoSession.user_id == uid)
+                        .where(LearnVideoSession.video_id == row.video_id)
+                    ).first()
+                    if real is None:
+                        row.user_id = uid
+                        session.add(row)
+                    else:
+                        if not real.title:
+                            real.title = row.title
+                        if not real.transcript_cached:
+                            real.transcript_cached = row.transcript_cached
+                        if not real.summary_cached:
+                            real.summary_cached = row.summary_cached
+                        if not real.quiz_json:
+                            real.quiz_json = row.quiz_json
+                        if (row.chat_history_json or "[]") != "[]":
+                            try:
+                                real_chat = json.loads(real.chat_history_json or "[]")
+                                guest_chat = json.loads(row.chat_history_json or "[]")
+                                if isinstance(real_chat, list) and isinstance(guest_chat, list):
+                                    real.chat_history_json = json.dumps(real_chat + guest_chat)
+                            except Exception:
+                                pass
+                        session.add(real)
+                        session.delete(row)
+
+                session.commit()
+            self.guest_token = ""
+        except Exception as e:
+            print(f"[GUEST MIGRATE] error: {e}")
 
     def _safe_role(self, role: str) -> str:
         return "assistant" if role == "bot" else role
@@ -7128,7 +7387,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     def delete_session(self, session_id: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not session_id:
             return
         try:
@@ -7155,7 +7414,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     def delete_home_session(self, session_id: str):
         """Delete an Alex AI home chat session (works from any scope)."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not session_id:
             return
         try:
@@ -7207,7 +7466,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     def confirm_rename_session(self):
         """Save the new title to DB."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         sid_str = self.renaming_session_id
         new_title = (self.renaming_title_input or "").strip()
         if uid < 0 or not sid_str or not new_title:
@@ -7271,7 +7530,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         if not value.strip():
             self.global_search_results = []
             return
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0:
             return
         q = value.strip().lower()
@@ -7329,7 +7588,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.event
     async def open_search_result(self, session_id: str, scope: str):
         """Navigate to the session containing the search result."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0:
             return
         target_scope = (scope or "home").strip()
@@ -7375,7 +7634,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         return (self.active_scope or "home").strip() or "home"
 
     def _reload_notes_items(self) -> None:
-        uid = self._uid()
+        uid = self._active_data_uid()
         self.notes_items = []
         if uid < 0:
             self.notes_header_subtitle = ""
@@ -7439,7 +7698,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def _notes_persist_editor(self, *, manual: bool, scope_key: str | None = None) -> bool:
         """Manual save requires a non-empty title. Auto-save may infer title from body or use \"Untitled\"."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0:
             return True
         if not self._notes_editor_has_saveable_content():
@@ -7582,7 +7841,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def handle_note_media_upload(self, files: list[rx.UploadFile]):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if not files or uid < 0:
             return
         uf = files[0]
@@ -7592,7 +7851,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     def notes_remove_attachment(self, att_id: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if not att_id:
             return
         rel_drop = ""
@@ -7607,7 +7866,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             _delete_note_attachment_paths(uid, [rel_drop])
 
     def _load_note_for_editor(self, note_id: str) -> None:
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not note_id:
             return
         scope = self._notes_scope_key()
@@ -7663,7 +7922,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     def notes_delete_current(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not self.notes_editor_id:
             return
         scope = self._notes_scope_key()
@@ -7697,7 +7956,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def save_reply_as_note(self, msg_index: int):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or msg_index < 0 or msg_index >= len(self.chat_history):
             return
         m = self.chat_history[msg_index]
@@ -9190,7 +9449,7 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
 
     def _high_detail_image_block(self, user_msg: str, response_text: str = "") -> tuple[str, str]:
         """Returns (visual_block, error_message). visual_block is empty on failure."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not self.current_session_id:
             return "", "no active session"
         if not OPENAI_API_KEY:
@@ -11045,7 +11304,7 @@ Quality rules:
     def toggle_semester_sidebar(self):
         self.show_semester_sidebar = not self.show_semester_sidebar
         if self.show_semester_sidebar:
-            uid = self._uid()
+            uid = self._active_data_uid()
             if uid >= 0:
                 self._load_home_sessions(uid)
 
@@ -11055,7 +11314,7 @@ Quality rules:
         if self.show_semester_sidebar:
             return
         self.show_semester_sidebar = True
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid >= 0:
             self._load_home_sessions(uid)
 
@@ -11266,15 +11525,19 @@ Quality rules:
     @rx.event
     async def on_load_free(self):
         """On-load handler for /free — general chat for custom-program students."""
-        uid = self._uid()
-        self._cached_uid = uid
-        if uid < 0:
-            yield AppState.auth_redir()  # type: ignore
-            return
+        real_uid = self._uid()
+        self._cached_uid = real_uid
+        uid = real_uid if real_uid >= 0 else self._active_data_uid()
         try:
-            self._load_profile(uid)
+            if real_uid >= 0:
+                self._load_profile(real_uid)
+            else:
+                self._load_guest_memory(uid)
         except Exception as e:
             print(f"[FREE] profile load error: {e}")
+        if not self.is_started:
+            yield rx.redirect(SELECTION_ROUTE)
+            return
         # If user is not on the custom path but somehow landed here, redirect properly
         if self.is_started and not _degree_is_custom(self.degree):
             yield _hard_navigate(self._authenticated_landing_route())
@@ -11299,8 +11562,13 @@ Quality rules:
             ]
         except Exception as e:
             print(f"[FREE] session load error: {e}")
-        self.chat_history = []
-        self.current_session_id = ""
+        try:
+            self._ensure_scope_memory(uid, "home")
+            self._ensure_session(uid, "home")
+            self._load_home_sessions(uid)
+            self._load_messages(uid, "home")
+        except Exception as e:
+            print(f"[FREE] home chat hydrate error: {e}")
 
     @rx.event
     async def on_load(self):
@@ -11365,15 +11633,16 @@ Quality rules:
         Minimum work for first paint: auth check, profile (1 DB call), scope routing.
         All scope hydration is deferred to post_render_hydrate_scope (background).
         """
-        uid = self._uid()
-        self._cached_uid = uid
-        if uid < 0:
-            yield AppState.auth_redir()  # type: ignore
-            return
+        real_uid = self._uid()
+        self._cached_uid = real_uid
+        uid = real_uid if real_uid >= 0 else self._active_data_uid()
 
         # ── Single DB call: profile + memory (needed for is_started, degree, name) ──
         try:
-            self._load_profile(uid)
+            if real_uid >= 0:
+                self._load_profile(real_uid)
+            else:
+                self._load_guest_memory(uid)
         except Exception as e:
             print(f"[ROUTE] profile load error: {e}")
 
@@ -11402,7 +11671,7 @@ Quality rules:
                 self.is_started = True
                 self._save_memory(uid)
             else:
-                yield rx.redirect(APP_DASHBOARD_ROUTE)
+                yield rx.redirect(SELECTION_ROUTE if real_uid < 0 else APP_DASHBOARD_ROUTE)
                 return
 
         year = scope_info["year"]
@@ -11484,7 +11753,7 @@ Quality rules:
         async with self:
             if hydrate_nonce != self._hydrate_nonce:
                 return
-            uid = self._uid()
+            uid = self._active_data_uid()
             if uid < 0:
                 self.scope_hydrating = False
                 return
@@ -11577,7 +11846,7 @@ Quality rules:
     async def post_render_check_plan(self, scope: str, year: str, semester: str):
         """Runs after hydration. Checks whether plan generation is needed."""
         async with self:
-            uid = self._uid()
+            uid = self._active_data_uid()
             if uid < 0 or not scope:
                 return
 
@@ -11625,7 +11894,7 @@ Quality rules:
 
     @rx.event
     async def new_chat(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0: return
         try:
             with rx.session() as session:
@@ -11650,7 +11919,7 @@ Quality rules:
 
     @rx.event
     async def switch_chat(self, session_id: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0: return
         try:
             if not self._session_in_scope(uid, int(session_id), self.active_scope):
@@ -11785,7 +12054,7 @@ Quality rules:
 
     @rx.event
     def next_step(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             self.onboarding_message = ""
             self.step = min(self.step + 1, ONBOARDING_FINAL_STEP)
@@ -11795,7 +12064,7 @@ Quality rules:
 
     @rx.event
     def advance_from_degree(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             if self.degree not in self.options and not _degree_is_custom(self.degree):
                 self.step = 1
@@ -11816,7 +12085,7 @@ Quality rules:
 
     @rx.event
     def advance_from_name(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             normalized_name = _normalize_person_name(self.name)
             condensed_name = re.sub(r"[\s'-]", "", normalized_name)
@@ -11851,7 +12120,7 @@ Quality rules:
 
     @rx.event
     def advance_from_year(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             if not self.selected_year:
                 self.step = 4
@@ -11866,7 +12135,7 @@ Quality rules:
 
     @rx.event
     def advance_from_semester(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             if not self.selected_year:
                 self.step = 4
@@ -11886,7 +12155,7 @@ Quality rules:
 
     @rx.event
     def set_degree(self, value: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             self.degree = value if value in self.options else ""
             # Reset pathway when degree changes
@@ -11921,7 +12190,7 @@ Quality rules:
     @rx.event
     def set_pathway(self, value: str):
         """Set the pathway for a multi-subject degree (e.g. 'AMAT / PHYS / PMAT')."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             if value in self._valid_pathway_labels():
                 self.pathway = value
@@ -11941,7 +12210,7 @@ Quality rules:
     @rx.event
     def advance_from_pathway(self):
         """Validate pathway selection and advance to name step."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             if not self.pathway or self.pathway not in self._valid_pathway_labels():
                 self.step = 2
@@ -11957,7 +12226,7 @@ Quality rules:
     @rx.event
     async def switch_subject(self, subject: str):
         """Switch the active subject for multi-subject degrees (subject switcher)."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             subjects = self._pathway_subjects()
             if subject not in subjects or not self.selected_year or not self.selected_semester:
@@ -11997,7 +12266,7 @@ Quality rules:
 
     @rx.event
     def set_year(self, year: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             if year not in SEMESTER_NAVIGATION:
                 self.selected_year = ""
@@ -12022,7 +12291,7 @@ Quality rules:
 
     @rx.event
     def choose_onboarding_year(self, year: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             if year not in SEMESTER_NAVIGATION:
                 self.step = 4
@@ -12044,7 +12313,7 @@ Quality rules:
 
     @rx.event
     def set_selected_semester(self, semester: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         self.selected_semester = semester
         try:
             if not self.selected_year:
@@ -12060,7 +12329,7 @@ Quality rules:
     # Replace your existing choose_onboarding_semester with this:
     @rx.event
     def choose_onboarding_semester(self, semester: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
         # Build full semester→year mapping from SEMESTER_NAVIGATION
             semester_to_year = {
@@ -12085,7 +12354,7 @@ Quality rules:
     @rx.event
     def set_onboarding_year(self, year: str):
         """Lightweight year setter for the single-page onboarding form."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             if year in SEMESTER_NAVIGATION and year not in LOCKED_YEARS:
                 self.selected_year = year
@@ -12100,7 +12369,7 @@ Quality rules:
     @rx.event
     def set_onboarding_semester(self, semester: str):
         """Lightweight semester setter for the single-page onboarding form."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             semester_to_year = {
                 "Semester 1": "Year 1", "Semester 2": "Year 1",
@@ -12118,7 +12387,7 @@ Quality rules:
 
     @rx.event
     def back_to_onboarding_year(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             self.step = 4
             self.selected_semester = ""
@@ -12129,7 +12398,7 @@ Quality rules:
 
     @rx.event
     def back_to_years(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             self.selected_year = ""
             self.selected_semester = ""
@@ -12157,7 +12426,7 @@ Quality rules:
                 self.is_started = True
                 self.step = ONBOARDING_FINAL_STEP
                 self.onboarding_message = ""
-                uid = self._uid()
+                uid = self._active_data_uid()
                 if uid >= 0:
                     self._save_memory(uid)
                 yield _hard_navigate("/free")
@@ -12191,7 +12460,7 @@ Quality rules:
             self.is_started = True
             self.step = ONBOARDING_FINAL_STEP
             self.onboarding_message = ""
-            uid = self._uid()
+            uid = self._active_data_uid()
             if uid >= 0:
                 self._set_default_semester_workspace(uid, year, self.selected_semester)
                 self._save_memory(uid)
@@ -12207,7 +12476,7 @@ Quality rules:
         """Handle the single-page onboarding form submission."""
         try:
             print(f"[COMPLETE_ONBOARD] form_data={form_data}", flush=True)
-            uid = self._uid()
+            uid = self._active_data_uid()
 
             # ── Degree ──
             degree = (form_data.get("degree") or "").strip()
@@ -12251,7 +12520,7 @@ Quality rules:
 
     @rx.event
     async def start_app(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         try:
             self.is_started = True
             if not self.selected_year:
@@ -12272,7 +12541,7 @@ Quality rules:
 
     @rx.event
     async def open_semester(self, semester: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not self.selected_year:
             return
         scope = self._set_default_semester_workspace(uid, self.selected_year, semester)
@@ -12280,7 +12549,7 @@ Quality rules:
 
     @rx.event
     async def open_dashboard_semester(self, year: str, semester: str):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0:
             return
         if semester in _locked_semesters_for_degree(self.degree):
@@ -12316,7 +12585,7 @@ Quality rules:
     async def generate_study_plan(self, scope: str = "", year: str = "", semester: str = ""):
         # ── Read state under lock ──
         async with self:
-            uid = self._uid()
+            uid = self._active_data_uid()
             target_scope = (scope or self.active_scope).strip()
             target_year = year or self.selected_year
             target_semester = semester or self.selected_semester
@@ -12496,7 +12765,7 @@ Course units to cover:\n{courses_text}"""
 
     @rx.event
     async def watch_study_plan_generation(self, scope: str = ""):
-        uid = self._uid()
+        uid = self._active_data_uid()
         target_scope = (scope or self.active_scope).strip()
         if uid < 0 or not target_scope or target_scope != self.active_scope:
             return
@@ -12546,7 +12815,7 @@ Course units to cover:\n{courses_text}"""
 
     @rx.event
     async def retry_study_plan_generation(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         print(f"[PLAN-RETRY] uid={uid} view_mode={self.view_mode} scope={self.active_scope} year={self.selected_year} sem={self.selected_semester}", flush=True)
         if uid < 0 or self.view_mode != "semester" or not self.active_scope:
             print("[PLAN-RETRY] BAIL: precondition failed", flush=True)
@@ -12579,7 +12848,7 @@ Course units to cover:\n{courses_text}"""
 
     @rx.event
     async def go_home(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0: return
         if self.active_scope == "home" and self.view_mode == "home":
             self.show_semester_sidebar = False
@@ -12594,7 +12863,7 @@ Course units to cover:\n{courses_text}"""
     @rx.event
     async def switch_to_home_chat(self, session_id: str):
         """Navigate to Alex AI home and load a specific chat session."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0: return
         self.show_semester_sidebar = False
         if self.active_scope == "home" and self.view_mode == "home":
@@ -12673,7 +12942,7 @@ Course units to cover:\n{courses_text}"""
     @rx.event
     async def confirm_edit_message(self):
         """Save the edited user message, remove everything after it, and re-send."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         idx = self.editing_msg_index
         new_text = self.editing_msg_text.strip()
         if uid < 0 or idx < 0 or idx >= len(self.chat_history) or not new_text:
@@ -12719,7 +12988,7 @@ Course units to cover:\n{courses_text}"""
     @rx.event
     async def retry_last_response(self):
         """Remove the last assistant message and re-generate from the last user message."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or len(self.chat_history) < 2:
             return
         # Find last assistant message index
@@ -12784,7 +13053,7 @@ Course units to cover:\n{courses_text}"""
     @rx.event
     def submit_feedback(self):
         """Save feedback to the DB and close the dialog."""
-        uid = self._uid()
+        uid = self._active_data_uid()
         idx = self.feedback_msg_index
         if uid < 0 or idx < 0 or idx >= len(self.chat_history):
             self.close_feedback_dialog()
@@ -12851,7 +13120,7 @@ Course units to cover:\n{courses_text}"""
 
     @rx.event
     async def send_message(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         has_typed_message = bool(self.chat_input.strip())
         has_image_attached = bool(self._image_data)
         has_document_attached = bool(self._document_data)
@@ -14573,7 +14842,7 @@ Behavior rules:
                 
     @rx.event
     async def update_scope_summary(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not _openrouter_llm_ready(): return
         try:
             scope = self.active_scope; self._ensure_scope_memory(uid, scope)
@@ -14587,7 +14856,7 @@ Behavior rules:
 
     @rx.event
     async def update_memory_summary(self):
-        uid = self._uid()
+        uid = self._active_data_uid()
         if uid < 0 or not _openrouter_llm_ready(): return
         try:
             recent_text = "\n".join([f'{m["role"]}: {m["content"]}' for m in self.chat_history[-20:]])
@@ -14600,6 +14869,7 @@ Behavior rules:
     @rx.event
     def logout(self):
         self.app_auth_token = ""
+        self.guest_token = ""
         self._cached_uid = -1
         self.active_scope = ""
         # Reset all user-specific state to prevent data leaking across logins
@@ -20248,6 +20518,61 @@ def profile_menu_button() -> rx.Component:
     )
 
 
+def guest_auth_buttons() -> rx.Component:
+    pill_style = {
+        "height": "38px",
+        "padding": "0 15px",
+        "border_radius": "999px",
+        "font_size": "0.86rem",
+        "font_weight": "650",
+        "cursor": "pointer",
+    }
+    return rx.cond(
+        AppState.is_authenticated_now | AppState.is_authenticated,
+        rx.fragment(),
+        rx.hstack(
+            rx.link(
+                rx.button(
+                    "Login",
+                    type="button",
+                    color="rgba(255,255,255,0.9)",
+                    background="rgba(255,255,255,0.07)",
+                    border="1px solid rgba(255,255,255,0.13)",
+                    _hover={"background": "rgba(255,255,255,0.12)"},
+                    **pill_style,
+                ),
+                href=auth_routes.LOGIN_ROUTE,
+                text_decoration="none",
+            ),
+            rx.link(
+                rx.button(
+                    "Sign up",
+                    type="button",
+                    color="#050507",
+                    background="#F7F7F8",
+                    border="1px solid rgba(255,255,255,0.4)",
+                    _hover={"background": "#FFFFFF"},
+                    **pill_style,
+                ),
+                href=auth_routes.REGISTER_ROUTE,
+                text_decoration="none",
+            ),
+            spacing="2",
+            align="center",
+            position="fixed",
+            top=rx.breakpoints(initial="12px", md="18px"),
+            right=rx.breakpoints(initial="12px", md="22px"),
+            z_index="2000",
+            padding="5px",
+            border_radius="999px",
+            background="rgba(0,0,0,0.42)",
+            border="1px solid rgba(255,255,255,0.08)",
+            backdrop_filter="blur(14px)",
+            box_shadow="0 12px 36px rgba(0,0,0,0.3)",
+        ),
+    )
+
+
 
 
 # ──────────────────────────────────────────────────────────────
@@ -23857,7 +24182,7 @@ def landing_page():
             custom_attrs={"data-landing-animate": "sub"},
         ),
         rx.hstack(
-            hero_button("Generate My Plan", auth_routes.LOGIN_ROUTE, "solid"),
+            hero_button("Generate My Plan", SELECTION_ROUTE, "solid"),
             hero_button("Contact Support", "/support", "secondary"),
             spacing="4",
             justify="center",
@@ -24391,7 +24716,7 @@ def landing_page():
                         rx.text("• Basic planner access", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
                         rx.text("• Trial access to study chat", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
                         rx.text("• Start building your semester system", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
-                        hero_button("Start Free", auth_routes.LOGIN_ROUTE, "secondary"),
+                        hero_button("Start Free", SELECTION_ROUTE, "secondary"),
                         spacing="3",
                         align_items="flex-start",
                         width="100%",
@@ -24946,11 +25271,31 @@ def app_dashboard_page():
     return onboarding_page()
 
 
+@rx.page(
+    route=SELECTION_ROUTE,
+    title="Choose Your Degree",
+    description="Choose your degree and open Alex AI",
+    image=FAVICON_32,
+    on_load=AppState.on_load_selection,
+)
+def selection_page():
+    return rx.fragment(
+        rx.cond(
+            AppState.is_hydrated,
+            onboarding_page(),
+            _app_shell_loading_gate(),
+        )
+    )
+
+
 def scope_page() -> rx.Component:
-    return rx.cond(
-        AppState.current_scope_from_path == "home",
-        home_page(),
-        semester_page_with_search(),
+    return rx.fragment(
+        guest_auth_buttons(),
+        rx.cond(
+            AppState.current_scope_from_path == "home",
+            home_page(),
+            semester_page_with_search(),
+        ),
     )
 
 
@@ -32402,6 +32747,7 @@ def free_sidebar_content() -> rx.Component:
 def free_page():
     return rx.fragment(
         notes_panel(),
+        guest_auth_buttons(),
         rx.box(
             # ── Mobile header ──
             rx.box(
