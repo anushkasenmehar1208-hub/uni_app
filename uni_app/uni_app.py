@@ -29718,11 +29718,76 @@ _APP_TOASTER = rx.fragment(
     ),
 )
 
+_NETWORK_ERROR_SUPPRESSION_CSS = """
+[data-sonner-toast][data-id="websocket-error"],
+[data-sonner-toast]:has([data-title*="Cannot connect to server"]),
+[data-sonner-toast]:has([data-description*="Check if server is reachable"]),
+[title^="Connection Error:"] {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+"""
+
+_NETWORK_ERROR_SUPPRESSION_JS = """
+(function(){
+  var blocked = [
+    'Cannot connect to server',
+    'Check if server is reachable',
+    'websocket-error',
+    '/_event'
+  ];
+
+  function hasBlockedText(text){
+    if(!text) return false;
+    return blocked.some(function(phrase){ return text.indexOf(phrase) !== -1; });
+  }
+
+  function maybeRemove(el){
+    if(!el || el.nodeType !== 1) return;
+    var title = el.getAttribute('title') || '';
+    if(title.indexOf('Connection Error:') === 0 || hasBlockedText(el.textContent || '')){
+      el.remove();
+    }
+  }
+
+  function scrub(root){
+    var base = root && root.nodeType === 1 ? root : document.body;
+    if(!base) return;
+    var selectors = [
+      '[title^="Connection Error:"]',
+      '[data-sonner-toast][data-id="websocket-error"]',
+      '[data-sonner-toast]',
+      '[role="alert"]',
+      '[role="status"]'
+    ].join(',');
+    if(base.matches && base.matches(selectors)) maybeRemove(base);
+    base.querySelectorAll(selectors).forEach(maybeRemove);
+  }
+
+  function start(){
+    scrub(document.body);
+    new MutationObserver(function(records){
+      records.forEach(function(record){
+        record.addedNodes.forEach(scrub);
+      });
+    }).observe(document.documentElement, { childList: true, subtree: true });
+    window.setInterval(function(){ scrub(document.body); }, 2500);
+  }
+
+  if(document.body) start();
+  else document.addEventListener('DOMContentLoaded', start, { once: true });
+})();
+"""
+
 app = rx.App(
     toaster=_APP_TOASTER,
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        # Hide Reflex' raw websocket failure UI; reconnects continue silently.
+        rx.el.style(_NETWORK_ERROR_SUPPRESSION_CSS),
+        rx.el.script(_NETWORK_ERROR_SUPPRESSION_JS),
         # Native loading splash — runs before React.
         # Creates a dark overlay + animated top bar as soon as the DOM is ready,
         # then watches for React to render content and fades itself out.
@@ -29800,6 +29865,9 @@ gtag('config', 'G-H5G0QBSY2M');
         }
     },
 )
+# The default Reflex app wrapper injects a websocket toast and red wifi icon.
+# We keep reconnect behavior, but remove the disruptive visual layer.
+app.app_wraps.pop((5, "Overlay"), None)
 _register_scope_pages()
 api = app._api
 if api is None:
