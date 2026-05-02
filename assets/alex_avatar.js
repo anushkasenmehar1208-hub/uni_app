@@ -45,6 +45,11 @@
     '&useHands=true';
   var REALISTIC_AVATAR_URL = 'https://models.readyplayer.me/6185a4acfb622cf1cdc49348.glb' + RPM_QUALITY_PARAMS;
   var LOCAL_AVATAR_FALLBACK_URL = AVATAR_URL_BASE + 'models/alex_body.glb';
+  var TEACHER_TEXTURE_URLS = {
+    body: AVATAR_URL_BASE + 'models/teacher_naoki_body.png',
+    hair: AVATAR_URL_BASE + 'models/teacher_naoki_hair.png',
+    skin: AVATAR_URL_BASE + 'models/teacher_naoki_skin.png'
+  };
   // Final CDN copy — used only if the preferred avatar and local fallbacks fail.
   var REMOTE_AVATAR_URL =
     'https://raw.githubusercontent.com/wass08/r3f-virtual-girlfriend-frontend/main/public/models/64f1a714fe61576b46f27ca2.glb';
@@ -392,6 +397,9 @@
       viseme: {},            // mesh → index of best "aa/open" viseme
       hasPaintedFace: false, // fallback anime model has face/eyes baked into its skin texture
       hasTexturedOutfit: false,
+      externalSkinLoaded: false,
+      needsFaceFallback: false,
+      faceFallbackGroup: null,
       currentState: 'idle',
       targetState: 'idle',
       prevState: 'idle',
@@ -400,6 +408,50 @@
       t: 0,
       restY: 0               // avatar.position.y after auto-centering; breathing anim adds on top
     };
+
+    var teacherTextureLoader = new THREE.TextureLoader();
+    var teacherTextureCache = {};
+    function removeFaceFallback() {
+      if (!rig.faceFallbackGroup) return;
+      try {
+        if (rig.faceFallbackGroup.parent) {
+          rig.faceFallbackGroup.parent.remove(rig.faceFallbackGroup);
+        }
+      } catch (e) {}
+      rig.faceFallbackGroup = null;
+    }
+    function teacherTexture(kind) {
+      if (!TEACHER_TEXTURE_URLS[kind]) return null;
+      if (teacherTextureCache[kind]) return teacherTextureCache[kind];
+      var tex = teacherTextureLoader.load(
+        TEACHER_TEXTURE_URLS[kind],
+        function () {
+          if (kind === 'skin') {
+            rig.externalSkinLoaded = true;
+            removeFaceFallback();
+          }
+        },
+        undefined,
+        function () {
+          if (kind === 'skin') {
+            rig.needsFaceFallback = true;
+          }
+          warn('teacher texture failed:', kind);
+        }
+      );
+      tex.flipY = false; // glTF UV convention; TextureLoader defaults to true.
+      if (tex.colorSpace !== undefined) tex.colorSpace = THREE.SRGBColorSpace;
+      teacherTextureCache[kind] = tex;
+      return tex;
+    }
+    function forceTeacherTexture(mat, kind) {
+      var tex = teacherTexture(kind);
+      if (!tex || !mat) return false;
+      mat.map = tex;
+      if (mat.color && mat.color.set) mat.color.set(0xffffff);
+      mat.needsUpdate = true;
+      return true;
+    }
 
     function sizeToCanvas() {
       // Use CSS pixel size — canvas has fixed ratio via CSS, but DPR-aware drawing buffer.
@@ -549,9 +601,9 @@
               // Apply suit jacket.
               if (isTop) {
                 log('  → suit jacket override on:', mat.name);
-                if (isBundledAnimeMat && hasTextureMap) {
+                if (isBundledAnimeMat) {
                   rig.hasTexturedOutfit = true;
-                  if (mat.color && mat.color.set) mat.color.set(0xffffff);
+                  forceTeacherTexture(mat, 'body');
                 } else {
                   if (mat.color && mat.color.set) mat.color.set(0x1c2230);
                   try { mat.map = null; } catch (e) {}
@@ -567,9 +619,10 @@
               // Apply skin tone.
               if (isSkin && mat.color && mat.color.set) {
                 log('  → skin override on:', mat.name);
-                if (isBundledAnimeMat && hasTextureMap) {
+                if (isBundledAnimeMat) {
                   rig.hasPaintedFace = true;
-                  mat.color.set(0xffffff);
+                  if (!hasTextureMap) rig.needsFaceFallback = true;
+                  forceTeacherTexture(mat, 'skin');
                 } else {
                   mat.color.set(0xefb892);
                   if ('roughness' in mat) mat.roughness = 0.52;
@@ -583,8 +636,8 @@
               // Apply hair.
               if (isHair && mat.color && mat.color.set) {
                 log('  → hair override on:', mat.name);
-                if (isBundledAnimeMat && hasTextureMap) {
-                  mat.color.set(0xffffff);
+                if (isBundledAnimeMat) {
+                  forceTeacherTexture(mat, 'hair');
                 } else {
                   mat.color.set(0x2a160a);
                   mat.roughness = 0.62;
@@ -604,9 +657,14 @@
 
               // Apply shoes.
               if (isFootwear && mat.color && mat.color.set) {
-                mat.color.set(0x0a0a0e);
-                mat.roughness = 0.40;
-                mat.metalness = 0.10;
+                if (isBundledAnimeMat) {
+                  rig.hasTexturedOutfit = true;
+                  forceTeacherTexture(mat, 'body');
+                } else {
+                  mat.color.set(0x0a0a0e);
+                  mat.roughness = 0.40;
+                  mat.metalness = 0.10;
+                }
                 mat.needsUpdate = true;
               }
 
@@ -818,6 +876,10 @@
       // so the avatar always has visible eyes regardless of GLB structure.
       (function addProceduralEyes() {
         try {
+          if (rig.needsFaceFallback && !rig.externalSkinLoaded) {
+            addAnimeFaceFallback();
+            return;
+          }
           if (rig.hasNativeEyes || rig.hasPaintedFace) {
             log('native/painted eyes detected; skipping procedural eyes', rig.nativeEyeNodes);
             return;
@@ -905,6 +967,88 @@
           warn('procedural eyes failed:', e && e.message);
         }
       })();
+
+      function addAnimeFaceFallback() {
+        if (!rig.head || rig.faceFallbackGroup) return;
+        try {
+          var headSize = 0.17;
+          if (rig.morphMeshes.length) {
+            var bb = new THREE.Box3();
+            rig.morphMeshes.forEach(function (m) {
+              if (!m.geometry) return;
+              if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+              if (m.geometry.boundingBox) bb.union(m.geometry.boundingBox);
+            });
+            if (!bb.isEmpty()) {
+              var s = bb.getSize(new THREE.Vector3());
+              headSize = Math.max(s.x, s.y, s.z) * 0.5;
+            }
+          }
+
+          var group = new THREE.Group();
+          group.name = 'AlexChromeSafeFaceFallback';
+          group.renderOrder = 30;
+
+          function mat(color, opacity) {
+            return new THREE.MeshBasicMaterial({
+              color: color,
+              transparent: opacity < 1,
+              opacity: opacity,
+              depthTest: false,
+              depthWrite: false,
+              side: THREE.DoubleSide
+            });
+          }
+          var whiteMat = mat(0xfaf3ee, 0.98);
+          var irisMat = mat(0xc68da6, 1);
+          var pupilMat = mat(0x231118, 1);
+          var browMat = mat(0x160a08, 1);
+          var noseMat = mat(0xd89d78, 0.72);
+          var mouthMat = mat(0xf4d5c5, 0.9);
+
+          var circle = new THREE.CircleGeometry(1, 32);
+          var bar = new THREE.PlaneGeometry(1, 1);
+          var eyeY = headSize * 0.20;
+          var eyeZ = headSize * 0.64;
+          var eyeX = headSize * 0.19;
+          var eyeW = headSize * 0.105;
+          var eyeH = headSize * 0.058;
+
+          function ellipse(material, x, y, z, sx, sy) {
+            var mesh = new THREE.Mesh(circle, material);
+            mesh.position.set(x, y, z);
+            mesh.scale.set(sx, sy, 1);
+            mesh.renderOrder = 31;
+            group.add(mesh);
+            return mesh;
+          }
+          function rect(material, x, y, z, sx, sy, rz) {
+            var mesh = new THREE.Mesh(bar, material);
+            mesh.position.set(x, y, z);
+            mesh.scale.set(sx, sy, 1);
+            mesh.rotation.z = rz || 0;
+            mesh.renderOrder = 32;
+            group.add(mesh);
+            return mesh;
+          }
+
+          [-1, 1].forEach(function (side) {
+            ellipse(whiteMat, side * eyeX, eyeY, eyeZ, eyeW, eyeH);
+            ellipse(irisMat, side * eyeX, eyeY - headSize * 0.002, eyeZ + headSize * 0.010, eyeH * 0.58, eyeH * 0.58);
+            ellipse(pupilMat, side * eyeX, eyeY - headSize * 0.002, eyeZ + headSize * 0.014, eyeH * 0.25, eyeH * 0.25);
+            rect(browMat, side * eyeX, eyeY + headSize * 0.080, eyeZ + headSize * 0.012, eyeW * 1.25, headSize * 0.012, side * -0.18);
+          });
+
+          rect(noseMat, 0, eyeY - headSize * 0.135, eyeZ + headSize * 0.016, headSize * 0.018, headSize * 0.050, 0.03);
+          rect(mouthMat, 0, eyeY - headSize * 0.250, eyeZ + headSize * 0.018, headSize * 0.150, headSize * 0.012, 0);
+
+          rig.head.add(group);
+          rig.faceFallbackGroup = group;
+          log('anime face fallback attached');
+        } catch (e) {
+          warn('anime face fallback failed:', e && e.message);
+        }
+      }
 
       // Auto-frame: normalize the avatar to a known scale, then frame the face tightly.
       // Handles full-body rigs (RPM, lots of bones) and head-only scans (facecap, no bones).
