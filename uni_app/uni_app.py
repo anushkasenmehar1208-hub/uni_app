@@ -6732,6 +6732,48 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.show_pricing_modal = False
 
     @rx.event
+    def show_video_generator_coming_soon(self):
+        return rx.call_script(
+            """
+            (function(){
+                var id = 'alex-video-generator-coming-soon';
+                var old = document.getElementById(id);
+                if (old) old.remove();
+                var t = document.createElement('div');
+                t.id = id;
+                t.textContent = 'coming soon';
+                t.style.cssText = [
+                    'position:fixed',
+                    'left:50%',
+                    'bottom:calc(28px + env(safe-area-inset-bottom, 0px))',
+                    'transform:translateX(-50%)',
+                    'z-index:99999',
+                    'padding:10px 18px',
+                    'border-radius:999px',
+                    'background:rgba(10,10,12,0.92)',
+                    'border:1px solid rgba(255,255,255,0.14)',
+                    'box-shadow:0 16px 44px rgba(0,0,0,0.42)',
+                    'color:rgba(245,247,250,0.96)',
+                    'font:700 13px/1.1 system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
+                    'letter-spacing:.02em',
+                    'backdrop-filter:blur(14px)',
+                    'pointer-events:none',
+                    'transition:opacity .24s ease, transform .24s ease'
+                ].join(';');
+                document.body.appendChild(t);
+                requestAnimationFrame(function(){
+                    t.style.transform = 'translateX(-50%) translateY(-4px)';
+                });
+                setTimeout(function(){
+                    t.style.opacity = '0';
+                    t.style.transform = 'translateX(-50%) translateY(4px)';
+                }, 1600);
+                setTimeout(function(){ t.remove(); }, 1900);
+            })();
+            """
+        )
+
+    @rx.event
     def on_load_dashboard(self):
         uid = self._uid()
         if uid >= 0:
@@ -22271,6 +22313,48 @@ def _nav_rail_btn(icon_tag: str, on_click, tooltip: str = "") -> rx.Component:
     )
 
 
+def _locked_nav_rail_btn(icon_tag: str, on_click) -> rx.Component:
+    return rx.button(
+        rx.box(
+            rx.icon(tag=icon_tag, size=17, color="rgba(200,210,220,0.42)"),
+            rx.box(
+                rx.icon(tag="lock", size=8, color="rgba(255,255,255,0.72)"),
+                position="absolute",
+                right="-3px",
+                bottom="-2px",
+                width="14px",
+                height="14px",
+                border_radius="999px",
+                background="rgba(20,20,22,0.96)",
+                border="1px solid rgba(255,255,255,0.16)",
+                display="flex",
+                align_items="center",
+                justify_content="center",
+            ),
+            position="relative",
+            width="18px",
+            height="18px",
+            display="flex",
+            align_items="center",
+            justify_content="center",
+        ),
+        on_click=on_click,
+        width="36px",
+        height="36px",
+        min_width="36px",
+        padding="0",
+        border_radius="8px",
+        cursor="pointer",
+        style={
+            "background": "transparent",
+            "border": "none",
+            "_hover": {
+                "background": "rgba(255,255,255,0.06)",
+            },
+        },
+    )
+
+
 def nav_rail() -> rx.Component:
     return rx.vstack(
         # ── Top group ──
@@ -22284,6 +22368,7 @@ def nav_rail() -> rx.Component:
         _nav_rail_btn("notebook", AppState.toggle_notes_panel),
         _nav_rail_btn("list_checks", rx.redirect("/tracker")),
         _nav_rail_btn("youtube", rx.redirect("/learn")),
+        _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon),
         rx.spacer(),
         # ── Bottom group ──
         _nav_rail_btn("settings", rx.redirect("/settings")),
@@ -32555,6 +32640,35 @@ def free_sidebar_content() -> rx.Component:
             },
         )
 
+    def _locked_nav_row(icon_tag: str, label: str, on_click=None) -> rx.Component:
+        return rx.button(
+            rx.hstack(
+                rx.icon(tag=icon_tag, size=15, color="rgba(255,255,255,0.44)", flex_shrink="0"),
+                rx.text(
+                    label,
+                    font_size="0.875rem",
+                    font_weight="400",
+                    color="rgba(255,255,255,0.54)",
+                    line_height="1",
+                ),
+                rx.spacer(),
+                rx.icon(tag="lock", size=12, color="rgba(255,255,255,0.34)", flex_shrink="0"),
+                spacing="2",
+                align="center",
+                width="100%",
+            ),
+            on_click=on_click,
+            variant="ghost",
+            width="100%",
+            justify="start",
+            height="40px",
+            padding_x="10px",
+            style={
+                **_btn_base,
+                "_hover": {"background": "rgba(255,255,255,0.05)"},
+            },
+        )
+
     def _session_row(s: dict) -> rx.Component:
         is_active = (AppState.is_home_scope_active) & (AppState.current_session_id == s["id"])
         return rx.cond(
@@ -32673,6 +32787,7 @@ def free_sidebar_content() -> rx.Component:
         _nav_row("notebook", "Notes", AppState.toggle_notes_panel),
         _nav_row("list_checks", "Tracker", rx.redirect("/tracker")),
         _nav_row("youtube", "Learn from video", rx.redirect("/learn")),
+        _locked_nav_row("video", "Generate teaching videos", AppState.show_video_generator_coming_soon),
 
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.07)", margin_y="4px"),
 
@@ -32934,6 +33049,7 @@ def free_page():
                                         "_hover": {"color": "rgba(255,255,255,0.9)", "background": "rgba(255,255,255,0.07)"},
                                     },
                                 ),
+                                _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon),
                                 spacing="1",
                                 align_items="center",
                             ),
