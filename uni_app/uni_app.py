@@ -5847,7 +5847,18 @@ class AppState(reflex_local_auth.LocalAuthState):
         if self.is_in_trial:
             return f"Trial ({self.trial_days_left}d left)"
         return "Free"
-    
+
+    @rx.var
+    def plan_label(self) -> str:
+        labels = {
+            PLAN_PRO: "Pro",
+            PLAN_MAX: "Max",
+            PLAN_ULTRA: "Ultra",
+        }
+        if self.has_premium_access:
+            return labels.get(self.effective_plan_tier, "Pro")
+        return "Free"
+
     @rx.var
     def semester_short_label(self) -> str:
         y = self.selected_year.replace("Year ", "").strip()
@@ -16870,6 +16881,55 @@ def upgrade_button() -> rx.Component:
     )
 
 
+def chat_upgrade_pill() -> rx.Component:
+    return rx.cond(
+        ~AppState.has_premium_access,
+        rx.button(
+            rx.hstack(
+                rx.icon(tag="sparkles", size=14, color="#052e16", flex_shrink="0"),
+                rx.text(
+                    "Upgrade to Premium",
+                    display=rx.breakpoints(initial="none", sm="inline"),
+                    white_space="nowrap",
+                ),
+                rx.text(
+                    "Upgrade",
+                    display=rx.breakpoints(initial="inline", sm="none"),
+                    white_space="nowrap",
+                ),
+                spacing="2",
+                align="center",
+            ),
+            on_click=AppState.open_pricing_modal,
+            height=rx.breakpoints(initial="34px", md="38px"),
+            padding=rx.breakpoints(initial="0 12px", md="0 15px"),
+            border_radius="999px",
+            position="absolute",
+            top=rx.breakpoints(initial="10px", md="14px"),
+            right=rx.breakpoints(initial="10px", md="18px"),
+            z_index="6",
+            custom_attrs={"aria-label": "Upgrade to Premium", "title": "Upgrade to Premium"},
+            style={
+                "background": "linear-gradient(135deg, #bbf7d0 0%, #4ade80 48%, #22c55e 100%)",
+                "border": "1px solid rgba(187,247,208,0.68)",
+                "color": "#052e16",
+                "font_weight": "850",
+                "font_size": "0.78rem",
+                "letter_spacing": "0",
+                "box_shadow": "0 12px 28px rgba(34,197,94,0.20), inset 0 1px 0 rgba(255,255,255,0.35)",
+                "cursor": "pointer",
+                "transition": "transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease",
+                "_hover": {
+                    "filter": "brightness(1.06)",
+                    "transform": "translateY(-1px)",
+                    "box_shadow": "0 16px 34px rgba(34,197,94,0.26), inset 0 1px 0 rgba(255,255,255,0.42)",
+                },
+            },
+        ),
+        rx.fragment(),
+    )
+
+
 # ═══════════════════════════════════════════════════════
 # INPUT BOX — thumbnail preview + drag-and-drop
 # ═══════════════════════════════════════════════════════
@@ -18247,6 +18307,7 @@ def active_chat_panel() -> rx.Component:
         rx.html(_CLAUDE_MD_CSS),
         rx.script(_CODE_ENHANCE_JS),
         rx.script(_CHAT_TEACHER_AVATAR_JS),
+        chat_upgrade_pill(),
         # Scrollable messages
         rx.box(
             rx.vstack(
@@ -21415,6 +21476,76 @@ def sidebar_plan_widget() -> rx.Component:
     )
 
 
+def sidebar_plan_badge() -> rx.Component:
+    return rx.box(
+        rx.text(
+            AppState.plan_label,
+            font_size="0.64rem",
+            font_weight="800",
+            letter_spacing="0.05em",
+            line_height="1",
+            text_transform="uppercase",
+            color=rx.cond(
+                AppState.has_ultra_access,
+                "#1c1201",
+                rx.cond(
+                    AppState.has_max_access,
+                    "#03121a",
+                    rx.cond(AppState.has_premium_access, "#052e16", "rgba(235,240,245,0.70)"),
+                ),
+            ),
+        ),
+        padding="5px 7px",
+        border_radius="999px",
+        background=rx.cond(
+            AppState.has_ultra_access,
+            "linear-gradient(135deg, rgba(251,191,36,0.98), rgba(245,158,11,0.92))",
+            rx.cond(
+                AppState.has_max_access,
+                "linear-gradient(135deg, rgba(125,211,252,0.95), rgba(56,189,248,0.82))",
+                rx.cond(
+                    AppState.has_premium_access,
+                    "linear-gradient(135deg, rgba(134,239,172,0.95), rgba(74,222,128,0.82))",
+                    "rgba(255,255,255,0.075)",
+                ),
+            ),
+        ),
+        border=rx.cond(
+            AppState.has_ultra_access,
+            "1px solid rgba(251,191,36,0.48)",
+            rx.cond(
+                AppState.has_max_access,
+                "1px solid rgba(125,211,252,0.40)",
+                rx.cond(
+                    AppState.has_premium_access,
+                    "1px solid rgba(134,239,172,0.42)",
+                    "1px solid rgba(255,255,255,0.10)",
+                ),
+            ),
+        ),
+        flex_shrink="0",
+    )
+
+
+def sidebar_brand_mark() -> rx.Component:
+    return rx.hstack(
+        rx.image(src="/a_logo.png", width="24px", height="24px", border_radius="6px", flex_shrink="0"),
+        rx.text(
+            "Alex",
+            font_size="1rem",
+            font_weight="700",
+            color="rgba(255,255,255,0.92)",
+            letter_spacing="0",
+            line_height="1",
+            white_space="nowrap",
+        ),
+        sidebar_plan_badge(),
+        spacing="2",
+        align="center",
+        min_width="0",
+    )
+
+
 def profile_menu_button() -> rx.Component:
     return rx.menu.root(
         rx.menu.trigger(
@@ -21447,7 +21578,7 @@ def profile_menu_button() -> rx.Component:
                         white_space="nowrap",
                     ),
                     rx.text(
-                        AppState.tier_label,
+                        AppState.plan_label,
                         color="rgba(255,255,255,0.38)",
                         font_size=rx.breakpoints(initial="0.75rem", md="0.65rem"),
                         font_weight="400",
@@ -22319,8 +22450,9 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
     if show_close_button:
         header_blocks.append(
             rx.hstack(
-                _sidebar_global_search_btn,
+                sidebar_brand_mark(),
                 rx.spacer(),
+                _sidebar_global_search_btn,
                 app_tooltip(
                     rx.icon_button(
                         rx.icon(tag="panel_left", size=18),
@@ -22354,8 +22486,9 @@ def workspace_sidebar_content(show_close_button: bool = False) -> rx.Component:
     else:
         header_blocks.append(
             rx.hstack(
-                _sidebar_global_search_btn,
+                sidebar_brand_mark(),
                 rx.spacer(),
+                _sidebar_global_search_btn,
                 width="100%",
                 align="center",
                 display=rx.breakpoints(initial="none", md="flex"),
@@ -34266,13 +34399,7 @@ def free_sidebar_content() -> rx.Component:
 
         # ── HEADER: logo + name + collapse ──
         rx.hstack(
-            rx.hstack(
-                rx.image(src="/a_logo.png", width="24px", height="24px", border_radius="6px", flex_shrink="0"),
-                rx.text("Alex", font_size="1rem", font_weight="700",
-                        color="rgba(255,255,255,0.92)", letter_spacing="-0.02em"),
-                spacing="2",
-                align="center",
-            ),
+            sidebar_brand_mark(),
             rx.spacer(),
             _icon_btn("panel_left", AppState.toggle_free_sidebar, "Collapse sidebar"),
             width="100%",
