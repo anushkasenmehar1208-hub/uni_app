@@ -3150,7 +3150,7 @@ DODO_PAYMENTS_ULTRA_PRODUCT_ID = os.getenv("DODO_PAYMENTS_ULTRA_PRODUCT_ID", "")
 DODO_PAYMENTS_WEBHOOK_SECRET = os.getenv("DODO_PAYMENTS_WEBHOOK_SECRET", "").strip()
 DODO_PAYMENTS_RETURN_URL = os.getenv(
     "DODO_PAYMENTS_RETURN_URL",
-    "https://alexstudies.com/dashboard",
+    "",
 ).strip()
 DODO_PAYMENTS_FAILURE_URL = os.getenv("DODO_PAYMENTS_FAILURE_URL", "").strip()
 GUMROAD_PING_SECRET = os.getenv("GUMROAD_PING_SECRET", "").strip()
@@ -6142,6 +6142,13 @@ class AppState(reflex_local_auth.LocalAuthState):
             base_origin = _normalized_origin(self._router_origin()) or _normalized_origin(APP_BASE_URL) or "https://alexstudies.com"
             return_url = (DODO_PAYMENTS_RETURN_URL or f"{base_origin}{APP_DASHBOARD_ROUTE}").strip()
             cancel_url = (DODO_PAYMENTS_FAILURE_URL or f"{base_origin}/pricing").strip()
+            if return_url.startswith("/"):
+                return_url = f"{base_origin}{return_url}"
+            if cancel_url.startswith("/"):
+                cancel_url = f"{base_origin}{cancel_url}"
+            cancel_path = (urlparse(cancel_url).path or "").rstrip("/") or "/"
+            if cancel_path in {APP_DASHBOARD_ROUTE, "/dashboard", "/free"} or cancel_path.startswith("/s/"):
+                cancel_url = f"{base_origin}/pricing"
             environment = _dodo_environment(
                 product_id,
                 DODO_PAYMENTS_API_URL,
@@ -7130,6 +7137,36 @@ class AppState(reflex_local_auth.LocalAuthState):
             return rx.call_script(
                 "setTimeout(function() { window.location.reload(); }, 4000);"
             )
+
+    @rx.event
+    def on_load_pricing(self):
+        uid = self._uid()
+        self._cached_uid = uid
+        if uid < 0:
+            self.post_login_redirect = "/pricing"
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        self._load_profile(uid)
+        self.show_pricing_modal = True
+
+    @rx.event
+    def on_load_payment_success(self):
+        uid = self._uid()
+        self._cached_uid = uid
+        if uid < 0:
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        self._load_profile(uid)
+        return _hard_navigate(self._authenticated_landing_route())
+
+    @rx.event
+    def on_load_payment_retry(self):
+        uid = self._uid()
+        self._cached_uid = uid
+        if uid < 0:
+            self.post_login_redirect = "/pricing"
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        self._load_profile(uid)
+        self.show_pricing_modal = True
+        return rx.redirect("/pricing")
 
     @rx.event
     def set_name(self, value: str):
@@ -19827,19 +19864,100 @@ def payment_dashboard_page():
     )
 
 
-@rx.page(route="/payment/success", title="Payment Successful", image=FAVICON_32)
+@rx.page(
+    route="/pricing",
+    title="Upgrade - Alex AI",
+    image=FAVICON_32,
+    on_load=AppState.on_load_pricing,
+)
+@require_app_login
+def pricing_page():
+    return rx.box(
+        rx.box(
+            position="absolute",
+            inset="0",
+            background=(
+                "radial-gradient(circle at 50% 22%, rgba(74,222,128,0.16), transparent 32%), "
+                "radial-gradient(circle at 86% 68%, rgba(125,211,252,0.10), transparent 34%)"
+            ),
+            pointer_events="none",
+        ),
+        rx.center(
+            rx.vstack(
+                rx.image(src="/a_logo.png", width="44px", height="44px", object_fit="contain", opacity="0.9"),
+                rx.heading("Complete your upgrade", size="7", color="white", text_align="center"),
+                rx.text(
+                    "Choose a plan to continue checkout. If a payment was cancelled or failed, no premium access changes are made until checkout succeeds.",
+                    color="rgba(226,232,240,0.62)",
+                    text_align="center",
+                    max_width="560px",
+                    line_height="1.65",
+                ),
+                rx.hstack(
+                    rx.button(
+                        "Open plans",
+                        on_click=AppState.open_pricing_modal,
+                        height="46px",
+                        padding="0 22px",
+                        border_radius="12px",
+                        style={
+                            "background": "linear-gradient(135deg,#16a34a,#4ade80)",
+                            "border": "none",
+                            "color": "#04120a",
+                            "font_weight": "850",
+                            "cursor": "pointer",
+                        },
+                    ),
+                    rx.button(
+                        "Back to Alex",
+                        on_click=rx.redirect(APP_DASHBOARD_ROUTE),
+                        height="46px",
+                        padding="0 20px",
+                        border_radius="12px",
+                        variant="outline",
+                        style={
+                            "border": "1px solid rgba(255,255,255,0.12)",
+                            "color": "rgba(255,255,255,0.78)",
+                            "background": "rgba(255,255,255,0.04)",
+                            "cursor": "pointer",
+                        },
+                    ),
+                    spacing="3",
+                    align="center",
+                    justify="center",
+                    flex_wrap="wrap",
+                ),
+                spacing="5",
+                align="center",
+                padding="28px",
+                position="relative",
+                z_index="1",
+            ),
+            min_height="100vh",
+        ),
+        pricing_modal(),
+        background="#050507",
+        color="white",
+        min_height="100vh",
+        width="100%",
+        position="relative",
+        overflow="hidden",
+    )
+
+
+@rx.page(route="/payment/success", title="Payment Successful", image=FAVICON_32, on_load=AppState.on_load_payment_success)
 def payment_success_page():
     return rx.box(
         rx.center(
             rx.vstack(
-                rx.text("✅", font_size="4rem"),
-                rx.heading("Payment Successful!", size="7", color="white"),
-                rx.text("Your premium plan is now active. Enjoy unlimited learning!", color="rgba(255,255,255,0.7)", text_align="center", max_width="400px"),
+                rx.icon(tag="circle_check", size=56, color="#86efac"),
+                rx.heading("Payment successful", size="7", color="white"),
+                rx.text("Taking you back to Alex...", color="rgba(255,255,255,0.7)", text_align="center", max_width="400px"),
                 rx.box(
-                    rx.text("⚡ Note: If your premium access isn't reflected yet, please wait a few seconds and refresh.", color="rgba(255,215,0,0.8)", font_size="0.82rem", text_align="center"),
+                    rx.text("If access takes a moment to appear, the payment webhook is still finishing in the background.", color="rgba(255,215,0,0.8)", font_size="0.82rem", text_align="center"),
                     background="rgba(255,215,0,0.08)", border="1px solid rgba(255,215,0,0.2)", border_radius="12px", padding="12px 20px", max_width="420px",
                 ),
-                rx.button("Go to Dashboard →", on_click=rx.redirect(APP_DASHBOARD_ROUTE), color_scheme="green", size="3",
+                rx.button("Go to home", on_click=rx.redirect(APP_DASHBOARD_ROUTE), color_scheme="green", size="3",
                     style={"background": "linear-gradient(90deg,#065f46,#10b981)", "border": "none", "color": "white", "font_weight": "700", "cursor": "pointer"}),
                 spacing="5", align="center",
             ),
@@ -19849,15 +19967,15 @@ def payment_success_page():
     )
 
 
-@rx.page(route="/payment/cancel", title="Payment Cancelled", image=FAVICON_32)
+@rx.page(route="/payment/cancel", title="Payment Cancelled", image=FAVICON_32, on_load=AppState.on_load_payment_retry)
 def payment_cancel_page():
     return rx.box(
         rx.center(
             rx.vstack(
-                rx.text("❌", font_size="4rem"),
-                rx.heading("Payment Cancelled", size="7", color="white"),
-                rx.text("No charges were made. You can try again anytime.", color="rgba(255,255,255,0.7)", text_align="center"),
-                rx.button("Back to Dashboard", on_click=rx.redirect(APP_DASHBOARD_ROUTE), variant="outline", color_scheme="green", size="3"),
+                rx.icon(tag="refresh_cw", size=52, color="#fbbf24"),
+                rx.heading("Checkout not completed", size="7", color="white"),
+                rx.text("Taking you back to the plan page so you can try again.", color="rgba(255,255,255,0.7)", text_align="center"),
+                rx.button("Choose a plan again", on_click=rx.redirect("/pricing"), variant="outline", color_scheme="green", size="3"),
                 spacing="5", align="center",
             ),
             height="100vh",
@@ -31087,7 +31205,7 @@ def _video_page_content_legacy_DISABLED() -> rx.Component:
                 VideoState.video_status == "done",
                 rx.vstack(
                     rx.hstack(
-                        rx.icon(tag="check_circle", size=20, color="rgba(52,211,153,0.95)"),
+                        rx.icon(tag="circle_check", size=20, color="rgba(52,211,153,0.95)"),
                         rx.text(
                             "Your video is ready",
                             color="rgba(240,244,248,0.95)",
