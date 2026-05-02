@@ -3145,6 +3145,8 @@ DODO_PAYMENTS_TEST_API_URL = "https://test.dodopayments.com/checkouts"
 DODO_PAYMENTS_API_KEY   = os.getenv("DODO_PAYMENTS_API_KEY", "").strip()
 DODO_PAYMENTS_KNOWN_TEST_PRODUCT_ID = "pdt_0NbPrfFmmyxFqzaTmWGQX"
 DODO_PAYMENTS_PRODUCT_ID = os.getenv("DODO_PAYMENTS_PRODUCT_ID", "").strip()
+DODO_PAYMENTS_MAX_PRODUCT_ID = os.getenv("DODO_PAYMENTS_MAX_PRODUCT_ID", "").strip()
+DODO_PAYMENTS_ULTRA_PRODUCT_ID = os.getenv("DODO_PAYMENTS_ULTRA_PRODUCT_ID", "").strip()
 DODO_PAYMENTS_WEBHOOK_SECRET = os.getenv("DODO_PAYMENTS_WEBHOOK_SECRET", "").strip()
 DODO_PAYMENTS_RETURN_URL = os.getenv(
     "DODO_PAYMENTS_RETURN_URL",
@@ -3202,14 +3204,143 @@ _CSRF_COOKIE_SECURE = (
 MEDIA_URL_MAX_AGE_SECONDS = max(300, int(os.getenv("MEDIA_URL_MAX_AGE_SECONDS", str(60 * 60 * 24))))
 _chat_media_serializer = URLSafeTimedSerializer(SESSION_SECRET, salt="chat-media")
 
-PLANS = {
-    1: {
-        "name":   "Alex — Premium",
-        "amount": 3.17,
-        "label":  " Premium",
-        "model":  OPENROUTER_TEACHER_MODEL,
+PLAN_FREE = "free"
+PLAN_PRO = "pro"
+PLAN_MAX = "max"
+PLAN_ULTRA = "ultra"
+PAID_PLAN_KEYS = (PLAN_PRO, PLAN_MAX, PLAN_ULTRA)
+PLAN_ORDER = {PLAN_FREE: 0, PLAN_PRO: 1, PLAN_MAX: 2, PLAN_ULTRA: 3}
+
+PLAN_PRODUCT_IDS = {
+    PLAN_PRO: DODO_PAYMENTS_PRODUCT_ID,
+    PLAN_MAX: DODO_PAYMENTS_MAX_PRODUCT_ID,
+    PLAN_ULTRA: DODO_PAYMENTS_ULTRA_PRODUCT_ID,
+}
+
+PLAN_DETAILS = {
+    PLAN_FREE: {"name": "Free", "price": 0, "reset_hours": 24},
+    PLAN_PRO: {"name": "Pro", "price": 3.17, "reset_hours": 24},
+    PLAN_MAX: {"name": "Max", "price": 25, "reset_hours": 24},
+    PLAN_ULTRA: {"name": "Ultra", "price": 100, "reset_hours": 5},
+}
+
+MANUAL_MODEL_SPECS: list[dict[str, str]] = [
+    {
+        "key": "teacher",
+        "label": "Gemini Flash",
+        "role": "Fast tutor",
+        "model": OPENROUTER_TEACHER_MODEL,
+        "mode": "core",
+    },
+    {
+        "key": "reasoning",
+        "label": "DeepSeek R1",
+        "role": "Reasoning",
+        "model": OPENROUTER_REASONING_MODEL,
+        "mode": "r1",
+    },
+    {
+        "key": "premium",
+        "label": "Claude Opus",
+        "role": "Premium depth",
+        "model": OPENROUTER_PREMIUM_MODEL,
+        "mode": "core",
+    },
+    {
+        "key": "vision",
+        "label": "GPT Vision",
+        "role": "Image help",
+        "model": OPENROUTER_VISION_MODEL,
+        "mode": "core",
+    },
+    {
+        "key": "spec",
+        "label": "DeepSeek V3",
+        "role": "Balanced chat",
+        "model": OPENROUTER_SPEC_MODEL,
+        "mode": "core",
+    },
+]
+MANUAL_MODEL_SPEC_BY_KEY = {spec["key"]: spec for spec in MANUAL_MODEL_SPECS}
+MANUAL_MODEL_DEFAULT_KEY = "teacher"
+
+# User-facing model credits. A long message consumes a few credits; normal turns use one.
+PLAN_MODEL_CREDIT_LIMITS = {
+    PLAN_MAX: {
+        "teacher": 180,
+        "reasoning": 90,
+        "premium": 45,
+        "vision": 40,
+        "spec": 110,
+    },
+    PLAN_ULTRA: {
+        "teacher": 1200,
+        "reasoning": 620,
+        "premium": 280,
+        "vision": 240,
+        "spec": 760,
     },
 }
+
+PLAN_VIDEO_GENERATION_LIMITS = {
+    PLAN_FREE: 0,
+    PLAN_PRO: 4,
+    PLAN_MAX: 20,
+    PLAN_ULTRA: 100,
+}
+
+PLAN_VOICE_DAILY_LIMIT_SEC = {
+    PLAN_FREE: 12 * 60,
+    PLAN_PRO: 45 * 60,
+    PLAN_MAX: 2 * 60 * 60,
+    PLAN_ULTRA: 8 * 60 * 60,
+}
+
+
+def _normalize_plan_tier(value: str) -> str:
+    key = (value or "").strip().lower()
+    aliases = {
+        "premium": PLAN_PRO,
+        "premium_1": PLAN_PRO,
+        "premium1": PLAN_PRO,
+        "starter": PLAN_FREE,
+        "plus": PLAN_PRO,
+        "pro": PLAN_PRO,
+        "max": PLAN_MAX,
+        "premium_2": PLAN_MAX,
+        "premium2": PLAN_MAX,
+        "ultra": PLAN_ULTRA,
+        "enterprise": PLAN_ULTRA,
+    }
+    return aliases.get(key, key if key in PLAN_ORDER else PLAN_FREE)
+
+
+def _plan_at_least(plan_tier: str, required_tier: str) -> bool:
+    return PLAN_ORDER.get(_normalize_plan_tier(plan_tier), 0) >= PLAN_ORDER.get(required_tier, 0)
+
+
+def _manual_model_key(value: str) -> str:
+    key = (value or "").strip().lower()
+    return key if key in MANUAL_MODEL_SPEC_BY_KEY else MANUAL_MODEL_DEFAULT_KEY
+
+
+def _manual_model_label(value: str) -> str:
+    return MANUAL_MODEL_SPEC_BY_KEY.get(_manual_model_key(value), MANUAL_MODEL_SPECS[0])["label"]
+
+
+def _manual_model_route(value: str) -> tuple[str, str, str]:
+    spec = MANUAL_MODEL_SPEC_BY_KEY.get(_manual_model_key(value), MANUAL_MODEL_SPECS[0])
+    return spec["model"], spec["mode"], spec["key"]
+
+
+def _plan_model_reset_hours(plan_tier: str) -> int:
+    plan = _normalize_plan_tier(plan_tier)
+    return int(PLAN_DETAILS.get(plan, PLAN_DETAILS[PLAN_FREE]).get("reset_hours", 24))
+
+
+def _plan_voice_limit_seconds(plan_tier: str) -> int:
+    plan = _normalize_plan_tier(plan_tier)
+    return int(PLAN_VOICE_DAILY_LIMIT_SEC.get(plan, PLAN_VOICE_DAILY_LIMIT_SEC[PLAN_FREE]))
 
 
 def _request_is_https(request: Request) -> bool:
@@ -4831,6 +4962,8 @@ class UserProfile(rx.Model, table=True):  # type: ignore
     is_pro: bool = Field(default=False, nullable=False)
     is_premium_1: bool = Field(default=False, nullable=False)
     is_premium_2: bool = Field(default=False, nullable=False)
+    plan_tier: str = Field(default=PLAN_FREE, nullable=False, sa_type=String(24))  # pyright: ignore[reportArgumentType]
+    model_usage_json: str = Field(default="{}", nullable=False)
     premium_activated_at: Optional[datetime] = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True), nullable=True),
@@ -4931,10 +5064,7 @@ async def gumroad_ping(request: Request) -> PlainTextResponse:
                 print(f"[Gumroad] ❌ Unknown unique_id: {unique_id} (email={email})")
                 return PlainTextResponse("user not found", status_code=404)
 
-            profile.is_premium_1 = True
-            profile.is_premium_2 = False
-            profile.is_pro = True
-            profile.premium_activated_at = datetime.now(timezone.utc)
+            _apply_profile_plan(profile, PLAN_PRO, True)
             session.add(profile)
             session.commit()
             print(f"[Gumroad] ✅ Activated Premium (30 days) for user_id={profile.user_id} unique_id={unique_id}")
@@ -4948,6 +5078,45 @@ async def gumroad_ping(request: Request) -> PlainTextResponse:
 
 def _normalize_email(email: str) -> str:
     return (email or "").strip().lower()
+
+
+def _profile_paid_plan_active(profile: UserProfile) -> bool:
+    activated = getattr(profile, "premium_activated_at", None)
+    if activated is None:
+        return bool(getattr(profile, "is_pro", False) or getattr(profile, "is_premium_1", False) or getattr(profile, "is_premium_2", False))
+    try:
+        if activated.tzinfo is None:
+            activated = activated.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - activated).days < 30
+    except Exception:
+        return False
+
+
+def _profile_effective_plan_tier(profile: UserProfile) -> str:
+    explicit_plan = _normalize_plan_tier(str(getattr(profile, "plan_tier", "") or ""))
+    if explicit_plan != PLAN_FREE and _profile_paid_plan_active(profile):
+        return explicit_plan
+    if getattr(profile, "is_premium_2", False) and _profile_paid_plan_active(profile):
+        return PLAN_MAX
+    if (getattr(profile, "is_premium_1", False) or getattr(profile, "is_pro", False)) and _profile_paid_plan_active(profile):
+        return PLAN_PRO
+    return PLAN_FREE
+
+
+def _apply_profile_plan(profile: UserProfile, plan_tier: str, is_active: bool) -> None:
+    plan = _normalize_plan_tier(plan_tier)
+    if is_active and plan in PAID_PLAN_KEYS:
+        profile.plan_tier = plan
+        profile.is_pro = True
+        profile.is_premium_1 = True
+        profile.is_premium_2 = _plan_at_least(plan, PLAN_MAX)
+        profile.premium_activated_at = datetime.now(timezone.utc)
+        return
+    profile.plan_tier = PLAN_FREE
+    profile.is_pro = False
+    profile.is_premium_1 = False
+    profile.is_premium_2 = False
+    profile.premium_activated_at = None
 
 
 def _store_user_profile_email(uid: int, email: str) -> None:
@@ -4967,7 +5136,7 @@ def _store_user_profile_email(uid: int, email: str) -> None:
             session.commit()
 
 
-def _set_pro_status_by_email(email: str, is_pro: bool) -> bool:
+def _set_plan_status_by_email(email: str, plan_tier: str, is_active: bool) -> bool:
     normalized_email = _normalize_email(email)
     if not normalized_email:
         return False
@@ -4990,16 +5159,13 @@ def _set_pro_status_by_email(email: str, is_pro: bool) -> bool:
             return False
 
         profile.email = normalized_email
-        profile.is_pro = is_pro
-        profile.is_premium_1 = is_pro
-        profile.is_premium_2 = False
-        profile.premium_activated_at = datetime.now(timezone.utc) if is_pro else None
+        _apply_profile_plan(profile, plan_tier, is_active)
         session.add(profile)
         session.commit()
         return True
 
 
-def _set_pro_status_by_unique_id(unique_id: str, is_pro: bool) -> bool:
+def _set_plan_status_by_unique_id(unique_id: str, plan_tier: str, is_active: bool) -> bool:
     normalized_unique_id = (unique_id or "").strip()
     if not normalized_unique_id:
         return False
@@ -5011,13 +5177,18 @@ def _set_pro_status_by_unique_id(unique_id: str, is_pro: bool) -> bool:
         if profile is None:
             return False
 
-        profile.is_pro = is_pro
-        profile.is_premium_1 = is_pro
-        profile.is_premium_2 = False
-        profile.premium_activated_at = datetime.now(timezone.utc) if is_pro else None
+        _apply_profile_plan(profile, plan_tier, is_active)
         session.add(profile)
         session.commit()
         return True
+
+
+def _set_pro_status_by_email(email: str, is_pro: bool) -> bool:
+    return _set_plan_status_by_email(email, PLAN_PRO, is_pro)
+
+
+def _set_pro_status_by_unique_id(unique_id: str, is_pro: bool) -> bool:
+    return _set_plan_status_by_unique_id(unique_id, PLAN_PRO, is_pro)
 
 
 async def dodo_webhook(request: Request) -> PlainTextResponse:
@@ -5049,15 +5220,39 @@ async def dodo_webhook(request: Request) -> PlainTextResponse:
     customer = getattr(event_data, "customer", None)
     email = _normalize_email(str(getattr(customer, "email", "") or ""))
     metadata = getattr(event_data, "metadata", {}) or {}
+    if not isinstance(metadata, dict):
+        metadata = {}
     unique_id = str(metadata.get("unique_id", "") or "").strip()
+    product_id = str(
+        getattr(event_data, "product_id", "")
+        or getattr(event_data, "product", "")
+        or metadata.get("product_id", "")
+        or ""
+    ).strip()
+    plan_tier = _normalize_plan_tier(str(metadata.get("plan_tier", "") or ""))
+    if plan_tier == PLAN_FREE:
+        plan_tier = next(
+            (
+                candidate
+                for candidate, configured_product_id in PLAN_PRODUCT_IDS.items()
+                if configured_product_id and configured_product_id == product_id
+            ),
+            PLAN_PRO,
+        )
 
     try:
         if event_type in {"payment.succeeded", "subscription.renewed"}:
-            if not (_set_pro_status_by_email(email, True) or _set_pro_status_by_unique_id(unique_id, True)):
-                print(f"[Dodo Payments] no matching user for success event unique_id={unique_id} email={email}")
+            if not (
+                _set_plan_status_by_email(email, plan_tier, True)
+                or _set_plan_status_by_unique_id(unique_id, plan_tier, True)
+            ):
+                print(f"[Dodo Payments] no matching user for success event unique_id={unique_id} email={email} plan={plan_tier}")
         elif event_type in {"subscription.cancelled", "subscription.failed"}:
-            if not (_set_pro_status_by_email(email, False) or _set_pro_status_by_unique_id(unique_id, False)):
-                print(f"[Dodo Payments] no matching user for downgrade event type={event_type} unique_id={unique_id} email={email}")
+            if not (
+                _set_plan_status_by_email(email, plan_tier, False)
+                or _set_plan_status_by_unique_id(unique_id, plan_tier, False)
+            ):
+                print(f"[Dodo Payments] no matching user for downgrade event type={event_type} unique_id={unique_id} email={email} plan={plan_tier}")
         else:
             print(f"[Dodo Payments] ignored event type={event_type}")
     except Exception as e:
@@ -5082,6 +5277,8 @@ async def health_check(request):
 class AppState(reflex_local_auth.LocalAuthState):
     app_auth_token: str = rx.LocalStorage(name=AUTH_TOKEN_LOCAL_STORAGE_KEY)
     guest_token: str = rx.LocalStorage(name=GUEST_TOKEN_LOCAL_STORAGE_KEY)
+    model_mode: str = rx.LocalStorage("auto", name="alex_model_mode")
+    manual_model_key: str = rx.LocalStorage(MANUAL_MODEL_DEFAULT_KEY, name="alex_manual_model_key")
     auth_csrf_token: str = rx.Cookie(
         "",
         name="alex_auth_csrf",
@@ -5236,7 +5433,9 @@ class AppState(reflex_local_auth.LocalAuthState):
     is_pro: bool = False
     is_premium_1: bool = False
     is_premium_2: bool = False
+    plan_tier: str = PLAN_FREE
     premium_activated_at: str = ""
+    model_credit_status: str = ""
     daily_message_count: int = 0
     last_message_date: str = ""
 
@@ -5367,11 +5566,22 @@ class AppState(reflex_local_auth.LocalAuthState):
             return 999
 
     @rx.var
+    def effective_plan_tier(self) -> str:
+        explicit_plan = _normalize_plan_tier(self.plan_tier)
+        if explicit_plan != PLAN_FREE:
+            return explicit_plan
+        if self.is_premium_2:
+            return PLAN_MAX
+        if self.is_premium_1 or self.is_pro:
+            return PLAN_PRO
+        return PLAN_FREE
+
+    @rx.var
     def has_premium_access(self) -> bool:
-        if not (self.is_premium_1 or self.is_premium_2):
+        if self.effective_plan_tier == PLAN_FREE:
             return False
         if not self.premium_activated_at:
-            return self.is_premium_1 or self.is_premium_2
+            return True
         try:
             activated = datetime.fromisoformat(self.premium_activated_at)
             now = datetime.now(timezone.utc)
@@ -5380,6 +5590,18 @@ class AppState(reflex_local_auth.LocalAuthState):
             return (now - activated).days < 30
         except Exception:
             return False
+
+    @rx.var
+    def has_max_access(self) -> bool:
+        return self.has_premium_access and _plan_at_least(self.effective_plan_tier, PLAN_MAX)
+
+    @rx.var
+    def has_ultra_access(self) -> bool:
+        return self.has_premium_access and self.effective_plan_tier == PLAN_ULTRA
+
+    @rx.var
+    def can_use_manual_model_mode(self) -> bool:
+        return self.has_max_access
 
     @rx.var
     def premium_days_left(self) -> int:
@@ -5543,6 +5765,37 @@ class AppState(reflex_local_auth.LocalAuthState):
         return "Auto"
 
     @rx.var
+    def selected_manual_model_label(self) -> str:
+        return _manual_model_label(self.manual_model_key)
+
+    @rx.var
+    def model_mode_label(self) -> str:
+        if self.model_mode == "manual" and self.can_use_manual_model_mode:
+            return "Manual"
+        return "Auto"
+
+    @rx.var
+    def model_mode_detail_label(self) -> str:
+        if self.model_mode == "manual" and self.can_use_manual_model_mode:
+            return self.selected_manual_model_label
+        return "Auto"
+
+    @rx.var
+    def manual_model_reset_label(self) -> str:
+        if not self.can_use_manual_model_mode:
+            return "Max unlocks 5 manual models"
+        reset_hours = _plan_model_reset_hours(self.effective_plan_tier)
+        return f"Credits reset every {reset_hours}h"
+
+    @rx.var
+    def manual_model_status_label(self) -> str:
+        if self.model_credit_status:
+            return self.model_credit_status
+        if not self.can_use_manual_model_mode:
+            return "Upgrade to Max or Ultra to switch models manually."
+        return self.manual_model_reset_label
+
+    @rx.var
     def auto_model_list(self) -> list[str]:
         models = [
             OPENROUTER_TEACHER_MODEL,
@@ -5566,12 +5819,29 @@ class AppState(reflex_local_auth.LocalAuthState):
         return cleaned
 
     @rx.var
+    def manual_model_menu_options(self) -> list[dict[str, str]]:
+        return [
+            {
+                "key": spec["key"],
+                "label": spec["label"],
+                "role": spec["role"],
+                "selected": "true" if spec["key"] == _manual_model_key(self.manual_model_key) else "false",
+            }
+            for spec in MANUAL_MODEL_SPECS
+        ]
+
+    @rx.var
     def tier_label(self) -> str:
         if self.has_premium_access:
-            return "⚡ Premium"
+            labels = {
+                PLAN_PRO: "Pro",
+                PLAN_MAX: "Max",
+                PLAN_ULTRA: "Ultra",
+            }
+            return labels.get(self.effective_plan_tier, "Pro")
         if self.is_in_trial:
             return f"Trial ({self.trial_days_left}d left)"
-        return "🔒 Free"
+        return "Free"
     
     @rx.var
     def semester_short_label(self) -> str:
@@ -5846,13 +6116,19 @@ class AppState(reflex_local_auth.LocalAuthState):
         uid_val = self.user_unique_id or ""
         return rx.call_script(f"navigator.clipboard.writeText('{uid_val}')")
 
-    @rx.event
-    async def buy_pro_plan(self):
+    async def _buy_plan_checkout(self, plan_tier: str):
+        plan = _normalize_plan_tier(plan_tier)
+        if plan not in PAID_PLAN_KEYS:
+            yield rx.window_alert("This plan is not available for checkout.")
+            return
         try:
             if not DODO_PAYMENTS_API_KEY:
                 raise RuntimeError("Missing Dodo API key. Set DODO_PAYMENTS_API_KEY in the environment.")
-            if not DODO_PAYMENTS_PRODUCT_ID:
-                raise RuntimeError("Missing Dodo live product ID. Set DODO_PAYMENTS_PRODUCT_ID from the live dashboard.")
+            product_id = (PLAN_PRODUCT_IDS.get(plan, "") or "").strip()
+            plan_name = str(PLAN_DETAILS.get(plan, {}).get("name", plan.title()))
+            if not product_id:
+                yield rx.window_alert(f"{plan_name} checkout is being connected. Please contact support for early access.")
+                return
             uid = self._uid()
             if uid >= 0 and not (self.user_unique_id or "").strip():
                 self._cached_uid = uid
@@ -5862,7 +6138,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             return_url = (DODO_PAYMENTS_RETURN_URL or f"{base_origin}{APP_DASHBOARD_ROUTE}").strip()
             cancel_url = (DODO_PAYMENTS_FAILURE_URL or f"{base_origin}/pricing").strip()
             environment = _dodo_environment(
-                DODO_PAYMENTS_PRODUCT_ID,
+                product_id,
                 DODO_PAYMENTS_API_URL,
                 DODO_PAYMENTS_API_KEY,
             )
@@ -5887,12 +6163,14 @@ class AppState(reflex_local_auth.LocalAuthState):
                 create_kwargs: dict[str, Any] = {
                     "product_cart": [
                         {
-                            "product_id": DODO_PAYMENTS_PRODUCT_ID,
+                            "product_id": product_id,
                             "quantity": 1,
                         }
                     ],
                     "metadata": {
                         "unique_id": self.user_unique_id or "",
+                        "plan_tier": plan,
+                        "product_id": product_id,
                         "checkout_nonce": secrets.token_urlsafe(12),
                         "checkout_requested_at": datetime.now(timezone.utc).isoformat(),
                     },
@@ -5914,6 +6192,48 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"[Dodo Payments] checkout error: {e}")
             yield rx.window_alert("Unable to start checkout right now. Please try again.")
+
+    @rx.event
+    async def buy_pro_plan(self):
+        async for event in self._buy_plan_checkout(PLAN_PRO):
+            yield event
+
+    @rx.event
+    async def buy_max_plan(self):
+        async for event in self._buy_plan_checkout(PLAN_MAX):
+            yield event
+
+    @rx.event
+    async def buy_ultra_plan(self):
+        async for event in self._buy_plan_checkout(PLAN_ULTRA):
+            yield event
+
+    @rx.event
+    def set_model_mode(self, mode: str):
+        normalized = (mode or "auto").strip().lower()
+        if normalized != "manual":
+            self.model_mode = "auto"
+            self.model_credit_status = ""
+            return
+        if not self.can_use_manual_model_mode:
+            self.model_mode = "auto"
+            self.model_credit_status = "Manual model switching is available on Max and Ultra."
+            self.show_pricing_modal = True
+            return
+        self.model_mode = "manual"
+        self.manual_model_key = _manual_model_key(self.manual_model_key)
+        self.model_credit_status = f"Manual mode active: {_manual_model_label(self.manual_model_key)}"
+
+    @rx.event
+    def set_manual_model_key(self, key: str):
+        if not self.can_use_manual_model_mode:
+            self.model_mode = "auto"
+            self.model_credit_status = "Manual model switching is available on Max and Ultra."
+            self.show_pricing_modal = True
+            return
+        self.manual_model_key = _manual_model_key(key)
+        self.model_mode = "manual"
+        self.model_credit_status = f"Manual mode active: {_manual_model_label(self.manual_model_key)}"
 
     def set_settings_tab(self, tab: str):
         self.settings_tab = tab
@@ -6042,9 +6362,14 @@ class AppState(reflex_local_auth.LocalAuthState):
                 session.commit()
                 session.refresh(profile)
 
-            resolved_is_pro = bool(profile.is_pro or profile.is_premium_1 or profile.is_premium_2)
-            if bool(profile.is_pro) != resolved_is_pro:
+            resolved_plan_tier = _profile_effective_plan_tier(profile)
+            resolved_is_pro = resolved_plan_tier != PLAN_FREE
+            if (
+                bool(profile.is_pro) != resolved_is_pro
+                or _normalize_plan_tier(getattr(profile, "plan_tier", "")) != resolved_plan_tier
+            ):
                 profile.is_pro = resolved_is_pro
+                profile.plan_tier = resolved_plan_tier
                 session.add(profile)
                 session.commit()
 
@@ -6052,6 +6377,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.is_pro               = resolved_is_pro
             self.is_premium_1         = bool(profile.is_premium_1)
             self.is_premium_2         = bool(profile.is_premium_2)
+            self.plan_tier            = resolved_plan_tier
             self.premium_activated_at = profile.premium_activated_at.isoformat() if profile.premium_activated_at else ""
             self.daily_message_count  = profile.daily_message_count or 0
             self.last_message_date    = (
@@ -11199,6 +11525,107 @@ Quality rules:
         base = self._alex_system_prompt(student_name)
         return f"{ctx}\n\n{teaching}\n\n{unified}\n\n─── Alex AI platform rules (follow strictly) ───\n{base}"
 
+    def _manual_model_credit_cost(self, user_msg: str) -> int:
+        estimated_tokens = alex_routing.estimate_tokens(user_msg or "")
+        return max(1, min(12, (estimated_tokens + 899) // 900))
+
+    def _consume_manual_model_credit(self, user_id: int, model_key: str, user_msg: str) -> tuple[bool, str]:
+        if user_id < 0:
+            return False, "Sign in to use manual model switching."
+        key = _manual_model_key(model_key)
+        now = datetime.now(timezone.utc)
+        try:
+            with rx.session() as session:
+                profile = session.exec(
+                    select(UserProfile).where(UserProfile.user_id == user_id)
+                ).one_or_none()
+                if profile is None:
+                    return False, "Manual model switching is available on Max and Ultra."
+
+                plan_tier = _profile_effective_plan_tier(profile)
+                if not _plan_at_least(plan_tier, PLAN_MAX):
+                    return False, "Manual model switching is available on Max and Ultra."
+
+                reset_hours = _plan_model_reset_hours(plan_tier)
+                limit = int(PLAN_MODEL_CREDIT_LIMITS.get(plan_tier, {}).get(key, 0))
+                if limit <= 0:
+                    return False, "This model is not available on your current plan."
+
+                try:
+                    usage = json.loads(getattr(profile, "model_usage_json", "") or "{}")
+                    if not isinstance(usage, dict):
+                        usage = {}
+                except Exception:
+                    usage = {}
+
+                slot = usage.get(key) if isinstance(usage.get(key), dict) else {}
+                started_raw = str(slot.get("window_started", "") or "")
+                try:
+                    started = datetime.fromisoformat(started_raw)
+                    if started.tzinfo is None:
+                        started = started.replace(tzinfo=timezone.utc)
+                except Exception:
+                    started = now
+                    slot = {"window_started": started.isoformat(), "used": 0}
+
+                if now - started >= timedelta(hours=reset_hours):
+                    started = now
+                    slot = {"window_started": started.isoformat(), "used": 0}
+
+                used = max(0, int(slot.get("used", 0) or 0))
+                cost = self._manual_model_credit_cost(user_msg)
+                if used + cost > limit:
+                    reset_at = started + timedelta(hours=reset_hours)
+                    remaining_seconds = max(0, int((reset_at - now).total_seconds()))
+                    remaining_hours = max(1, (remaining_seconds + 3599) // 3600)
+                    slot["used"] = used
+                    slot["window_started"] = started.isoformat()
+                    usage[key] = slot
+                    profile.model_usage_json = json.dumps(usage, ensure_ascii=True)
+                    session.add(profile)
+                    session.commit()
+                    return (
+                        False,
+                        f"{_manual_model_label(key)} credits reset in {remaining_hours}h. Auto mode is active.",
+                    )
+
+                slot["used"] = used + cost
+                slot["window_started"] = started.isoformat()
+                usage[key] = slot
+                profile.model_usage_json = json.dumps(usage, ensure_ascii=True)
+                session.add(profile)
+                session.commit()
+                credits_left = max(0, limit - int(slot["used"]))
+                return True, f"{_manual_model_label(key)}: {credits_left} credits left"
+        except Exception as e:
+            print(f"ERROR manual_model_credit: {e}")
+            return False, "Manual model credits are unavailable. Auto mode is active."
+
+    def _manual_model_override_for_chat(self, user_msg: str, user_id: int) -> tuple[str, str, dict[str, Any]] | None:
+        if (self.model_mode or "auto").strip().lower() != "manual":
+            return None
+        if not self.can_use_manual_model_mode:
+            self.model_mode = "auto"
+            self.model_credit_status = "Manual model switching is available on Max and Ultra."
+            return None
+        key = _manual_model_key(self.manual_model_key)
+        allowed, status = self._consume_manual_model_credit(user_id, key, user_msg)
+        self.model_credit_status = status
+        if not allowed:
+            self.model_mode = "auto"
+            return None
+        model_id, teaching_mode, normalized_key = _manual_model_route(key)
+        route = dict(alex_routing.DEFAULT_ROUTE)
+        route.update(
+            {
+                "recommended_model": "manual",
+                "manual_model_key": normalized_key,
+                "manual_model_label": _manual_model_label(normalized_key),
+                "confidence": 1.0,
+            }
+        )
+        return model_id, teaching_mode, route
+
     def _alex_apply_route_to_chat(self, route: dict[str, Any], user_id: int) -> tuple[str, str]:
         """Map router output + budgets to (openrouter_model_id, teaching_mode)."""
         budget_ok = alex_routing.can_use_premium(user_id)
@@ -11235,6 +11662,9 @@ Quality rules:
             r = dict(alex_routing.DEFAULT_ROUTE)
             m, mode = self._alex_apply_route_to_chat(r, user_id)
             return m, mode, r
+        manual_override = self._manual_model_override_for_chat(user_msg, user_id)
+        if manual_override is not None:
+            return manual_override
         try:
             route = await _openrouter_router_classify_structured(user_msg, user_id)
         except Exception:
@@ -11478,6 +11908,8 @@ Quality rules:
         if ALEX_VOICE_COMMERCIAL_GATES:
             is_premium = self.has_premium_access
             is_home = (self.active_scope or "home") == "home"
+            voice_plan_tier = self.effective_plan_tier if is_premium else PLAN_FREE
+            voice_limit_sec = _plan_voice_limit_seconds(voice_plan_tier)
 
             if is_home and not is_premium:
                 voice_allowed = False
@@ -11485,7 +11917,7 @@ Quality rules:
                 block_reason = "home_blocked"
             else:
                 used_sec = _get_voice_seconds_today(self._uid())
-                remaining_sec = max(0, VOICE_FREE_LIMIT_SEC - used_sec)
+                remaining_sec = max(0, voice_limit_sec - used_sec)
                 if remaining_sec <= 0:
                     voice_allowed = False
                     block_reason = "limit_reached"
@@ -13981,6 +14413,7 @@ Your response style rules:
                 chat_model, or_teaching_mode, route = await self._alex_resolve_chat_model(user_msg, uid)
                 use_answer_cache = (
                     not visual_only_request
+                    and not route.get("manual_model_key")
                     and not reply_after_indepth_request
                     and not rich_teaching_request
                     and not has_document_attached
@@ -14093,14 +14526,15 @@ Your response style rules:
                     partial_final_from_sanitize = ""
                     buf = ""
                     last_scroll = 0
-                    chat_model, or_teaching_mode, _ = alex_routing.enforce_premium_hard_gate(
-                        chat_model,
-                        or_teaching_mode,
-                        user_id=uid,
-                        teacher_m=OPENROUTER_TEACHER_MODEL,
-                        reasoning_m=OPENROUTER_REASONING_MODEL,
-                        premium_m=OPENROUTER_PREMIUM_MODEL,
-                    )
+                    if not route.get("manual_model_key"):
+                        chat_model, or_teaching_mode, _ = alex_routing.enforce_premium_hard_gate(
+                            chat_model,
+                            or_teaching_mode,
+                            user_id=uid,
+                            teacher_m=OPENROUTER_TEACHER_MODEL,
+                            reasoning_m=OPENROUTER_REASONING_MODEL,
+                            premium_m=OPENROUTER_PREMIUM_MODEL,
+                        )
                     system_chat = self._alex_openrouter_system_bundle(student_name, or_teaching_mode)
                     chat_messages = [
                         {"role": "system", "content": system_chat},
@@ -14156,7 +14590,7 @@ Your response style rules:
                         visual_only=visual_only_request,
                         is_indepth=reply_after_indepth_request,
                     )
-                    if needs_esc:
+                    if needs_esc and not route.get("manual_model_key"):
                         nxt = alex_routing.next_escalation(
                             chat_model,
                             teacher_m=OPENROUTER_TEACHER_MODEL,
@@ -14204,14 +14638,16 @@ Your response style rules:
                             }
                         )
                         break
-                    nxt = alex_routing.next_escalation(
-                        chat_model,
-                        teacher_m=OPENROUTER_TEACHER_MODEL,
-                        reasoning_m=OPENROUTER_REASONING_MODEL,
-                        premium_m=OPENROUTER_PREMIUM_MODEL,
-                        route=route,
-                        premium_budget_allows=alex_routing.can_use_premium(uid),
-                    )
+                    nxt = None
+                    if not route.get("manual_model_key"):
+                        nxt = alex_routing.next_escalation(
+                            chat_model,
+                            teacher_m=OPENROUTER_TEACHER_MODEL,
+                            reasoning_m=OPENROUTER_REASONING_MODEL,
+                            premium_m=OPENROUTER_PREMIUM_MODEL,
+                            route=route,
+                            premium_budget_allows=alex_routing.can_use_premium(uid),
+                        )
                     if nxt is None:
                         break
                     verify_extra_used += 1
@@ -14545,6 +14981,7 @@ Behavior rules:
         chat_model, or_teaching_mode, route = await self._alex_resolve_chat_model(user_msg, uid)
         use_answer_cache_home = (
             not visual_only_request
+            and not route.get("manual_model_key")
             and not rich_teaching_request
             and not has_document_attached
             and not _is_explicit_web_search_request(user_msg)
@@ -14644,14 +15081,15 @@ Behavior rules:
             partial_final_h = ""
             buf = ""
             last_scroll = 0
-            chat_model, or_teaching_mode, _ = alex_routing.enforce_premium_hard_gate(
-                chat_model,
-                or_teaching_mode,
-                user_id=uid,
-                teacher_m=OPENROUTER_TEACHER_MODEL,
-                reasoning_m=OPENROUTER_REASONING_MODEL,
-                premium_m=OPENROUTER_PREMIUM_MODEL,
-            )
+            if not route.get("manual_model_key"):
+                chat_model, or_teaching_mode, _ = alex_routing.enforce_premium_hard_gate(
+                    chat_model,
+                    or_teaching_mode,
+                    user_id=uid,
+                    teacher_m=OPENROUTER_TEACHER_MODEL,
+                    reasoning_m=OPENROUTER_REASONING_MODEL,
+                    premium_m=OPENROUTER_PREMIUM_MODEL,
+                )
             system_chat = self._alex_openrouter_system_bundle(student_name, or_teaching_mode)
             home_messages = [
                 {"role": "system", "content": system_chat},
@@ -14707,7 +15145,7 @@ Behavior rules:
                 visual_only=visual_only_request,
                 is_indepth=False,
             )
-            if needs_esc_h:
+            if needs_esc_h and not route.get("manual_model_key"):
                 nxt_h = alex_routing.next_escalation(
                     chat_model,
                     teacher_m=OPENROUTER_TEACHER_MODEL,
@@ -14755,14 +15193,16 @@ Behavior rules:
                     }
                 )
                 break
-            nxt_h = alex_routing.next_escalation(
-                chat_model,
-                teacher_m=OPENROUTER_TEACHER_MODEL,
-                reasoning_m=OPENROUTER_REASONING_MODEL,
-                premium_m=OPENROUTER_PREMIUM_MODEL,
-                route=route,
-                premium_budget_allows=alex_routing.can_use_premium(uid),
-            )
+            nxt_h = None
+            if not route.get("manual_model_key"):
+                nxt_h = alex_routing.next_escalation(
+                    chat_model,
+                    teacher_m=OPENROUTER_TEACHER_MODEL,
+                    reasoning_m=OPENROUTER_REASONING_MODEL,
+                    premium_m=OPENROUTER_PREMIUM_MODEL,
+                    route=route,
+                    premium_budget_allows=alex_routing.can_use_premium(uid),
+                )
             if nxt_h is None:
                 break
             verify_extra_used_h += 1
@@ -14933,9 +15373,14 @@ Behavior rules:
         self.daily_message_count = 0
         self.last_message_date = ""
         self.profile_created_at = ""
+        self.is_pro = False
         self.is_premium_1 = False
         self.is_premium_2 = False
+        self.plan_tier = PLAN_FREE
         self.premium_activated_at = ""
+        self.model_mode = "auto"
+        self.manual_model_key = MANUAL_MODEL_DEFAULT_KEY
+        self.model_credit_status = ""
         return [
             reflex_local_auth.LocalAuthState.do_logout,
             rx.call_script(
@@ -15649,6 +16094,11 @@ def pricing_modal() -> rx.Component:
                 "border": "1px solid rgba(125,211,252,0.24)",
                 "color": "#bae6fd",
             },
+            "ultra": {
+                "background": "rgba(251,191,36,0.13)",
+                "border": "1px solid rgba(251,191,36,0.28)",
+                "color": "#fde68a",
+            },
         }.get(tone, {})
         return rx.box(
             rx.text(label, font_size="0.66rem", font_weight="800", letter_spacing="0.12em"),
@@ -15672,11 +16122,13 @@ def pricing_modal() -> rx.Component:
             "free": "rgba(255,255,255,0.14)",
             "pro": "rgba(74,222,128,0.48)",
             "max": "rgba(125,211,252,0.42)",
+            "ultra": "rgba(251,191,36,0.44)",
         }.get(tone, "rgba(255,255,255,0.14)")
         glow = {
             "free": "0 18px 42px rgba(0,0,0,0.28)",
             "pro": "0 28px 80px rgba(34,197,94,0.18), 0 0 0 1px rgba(74,222,128,0.14)",
             "max": "0 24px 70px rgba(56,189,248,0.12), 0 0 0 1px rgba(125,211,252,0.10)",
+            "ultra": "0 28px 76px rgba(251,191,36,0.13), 0 0 0 1px rgba(251,191,36,0.10)",
         }.get(tone, "0 18px 42px rgba(0,0,0,0.28)")
         return rx.box(
             rx.box(
@@ -15707,7 +16159,7 @@ def pricing_modal() -> rx.Component:
                 rx.vstack(
                     rx.text(title, color="rgba(255,255,255,0.96)", font_size="1.15rem", font_weight="760"),
                     rx.hstack(
-                        rx.text(price, color="white", font_size="2.15rem", font_weight="850", letter_spacing="-0.04em"),
+                        rx.text(price, color="white", font_size="2.15rem", font_weight="850", letter_spacing="0"),
                         rx.text(period, color="rgba(255,255,255,0.44)", font_size="0.82rem", padding_bottom="7px"),
                         align="end",
                         spacing="2",
@@ -15732,7 +16184,7 @@ def pricing_modal() -> rx.Component:
                 height="100%",
             ),
             position="relative",
-            width=rx.breakpoints(initial="100%", md="calc(33.333% - 13px)"),
+            width=rx.breakpoints(initial="100%", md="calc(33.333% - 14px)"),
             min_width=rx.breakpoints(initial="100%", md="0"),
             padding="20px",
             border_radius="20px",
@@ -15749,6 +16201,47 @@ def pricing_modal() -> rx.Component:
                     "border_color": accent,
                 },
                 "transition": "transform 0.18s ease, border-color 0.18s ease",
+            },
+        )
+
+    def _active_plan_box(label: str) -> rx.Component:
+        return rx.box(
+            rx.text(label, color="#86efac", font_weight="800", text_align="center"),
+            width="100%",
+            height="46px",
+            border_radius="12px",
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            border="1px solid rgba(134,239,172,0.38)",
+            background="rgba(22,101,52,0.18)",
+        )
+
+    def _checkout_button(label: str, handler: Any, tone: str) -> rx.Component:
+        backgrounds = {
+            "pro": "linear-gradient(135deg,#16a34a,#4ade80)",
+            "max": "linear-gradient(135deg, rgba(14,165,233,0.95), rgba(125,211,252,0.90))",
+            "ultra": "linear-gradient(135deg, rgba(217,119,6,0.98), rgba(251,191,36,0.94))",
+        }
+        colors = {
+            "pro": "#04120a",
+            "max": "#03121a",
+            "ultra": "#1c1201",
+        }
+        return rx.button(
+            label,
+            on_click=handler,
+            width="100%",
+            height="46px",
+            border_radius="12px",
+            style={
+                "background": backgrounds.get(tone, backgrounds["pro"]),
+                "border": "none",
+                "color": colors.get(tone, colors["pro"]),
+                "font_weight": "850",
+                "cursor": "pointer",
+                "box_shadow": "0 18px 36px rgba(0,0,0,0.20)",
+                "_hover": {"filter": "brightness(1.08)", "transform": "translateY(-1px)"},
             },
         )
 
@@ -15823,123 +16316,66 @@ def pricing_modal() -> rx.Component:
                         spacing="4",
                         padding_right=rx.breakpoints(initial="42px", md="52px"),
                     ),
-                    rx.flex(
-                        _plan_card(
-                            "Free",
-                            "Starter",
-                            "USD 0",
-                            "forever",
-                            "For trying Alex AI, starting a semester structure, and keeping lightweight study history.",
-                            [
-                                "Basic planner access",
-                                "Trial access to study chat",
-                                "Saved chats and notes on your account",
-                            ],
-                            rx.cond(
-                                AppState.has_premium_access,
-                                rx.box(
-                                    rx.text("Included", color="rgba(255,255,255,0.56)", font_weight="760", text_align="center"),
-                                    width="100%",
-                                    height="46px",
-                                    border_radius="12px",
-                                    display="flex",
-                                    align_items="center",
-                                    justify_content="center",
-                                    border="1px solid rgba(255,255,255,0.1)",
-                                    background="rgba(255,255,255,0.04)",
-                                ),
-                                rx.box(
-                                    rx.text("Current access", color="rgba(255,255,255,0.72)", font_weight="760", text_align="center"),
-                                    width="100%",
-                                    height="46px",
-                                    border_radius="12px",
-                                    display="flex",
-                                    align_items="center",
-                                    justify_content="center",
-                                    border="1px solid rgba(255,255,255,0.12)",
-                                    background="rgba(255,255,255,0.06)",
-                                ),
-                            ),
-                            "free",
-                        ),
-                        _plan_card(
-                            "Pro",
-                            "Most popular",
-                            "USD 3.17",
-                            "/ month",
-                            "The full student workspace: daily study chat, semester planner, notes, tasks, and live mentor support.",
-                            [
-                                "Unlimited daily messages",
-                                "Full semester planner access",
-                                "Voice mentor plus typed chat",
-                                "Notes, tasks, and saved chat history",
-                            ],
-                            rx.cond(
-                                AppState.has_premium_access,
-                                rx.box(
-                                    rx.text("Pro is active", color="#86efac", font_weight="800", text_align="center"),
-                                    width="100%",
-                                    height="46px",
-                                    border_radius="12px",
-                                    display="flex",
-                                    align_items="center",
-                                    justify_content="center",
-                                    border="1px solid rgba(134,239,172,0.38)",
-                                    background="rgba(22,101,52,0.18)",
-                                ),
-                                rx.button(
-                                    "Continue to secure checkout",
-                                    on_click=AppState.buy_pro_plan,
-                                    width="100%",
-                                    height="46px",
-                                    border_radius="12px",
-                                    style={
-                                        "background": "linear-gradient(135deg,#16a34a,#4ade80)",
-                                        "border": "none",
-                                        "color": "#04120a",
-                                        "font_weight": "850",
-                                        "cursor": "pointer",
-                                        "box_shadow": "0 18px 36px rgba(34,197,94,0.20)",
-                                        "_hover": {"filter": "brightness(1.08)", "transform": "translateY(-1px)"},
-                                    },
-                                ),
-                            ),
-                            "pro",
-                            True,
-                        ),
-                        _plan_card(
-                            "Max",
-                            "Priority",
-                            "USD 25",
-                            "/ month",
-                            "For students who want the highest access tier, priority help, model choice, and advanced creation tools.",
-                            [
-                                "Priority support",
-                                "Preferred AI model selection",
-                                "Maximum live voice mentor experience",
-                                "Study video generation when released",
-                            ],
-                            rx.link(
-                                rx.button(
-                                    "Talk to support",
-                                    width="100%",
-                                    height="46px",
-                                    border_radius="12px",
-                                    style={
-                                        "background": "linear-gradient(135deg, rgba(14,165,233,0.92), rgba(125,211,252,0.86))",
-                                        "border": "none",
-                                        "color": "#03121a",
-                                        "font_weight": "850",
-                                        "cursor": "pointer",
-                                        "_hover": {"filter": "brightness(1.08)", "transform": "translateY(-1px)"},
-                                    },
-                                ),
-                                href="/support",
-                                width="100%",
-                                text_decoration="none",
-                            ),
-                            "max",
-                        ),
+	                    rx.flex(
+	                        _plan_card(
+	                            "Pro",
+	                            "Core",
+	                            "USD 3.17",
+	                            "/ month",
+	                            "The full everyday student workspace for guided study, saved progress, and voice-supported learning.",
+	                            [
+	                                "Unlimited daily messages",
+	                                "Full semester planner access",
+	                                "Auto model routing for every chat",
+	                                "45 min/day voice mentor limit",
+	                                "Notes, tasks, and saved chat history",
+	                            ],
+	                            rx.cond(
+	                                AppState.has_premium_access & (AppState.effective_plan_tier == PLAN_PRO),
+	                                _active_plan_box("Pro is active"),
+	                                _checkout_button("Continue to secure checkout", AppState.buy_pro_plan, "pro"),
+	                            ),
+	                            "pro",
+	                        ),
+	                        _plan_card(
+	                            "Max",
+	                            "Model control",
+	                            "USD 25",
+	                            "/ month",
+	                            "For students who want manual access to the five Alex models, more video creation, and longer voice sessions.",
+	                            [
+	                                "Switch manually between 5 Alex models",
+	                                "Per-model credits reset every 24h",
+	                                "20 teaching-video generations/month",
+	                                "2 hours/day voice mentor limit",
+	                            ],
+	                            rx.cond(
+	                                AppState.has_premium_access & (AppState.effective_plan_tier == PLAN_MAX),
+	                                _active_plan_box("Max is active"),
+	                                _checkout_button("Upgrade to Max", AppState.buy_max_plan, "max"),
+	                            ),
+	                            "max",
+	                            True,
+	                        ),
+	                        _plan_card(
+	                            "Ultra",
+	                            "Highest limit",
+	                            "USD 100",
+	                            "/ month",
+	                            "For heavy study sessions with much larger model limits, the fastest reset window, and maximum voice time.",
+	                            [
+	                                "Higher credits across all 5 models",
+	                                "Per-model credits reset every 5h",
+	                                "100 teaching-video generations/month",
+	                                "8 hours/day voice mentor limit",
+	                            ],
+	                            rx.cond(
+	                                AppState.has_premium_access & (AppState.effective_plan_tier == PLAN_ULTRA),
+	                                _active_plan_box("Ultra is active"),
+	                                _checkout_button("Upgrade to Ultra", AppState.buy_ultra_plan, "ultra"),
+	                            ),
+	                            "ultra",
+	                        ),
                         direction=rx.breakpoints(initial="column", md="row"),
                         gap="20px",
                         width="100%",
@@ -16063,6 +16499,40 @@ def image_preview_modal() -> rx.Component:
 # Tier status bar & input components
 # ──────────────────────────────────────────────────────────────
 def tier_status_bar() -> rx.Component:
+    def _mode_menu_item(label: str, description: str, selected: Any, handler: Any, disabled: Any = False) -> rx.Component:
+        return rx.button(
+            rx.hstack(
+                rx.vstack(
+                    rx.text(label, color="rgba(236,242,250,0.95)", font_size="0.72rem", font_weight="760"),
+                    rx.text(description, color="rgba(185,198,212,0.68)", font_size="0.62rem", line_height="1.25"),
+                    spacing="0",
+                    align_items="flex-start",
+                    min_width="0",
+                    flex="1",
+                ),
+                rx.cond(
+                    selected,
+                    rx.icon(tag="check", size=14, color="#86efac", flex_shrink="0"),
+                    rx.box(width="14px", height="14px", flex_shrink="0"),
+                ),
+                width="100%",
+                align="center",
+                spacing="2",
+            ),
+            on_click=handler,
+            disabled=disabled,
+            width="100%",
+            padding="8px 9px",
+            border_radius="9px",
+            style={
+                "background": "rgba(255,255,255,0.055)",
+                "border": "1px solid rgba(255,255,255,0.10)",
+                "cursor": "pointer",
+                "_hover": {"background": "rgba(255,255,255,0.09)"},
+                "_disabled": {"opacity": "0.54", "cursor": "not-allowed"},
+            },
+        )
+
     return rx.hstack(
         rx.text(
             AppState.tier_label,
@@ -16081,11 +16551,19 @@ def tier_status_bar() -> rx.Component:
             rx.menu.trigger(
                 rx.hstack(
                     rx.text(
-                        AppState.auto_model_label,
+                        AppState.model_mode_label,
                         font_size=rx.breakpoints(initial="0.68rem", md="0.65rem"),
                         font_weight="600",
                         color="rgba(210, 220, 235, 0.92)",
                         font_family="monospace",
+                    ),
+                    rx.text(
+                        AppState.model_mode_detail_label,
+                        font_size=rx.breakpoints(initial="0.68rem", md="0.65rem"),
+                        font_weight="500",
+                        color="rgba(210, 220, 235, 0.62)",
+                        font_family="monospace",
+                        display=rx.breakpoints(initial="none", sm="inline"),
                     ),
                     rx.icon(
                         tag="chevron_down",
@@ -16098,7 +16576,7 @@ def tier_status_bar() -> rx.Component:
                     min_width="62px",
                     justify_content="center",
                     border_radius="999px",
-                    display=rx.breakpoints(initial="none", md="inline-flex"),
+                    display="inline-flex",
                     style={
                         "background": "rgba(255,255,255,0.07)",
                         "border": "1px solid rgba(255,255,255,0.16)",
@@ -16112,36 +16590,86 @@ def tier_status_bar() -> rx.Component:
             ),
             rx.menu.content(
                 rx.vstack(
-                    rx.text(
-                        "Models in auto mode",
-                        color="rgba(235,242,250,0.88)",
-                        font_size="0.68rem",
-                        font_weight="600",
+                    rx.hstack(
+                        rx.text("Model mode", color="rgba(235,242,250,0.92)", font_size="0.74rem", font_weight="820"),
+                        rx.spacer(),
+                        rx.text(AppState.tier_label, color="rgba(185,198,212,0.70)", font_size="0.62rem", font_weight="700"),
+                        width="100%",
+                        align="center",
                     ),
-                    rx.foreach(
-                        AppState.auto_model_list,
-                        lambda model_name: rx.box(
-                            rx.text(
-                                model_name,
-                                color="rgba(226,234,244,0.88)",
-                                font_size="0.66rem",
-                                font_family="monospace",
+                    _mode_menu_item(
+                        "Auto",
+                        "Alex chooses the best model for the question.",
+                        AppState.model_mode != "manual",
+                        AppState.set_model_mode("auto"),
+                    ),
+                    rx.box(height="1px", background="rgba(255,255,255,0.10)", width="100%", margin_y="2px"),
+                    rx.cond(
+                        AppState.can_use_manual_model_mode,
+                        rx.vstack(
+                            _mode_menu_item(
+                                "Gemini Flash",
+                                "Fast tutor",
+                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "teacher"),
+                                AppState.set_manual_model_key("teacher"),
                             ),
+                            _mode_menu_item(
+                                "DeepSeek R1",
+                                "Reasoning model",
+                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "reasoning"),
+                                AppState.set_manual_model_key("reasoning"),
+                            ),
+                            _mode_menu_item(
+                                "Claude Opus",
+                                "Premium depth",
+                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "premium"),
+                                AppState.set_manual_model_key("premium"),
+                            ),
+                            _mode_menu_item(
+                                "GPT Vision",
+                                "Image help",
+                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "vision"),
+                                AppState.set_manual_model_key("vision"),
+                            ),
+                            _mode_menu_item(
+                                "DeepSeek V3",
+                                "Balanced chat",
+                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "spec"),
+                                AppState.set_manual_model_key("spec"),
+                            ),
+                            spacing="2",
+                            align_items="stretch",
                             width="100%",
-                            padding="6px 8px",
-                            border_radius="8px",
+                        ),
+                        rx.button(
+                            rx.hstack(
+                                rx.icon(tag="lock", size=14, color="rgba(226,234,244,0.78)", flex_shrink="0"),
+                                rx.vstack(
+                                    rx.text("Manual model switching", color="rgba(236,242,250,0.92)", font_size="0.72rem", font_weight="760"),
+                                    rx.text("Available on Max and Ultra.", color="rgba(185,198,212,0.68)", font_size="0.62rem"),
+                                    spacing="0",
+                                    align_items="flex-start",
+                                ),
+                                spacing="2",
+                                align="center",
+                            ),
+                            on_click=AppState.open_pricing_modal,
+                            width="100%",
+                            padding="9px",
+                            border_radius="9px",
                             style={
-                                "background": "rgba(255,255,255,0.06)",
-                                "border": "1px solid rgba(255,255,255,0.12)",
-                                "opacity": "0.88",
-                                "cursor": "not-allowed",
+                                "background": "rgba(125,211,252,0.075)",
+                                "border": "1px solid rgba(125,211,252,0.16)",
+                                "cursor": "pointer",
+                                "_hover": {"background": "rgba(125,211,252,0.12)"},
                             },
                         ),
                     ),
                     rx.text(
-                        "Selection is automatic",
+                        AppState.manual_model_status_label,
                         color="rgba(185,198,212,0.76)",
                         font_size="0.62rem",
+                        line_height="1.35",
                     ),
                     spacing="2",
                     align_items="stretch",
@@ -16155,7 +16683,7 @@ def tier_status_bar() -> rx.Component:
                     "border": "1px solid rgba(255,255,255,0.14)",
                     "border_radius": "12px",
                     "padding": "10px",
-                    "min_width": "250px",
+                    "min_width": "286px",
                     "box_shadow": "0 14px 28px rgba(0,0,0,0.32)",
                     "z_index": "9999",
                 },
@@ -31144,6 +31672,32 @@ def _ensure_userprofile_premium_activated_at() -> None:
 _ensure_userprofile_premium_activated_at()
 
 
+def _ensure_userprofile_plan_columns() -> None:
+    try:
+        with rx.session() as session:
+            conn = session.connection()
+            dialect = conn.dialect.name
+            if dialect == "sqlite":
+                cols = {str(row[1]) for row in conn.exec_driver_sql("PRAGMA table_info('userprofile')").fetchall()}
+                if "plan_tier" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN plan_tier VARCHAR(24) NOT NULL DEFAULT 'free'")
+                if "model_usage_json" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN model_usage_json VARCHAR NOT NULL DEFAULT '{}'")
+            elif dialect == "postgresql":
+                rows = conn.exec_driver_sql(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name='userprofile'"
+                ).fetchall()
+                cols = {str(row[0]) for row in rows}
+                if "plan_tier" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN plan_tier VARCHAR(24) NOT NULL DEFAULT 'free'")
+                if "model_usage_json" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE userprofile ADD COLUMN model_usage_json VARCHAR NOT NULL DEFAULT '{}'")
+            session.commit()
+    except Exception as e:
+        print(f"ERROR ensure_userprofile_plan_columns: {e}")
+_ensure_userprofile_plan_columns()
+
+
 def _ensure_chatmessage2_document_columns() -> None:
     try:
         with rx.session() as session:
@@ -31208,7 +31762,7 @@ _ALEX_VOICE_SYSTEM = (
     "No [VISUAL] blocks. Teach one clear layer per turn, warmly."
 )
 
-VOICE_FREE_LIMIT_SEC = 720  # 12 minutes per day for all users (free and pro)
+VOICE_FREE_LIMIT_SEC = PLAN_VOICE_DAILY_LIMIT_SEC[PLAN_FREE]
 _VOICE_DAILY_SCOPE = "__voice_daily__"
 
 # When false: voice works everywhere (incl. home) with no daily cap UI, no upgrade CTAs.
@@ -31300,16 +31854,22 @@ def _db_user_has_premium_access(uid: int) -> bool:
             profile = db.exec(select(UserProfile).where(UserProfile.user_id == uid)).one_or_none()
         if profile is None:
             return False
-        if not (profile.is_premium_1 or profile.is_premium_2):
-            return False
-        if profile.premium_activated_at is None:
-            return True
-        activated = profile.premium_activated_at
-        if activated.tzinfo is None:
-            activated = activated.replace(tzinfo=timezone.utc)
-        return (datetime.now(timezone.utc) - activated).days < 30
+        return _profile_effective_plan_tier(profile) != PLAN_FREE
     except Exception:
         return False
+
+
+def _db_user_plan_tier(uid: int) -> str:
+    if uid < 0:
+        return PLAN_FREE
+    try:
+        with rx.session() as db:
+            profile = db.exec(select(UserProfile).where(UserProfile.user_id == uid)).one_or_none()
+        if profile is None:
+            return PLAN_FREE
+        return _profile_effective_plan_tier(profile)
+    except Exception:
+        return PLAN_FREE
 
 
 async def alex_voice_stt(request: Request):
@@ -32123,12 +32683,8 @@ async def alex_voice_sync(request: Request):
         logger.error("AlexVoice sync error: %s", exc)
         return JSONResponse({"error": str(exc)}, status_code=500)
 
-    # Track daily voice usage for non-premium users only (skip while commercial gates are off for testing)
-    if (
-        duration_seconds > 0
-        and ALEX_VOICE_COMMERCIAL_GATES
-        and not _db_user_has_premium_access(int(uid))
-    ):
+    # Track daily voice usage for all plans when commercial gates are enabled.
+    if duration_seconds > 0 and ALEX_VOICE_COMMERCIAL_GATES:
         _add_voice_seconds_today(int(uid), duration_seconds)
 
     # Background: update scope memory with voice session transcript
