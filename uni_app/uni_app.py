@@ -28636,6 +28636,9 @@ class LearnState(AppState):
         async with self:
             if self.summary_loading or not self.video_id:
                 return
+            if not self.has_premium_access:
+                self.active_tab = "summary"
+                return
             if not self.transcript:
                 self.summary = "No transcript available — can't summarize this video."
                 return
@@ -28678,6 +28681,9 @@ class LearnState(AppState):
     async def generate_quiz(self):
         async with self:
             if self.quiz_loading or not self.video_id:
+                return
+            if not self.has_premium_access:
+                self.active_tab = "quiz"
                 return
             if not self.transcript:
                 self.quiz_questions = []
@@ -29509,8 +29515,113 @@ def _learn_chat_panel() -> rx.Component:
     )
 
 
+def _learn_premium_locked_panel(title: str, description: str, icon: str, gradient: str) -> rx.Component:
+    return rx.center(
+        rx.box(
+            rx.vstack(
+                rx.hstack(
+                    rx.box(
+                        rx.icon(tag=icon, size=22, color="white"),
+                        width="48px",
+                        height="48px",
+                        border_radius="14px",
+                        display="flex",
+                        align_items="center",
+                        justify_content="center",
+                        style={
+                            "background": gradient,
+                            "box_shadow": "0 18px 44px rgba(0,0,0,0.35)",
+                        },
+                    ),
+                    rx.spacer(),
+                    rx.hstack(
+                        rx.icon(tag="lock", size=13, color="#fde68a"),
+                        rx.text("Premium", color="#fde68a", font_size="0.72rem", font_weight="800"),
+                        spacing="1",
+                        align="center",
+                        padding="7px 10px",
+                        border_radius="999px",
+                        border="1px solid rgba(251,191,36,0.28)",
+                        background="rgba(251,191,36,0.10)",
+                    ),
+                    width="100%",
+                    align="center",
+                ),
+                rx.vstack(
+                    rx.text(title, color="rgba(255,255,255,0.96)", font_size="1.15rem", font_weight="780"),
+                    rx.text(description, color="rgba(226,232,240,0.62)", font_size="0.88rem", line_height="1.55"),
+                    spacing="2",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                rx.vstack(
+                    rx.hstack(
+                        rx.icon(tag="check", size=14, color="#86efac", flex_shrink="0"),
+                        rx.text("Included with Pro, Max, and Ultra", color="rgba(236,240,244,0.78)", font_size="0.84rem"),
+                        spacing="2",
+                        align="center",
+                    ),
+                    rx.hstack(
+                        rx.icon(tag="check", size=14, color="#86efac", flex_shrink="0"),
+                        rx.text("Works from the video's transcript after it loads", color="rgba(236,240,244,0.72)", font_size="0.84rem"),
+                        spacing="2",
+                        align="center",
+                    ),
+                    spacing="2",
+                    align_items="stretch",
+                    width="100%",
+                ),
+                rx.button(
+                    rx.hstack(rx.icon(tag="sparkles", size=15), rx.text("Upgrade to unlock"), spacing="2", align="center"),
+                    on_click=AppState.open_pricing_modal,
+                    width="100%",
+                    height="46px",
+                    border_radius="12px",
+                    style={
+                        "background": gradient,
+                        "border": "none",
+                        "color": "white",
+                        "font_weight": "820",
+                        "cursor": "pointer",
+                        "box_shadow": "0 18px 38px rgba(0,0,0,0.26)",
+                        "_hover": {"filter": "brightness(1.08)", "transform": "translateY(-1px)"},
+                    },
+                ),
+                spacing="5",
+                align_items="stretch",
+                width="100%",
+            ),
+            width="min(420px, 100%)",
+            padding="22px",
+            border_radius="20px",
+            border="1px solid rgba(255,255,255,0.10)",
+            background=(
+                "radial-gradient(circle at 50% 0%, rgba(251,191,36,0.11), transparent 46%), "
+                "linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025)), "
+                "rgba(12,13,16,0.96)"
+            ),
+            style={
+                "box_shadow": "0 28px 80px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.04)",
+                "backdrop_filter": "blur(16px)",
+            },
+        ),
+        width="100%",
+        height="100%",
+        padding="18px",
+    )
+
+
+def _learn_paid_panel(content: rx.Component, title: str, description: str, icon: str, gradient: str) -> rx.Component:
+    return rx.cond(
+        LearnState.has_premium_access,
+        content,
+        _learn_premium_locked_panel(title, description, icon, gradient),
+    )
+
+
 def _learn_summary_panel() -> rx.Component:
-    return rx.vstack(
+    return _learn_paid_panel(
+        rx.vstack(
         rx.cond(
             LearnState.summary == "",
             # Empty state — generate button
@@ -29618,6 +29729,11 @@ def _learn_summary_panel() -> rx.Component:
         padding="16px",
         width="100%",
         height="100%",
+        ),
+        "Unlock AI study guides",
+        "Guide turns any transcript into a focused study path with key ideas, takeaways, and clear explanations.",
+        "book_open",
+        "linear-gradient(135deg, rgba(99,102,241,0.95), rgba(124,58,237,0.95))",
     )
 
 
@@ -29717,7 +29833,8 @@ def _quiz_question(q: rx.Var, idx: int) -> rx.Component:
 
 
 def _learn_quiz_panel() -> rx.Component:
-    return rx.vstack(
+    return _learn_paid_panel(
+        rx.vstack(
         rx.cond(
             LearnState.quiz_questions.length() == 0,
             # Empty state
@@ -29834,6 +29951,11 @@ def _learn_quiz_panel() -> rx.Component:
         padding="16px",
         width="100%",
         height="100%",
+        ),
+        "Unlock AI video quizzes",
+        "Quiz creates practice questions from the video so students can check understanding before moving on.",
+        "circle_help",
+        "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.95))",
     )
 
 
@@ -29914,14 +30036,30 @@ def _learn_notes_panel() -> rx.Component:
 
 def _learn_tab_button(value: str, label: str, icon: str) -> rx.Component:
     is_active = LearnState.active_tab == value
+    is_premium_feature = value in ("summary", "quiz")
     return rx.button(
         rx.hstack(
             rx.icon(tag=icon, size=14),
             rx.text(label, font_size="0.85rem", font_weight="500"),
+            *(
+                [
+                    rx.cond(
+                        ~LearnState.has_premium_access,
+                        rx.icon(tag="lock", size=11, color="rgba(251,191,36,0.82)"),
+                        rx.fragment(),
+                    )
+                ]
+                if is_premium_feature
+                else []
+            ),
             spacing="2", align="center",
         ),
         on_click=LearnState.set_active_tab(value),
         variant="ghost",
+        custom_attrs={
+            "aria-label": f"{label} tab",
+            "title": f"Premium: {label}" if is_premium_feature else label,
+        },
         style={
             "background": rx.cond(is_active, "rgba(244,63,94,0.16)", "transparent"),
             "color": rx.cond(is_active, "rgba(255,225,230,0.95)", "rgba(240,244,248,0.6)"),
@@ -30343,6 +30481,7 @@ def learn_page():
             spacing="0",
             align="stretch",
         ),
+        pricing_modal(),
         background="#191919",
         width="100%",
         height="100vh",
