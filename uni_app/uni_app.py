@@ -28310,6 +28310,9 @@ class LearnState(AppState):
     # ── Notes (AI suggestions + user-editable) ───────────────
     note_draft: str = ""
     notes_saved: bool = False        # Flash flag after saving
+    note_save_status: str = ""       # "", "saved", "already"
+    last_saved_note_text: str = ""
+    note_save_feedback_id: int = 0
 
     # ── Active right-panel tab: chat | summary | quiz | notes ──
     active_tab: str = "chat"
@@ -28357,7 +28360,12 @@ class LearnState(AppState):
     # ── Setters ──────────────────────────────────────────────
     def set_url_input(self, v: str): self.url_input = v
     def set_chat_input(self, v: str): self.chat_input = v
-    def set_note_draft(self, v: str): self.note_draft = v
+    def set_note_draft(self, v: str):
+        self.note_draft = v
+        if (v or "").strip() != (self.last_saved_note_text or "").strip():
+            self.notes_saved = False
+            self.note_save_status = ""
+
     def set_active_tab(self, v: str): self.active_tab = v
 
     def set_rate_limit_msg(self, v: str):
@@ -28385,6 +28393,9 @@ class LearnState(AppState):
         self.quiz_revealed = False
         self.note_draft = ""
         self.notes_saved = False
+        self.note_save_status = ""
+        self.last_saved_note_text = ""
+        self.note_save_feedback_id += 1
         self.url_error = ""
         self.active_tab = "chat"
 
@@ -28447,6 +28458,9 @@ class LearnState(AppState):
             self.quiz_revealed = False
             self.note_draft = ""
             self.notes_saved = False
+            self.note_save_status = ""
+            self.last_saved_note_text = ""
+            self.note_save_feedback_id += 1
             self.active_tab = "chat"
             uid = self._uid()
 
@@ -28791,6 +28805,8 @@ class LearnState(AppState):
                     self.note_draft = self.note_draft.rstrip() + "\n\n" + addition
                 else:
                     self.note_draft = addition
+                self.notes_saved = False
+                self.note_save_status = ""
                 self.active_tab = "notes"
                 return
 
@@ -28801,6 +28817,8 @@ class LearnState(AppState):
             self.note_draft = self.note_draft.rstrip() + "\n\n" + self.summary
         else:
             self.note_draft = self.summary
+        self.notes_saved = False
+        self.note_save_status = ""
         self.active_tab = "notes"
 
     # ── Save current note draft into the StudentNote workspace ──
@@ -28808,6 +28826,11 @@ class LearnState(AppState):
         text = (self.note_draft or "").strip()
         if not text:
             return
+        if text == (self.last_saved_note_text or "").strip():
+            self.notes_saved = False
+            self.note_save_status = "already"
+            self.note_save_feedback_id += 1
+            return LearnState.clear_note_save_feedback_later(self.note_save_feedback_id)
         uid = self._uid()
         if uid < 0:
             return
@@ -28817,6 +28840,19 @@ class LearnState(AppState):
         body = text + source
         try:
             with rx.session() as session:
+                existing = session.exec(
+                    select(StudentNote)
+                    .where(StudentNote.user_id == uid)
+                    .where(StudentNote.scope == f"learn:{self.video_id}")
+                    .where(StudentNote.body == body)
+                    .limit(1)
+                ).first()
+                if existing is not None:
+                    self.last_saved_note_text = text
+                    self.notes_saved = False
+                    self.note_save_status = "already"
+                    self.note_save_feedback_id += 1
+                    return LearnState.clear_note_save_feedback_later(self.note_save_feedback_id)
                 row = StudentNote(
                     user_id=uid,
                     scope=f"learn:{self.video_id}",  # Distinguishable scope
@@ -28828,12 +28864,26 @@ class LearnState(AppState):
                 session.add(row)
                 session.commit()
             self.notes_saved = True
+            self.note_save_status = "saved"
+            self.last_saved_note_text = text
+            self.note_save_feedback_id += 1
+            return LearnState.clear_note_save_feedback_later(self.note_save_feedback_id)
         except Exception as e:
             logger.error(f"save_note_to_workspace error: {e}")
             self.notes_saved = False
+            self.note_save_status = ""
 
     def clear_notes_saved_flash(self):
         self.notes_saved = False
+        self.note_save_status = ""
+
+    @rx.event(background=True)
+    async def clear_note_save_feedback_later(self, feedback_id: int):
+        await asyncio.sleep(2.4)
+        async with self:
+            if self.note_save_feedback_id == feedback_id:
+                self.notes_saved = False
+                self.note_save_status = ""
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -29966,10 +30016,26 @@ def _learn_notes_panel() -> rx.Component:
             rx.text("Notes", font_size="0.95rem", font_weight="600", color="rgba(240,244,248,0.9)"),
             rx.spacer(),
             rx.cond(
-                LearnState.notes_saved,
+                LearnState.note_save_status != "",
                 rx.hstack(
-                    rx.icon(tag="check", size=14, color="rgba(52,211,153,0.95)"),
-                    rx.text("Saved", color="rgba(52,211,153,0.95)", font_size="0.82rem"),
+                    rx.icon(
+                        tag="check",
+                        size=14,
+                        color=rx.cond(
+                            LearnState.note_save_status == "already",
+                            "#fde68a",
+                            "rgba(52,211,153,0.95)",
+                        ),
+                    ),
+                    rx.text(
+                        rx.cond(LearnState.note_save_status == "already", "Already saved", "Saved"),
+                        color=rx.cond(
+                            LearnState.note_save_status == "already",
+                            "#fde68a",
+                            "rgba(52,211,153,0.95)",
+                        ),
+                        font_size="0.82rem",
+                    ),
                     on_click=LearnState.clear_notes_saved_flash,
                     spacing="1",
                     align="center",
@@ -30004,16 +30070,35 @@ def _learn_notes_panel() -> rx.Component:
         rx.hstack(
             rx.button(
                 rx.hstack(
-                    rx.icon(tag="save", size=14),
-                    rx.text("Save to my notes", font_weight="600"),
+                    rx.cond(
+                        LearnState.note_save_status != "",
+                        rx.icon(tag="check", size=14),
+                        rx.icon(tag="save", size=14),
+                    ),
+                    rx.text(
+                        rx.cond(
+                            LearnState.note_save_status == "saved",
+                            "Saved",
+                            rx.cond(
+                                LearnState.note_save_status == "already",
+                                "Already saved",
+                                "Save to my notes",
+                            ),
+                        ),
+                        font_weight="600",
+                    ),
                     spacing="2", align="center",
                 ),
                 on_click=LearnState.save_note_to_workspace,
                 disabled=LearnState.note_draft == "",
                 size="3",
                 style={
-                    "background": "linear-gradient(135deg, rgba(52,211,153,0.95), rgba(34,197,94,0.95))",
-                    "color": "#0a1f15",
+                    "background": rx.cond(
+                        LearnState.note_save_status == "already",
+                        "linear-gradient(135deg, rgba(251,191,36,0.95), rgba(245,158,11,0.95))",
+                        "linear-gradient(135deg, rgba(52,211,153,0.95), rgba(34,197,94,0.95))",
+                    ),
+                    "color": rx.cond(LearnState.note_save_status == "already", "#1c1201", "#0a1f15"),
                     "border": "none",
                     "border_radius": "10px",
                     "padding": "8px 18px",
@@ -30052,7 +30137,11 @@ def _learn_tab_button(value: str, label: str, icon: str) -> rx.Component:
                 if is_premium_feature
                 else []
             ),
-            spacing="2", align="center",
+            spacing="2",
+            align="center",
+            justify="center",
+            width="100%",
+            min_width="0",
         ),
         on_click=LearnState.set_active_tab(value),
         variant="ghost",
@@ -30066,6 +30155,9 @@ def _learn_tab_button(value: str, label: str, icon: str) -> rx.Component:
             "border": "none",
             "border_radius": "8px",
             "padding": "8px 14px",
+            "flex": "1",
+            "min_width": "0",
+            "justify_content": "center",
             "cursor": "pointer",
             "_hover": {"background": "rgba(255,255,255,0.05)"},
         },
