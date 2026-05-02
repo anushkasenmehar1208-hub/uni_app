@@ -31341,6 +31341,11 @@ def alex_voice_overlay_panel() -> rx.Component:
                 height:440px;
                 width:340px;
                 margin-bottom:-96px;   /* pulls the wall up to meet the waist */
+                pointer-events:none !important;
+            }
+            #alex-orb-avatar-canvas {
+                pointer-events:none !important;
+                cursor:default !important;
             }
             /* Subtle floor shadow directly under the avatar — reads as "standing on ground" */
             #alex-orb.alex-avatar-active::after {
