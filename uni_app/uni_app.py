@@ -4696,6 +4696,11 @@ def _hard_navigate(route: str):
     """Force a full browser navigation — guarantees fresh WebSocket + state."""
     return rx.call_script(f"window.location.href = {json.dumps(route)}")
 
+
+def _replace_route(route: str):
+    """Replace stale browser history entries with the canonical workspace route."""
+    return rx.call_script(f"window.location.replace({json.dumps(route)})")
+
 ONBOARDING_FINAL_STEP = 6
 
 
@@ -6590,6 +6595,9 @@ class AppState(reflex_local_auth.LocalAuthState):
             return scope_to_route("home")
         return APP_DASHBOARD_ROUTE
 
+    def _workspace_home_route(self) -> str:
+        return "/free" if _degree_is_custom(self.degree) else scope_to_route("home")
+
     def _preload_root_workspace_target(self, uid: int) -> str:
         if uid < 0:
             return APP_DASHBOARD_ROUTE
@@ -7965,16 +7973,21 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.global_search_query = ""
         self.global_search_results = []
         if target_scope == "home":
+            target_route = self._workspace_home_route()
+            current_path = str(getattr(self.router.url, "path", "") or "")
             if self.active_scope == "home" and self.view_mode == "home":
                 if self._session_in_scope(uid, int(session_id), "home"):
                     self.current_session_id = session_id
                     self._load_messages(uid)
-                    yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    if current_path != target_route:
+                        yield _hard_navigate(target_route)
+                    else:
+                        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
                 return
             self.active_scope = "home"
             self.view_mode = "home"
             self.current_session_id = session_id
-            yield _hard_navigate(scope_to_route("home"))
+            yield _hard_navigate(target_route)
         else:
             scope_info = SCOPE_ROUTE_MAP.get(base_scope, {})
             if scope_info:
@@ -12014,7 +12027,7 @@ Quality rules:
             return
         # If user is not on the custom path but somehow landed here, redirect properly
         if self.is_started and not _degree_is_custom(self.degree):
-            yield _hard_navigate(self._authenticated_landing_route())
+            yield _replace_route(self._authenticated_landing_route())
             return
         # Load home scope chat sessions
         self.active_scope = "home"
@@ -12119,6 +12132,10 @@ Quality rules:
                 self._load_guest_memory(uid)
         except Exception as e:
             print(f"[ROUTE] profile load error: {e}")
+
+        if self.is_started and _degree_is_custom(self.degree):
+            yield _replace_route("/free")
+            return
 
         # ── Scope routing (no DB) ──
         # Prefer the actual URL path so semester pages cannot accidentally hydrate as "home"
@@ -12384,10 +12401,10 @@ Quality rules:
             self._clear_canvas_state()
             self.chat_input = self.chat_drafts.get(self.active_scope, "")
             if self.active_scope == "home":
-                yield rx.call_script(
-                    "if (window.location.pathname !== '/s/home') {"
-                    " window.history.pushState(null, '', '/s/home'); }"
-                )
+                target_route = self._workspace_home_route()
+                current_path = str(getattr(self.router.url, "path", "") or "")
+                if current_path != target_route:
+                    yield _hard_navigate(target_route)
         except Exception as e:
             print(f"ERROR new_chat: {e}")
 
@@ -12402,9 +12419,14 @@ Quality rules:
             self.chat_input = self.chat_drafts.get(self.active_scope, "")
             self._load_messages(uid)
             if self.active_scope == "home":
-                yield rx.call_script(
-                    f"window.history.pushState(null,'','/s/home/{session_id}')"
-                )
+                target_route = self._workspace_home_route()
+                current_path = str(getattr(self.router.url, "path", "") or "")
+                if current_path != target_route:
+                    yield _hard_navigate(target_route)
+                elif target_route == scope_to_route("home"):
+                    yield rx.call_script(
+                        f"window.history.pushState(null,'','/s/home/{session_id}')"
+                    )
         except Exception as e:
             print(f"ERROR switch_chat: {e}")
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -13332,7 +13354,7 @@ Course units to cover:\n{courses_text}"""
         self.show_semester_sidebar = False
         self._save_memory(uid)
         self._switch_scope(uid, "home")
-        yield _hard_navigate(scope_to_route("home"))
+        yield _hard_navigate(self._workspace_home_route())
 
     @rx.event
     async def switch_to_home_chat(self, session_id: str):
@@ -13354,7 +13376,7 @@ Course units to cover:\n{courses_text}"""
         self._switch_scope(uid, "home")
         # Store session to load after navigation
         self.current_session_id = session_id
-        yield _hard_navigate(scope_to_route("home"))
+        yield _hard_navigate(self._workspace_home_route())
 
     # ──────────────────────────────────────────────────────────
     # Message actions: copy, edit, retry, like/dislike
@@ -21530,7 +21552,11 @@ def home_page():
                         font_weight="600",
                     ),
                     rx.text(
-                        "Software Engineering",
+                        rx.cond(
+                            AppState.custom_degree_selected,
+                            rx.cond(AppState.other_degree_text != "", AppState.other_degree_text, "Custom program"),
+                            AppState.degree,
+                        ),
                         color="rgba(160,170,180,0.4)",
                         font_size="0.68rem",
                         font_weight="400",
@@ -23169,7 +23195,11 @@ def semester_sidebar_drawer() -> rx.Component:
     )
     panel = rx.box(
         _semester_sidebar_swipe_close_hook_btn(),
-        workspace_sidebar_content(show_close_button=True),
+        rx.cond(
+            AppState.custom_degree_selected,
+            free_sidebar_content(),
+            workspace_sidebar_content(show_close_button=True),
+        ),
         id="mobile_sidebar_drawer_panel",
         position="fixed",
         top="0",
@@ -28375,6 +28405,30 @@ class LearnState(AppState):
         if key == "Enter" and self.can_send_chat:
             return LearnState.send_chat
 
+    @rx.event
+    def on_load_learn(self):
+        uid = self._uid()
+        if uid < 0:
+            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        self._cached_uid = uid
+        self._load_profile(uid)
+        if not self.is_started:
+            return rx.redirect(SELECTION_ROUTE)
+        if _degree_is_custom(self.degree):
+            self.active_scope = "home"
+            self.view_mode = "home"
+        elif not (self.active_scope or "").strip():
+            if self.selected_year and self.selected_semester:
+                self.active_scope = self._scope_key(self.selected_year, self.selected_semester)
+                self.view_mode = "semester"
+            else:
+                self.active_scope = "home"
+                self.view_mode = "home"
+        try:
+            self._load_home_sessions(uid)
+        except Exception as e:
+            print(f"[LEARN] home session load error: {e}")
+
     def reset_session(self):
         """Clear current session — back to URL input."""
         self.video_id = ""
@@ -30558,10 +30612,17 @@ def learn_page_content() -> rx.Component:
     route="/learn",
     title="Learn — Alex AI",
     image=FAVICON_32,
+    on_load=LearnState.on_load_learn,
 )
 @require_app_login
 def learn_page():
     return rx.box(
+        rx.script(SIDEBAR_GESTURES_JS),
+        _semester_sidebar_swipe_open_hook_btn(),
+        _notes_unload_autosave_dom(),
+        semester_sidebar_drawer(),
+        global_search_panel(),
+        notes_panel(),
         rx.hstack(
             rx.box(
                 nav_rail(),
