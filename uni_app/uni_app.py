@@ -31620,6 +31620,9 @@ def alex_voice_overlay_panel() -> rx.Component:
                 width:100%; max-width:420px; margin-top:4px;
                 opacity:0.55;
                 transition: opacity .25s;
+                position:relative;
+                z-index:20;
+                pointer-events:auto;
             }
             #alex-type-input {
                 flex:1; min-width:0;
@@ -31684,6 +31687,13 @@ def alex_voice_overlay_panel() -> rx.Component:
             }
             #alex-call-row {
                 transition: opacity .18s ease;
+                position:relative;
+                z-index:21;
+                pointer-events:auto;
+            }
+            #alex-call-row > *,
+            #alex-type-row > * {
+                pointer-events:auto;
             }
 
             /* ── Right-side chat history panel ───────────────────── */
