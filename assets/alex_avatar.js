@@ -25,7 +25,12 @@
       return '';
     })();
   var AVATAR_URL_BASE = AVATAR_SCRIPT_SRC.replace(/[^/?#]*(\?.*)?(#.*)?$/, '');
-  // Default avatar: official Ready Player Me sample with a realistic adult male face.
+  // Default avatar: use the bundled Alex/student GLB first so every
+  // browser gets the same finished character even when Chromium/Brave blocks or
+  // fails a third-party model request.
+  var LOCAL_AVATAR_URL = AVATAR_URL_BASE + 'models/teacher_naoki.glb';
+
+  // Remote Ready Player Me source kept as a final recovery path.
   // Quality params: ARKit/Oculus visemes for lipsync, atlased 1024 textures, highest mesh LOD,
   // A-pose (more natural than T), full hand bones. These dramatically increase detail vs. the
   // default URL which returns a low-LOD, low-texture stylized variant.
@@ -39,9 +44,7 @@
     '&pose=A' +
     '&useHands=true';
   var REALISTIC_AVATAR_URL = 'https://models.readyplayer.me/6185a4acfb622cf1cdc49348.glb' + RPM_QUALITY_PARAMS;
-  var LOCAL_AVATAR_URL = REALISTIC_AVATAR_URL;
-  var LOCAL_AVATAR_FALLBACK_URL = AVATAR_URL_BASE + 'models/teacher_naoki.glb';
-  var LOCAL_AVATAR_SECONDARY_FALLBACK_URL = AVATAR_URL_BASE + 'models/alex_body.glb';
+  var LOCAL_AVATAR_FALLBACK_URL = AVATAR_URL_BASE + 'models/alex_body.glb';
   // Final CDN copy — used only if the preferred avatar and local fallbacks fail.
   var REMOTE_AVATAR_URL =
     'https://raw.githubusercontent.com/wass08/r3f-virtual-girlfriend-frontend/main/public/models/64f1a714fe61576b46f27ca2.glb';
@@ -387,6 +390,8 @@
       morphMeshes: [],       // meshes with morphTargetDictionary
       jawOpenKeys: [],       // preferred morph target names per mesh for jaw
       viseme: {},            // mesh → index of best "aa/open" viseme
+      hasPaintedFace: false, // fallback anime model has face/eyes baked into its skin texture
+      hasTexturedOutfit: false,
       currentState: 'idle',
       targetState: 'idle',
       prevState: 'idle',
@@ -491,6 +496,11 @@
               // Debug: dump every material name so we can verify matching.
               log('mesh:', node.name, '→ material:', mat.name);
               var nm = mat.name.toLowerCase();
+              var hasTextureMap = !!(mat.map && mat.map.isTexture);
+              var isBundledAnimeMat = nm.indexOf('mat-') === 0;
+              if (hasTextureMap && mat.map.colorSpace !== undefined) {
+                mat.map.colorSpace = THREE.SRGBColorSpace;
+              }
 
               // ── Classify each material so we can override its colour/roughness.
               // Must handle BOTH naming conventions:
@@ -539,12 +549,17 @@
               // Apply suit jacket.
               if (isTop) {
                 log('  → suit jacket override on:', mat.name);
-                if (mat.color && mat.color.set) mat.color.set(0x1c2230);
-                try { mat.map = null; } catch (e) {}
-                mat.roughness = 0.78;
-                mat.metalness = 0.04;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x05070d);
-                mat.emissiveIntensity = 0.05;
+                if (isBundledAnimeMat && hasTextureMap) {
+                  rig.hasTexturedOutfit = true;
+                  if (mat.color && mat.color.set) mat.color.set(0xffffff);
+                } else {
+                  if (mat.color && mat.color.set) mat.color.set(0x1c2230);
+                  try { mat.map = null; } catch (e) {}
+                  mat.roughness = 0.78;
+                  mat.metalness = 0.04;
+                  if (mat.emissive && mat.emissive.set) mat.emissive.set(0x05070d);
+                  mat.emissiveIntensity = 0.05;
+                }
                 mat.side = THREE.DoubleSide;
                 mat.needsUpdate = true;
               }
@@ -552,20 +567,29 @@
               // Apply skin tone.
               if (isSkin && mat.color && mat.color.set) {
                 log('  → skin override on:', mat.name);
-                mat.color.set(0xefb892);
-                if ('roughness' in mat) mat.roughness = 0.52;
-                mat.metalness = 0.0;
-                if (mat.emissive && mat.emissive.set) mat.emissive.set(0x2a160c);
-                mat.emissiveIntensity = 0.025;
+                if (isBundledAnimeMat && hasTextureMap) {
+                  rig.hasPaintedFace = true;
+                  mat.color.set(0xffffff);
+                } else {
+                  mat.color.set(0xefb892);
+                  if ('roughness' in mat) mat.roughness = 0.52;
+                  mat.metalness = 0.0;
+                  if (mat.emissive && mat.emissive.set) mat.emissive.set(0x2a160c);
+                  mat.emissiveIntensity = 0.025;
+                }
                 mat.needsUpdate = true;
               }
 
               // Apply hair.
               if (isHair && mat.color && mat.color.set) {
                 log('  → hair override on:', mat.name);
-                mat.color.set(0x2a160a);
-                mat.roughness = 0.62;
-                mat.metalness = 0.05;
+                if (isBundledAnimeMat && hasTextureMap) {
+                  mat.color.set(0xffffff);
+                } else {
+                  mat.color.set(0x2a160a);
+                  mat.roughness = 0.62;
+                  mat.metalness = 0.05;
+                }
                 mat.needsUpdate = true;
               }
 
@@ -618,9 +642,12 @@
             rig.morphMeshes.push(node);
             // Pick best available jaw/open morph by priority.
             var dict = node.morphTargetDictionary;
+            // Eye blink/look morphs are facial animation data, not proof that
+            // separate visible eye geometry exists. Some fallback anime GLBs
+            // have these morph names but no eye meshes, so procedural eyes must
+            // still be allowed to attach.
             if (looksLikeEyeMorphDictionary(dict)) {
-              rig.hasNativeEyes = true;
-              rig.nativeEyeNodes.push(node.name || node.uuid);
+              rig.nativeEyeNodes.push('eye-morphs:' + (node.name || node.uuid));
             }
             var priorities = [
               'jawOpen',        // ARKit (facecap + RPM ARKit)
@@ -732,6 +759,10 @@
       // Stored on rig so startLoop() can call it once the avatar is scaled.
       rig._pendingSuitDetails = function () {
         try {
+          // The bundled student avatar already has a jacket, shirt and tie baked
+          // into its outfit texture. Extra procedural suit pieces are only for
+          // generic fallback avatars.
+          if (rig.hasTexturedOutfit) return;
           var anchorBone = rig.bones.neck || rig.bones.spine2 || rig.bones.spine1 || rig.bones.spine;
           if (!anchorBone) return;
 
@@ -787,8 +818,8 @@
       // so the avatar always has visible eyes regardless of GLB structure.
       (function addProceduralEyes() {
         try {
-          if (rig.hasNativeEyes) {
-            log('native eye meshes/materials detected; skipping procedural eyes', rig.nativeEyeNodes);
+          if (rig.hasNativeEyes || rig.hasPaintedFace) {
+            log('native/painted eyes detected; skipping procedural eyes', rig.nativeEyeNodes);
             return;
           }
           if (!rig.head) {
@@ -810,7 +841,7 @@
             }
           }
           // Eye dimensions — small relative to head.
-          var eyeR = headSize * 0.085;          // sclera radius
+          var eyeR = headSize * 0.042;          // sclera radius
           var irisR = eyeR * 0.55;              // iris disc radius
           var pupilR = eyeR * 0.22;             // pupil dot radius
           // Position relative to head bone's local frame. RPM head bones have
@@ -1026,8 +1057,9 @@
     }
 
     var urls = [AVATAR_URL];
-    if (LOCAL_AVATAR_FALLBACK_URL && LOCAL_AVATAR_FALLBACK_URL !== AVATAR_URL) urls.push(LOCAL_AVATAR_FALLBACK_URL);
-    if (LOCAL_AVATAR_SECONDARY_FALLBACK_URL && urls.indexOf(LOCAL_AVATAR_SECONDARY_FALLBACK_URL) === -1) urls.push(LOCAL_AVATAR_SECONDARY_FALLBACK_URL);
+    if (LOCAL_AVATAR_URL && urls.indexOf(LOCAL_AVATAR_URL) === -1) urls.push(LOCAL_AVATAR_URL);
+    if (LOCAL_AVATAR_FALLBACK_URL && urls.indexOf(LOCAL_AVATAR_FALLBACK_URL) === -1) urls.push(LOCAL_AVATAR_FALLBACK_URL);
+    if (REALISTIC_AVATAR_URL && urls.indexOf(REALISTIC_AVATAR_URL) === -1) urls.push(REALISTIC_AVATAR_URL);
     if (AVATAR_URL_FALLBACK && urls.indexOf(AVATAR_URL_FALLBACK) === -1) urls.push(AVATAR_URL_FALLBACK);
     loadWithFallback(urls);
 
