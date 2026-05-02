@@ -16245,6 +16245,17 @@ def pricing_modal() -> rx.Component:
             },
         )
 
+    def _pricing_policy_link(label: str, href: str) -> rx.Component:
+        return rx.link(
+            label,
+            href=href,
+            color="rgba(226,232,240,0.72)",
+            text_decoration="underline",
+            text_decoration_color="rgba(226,232,240,0.28)",
+            text_underline_offset="3px",
+            style={"_hover": {"color": "white", "text_decoration_color": "rgba(255,255,255,0.7)"}},
+        )
+
     return rx.cond(
         AppState.show_pricing_modal,
         rx.box(
@@ -16380,6 +16391,25 @@ def pricing_modal() -> rx.Component:
                         gap="20px",
                         width="100%",
                         align="stretch",
+                    ),
+                    rx.hstack(
+                        rx.text(
+                            "Billed monthly. Cancel anytime through support. Taxes may apply. Usage limits reset as stated. By continuing, you agree to our",
+                            color="rgba(226,232,240,0.48)",
+                            font_size="0.72rem",
+                            line_height="1.45",
+                        ),
+                        _pricing_policy_link("Terms", "/terms"),
+                        rx.text("and", color="rgba(226,232,240,0.48)", font_size="0.72rem"),
+                        _pricing_policy_link("Privacy Policy", "/privacy-policy"),
+                        rx.text("and", color="rgba(226,232,240,0.48)", font_size="0.72rem"),
+                        _pricing_policy_link("Refund Policy", "/return-policy"),
+                        rx.text(".", color="rgba(226,232,240,0.48)", font_size="0.72rem"),
+                        spacing="1",
+                        align="center",
+                        flex_wrap="wrap",
+                        width="100%",
+                        padding_top="2px",
                     ),
                     spacing="4",
                     align_items="stretch",
@@ -19586,7 +19616,7 @@ def _public_footer() -> rx.Component:
                     font_size="1rem",
                 ),
                 rx.hstack(
-                    rx.link("Return Policy", href="/return-policy", **footer_link_style),
+                    rx.link("Refund & Cancellation", href="/return-policy", **footer_link_style),
                     rx.link("Privacy Policy", href="/privacy-policy", **footer_link_style),
                     rx.link("Terms", href="/terms", **footer_link_style),
                     rx.link("Support", href="/support", **footer_link_style),
@@ -19891,21 +19921,26 @@ def legal_page_shell(title: str, subtitle: str, sections: list[tuple[str, str]])
     )
 
 
-@rx.page(route="/return-policy", title="Return Policy", image=FAVICON_32)
+@rx.page(route="/return-policy", title="Refund & Cancellation Policy", image=FAVICON_32)
 def return_policy_page():
     return legal_page_shell(
-        "Return Policy",
+        "Refund & Cancellation Policy",
         "Simple refund and cancellation information for Alex AI subscriptions.",
         [
             (
                 "Refunds",
-                "We handle refund requests case-by-case.\n"
-                "If you were charged incorrectly or had a technical billing issue, contact support with your order details.",
+                "Refund requests are reviewed case-by-case and may depend on account status, usage, billing history, and applicable law.\n"
+                "If you were charged incorrectly, experienced a duplicate charge, or had a technical billing issue, contact support with your order details.",
             ),
             (
                 "Cancellation Rules",
-                "You can cancel at any time.\n"
-                "Cancellation stops future renewals. Access already provided for the paid period may remain active until that period ends.",
+                "You can cancel at any time by contacting support.\n"
+                "Cancellation stops future renewals. Monthly subscriptions are billed in advance, and access already provided for the paid period may remain active until that period ends.",
+            ),
+            (
+                "Usage Limits",
+                "Plan limits, model credits, video-generation limits, and voice-time limits reset according to the plan shown at checkout.\n"
+                "Unused limits do not roll over unless we explicitly say otherwise.",
             ),
             (
                 "Support Contact",
@@ -19928,6 +19963,16 @@ def privacy_policy_page():
                 "User Data",
                 "We store account data and study-related activity needed to run the service.\n"
                 "We use this data to provide login, chat history, progress tracking, and support.",
+            ),
+            (
+                "AI and Learning Data",
+                "Messages, uploaded study material, voice transcripts, YouTube learning sessions, notes, and quiz activity may be processed to provide AI tutoring features.\n"
+                "Do not upload private, sensitive, or confidential material unless you have permission to use it in the service.",
+            ),
+            (
+                "Payments",
+                "Payments are processed by our payment provider. We do not store full card numbers on our own servers.\n"
+                "Billing details may be handled by the payment provider according to their own privacy and buyer terms.",
             ),
             (
                 "Cookies and Local Storage",
@@ -19957,12 +20002,22 @@ def terms_page():
             (
                 "Payments",
                 "Paid plans are billed as shown at checkout.\n"
-                "You are responsible for accurate payment details and reviewing plan pricing before purchase.",
+                "Subscriptions are billed monthly unless stated otherwise. You are responsible for accurate payment details and reviewing plan pricing, renewal terms, usage limits, and cancellation rules before purchase.",
+            ),
+            (
+                "Educational Use and AI Accuracy",
+                "Alex AI is an educational assistant, not an official university, lecturer, or examination authority.\n"
+                "AI responses, summaries, quizzes, voice replies, generated visuals, and study plans may be incomplete or inaccurate. Always check important answers against official course material, lecturers, and exam guidelines.",
+            ),
+            (
+                "Acceptable Use",
+                "Do not use Alex AI to break the law, harm others, bypass security, scrape the service, overload the platform, or share access in a way that abuses plan limits.\n"
+                "We may limit, suspend, or terminate access when necessary to protect users, the platform, or legal compliance.",
             ),
             (
                 "Responsibilities",
                 "You are responsible for your account credentials and activity under your account.\n"
-                "We may update features, pricing, or terms over time.",
+                "We may update features, pricing, model availability, usage limits, or terms over time. Material changes will be reflected in the service or checkout flow.",
             ),
         ],
     )
@@ -24065,7 +24120,7 @@ def _auth_legal_footer() -> rx.Component:
     divider = rx.text("·", color="rgba(255,255,255,0.15)", font_size="0.72rem")
     return rx.box(
         rx.hstack(
-            rx.link("Return Policy",  href="/return-policy",  **link_style),
+            rx.link("Refund & Cancellation",  href="/return-policy",  **link_style),
             divider,
             rx.link("Privacy Policy", href="/privacy-policy", **link_style),
             divider,
@@ -26693,7 +26748,7 @@ def settings_learn_more_tab() -> rx.Component:
             color="rgba(255,255,255,0.35)",
             font_size="0.82rem",
         ),
-        _row("file_text", "Return Policy", "View our return and refund policy", "/return-policy"),
+        _row("file_text", "Refund & Cancellation", "View refund and cancellation rules", "/return-policy"),
         _row("shield", "Privacy Policy", "How we handle your data", "/privacy-policy"),
         _row("scroll_text", "Terms of Service", "Terms and conditions of use", "/terms"),
         _row("circle_help", "Support", "Get help or contact us", "/support"),
