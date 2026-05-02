@@ -29679,6 +29679,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         h.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         # Restrict browser features
         h.setdefault("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")
+        content_type = h.get("content-type", "")
+        if "text/html" in content_type:
+            # Keep Chrome from reusing an older app shell after deploys.
+            h.setdefault("Cache-Control", "no-store, max-age=0")
+            h.setdefault("Pragma", "no-cache")
+            h.setdefault("Expires", "0")
         # Content Security Policy — allows YouTube iframes + our own assets
         h.setdefault(
             "Content-Security-Policy",
