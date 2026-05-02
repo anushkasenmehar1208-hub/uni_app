@@ -16617,6 +16617,50 @@ def tier_status_bar() -> rx.Component:
             },
         )
 
+    def _locked_model_menu_item(label: str, description: str) -> rx.Component:
+        return rx.button(
+            rx.hstack(
+                rx.vstack(
+                    rx.text(label, color="rgba(236,242,250,0.72)", font_size="0.72rem", font_weight="760"),
+                    rx.text(description, color="rgba(185,198,212,0.46)", font_size="0.62rem", line_height="1.25"),
+                    spacing="0",
+                    align_items="flex-start",
+                    min_width="0",
+                    flex="1",
+                ),
+                rx.icon(tag="lock", size=13, color="rgba(185,198,212,0.48)", flex_shrink="0"),
+                width="100%",
+                align="center",
+                spacing="2",
+            ),
+            on_click=AppState.open_pricing_modal,
+            width="100%",
+            padding="8px 9px",
+            border_radius="9px",
+            custom_attrs={"aria-label": f"Upgrade to use {label}", "title": f"Upgrade to use {label}"},
+            style={
+                "background": "rgba(255,255,255,0.035)",
+                "border": "1px solid rgba(255,255,255,0.075)",
+                "cursor": "pointer",
+                "_hover": {
+                    "background": "rgba(125,211,252,0.08)",
+                    "border": "1px solid rgba(125,211,252,0.16)",
+                },
+            },
+        )
+
+    def _model_choice(key: str, label: str, description: str) -> rx.Component:
+        return rx.cond(
+            AppState.can_use_manual_model_mode,
+            _mode_menu_item(
+                label,
+                description,
+                (AppState.model_mode == "manual") & (AppState.manual_model_key == key),
+                AppState.set_manual_model_key(key),
+            ),
+            _locked_model_menu_item(label, f"{description} · Max/Ultra"),
+        )
+
     return rx.hstack(
         rx.text(
             AppState.tier_label,
@@ -16637,17 +16681,9 @@ def tier_status_bar() -> rx.Component:
                     rx.text(
                         AppState.model_mode_label,
                         font_size=rx.breakpoints(initial="0.68rem", md="0.65rem"),
-                        font_weight="600",
+                        font_weight="700",
                         color="rgba(210, 220, 235, 0.92)",
                         font_family="monospace",
-                    ),
-                    rx.text(
-                        AppState.model_mode_detail_label,
-                        font_size=rx.breakpoints(initial="0.68rem", md="0.65rem"),
-                        font_weight="500",
-                        color="rgba(210, 220, 235, 0.62)",
-                        font_family="monospace",
-                        display=rx.breakpoints(initial="none", sm="inline"),
                     ),
                     rx.icon(
                         tag="chevron_down",
@@ -16688,72 +16724,39 @@ def tier_status_bar() -> rx.Component:
                         AppState.set_model_mode("auto"),
                     ),
                     rx.box(height="1px", background="rgba(255,255,255,0.10)", width="100%", margin_y="2px"),
+                    rx.text(
+                        "Models",
+                        color="rgba(185,198,212,0.52)",
+                        font_size="0.62rem",
+                        font_weight="800",
+                        letter_spacing="0.12em",
+                        text_transform="uppercase",
+                        padding="2px 2px 0",
+                    ),
+                    rx.vstack(
+                        _model_choice("teacher", "Gemini Flash", "Fast tutor"),
+                        _model_choice("reasoning", "DeepSeek R1", "Reasoning model"),
+                        _model_choice("premium", "Claude Opus", "Premium depth"),
+                        _model_choice("vision", "GPT Vision", "Image help"),
+                        _model_choice("spec", "DeepSeek V3", "Balanced chat"),
+                        spacing="2",
+                        align_items="stretch",
+                        width="100%",
+                    ),
                     rx.cond(
                         AppState.can_use_manual_model_mode,
-                        rx.vstack(
-                            _mode_menu_item(
-                                "Gemini Flash",
-                                "Fast tutor",
-                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "teacher"),
-                                AppState.set_manual_model_key("teacher"),
-                            ),
-                            _mode_menu_item(
-                                "DeepSeek R1",
-                                "Reasoning model",
-                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "reasoning"),
-                                AppState.set_manual_model_key("reasoning"),
-                            ),
-                            _mode_menu_item(
-                                "Claude Opus",
-                                "Premium depth",
-                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "premium"),
-                                AppState.set_manual_model_key("premium"),
-                            ),
-                            _mode_menu_item(
-                                "GPT Vision",
-                                "Image help",
-                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "vision"),
-                                AppState.set_manual_model_key("vision"),
-                            ),
-                            _mode_menu_item(
-                                "DeepSeek V3",
-                                "Balanced chat",
-                                (AppState.model_mode == "manual") & (AppState.manual_model_key == "spec"),
-                                AppState.set_manual_model_key("spec"),
-                            ),
-                            spacing="2",
-                            align_items="stretch",
-                            width="100%",
+                        rx.text(
+                            AppState.manual_model_reset_label,
+                            color="rgba(185,198,212,0.66)",
+                            font_size="0.62rem",
+                            line_height="1.35",
                         ),
-                        rx.button(
-                            rx.hstack(
-                                rx.icon(tag="lock", size=14, color="rgba(226,234,244,0.78)", flex_shrink="0"),
-                                rx.vstack(
-                                    rx.text("Manual model switching", color="rgba(236,242,250,0.92)", font_size="0.72rem", font_weight="760"),
-                                    rx.text("Available on Max and Ultra.", color="rgba(185,198,212,0.68)", font_size="0.62rem"),
-                                    spacing="0",
-                                    align_items="flex-start",
-                                ),
-                                spacing="2",
-                                align="center",
-                            ),
-                            on_click=AppState.open_pricing_modal,
-                            width="100%",
-                            padding="9px",
-                            border_radius="9px",
-                            style={
-                                "background": "rgba(125,211,252,0.075)",
-                                "border": "1px solid rgba(125,211,252,0.16)",
-                                "cursor": "pointer",
-                                "_hover": {"background": "rgba(125,211,252,0.12)"},
-                            },
+                        rx.text(
+                            "Model control unlocks on Max and Ultra.",
+                            color="rgba(185,198,212,0.66)",
+                            font_size="0.62rem",
+                            line_height="1.35",
                         ),
-                    ),
-                    rx.text(
-                        AppState.manual_model_status_label,
-                        color="rgba(185,198,212,0.76)",
-                        font_size="0.62rem",
-                        line_height="1.35",
                     ),
                     spacing="2",
                     align_items="stretch",
