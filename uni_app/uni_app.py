@@ -16913,7 +16913,8 @@ def upgrade_button() -> rx.Component:
 
 def chat_upgrade_pill() -> rx.Component:
     return rx.cond(
-        ~AppState.has_premium_access,
+        (AppState.is_authenticated_now | AppState.is_authenticated)
+        & ~AppState.has_premium_access,
         rx.button(
             rx.hstack(
                 rx.icon(tag="sparkles", size=14, color="#E7B69D", flex_shrink="0"),
@@ -18329,7 +18330,7 @@ def teacher_avatar_panel() -> rx.Component:
                 ),
                 rx.vstack(
                     rx.text(
-                        "Alex Teacher",
+                        "Alex AI",
                         color="rgba(228,236,245,0.95)",
                         font_size=rx.breakpoints(initial="1rem", md="1.05rem"),
                         font_weight="600",
@@ -18346,7 +18347,7 @@ def teacher_avatar_panel() -> rx.Component:
                         line_height="1.6",
                     ),
                     rx.text(
-                        "The avatar is visual for now. Voice-mode lip sync still works when you open live voice.",
+                        "Ask a question, explore a topic, or keep the lesson moving at your pace.",
                         color="rgba(164,178,194,0.54)",
                         font_size="0.76rem",
                         line_height="1.55",
@@ -33731,12 +33732,14 @@ def alex_voice_overlay_panel() -> rx.Component:
                 height:440px;
                 width:340px;
                 margin-bottom:-96px;   /* pulls the wall up to meet the waist */
-                pointer-events:none !important;
+                pointer-events:auto !important;
             }
             #alex-orb-avatar-canvas {
-                pointer-events:none !important;
-                cursor:default !important;
+                pointer-events:auto !important;
+                cursor:grab !important;
+                touch-action:none !important;
             }
+            #alex-orb-avatar-canvas:active { cursor:grabbing !important; }
             /* Subtle floor shadow directly under the avatar — reads as "standing on ground" */
             #alex-orb.alex-avatar-active::after {
                 content:"";
