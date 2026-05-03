@@ -16889,7 +16889,7 @@ def chat_upgrade_pill() -> rx.Component:
         ~AppState.has_premium_access,
         rx.button(
             rx.hstack(
-                rx.icon(tag="sparkles", size=14, color="#A7F3D0", flex_shrink="0"),
+                rx.icon(tag="sparkles", size=14, color="#E7B69D", flex_shrink="0"),
                 rx.text(
                     "Upgrade to Premium",
                     display=rx.breakpoints(initial="none", sm="inline"),
@@ -16913,21 +16913,21 @@ def chat_upgrade_pill() -> rx.Component:
             z_index="6",
             custom_attrs={"aria-label": "Upgrade to Premium", "title": "Upgrade to Premium"},
             style={
-                "background": "linear-gradient(135deg, rgba(14,24,20,0.92) 0%, rgba(18,55,36,0.9) 52%, rgba(8,16,14,0.94) 100%)",
-                "border": "1px solid rgba(134,239,172,0.26)",
-                "color": "rgba(232,255,240,0.94)",
+                "background": "linear-gradient(135deg, rgba(31,24,20,0.94) 0%, rgba(72,42,31,0.92) 52%, rgba(18,15,13,0.96) 100%)",
+                "border": "1px solid rgba(217,119,87,0.34)",
+                "color": "rgba(255,238,230,0.95)",
                 "font_weight": "850",
                 "font_size": "0.78rem",
                 "letter_spacing": "0",
-                "box_shadow": "0 18px 46px rgba(0,0,0,0.28), 0 0 28px rgba(52,211,153,0.10), inset 0 1px 0 rgba(255,255,255,0.08)",
+                "box_shadow": "0 18px 46px rgba(0,0,0,0.28), 0 0 28px rgba(217,119,87,0.12), inset 0 1px 0 rgba(255,255,255,0.08)",
                 "backdrop_filter": "blur(16px) saturate(135%)",
                 "cursor": "pointer",
                 "transition": "transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease",
                 "_hover": {
-                    "background": "linear-gradient(135deg, rgba(19,35,28,0.96) 0%, rgba(22,74,47,0.94) 52%, rgba(9,18,15,0.98) 100%)",
-                    "border_color": "rgba(167,243,208,0.42)",
+                    "background": "linear-gradient(135deg, rgba(39,29,24,0.97) 0%, rgba(88,49,35,0.95) 52%, rgba(20,16,14,0.98) 100%)",
+                    "border_color": "rgba(231,182,157,0.46)",
                     "transform": "translateY(-1px)",
-                    "box_shadow": "0 22px 54px rgba(0,0,0,0.34), 0 0 34px rgba(52,211,153,0.16), inset 0 1px 0 rgba(255,255,255,0.10)",
+                    "box_shadow": "0 22px 54px rgba(0,0,0,0.34), 0 0 34px rgba(217,119,87,0.18), inset 0 1px 0 rgba(255,255,255,0.10)",
                 },
             },
         ),
@@ -21454,23 +21454,23 @@ def sidebar_plan_widget() -> rx.Component:
                 rx.hstack(
                     rx.hstack(
                         rx.box(
-                            rx.text("✦", color="#dcfce7", font_size="0.78rem", font_weight="800"),
+                            rx.text("✦", color="#F4C7B0", font_size="0.78rem", font_weight="800"),
                             width="18px",
                             height="18px",
                             border_radius="999px",
                             display="flex",
                             align_items="center",
                             justify_content="center",
-                            background="rgba(220,252,231,0.1)",
-                            border="1px solid rgba(220,252,231,0.12)",
+                            background="rgba(217,119,87,0.12)",
+                            border="1px solid rgba(231,182,157,0.16)",
                             flex_shrink="0",
                         ),
-                        rx.text("Upgrade to Premium", font_size="0.8rem", font_weight="700", color="white"),
+                        rx.text("Upgrade to Premium", font_size="0.8rem", font_weight="700", color="rgba(255,238,230,0.95)"),
                         spacing="2",
                         align="center",
                     ),
                     rx.spacer(),
-                    rx.text("→", color="rgba(220,252,231,0.76)", font_size="0.9rem"),
+                    rx.text("→", color="rgba(231,182,157,0.78)", font_size="0.9rem"),
                     width="100%",
                     align="center",
                 ),
@@ -21479,14 +21479,14 @@ def sidebar_plan_widget() -> rx.Component:
                 height="44px",
                 border_radius="10px",
                 style={
-                    "background": "linear-gradient(135deg, rgba(10,24,16,0.98) 0%, rgba(16,68,43,0.92) 46%, rgba(6,8,7,0.98) 100%)",
-                    "border": "1px solid rgba(110,231,183,0.24)",
+                    "background": "linear-gradient(135deg, rgba(31,24,20,0.96) 0%, rgba(72,42,31,0.9) 46%, rgba(12,11,10,0.98) 100%)",
+                    "border": "1px solid rgba(217,119,87,0.30)",
                     "cursor": "pointer",
                     "transition": "all 0.2s ease",
-                    "box_shadow": "0 10px 22px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04)",
+                    "box_shadow": "0 10px 22px rgba(0,0,0,0.24), 0 0 24px rgba(217,119,87,0.10), inset 0 1px 0 rgba(255,255,255,0.04)",
                     "_hover": {
                         "filter": "brightness(1.05)",
-                        "border": "1px solid rgba(134,239,172,0.34)",
+                        "border": "1px solid rgba(231,182,157,0.42)",
                         "transform": "translateY(-1px)",
                     },
                 },
@@ -21596,12 +21596,12 @@ def profile_menu_button() -> rx.Component:
                 outline: none !important;
             }
             .alex-profile-menu .alex-profile-menu-upgrade[data-highlighted] {
-                background: rgba(52,211,153,0.12) !important;
-                color: #A7F3D0 !important;
+                background: rgba(217,119,87,0.13) !important;
+                color: #E7B69D !important;
             }
             .alex-profile-menu .alex-profile-menu-upgrade[data-highlighted] svg,
             .alex-profile-menu .alex-profile-menu-upgrade[data-highlighted] span {
-                color: #A7F3D0 !important;
+                color: #E7B69D !important;
             }
             .alex-profile-menu .alex-profile-menu-danger[data-highlighted] {
                 background: rgba(248,113,113,0.10) !important;
@@ -21701,8 +21701,8 @@ def profile_menu_button() -> rx.Component:
                 rx.menu.separator(class_name="alex-profile-menu-separator"),
                 rx.menu.item(
                     rx.hstack(
-                        rx.icon(tag="sparkles", size=14, color="#86EFAC"),
-                        rx.text("Upgrade to Premium", font_size="0.78rem", color="#A7F3D0", font_weight="650"),
+                        rx.icon(tag="sparkles", size=14, color="#E7B69D"),
+                        rx.text("Upgrade to Premium", font_size="0.78rem", color="#E7B69D", font_weight="650"),
                         spacing="2",
                         align="center",
                     ),
@@ -34331,33 +34331,16 @@ def free_sidebar_content() -> rx.Component:
     def _locked_nav_row(icon_tag: str, label: str, on_click=None) -> rx.Component:
         return rx.button(
             rx.hstack(
-                rx.icon(tag=icon_tag, size=15, color="rgba(255,255,255,0.48)", flex_shrink="0"),
+                rx.icon(tag=icon_tag, size=15, color="rgba(255,255,255,0.44)", flex_shrink="0"),
                 rx.text(
                     label,
                     font_size="0.875rem",
                     font_weight="400",
-                    color="rgba(255,255,255,0.60)",
+                    color="rgba(255,255,255,0.54)",
                     line_height="1",
                 ),
                 rx.spacer(),
-                rx.hstack(
-                    rx.text(
-                        "Soon",
-                        font_size="0.62rem",
-                        font_weight="750",
-                        letter_spacing="0.04em",
-                        color="rgba(167,243,208,0.82)",
-                        line_height="1",
-                    ),
-                    rx.icon(tag="lock", size=10, color="rgba(167,243,208,0.62)", flex_shrink="0"),
-                    spacing="1",
-                    align="center",
-                    padding="4px 6px",
-                    border_radius="999px",
-                    background="rgba(52,211,153,0.08)",
-                    border="1px solid rgba(52,211,153,0.12)",
-                    flex_shrink="0",
-                ),
+                rx.icon(tag="lock", size=12, color="rgba(255,255,255,0.34)", flex_shrink="0"),
                 spacing="2",
                 align="center",
                 width="100%",
@@ -34370,12 +34353,7 @@ def free_sidebar_content() -> rx.Component:
             padding_x="10px",
             style={
                 **_btn_base,
-                "background": "linear-gradient(90deg, rgba(52,211,153,0.035), rgba(255,255,255,0))",
-                "border": "1px solid rgba(255,255,255,0.035)",
-                "_hover": {
-                    "background": "linear-gradient(90deg, rgba(52,211,153,0.075), rgba(255,255,255,0.018))",
-                    "border_color": "rgba(52,211,153,0.12)",
-                },
+                "_hover": {"background": "rgba(255,255,255,0.05)"},
             },
         )
 
