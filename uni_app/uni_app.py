@@ -25040,6 +25040,150 @@ def landing_page():
             box_shadow="0 24px 60px rgba(0,0,0,0.34)",
         )
 
+    def landing_pricing_card(
+        title: str,
+        price: str,
+        period: str,
+        description: str,
+        features: list[str],
+        action_label: str,
+        href: str,
+        accent: str = "neutral",
+        primary: bool = False,
+    ) -> rx.Component:
+        accent_styles = {
+            "free": {
+                "border": "rgba(255,255,255,0.08)",
+                "glow": "rgba(255,255,255,0.04)",
+            },
+            "pro": {
+                "border": "rgba(94,211,132,0.36)",
+                "glow": "rgba(74,222,128,0.10)",
+            },
+            "max": {
+                "border": "rgba(125,211,252,0.32)",
+                "glow": "rgba(125,211,252,0.09)",
+            },
+            "ultra": {
+                "border": "rgba(231,182,157,0.38)",
+                "glow": "rgba(231,182,157,0.11)",
+            },
+        }
+        theme = accent_styles.get(accent, accent_styles["free"])
+        button_background = (
+            "linear-gradient(180deg, #f7f4ed 0%, #ebe4d7 100%)"
+            if primary
+            else "rgba(255,255,255,0.045)"
+        )
+        button_color = "#1c1915" if primary else "rgba(255,255,255,0.88)"
+        button_border = "1px solid rgba(255,255,255,0.10)" if primary else f"1px solid {theme['border']}"
+
+        return rx.box(
+            rx.vstack(
+                rx.vstack(
+                    rx.text(
+                        title,
+                        color="rgba(255,255,255,0.96)",
+                        font_size="1.05rem",
+                        font_weight="700",
+                        letter_spacing="-0.02em",
+                    ),
+                    rx.hstack(
+                        rx.text(
+                            price,
+                            color="rgba(255,255,255,0.98)",
+                            font_size=rx.breakpoints(initial="2.3rem", md="1.92rem", lg="2.16rem"),
+                            font_weight="800",
+                            letter_spacing="-0.055em",
+                            line_height="1",
+                        ),
+                        rx.text(
+                            period,
+                            color="rgba(255,255,255,0.48)",
+                            font_size="0.78rem",
+                            font_weight="500",
+                            white_space="nowrap",
+                        ),
+                        spacing="2",
+                        align="end",
+                    ),
+                    rx.text(
+                        description,
+                        color="rgba(255,255,255,0.58)",
+                        font_size=rx.breakpoints(initial="0.95rem", md="0.84rem", lg="0.9rem"),
+                        line_height="1.62",
+                    ),
+                    spacing="3",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                rx.vstack(
+                    *[
+                        rx.hstack(
+                            rx.text("•", color="rgba(231,182,157,0.8)", font_size="0.9rem", line_height="1.45"),
+                            rx.text(
+                                feature,
+                                color="rgba(255,255,255,0.78)",
+                                font_size=rx.breakpoints(initial="0.92rem", md="0.78rem", lg="0.84rem"),
+                                line_height="1.48",
+                            ),
+                            spacing="2",
+                            align="start",
+                            width="100%",
+                        )
+                        for feature in features
+                    ],
+                    spacing="2",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                rx.box(flex="1"),
+                rx.link(
+                    rx.button(
+                        action_label,
+                        width="100%",
+                        height=rx.breakpoints(initial="52px", md="48px"),
+                        border_radius="999px",
+                        background=button_background,
+                        color=button_color,
+                        border=button_border,
+                        font_weight="750",
+                        font_size="0.92rem",
+                        box_shadow=(
+                            "0 18px 46px rgba(0,0,0,0.44), 0 1px 0 rgba(255,255,255,0.45) inset"
+                            if primary
+                            else "none"
+                        ),
+                        cursor="pointer",
+                        style={
+                            "_hover": {
+                                "transform": "translateY(-1px)",
+                                "background": "#fffaf0" if primary else "rgba(255,255,255,0.075)",
+                            }
+                        },
+                    ),
+                    href=href,
+                    width="100%",
+                    text_decoration="none",
+                ),
+                spacing="4",
+                align_items="flex-start",
+                width="100%",
+                height="100%",
+            ),
+            width=rx.breakpoints(initial="100%", md="calc(25% - 14px)"),
+            min_width=rx.breakpoints(initial="100%", md="0"),
+            min_height=rx.breakpoints(initial="auto", md="500px"),
+            padding=rx.breakpoints(initial="24px", md="18px", lg="22px"),
+            border=f"1px solid {theme['border']}",
+            border_radius="24px",
+            background=(
+                f"radial-gradient(circle at 50% 0%, {theme['glow']} 0%, transparent 42%), "
+                "linear-gradient(180deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.025) 100%)"
+            ),
+            box_shadow="0 24px 70px rgba(0,0,0,0.36)",
+        )
+
     def landing_live_chat_demo() -> rx.Component:
         return rx.fragment(
             rx.html('''
@@ -26141,92 +26285,76 @@ def landing_page():
                 align_items="center",
                 width="100%",
             ),
-            rx.hstack(
-                rx.box(
-                    rx.vstack(
-                        rx.text("Free", color="rgba(255,255,255,0.94)", font_size="1.15rem", font_weight="650"),
-                        rx.text("USD 0", color="rgba(255,255,255,0.98)", font_size="2rem", font_weight="750", letter_spacing="-0.05em"),
-                        rx.text("for getting started", color="rgba(255,255,255,0.44)", font_size="0.88rem"),
-                        rx.text("Explore the planner, test the academic mentor, and see how Alex AI fits your semester workflow.", color="rgba(255,255,255,0.56)", font_size="0.95rem", line_height="1.7"),
-                        rx.text("• Basic planner access", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
-                        rx.text("• Trial access to study chat", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
-                        rx.text("• Start building your semester system", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
-                        hero_button("Start Free", SELECTION_ROUTE, "secondary"),
-                        spacing="3",
-                        align_items="flex-start",
-                        width="100%",
-                    ),
-                    width=rx.breakpoints(initial="100%", md="calc(33.333% - 16px)"),
-                    min_width=rx.breakpoints(initial="100%", md="280px"),
-                    padding="24px",
-                    border="1px solid rgba(255,255,255,0.08)",
-                    border_radius="24px",
-                    background="linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)",
+            rx.flex(
+                landing_pricing_card(
+                    "Free",
+                    "USD 0",
+                    "starter",
+                    "Start with Alex AI, build your study workspace, and test the academic mentor before upgrading.",
+                    [
+                        "3-day trial for new users",
+                        "5 free messages/day after trial",
+                        "Auto model routing",
+                        "Basic workspace access",
+                    ],
+                    "Start Free",
+                    SELECTION_ROUTE,
+                    "free",
+                    False,
                 ),
-                rx.box(
-                    rx.vstack(
-                        rx.text("Pro", color="rgba(255,255,255,0.98)", font_size="1.15rem", font_weight="700"),
-                        rx.text("USD 3.17", color="rgba(255,255,255,0.98)", font_size="2.2rem", font_weight="800", letter_spacing="-0.05em"),
-                        rx.text("per month", color="rgba(255,255,255,0.48)", font_size="0.88rem"),
-                        rx.text("Unlock the full semester planner, live 3D mentor teaching, and a more advanced daily study workflow built for serious students.", color="rgba(255,255,255,0.62)", font_size="0.96rem", line_height="1.72"),
-                        rx.text("• Full semester automation", color="rgba(255,255,255,0.82)", font_size="0.92rem"),
-                        rx.text("• Live 3D voice mentor with typed chat", color="rgba(255,255,255,0.82)", font_size="0.92rem"),
-                        rx.text("• Notes, tasks, and visual study support", color="rgba(255,255,255,0.82)", font_size="0.92rem"),
-                        rx.link(
-                            rx.button(
-                                "Upgrade to Pro",
-                                width="100%",
-                                height="52px",
-                                border_radius="999px",
-                                background="linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%)",
-                                color="#09090b",
-                                font_weight="700",
-                                border="1px solid rgba(255,255,255,0.08)",
-                                box_shadow="0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset",
-                                _hover={"background": "#ffffff", "transform": "translateY(-1px)"},
-                            ),
-                            href=auth_routes.LOGIN_ROUTE,
-                            width="100%",
-                            text_decoration="none",
-                        ),
-                        spacing="3",
-                        align_items="flex-start",
-                        width="100%",
-                    ),
-                    width=rx.breakpoints(initial="100%", md="calc(33.333% - 16px)"),
-                    min_width=rx.breakpoints(initial="100%", md="280px"),
-                    padding="24px",
-                    border="1px solid rgba(255,255,255,0.12)",
-                    border_radius="24px",
-                    background="linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
-                    box_shadow="0 28px 72px rgba(0,0,0,0.36)",
+                landing_pricing_card(
+                    "Pro",
+                    "USD 3.17",
+                    "/ month",
+                    "The full everyday student workspace for guided study, planner tools, and voice-supported learning.",
+                    [
+                        "Unlimited daily messages",
+                        "Full semester planner access",
+                        "Auto model routing for every chat",
+                        "45 min/day voice mentor limit",
+                        "Notes, tasks, YouTube learning with quizzes, and more",
+                    ],
+                    "Upgrade to Pro",
+                    "/pricing",
+                    "pro",
+                    True,
                 ),
-                rx.box(
-                    rx.vstack(
-                        rx.text("Max", color="rgba(255,255,255,0.94)", font_size="1.15rem", font_weight="650"),
-                        rx.text("USD 25", color="rgba(255,255,255,0.98)", font_size="2rem", font_weight="750", letter_spacing="-0.05em"),
-                        rx.text("per month", color="rgba(255,255,255,0.44)", font_size="0.88rem"),
-                        rx.text("For students who want the most advanced Alex AI experience, expanded control, and premium creation tools as the platform grows.", color="rgba(255,255,255,0.56)", font_size="0.95rem", line_height="1.7"),
-                        rx.text("• Priority support", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
-                        rx.text("• Choose your preferred AI model (DeepSeek Chat, DeepSeek R1, Claude Opus 4.6, GPT-4o Mini)", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
-                        rx.text("• Maximum live voice chat with the 3D mentor experience", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
-                        rx.text("• Video generation for study topics across your subjects", color="rgba(255,255,255,0.78)", font_size="0.92rem"),
-                        hero_button("Talk to Support", "/support", "secondary"),
-                        spacing="3",
-                        align_items="flex-start",
-                        width="100%",
-                    ),
-                    width=rx.breakpoints(initial="100%", md="calc(33.333% - 16px)"),
-                    min_width=rx.breakpoints(initial="100%", md="280px"),
-                    padding="24px",
-                    border="1px solid rgba(255,255,255,0.08)",
-                    border_radius="24px",
-                    background="linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)",
+                landing_pricing_card(
+                    "Max",
+                    "USD 25",
+                    "/ month",
+                    "For students who want manual access to the five Alex models, more video creation, and longer voice sessions.",
+                    [
+                        "Switch manually between 5 Alex models",
+                        "Per-model credits reset every 24h",
+                        "20 teaching-video generations/month",
+                        "2 hours/day voice mentor limit",
+                    ],
+                    "Upgrade to Max",
+                    "/pricing",
+                    "max",
+                    True,
                 ),
-                spacing="5",
+                landing_pricing_card(
+                    "Ultra",
+                    "USD 100",
+                    "/ month",
+                    "For heavy study sessions with much larger model limits, the fastest reset window, and maximum voice time.",
+                    [
+                        "Higher credits across all 5 models",
+                        "Per-model credits reset every 5h",
+                        "100 teaching-video generations/month",
+                        "8 hours/day voice mentor limit",
+                    ],
+                    "Upgrade to Ultra",
+                    "/pricing",
+                    "ultra",
+                    True,
+                ),
+                gap=rx.breakpoints(initial="18px", md="18px"),
                 align="stretch",
                 justify="between",
-                flex_wrap="wrap",
+                flex_wrap=rx.breakpoints(initial="wrap", md="nowrap"),
                 width="100%",
             ),
             spacing="6",
