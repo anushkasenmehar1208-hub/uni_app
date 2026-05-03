@@ -8075,6 +8075,39 @@ class AppState(reflex_local_auth.LocalAuthState):
     def _notes_scope_key(self) -> str:
         return (self.active_scope or "home").strip() or "home"
 
+    def _migrate_legacy_learn_notes_to_home(self, uid: int, scope: str) -> None:
+        if uid < 0 or scope != "home":
+            return
+        try:
+            with rx.session() as session:
+                existing_bodies = {
+                    str(body or "")
+                    for body in session.exec(
+                        select(StudentNote.body)
+                        .where(StudentNote.user_id == uid)
+                        .where(StudentNote.scope == "home")
+                    ).all()
+                }
+                rows = session.exec(
+                    select(StudentNote)
+                    .where(StudentNote.user_id == uid)
+                    .where(StudentNote.scope.startswith("learn:"))
+                ).all()
+                changed = False
+                for row in rows:
+                    body = str(row.body or "")
+                    if body in existing_bodies:
+                        session.delete(row)
+                    else:
+                        row.scope = "home"
+                        session.add(row)
+                        existing_bodies.add(body)
+                    changed = True
+                if changed:
+                    session.commit()
+        except Exception as e:
+            print(f"ERROR _migrate_legacy_learn_notes_to_home: {e}")
+
     def _reload_notes_items(self) -> None:
         uid = self._active_data_uid()
         self.notes_items = []
@@ -8082,6 +8115,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.notes_header_subtitle = ""
             return
         scope = self._notes_scope_key()
+        self._migrate_legacy_learn_notes_to_home(uid, scope)
         try:
             with rx.session() as session:
                 rows = session.exec(
@@ -29196,15 +29230,14 @@ class LearnState(AppState):
         text = (self.note_draft or "").strip()
         if not text:
             return
-        if text == (self.last_saved_note_text or "").strip():
-            self.notes_saved = False
-            self.note_save_status = "already"
-            self.note_save_feedback_id += 1
-            return LearnState.clear_note_save_feedback_later(self.note_save_feedback_id)
         uid = self._uid()
         if uid < 0:
             return
         title = (self.video_title or f"YouTube — {self.video_id}").strip()[:120]
+        target_scope = self._notes_scope_key()
+        if target_scope.startswith("learn:"):
+            target_scope = "home"
+        legacy_scope = f"learn:{self.video_id}"
         # Add the source link at the bottom of the note
         source = f"\n\n---\nSource: https://www.youtube.com/watch?v={self.video_id}"
         body = text + source
@@ -29213,7 +29246,7 @@ class LearnState(AppState):
                 existing = session.exec(
                     select(StudentNote)
                     .where(StudentNote.user_id == uid)
-                    .where(StudentNote.scope == f"learn:{self.video_id}")
+                    .where(StudentNote.scope == target_scope)
                     .where(StudentNote.body == body)
                     .limit(1)
                 ).first()
@@ -29223,20 +29256,35 @@ class LearnState(AppState):
                     self.note_save_status = "already"
                     self.note_save_feedback_id += 1
                     return LearnState.clear_note_save_feedback_later(self.note_save_feedback_id)
-                row = StudentNote(
-                    user_id=uid,
-                    scope=f"learn:{self.video_id}",  # Distinguishable scope
-                    title=title,
-                    body=body,
-                    attachments_json="[]",
-                    source_message_db_id=0,
-                )
-                session.add(row)
+                legacy_row = None
+                if legacy_scope != target_scope:
+                    legacy_row = session.exec(
+                        select(StudentNote)
+                        .where(StudentNote.user_id == uid)
+                        .where(StudentNote.scope == legacy_scope)
+                        .where(StudentNote.body == body)
+                        .limit(1)
+                    ).first()
+                if legacy_row is not None:
+                    legacy_row.scope = target_scope
+                    legacy_row.title = title
+                    session.add(legacy_row)
+                else:
+                    row = StudentNote(
+                        user_id=uid,
+                        scope=target_scope,
+                        title=title,
+                        body=body,
+                        attachments_json="[]",
+                        source_message_db_id=0,
+                    )
+                    session.add(row)
                 session.commit()
             self.notes_saved = True
             self.note_save_status = "saved"
             self.last_saved_note_text = text
             self.note_save_feedback_id += 1
+            self._reload_notes_items()
             return LearnState.clear_note_save_feedback_later(self.note_save_feedback_id)
         except Exception as e:
             logger.error(f"save_note_to_workspace error: {e}")
