@@ -23744,12 +23744,12 @@ def nav_rail() -> rx.Component:
         ),
         _nav_rail_btn("search", AppState.toggle_global_search, "Search chats"),
         _nav_rail_btn("notebook", AppState.toggle_notes_panel, "Notes"),
-        _nav_rail_btn("list_checks", rx.redirect("/tracker"), "Tracker"),
-        _nav_rail_btn("youtube", rx.redirect("/learn"), "Learn from video"),
+        _nav_rail_btn("list_checks", [AppState.close_semester_sidebar, rx.redirect("/tracker")], "Tracker"),
+        _nav_rail_btn("youtube", [AppState.close_semester_sidebar, rx.redirect("/learn")], "Learn from video"),
         _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
         rx.spacer(),
         # ── Bottom group ──
-        _nav_rail_btn("settings", rx.redirect("/settings"), "Settings"),
+        _nav_rail_btn("settings", [AppState.close_semester_sidebar, rx.redirect("/settings")], "Settings"),
         # User avatar
         rx.box(
             rx.text(
@@ -34737,8 +34737,8 @@ def free_sidebar_content() -> rx.Component:
         _nav_row("square_pen", "New chat", AppState.new_chat),
         _nav_row("search", "Search chats", AppState.toggle_global_search),
         _nav_row("notebook", "Notes", AppState.toggle_notes_panel),
-        _nav_row("list_checks", "Tracker", rx.redirect("/tracker")),
-        _nav_row("youtube", "Learn from video", rx.redirect("/learn")),
+        _nav_row("list_checks", "Tracker", [AppState.close_semester_sidebar, rx.redirect("/tracker")]),
+        _nav_row("youtube", "Learn from video", [AppState.close_semester_sidebar, rx.redirect("/learn")]),
         _locked_nav_row("video", "Generate teaching videos", AppState.show_video_generator_coming_soon),
 
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.07)", margin_y="4px"),
