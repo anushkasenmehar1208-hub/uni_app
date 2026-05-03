@@ -3219,7 +3219,7 @@ PLAN_PRODUCT_IDS = {
 
 PLAN_DETAILS = {
     PLAN_FREE: {"name": "Free", "price": 0, "reset_hours": 24},
-    PLAN_PRO: {"name": "Pro", "price": 3.17, "reset_hours": 24},
+    PLAN_PRO: {"name": "Pro", "price": 3.00, "reset_hours": 24},
     PLAN_MAX: {"name": "Max", "price": 25, "reset_hours": 24},
     PLAN_ULTRA: {"name": "Ultra", "price": 100, "reset_hours": 5},
 }
@@ -16426,7 +16426,7 @@ def pricing_modal() -> rx.Component:
                             _plan_card(
                                 "Pro",
                                 "Guided study, planner tools",
-                                "$3.17",
+                                "$3",
                                 "USD / month",
                                 "Monthly billing · Cancel anytime",
                                 "Everything in Free, plus:",
@@ -25532,7 +25532,7 @@ def landing_page():
                         const t = (text || '').trim().toLowerCase();
                         if (!t) return "Ask about planning, pricing, voice teaching, or study tools.";
                         if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students turn syllabi into guided semester plans.";
-                        if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3.17/month, and Max is $25/month.";
+                        if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3/month, and Max is $25/month.";
                         if (/(voice|speak|talk|mentor|call)/.test(t)) return "Alex AI offers live voice teaching with a 3D mentor and typed chat.";
                         if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Upload your syllabus and Alex AI organizes your semester automatically.";
                         if (/(notes|tasks|todo|to-do)/.test(t)) return "Students can save notes, manage tasks, and keep study flow in one place.";
@@ -26304,7 +26304,7 @@ def landing_page():
                 ),
                 landing_pricing_card(
                     "Pro",
-                    "USD 3.17",
+                    "USD 3",
                     "/ month",
                     "The full everyday student workspace for guided study, planner tools, and voice-supported learning.",
                     [
