@@ -25498,7 +25498,7 @@ def landing_page():
                     },
                 },
             ),
-            href=auth_routes.LOGIN_ROUTE,
+            href=SELECTION_ROUTE,
             text_decoration="none",
             custom_attrs={"data-landing-animate": "nav"},
         ),
@@ -26289,7 +26289,7 @@ def landing_page():
                             font_weight="500",
                             letter_spacing="-0.02em",
                         ),
-                        href=auth_routes.LOGIN_ROUTE,
+                        href=SELECTION_ROUTE,
                         text_decoration="none",
                         style={
                             "_hover": {
