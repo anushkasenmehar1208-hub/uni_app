@@ -25479,7 +25479,7 @@ def landing_page():
         ),
         rx.link(
             rx.button(
-                "Student Login",
+                "See Alex AI",
                 type="button",
                 variant="ghost",
                 style={
@@ -26283,7 +26283,7 @@ def landing_page():
                     nav_link("Terms", "/terms"),
                     rx.link(
                         rx.text(
-                            "Student Login",
+                            "See Alex AI",
                             color="rgba(255,255,255,0.52)",
                             font_size="0.95rem",
                             font_weight="500",
