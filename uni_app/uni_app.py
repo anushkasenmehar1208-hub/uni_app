@@ -6616,6 +6616,13 @@ class AppState(reflex_local_auth.LocalAuthState):
     def _workspace_home_route(self) -> str:
         return "/free" if _degree_is_custom(self.degree) else scope_to_route("home")
 
+    def _workspace_home_chat_route(self, session_id: str) -> str:
+        base_route = self._workspace_home_route()
+        return f"{base_route}?chat={quote(str(session_id or '').strip())}" if session_id else base_route
+
+    def _workspace_home_chat_history_script(self, session_id: str) -> str:
+        return f"window.history.pushState(null,'',{json.dumps(self._workspace_home_chat_route(session_id))})"
+
     def _preload_root_workspace_target(self, uid: int) -> str:
         if uid < 0:
             return APP_DASHBOARD_ROUTE
@@ -8027,7 +8034,10 @@ class AppState(reflex_local_auth.LocalAuthState):
                 if self._session_in_scope(uid, int(session_id), "home"):
                     self.current_session_id = session_id
                     self._load_messages(uid)
-                    if current_path != target_route:
+                    if target_route == "/free":
+                        yield rx.call_script(self._workspace_home_chat_history_script(session_id))
+                        yield rx.call_script(SCROLL_TO_BOTTOM_JS)
+                    elif current_path != target_route:
                         yield _hard_navigate(target_route)
                     else:
                         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
@@ -8035,7 +8045,10 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.active_scope = "home"
             self.view_mode = "home"
             self.current_session_id = session_id
-            yield _hard_navigate(target_route)
+            yield _hard_navigate(
+                self._workspace_home_chat_route(session_id) if target_route == "/free" else target_route
+            )
+            return
         else:
             scope_info = SCOPE_ROUTE_MAP.get(base_scope, {})
             if scope_info:
@@ -12077,6 +12090,7 @@ Quality rules:
         if self.is_started and not _degree_is_custom(self.degree):
             yield _replace_route(self._authenticated_landing_route())
             return
+        requested_session_id = str(self.router.page.params.get("chat", "") or "").strip()
         # Load home scope chat sessions
         self.active_scope = "home"
         self.view_mode = "home"
@@ -12099,9 +12113,30 @@ Quality rules:
             print(f"[FREE] session load error: {e}")
         try:
             self._ensure_scope_memory(uid, "home")
-            self._ensure_session(uid, "home")
+            loaded_requested_session = False
+            if requested_session_id:
+                try:
+                    requested_sid = int(requested_session_id)
+                    if self._session_in_scope(uid, requested_sid, "home"):
+                        with rx.session() as session:
+                            requested_row = session.exec(
+                                select(ChatSession)
+                                .where(ChatSession.id == requested_sid)
+                                .where(ChatSession.user_id == uid)
+                                .where(ChatSession.scope == "home")
+                            ).one_or_none()
+                        if requested_row is not None:
+                            self.current_session_id = str(requested_row.id)
+                            self.current_session_choice = f"{requested_row.id}::{requested_row.title}"
+                            loaded_requested_session = True
+                except (TypeError, ValueError):
+                    loaded_requested_session = False
+            if not loaded_requested_session:
+                self._ensure_session(uid, "home")
             self._load_home_sessions(uid)
             self._load_messages(uid, "home")
+            self._last_hydrated_scope = "home"
+            self._last_hydrated_session_id = str(self.current_session_id or "")
         except Exception as e:
             print(f"[FREE] home chat hydrate error: {e}")
 
@@ -12435,24 +12470,39 @@ Quality rules:
     async def new_chat(self):
         uid = self._active_data_uid()
         if uid < 0: return
+        scope = (self.active_scope or "home").strip() or "home"
+        has_user_message = any(
+            isinstance(m, dict) and (m.get("role") or "").strip() == "user"
+            for m in (self.chat_history or [])
+        )
+        if not has_user_message:
+            return
         try:
             with rx.session() as session:
-                sess = ChatSession(user_id=uid, scope=self.active_scope, title="New chat")  # type: ignore
+                sess = ChatSession(user_id=uid, scope=scope, title="New chat")  # type: ignore
                 session.add(sess); session.commit(); session.refresh(sess)
                 self.current_session_id = str(sess.id)
                 self.current_session_choice = f"{sess.id}::New chat"
-            self._load_sessions(uid, self.active_scope)
-            if self.active_scope == "home":
+            self._load_sessions(uid, scope)
+            if scope == "home":
                 self._load_home_sessions(uid)
             # NEW: reset to empty state (no welcome message stored)
             self.chat_history = []
             self._clear_canvas_state()
-            self.chat_input = self.chat_drafts.get(self.active_scope, "")
-            if self.active_scope == "home":
+            self.chat_input = self.chat_drafts.get(scope, "")
+            self._last_hydrated_scope = scope
+            self._last_hydrated_session_id = self.current_session_id
+            if scope == "home":
                 target_route = self._workspace_home_route()
                 current_path = str(getattr(self.router.url, "path", "") or "")
-                if current_path != target_route:
+                if target_route == "/free":
+                    yield rx.call_script(self._workspace_home_chat_history_script(self.current_session_id))
+                elif current_path != target_route:
                     yield _hard_navigate(target_route)
+                else:
+                    yield rx.call_script(
+                        f"window.history.pushState(null,'','/s/home/{self.current_session_id}')"
+                    )
         except Exception as e:
             print(f"ERROR new_chat: {e}")
 
@@ -12469,7 +12519,9 @@ Quality rules:
             if self.active_scope == "home":
                 target_route = self._workspace_home_route()
                 current_path = str(getattr(self.router.url, "path", "") or "")
-                if current_path != target_route:
+                if target_route == "/free":
+                    yield rx.call_script(self._workspace_home_chat_history_script(session_id))
+                elif current_path != target_route:
                     yield _hard_navigate(target_route)
                 elif target_route == scope_to_route("home"):
                     yield rx.call_script(
@@ -13415,6 +13467,8 @@ Course units to cover:\n{courses_text}"""
             if self._session_in_scope(uid, int(session_id), "home"):
                 self.current_session_id = session_id
                 self._load_messages(uid)
+                if self._workspace_home_route() == "/free":
+                    yield rx.call_script(self._workspace_home_chat_history_script(session_id))
                 yield rx.call_script(SCROLL_TO_BOTTOM_JS)
             return
         # On a semester page — navigate to home
@@ -13424,7 +13478,10 @@ Course units to cover:\n{courses_text}"""
         self._switch_scope(uid, "home")
         # Store session to load after navigation
         self.current_session_id = session_id
-        yield _hard_navigate(self._workspace_home_route())
+        target_route = self._workspace_home_route()
+        yield _hard_navigate(
+            self._workspace_home_chat_route(session_id) if target_route == "/free" else target_route
+        )
 
     # ──────────────────────────────────────────────────────────
     # Message actions: copy, edit, retry, like/dislike
