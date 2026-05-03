@@ -21808,10 +21808,10 @@ def profile_menu_button() -> rx.Component:
 
 def guest_auth_buttons() -> rx.Component:
     pill_style = {
-        "height": "38px",
-        "padding": "0 15px",
+        "height": rx.breakpoints(initial="36px", md="38px"),
+        "padding": rx.breakpoints(initial="0 12px", md="0 15px"),
         "border_radius": "999px",
-        "font_size": "0.86rem",
+        "font_size": rx.breakpoints(initial="0.8rem", md="0.86rem"),
         "font_weight": "650",
         "cursor": "pointer",
     }
@@ -21819,6 +21819,31 @@ def guest_auth_buttons() -> rx.Component:
         AppState.is_authenticated_now | AppState.is_authenticated,
         rx.fragment(),
         rx.hstack(
+            rx.button(
+                rx.hstack(
+                    rx.icon(tag="sparkles", size=13, color="#E7B69D", flex_shrink="0"),
+                    rx.text(
+                        "Upgrade",
+                        color="rgba(255,238,230,0.95)",
+                        white_space="nowrap",
+                    ),
+                    spacing="2",
+                    align="center",
+                ),
+                on_click=AppState.open_pricing_modal,
+                type="button",
+                border="1px solid rgba(217,119,87,0.34)",
+                background="linear-gradient(135deg, rgba(31,24,20,0.94) 0%, rgba(72,42,31,0.92) 52%, rgba(18,15,13,0.96) 100%)",
+                color="rgba(255,238,230,0.95)",
+                box_shadow="0 12px 32px rgba(0,0,0,0.24), 0 0 20px rgba(217,119,87,0.10), inset 0 1px 0 rgba(255,255,255,0.08)",
+                _hover={
+                    "background": "linear-gradient(135deg, rgba(39,29,24,0.97) 0%, rgba(88,49,35,0.95) 52%, rgba(20,16,14,0.98) 100%)",
+                    "border_color": "rgba(231,182,157,0.46)",
+                    "transform": "translateY(-1px)",
+                },
+                custom_attrs={"aria-label": "Upgrade to Premium", "title": "Upgrade to Premium"},
+                **pill_style,
+            ),
             rx.link(
                 rx.button(
                     "Login",
@@ -21851,7 +21876,7 @@ def guest_auth_buttons() -> rx.Component:
             top=rx.breakpoints(initial="12px", md="18px"),
             right=rx.breakpoints(initial="12px", md="22px"),
             z_index="2000",
-            padding="5px",
+            padding=rx.breakpoints(initial="4px", md="5px"),
             border_radius="999px",
             background="rgba(0,0,0,0.42)",
             border="1px solid rgba(255,255,255,0.08)",
