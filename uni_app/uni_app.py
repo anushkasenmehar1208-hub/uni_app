@@ -16966,7 +16966,8 @@ def chat_upgrade_pill() -> rx.Component:
 
 def mobile_header_upgrade_button() -> rx.Component:
     return rx.cond(
-        ~AppState.has_premium_access,
+        (AppState.is_authenticated_now | AppState.is_authenticated)
+        & ~AppState.has_premium_access,
         app_tooltip(
             rx.button(
                 rx.hstack(
@@ -21820,7 +21821,8 @@ def guest_auth_buttons() -> rx.Component:
     return rx.cond(
         AppState.is_authenticated_now
         | AppState.is_authenticated
-        | AppState.show_pricing_modal,
+        | AppState.show_pricing_modal
+        | AppState.show_notes_panel,
         rx.fragment(),
         rx.hstack(
             rx.button(
@@ -27521,9 +27523,11 @@ class TrackerState(AppState):
 
     # ── Page load ──
     def on_load_tracker(self):
-        uid = self._cached_uid
-        if uid < 0:
-            return rx.redirect("/login")
+        real_uid = self._uid()
+        uid = real_uid if real_uid >= 0 else self._active_data_uid()
+        self._cached_uid = uid
+        if real_uid < 0:
+            self._load_guest_memory(uid)
         with rx.session() as session:
             self._load_lists(session)
             tracker = None
@@ -28935,11 +28939,13 @@ class LearnState(AppState):
 
     @rx.event
     def on_load_learn(self):
-        uid = self._uid()
-        if uid < 0:
-            return rx.redirect(auth_routes.LOGIN_ROUTE)
+        real_uid = self._uid()
+        uid = real_uid if real_uid >= 0 else self._active_data_uid()
         self._cached_uid = uid
-        self._load_profile(uid)
+        if real_uid >= 0:
+            self._load_profile(real_uid)
+        else:
+            self._load_guest_memory(uid)
         if not self.is_started:
             return rx.redirect(SELECTION_ROUTE)
         if _degree_is_custom(self.degree):
@@ -28952,10 +28958,11 @@ class LearnState(AppState):
             else:
                 self.active_scope = "home"
                 self.view_mode = "home"
-        try:
-            self._load_home_sessions(uid)
-        except Exception as e:
-            print(f"[LEARN] home session load error: {e}")
+        if real_uid >= 0:
+            try:
+                self._load_home_sessions(uid)
+            except Exception as e:
+                print(f"[LEARN] home session load error: {e}")
 
     def reset_session(self):
         """Clear current session — back to URL input."""
@@ -29044,10 +29051,7 @@ class LearnState(AppState):
             self.last_saved_note_text = ""
             self.note_save_feedback_id += 1
             self.active_tab = "chat"
-            uid = self._uid()
-
-        if uid < 0:
-            return
+            uid = self._active_data_uid()
 
         # Load or create the session row
         try:
@@ -29175,7 +29179,7 @@ class LearnState(AppState):
             user_msg = (self.chat_input or "").strip()
             if not user_msg or self.chat_busy or not self.video_id:
                 return
-            uid = self._uid()
+            uid = self._active_data_uid()
             # 20 messages per minute per user
             if not _rl.is_allowed(f"chat:{uid}", 20, 60):
                 wait = _rl.seconds_until_reset(f"chat:{uid}", 60)
@@ -29238,7 +29242,7 @@ class LearnState(AppState):
             if not self.transcript:
                 self.summary = "No transcript available — can't summarize this video."
                 return
-            uid = self._uid()
+            uid = self._active_data_uid()
             # 5 summaries per hour per user
             if not _rl.is_allowed(f"summary:{uid}", 5, 3600):
                 wait = _rl.seconds_until_reset(f"summary:{uid}", 3600)
@@ -29284,7 +29288,7 @@ class LearnState(AppState):
             if not self.transcript:
                 self.quiz_questions = []
                 return
-            uid = self._uid()
+            uid = self._active_data_uid()
             # 10 quiz generations per hour per user
             if not _rl.is_allowed(f"quiz:{uid}", 10, 3600):
                 wait = _rl.seconds_until_reset(f"quiz:{uid}", 3600)
@@ -29408,9 +29412,7 @@ class LearnState(AppState):
         text = (self.note_draft or "").strip()
         if not text:
             return
-        uid = self._uid()
-        if uid < 0:
-            return
+        uid = self._active_data_uid()
         title = (self.video_title or f"YouTube — {self.video_id}").strip()[:120]
         target_scope = self._notes_scope_key()
         if target_scope.startswith("learn:"):
