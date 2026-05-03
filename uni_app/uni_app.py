@@ -16289,7 +16289,7 @@ def pricing_modal() -> rx.Component:
             min_width=rx.breakpoints(initial="100%", md="0"),
             flex_shrink=rx.breakpoints(initial="0", md="1"),
             height=rx.breakpoints(initial="auto", md="100%"),
-            min_height=rx.breakpoints(initial="0", md="0"),
+            min_height=rx.breakpoints(initial="0", md="640px"),
             padding=rx.breakpoints(initial="20px", md="22px"),
             border_radius="18px",
             border="1px solid rgba(255,255,255,0.105)",
@@ -16487,7 +16487,8 @@ def pricing_modal() -> rx.Component:
                             align="stretch",
                             justify="center",
                             flex="1",
-                            min_height="0",
+                            height=rx.breakpoints(initial="auto", md="100%"),
+                            min_height=rx.breakpoints(initial="0", md="640px"),
                             padding="0",
                             style={
                                 "overflow_x": "visible",
@@ -21816,7 +21817,9 @@ def guest_auth_buttons() -> rx.Component:
         "cursor": "pointer",
     }
     return rx.cond(
-        AppState.is_authenticated_now | AppState.is_authenticated,
+        AppState.is_authenticated_now
+        | AppState.is_authenticated
+        | AppState.show_pricing_modal,
         rx.fragment(),
         rx.hstack(
             rx.button(
@@ -21855,19 +21858,6 @@ def guest_auth_buttons() -> rx.Component:
                     **pill_style,
                 ),
                 href=auth_routes.LOGIN_ROUTE,
-                text_decoration="none",
-            ),
-            rx.link(
-                rx.button(
-                    "Sign up",
-                    type="button",
-                    color="#050507",
-                    background="#F7F7F8",
-                    border="1px solid rgba(255,255,255,0.4)",
-                    _hover={"background": "#FFFFFF"},
-                    **pill_style,
-                ),
-                href=auth_routes.REGISTER_ROUTE,
                 text_decoration="none",
             ),
             spacing="2",
