@@ -16937,6 +16937,7 @@ def chat_upgrade_pill() -> rx.Component:
             top=rx.breakpoints(initial="10px", md="14px"),
             right=rx.breakpoints(initial="10px", md="18px"),
             z_index="6",
+            display=rx.breakpoints(initial="none", md="inline-flex"),
             custom_attrs={"aria-label": "Upgrade to Premium", "title": "Upgrade to Premium"},
             style={
                 "background": "linear-gradient(135deg, rgba(31,24,20,0.94) 0%, rgba(72,42,31,0.92) 52%, rgba(18,15,13,0.96) 100%)",
@@ -16956,6 +16957,45 @@ def chat_upgrade_pill() -> rx.Component:
                     "box_shadow": "0 22px 54px rgba(0,0,0,0.34), 0 0 34px rgba(217,119,87,0.18), inset 0 1px 0 rgba(255,255,255,0.10)",
                 },
             },
+        ),
+        rx.fragment(),
+    )
+
+
+def mobile_header_upgrade_button() -> rx.Component:
+    return rx.cond(
+        ~AppState.has_premium_access,
+        app_tooltip(
+            rx.button(
+                rx.hstack(
+                    rx.icon(tag="sparkles", size=14, color="#E7B69D", flex_shrink="0"),
+                    rx.text("Upgrade", font_size="0.76rem", font_weight="850", color="rgba(255,238,230,0.95)"),
+                    spacing="2",
+                    align="center",
+                ),
+                on_click=AppState.open_pricing_modal,
+                height="34px",
+                padding="0 13px",
+                border_radius="999px",
+                display=rx.breakpoints(initial="inline-flex", md="none"),
+                align_items="center",
+                justify_content="center",
+                custom_attrs={"aria-label": "Upgrade to Premium", "title": "Upgrade to Premium"},
+                style={
+                    "background": "linear-gradient(135deg, rgba(31,24,20,0.94) 0%, rgba(72,42,31,0.92) 52%, rgba(18,15,13,0.96) 100%)",
+                    "border": "1px solid rgba(217,119,87,0.34)",
+                    "box_shadow": "0 12px 32px rgba(0,0,0,0.26), 0 0 24px rgba(217,119,87,0.12), inset 0 1px 0 rgba(255,255,255,0.08)",
+                    "backdrop_filter": "blur(14px) saturate(135%)",
+                    "cursor": "pointer",
+                    "transition": "transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease",
+                    "_hover": {
+                        "border_color": "rgba(231,182,157,0.46)",
+                        "transform": "translateY(-1px)",
+                    },
+                },
+            ),
+            "Upgrade to Premium",
+            "bottom",
         ),
         rx.fragment(),
     )
@@ -21868,6 +21908,7 @@ def home_page():
                     "bottom",
                 ),
                 rx.spacer(),
+                mobile_header_upgrade_button(),
                 app_tooltip(
                     rx.button(
                         rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
@@ -23935,27 +23976,7 @@ def semester_page():
                         min_width="0",
                     ),
                     rx.spacer(),
-                    app_tooltip(
-                        rx.icon_button(
-                            rx.icon(tag="notebook", size=18, color="rgba(200,210,220,0.55)"),
-                            on_click=AppState.toggle_notes_panel,
-                            variant="ghost",
-                            display=rx.breakpoints(initial="inline-flex", md="none"),
-                            custom_attrs={"aria-label": "Notes", "title": "Notes"},
-                            style={
-                                "width": "40px",
-                                "height": "40px",
-                                "border_radius": "12px",
-                                "color": "rgba(200,210,220,0.55)",
-                                "background": "transparent",
-                                "border": "none",
-                                "cursor": "pointer",
-                                "_hover": {"background": "rgba(255,255,255,0.06)", "color": "rgba(240,244,248,0.85)"},
-                            },
-                        ),
-                        "Notes",
-                        "bottom",
-                    ),
+                    mobile_header_upgrade_button(),
                     subject_switcher_trigger(),
                     width="100%",
                     align="center",
@@ -34640,6 +34661,7 @@ def free_page():
                         "bottom",
                     ),
                     rx.spacer(),
+                    mobile_header_upgrade_button(),
                     app_tooltip(
                         rx.button(
                             rx.icon(tag="square_pen", size=20, color="rgba(255,255,255,0.7)"),
