@@ -31137,7 +31137,38 @@ def learn_page_content() -> rx.Component:
         ),
         # Empty state — paste a URL
         rx.box(
-            _learn_url_card(),
+            rx.vstack(
+                rx.hstack(
+                    app_tooltip(
+                        rx.icon_button(
+                            rx.icon(tag="arrow_left", size=18),
+                            on_click=rx.call_script(
+                                "if (window.history.length > 1) { window.history.back(); } else { window.location.assign('/free'); }"
+                            ),
+                            variant="ghost",
+                            size="2",
+                            color="rgba(255,255,255,0.5)",
+                            custom_attrs={"aria-label": "Back", "title": "Back"},
+                            style={
+                                "border_radius": "10px",
+                                "_hover": {
+                                    "color": "rgba(240,244,248,0.96)",
+                                    "background": "rgba(255,255,255,0.06)",
+                                },
+                            },
+                        ),
+                        "Back",
+                        "bottom",
+                    ),
+                    width="100%",
+                    justify="start",
+                ),
+                _learn_url_card(),
+                spacing="4",
+                width="100%",
+                max_width="640px",
+                align="stretch",
+            ),
             display="flex",
             justify_content="center",
             align_items="center",
