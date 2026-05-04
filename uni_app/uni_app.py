@@ -25792,7 +25792,6 @@ def landing_page():
         ),
         rx.hstack(
             hero_button("Generate My Plan", SELECTION_ROUTE, "solid"),
-            hero_button("Contact Support", "/support", "secondary"),
             spacing="4",
             justify="center",
             flex_wrap="wrap",
