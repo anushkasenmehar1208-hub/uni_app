@@ -24912,11 +24912,11 @@ def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
 @rx.page(
     route="/",
     title="Alex AI | AI Academic Mentor for University Students",
-    description="Upload your syllabus and let Alex AI organize your semester with planning, voice teaching, notes, tasks, and AI-powered study visuals.",
+    description="Choose your degree and let Alex AI organize your semester with planning, voice teaching, notes, tasks, and AI-powered study visuals.",
     image=FAVICON_32,
     on_load=AppState.on_load_public_landing,
     meta=[
-        {"name": "keywords", "content": "AI academic mentor, semester planner, university students, voice study assistant, syllabus planning"},
+        {"name": "keywords", "content": "AI academic mentor, semester planner, university students, voice study assistant, degree planning"},
         {"name": "robots", "content": "index, follow"},
         {"property": "og:title", "content": "Alex AI | AI Academic Mentor for University Students"},
         {"property": "og:url", "content": "https://alexstudies.com"},
@@ -25549,10 +25549,10 @@ def landing_page():
                     const respond = (text) => {
                         const t = (text || '').trim().toLowerCase();
                         if (!t) return "Ask about planning, pricing, voice teaching, or study tools.";
-                        if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students turn syllabi into guided semester plans.";
+                        if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students choose a degree and get guided semester plans.";
                         if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3/month, and Max is $25/month.";
                         if (/(voice|speak|talk|mentor|call)/.test(t)) return "Alex AI offers live voice teaching with a 3D mentor and typed chat.";
-                        if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Upload your syllabus and Alex AI organizes your semester automatically.";
+                        if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Choose your degree and Alex AI organizes your semester automatically.";
                         if (/(notes|tasks|todo|to-do)/.test(t)) return "Students can save notes, manage tasks, and keep study flow in one place.";
                         if (/(models|deepseek|claude|chatgpt|teach)/.test(t)) return "Alex AI uses multiple models for teaching, explanations, and faster answers.";
                         return "Alex AI is an academic mentor with planning, voice learning, notes, and study visuals.";
@@ -25770,7 +25770,7 @@ def landing_page():
             custom_attrs={"data-landing-animate": "headline-box"},
         ),
         rx.text(
-            "Upload your syllabus, generate a personalized semester plan, and study with voice, notes, tasks, and AI visuals in one place.",
+            "Choose your degree, generate a personalized semester plan, and study with voice, notes, tasks, and AI visuals in one place.",
             color="rgba(255,255,255,0.48)",
             font_size=rx.breakpoints(initial="0.98rem", md="1.06rem"),
             line_height="1.7",
@@ -25816,7 +25816,7 @@ def landing_page():
                             max_width="360px",
                         ),
                         rx.vstack(
-                            proof_chip("Upload syllabus -> get a semester system"),
+                            proof_chip("Choose your degree -> get a semester system"),
                             proof_chip("Learn with diagrams, notes, and to-dos"),
                             proof_chip("Switch between planner, chat, and live mentor"),
                             spacing="3",
@@ -25874,7 +25874,7 @@ def landing_page():
                 rx.hstack(
                     rx.hstack(
                         rx.text(
-                            "Upload your syllabus and build a study system,",
+                            "Choose your degree and build a study system,",
                             color="rgba(255,255,255,0.95)",
                             font_size=rx.breakpoints(initial="clamp(2rem, 5.8vw, 3.1rem)", md="clamp(2.7rem, 4.15vw, 4rem)"),
                             font_weight="500",
@@ -25983,7 +25983,7 @@ def landing_page():
                 rx.box(
                     rx.vstack(
                         rx.text(
-                            "Upload your syllabus",
+                            "Choose your degree",
                             color="rgba(255,255,255,0.9)",
                             font_size=rx.breakpoints(initial="clamp(1.2rem, 3.4vw, 1.55rem)", md="clamp(1.28rem, 1.9vw, 1.65rem)"),
                             font_weight="500",
