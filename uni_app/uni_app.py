@@ -25618,7 +25618,7 @@ def landing_page():
             """),
         )
 
-    def header_action(label: str) -> rx.Component:
+    def header_action(label: str, margin_left: str = "0") -> rx.Component:
         return rx.link(
             rx.button(
                 label,
@@ -25642,6 +25642,9 @@ def landing_page():
             ),
             href=SELECTION_ROUTE,
             text_decoration="none",
+            display="inline-flex",
+            flex_shrink="0",
+            margin_left=margin_left,
             custom_attrs={"data-landing-animate": "nav"},
         )
 
@@ -25672,10 +25675,9 @@ def landing_page():
         ),
         rx.hstack(
             header_action("Home"),
-            header_action("See Alex"),
+            header_action("See Alex", "22px"),
             spacing="0",
             align="center",
-            style={"gap": "14px"},
         ),
         width="100%",
         align="center",
