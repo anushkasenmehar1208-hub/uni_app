@@ -25618,30 +25618,10 @@ def landing_page():
             """),
         )
 
-    hero_header = rx.hstack(
-        rx.hstack(
-            rx.image(
-                src="/a_logo.png",
-                width="22px",
-                height="22px",
-                object_fit="contain",
-                border_radius="6px",
-            ),
-            rx.text(
-                "Alex AI",
-                color="rgba(255,255,255,0.94)",
-                font_size="1.04rem",
-                font_weight="700",
-                font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-                letter_spacing="-0.04em",
-            ),
-            spacing="2",
-            align="center",
-            custom_attrs={"data-landing-animate": "nav"},
-        ),
-        rx.link(
+    def header_action(label: str) -> rx.Component:
+        return rx.link(
             rx.button(
-                "See Alex AI",
+                label,
                 type="button",
                 variant="ghost",
                 style={
@@ -25663,6 +25643,38 @@ def landing_page():
             href=SELECTION_ROUTE,
             text_decoration="none",
             custom_attrs={"data-landing-animate": "nav"},
+        )
+
+    hero_header = rx.hstack(
+        rx.link(
+            rx.hstack(
+                rx.image(
+                    src="/a_logo.png",
+                    width="22px",
+                    height="22px",
+                    object_fit="contain",
+                    border_radius="6px",
+                ),
+                rx.text(
+                    "Alex AI",
+                    color="rgba(255,255,255,0.94)",
+                    font_size="1.04rem",
+                    font_weight="700",
+                    font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+                    letter_spacing="-0.04em",
+                ),
+                spacing="2",
+                align="center",
+            ),
+            href=SELECTION_ROUTE,
+            text_decoration="none",
+            custom_attrs={"data-landing-animate": "nav"},
+        ),
+        rx.hstack(
+            header_action("Home"),
+            header_action("See Alex AI"),
+            spacing="3",
+            align="center",
         ),
         width="100%",
         align="center",
