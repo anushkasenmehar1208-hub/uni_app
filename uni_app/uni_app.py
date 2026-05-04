@@ -25672,9 +25672,10 @@ def landing_page():
         ),
         rx.hstack(
             header_action("Home"),
-            header_action("See Alex AI"),
-            spacing="3",
+            header_action("See Alex"),
+            spacing="0",
             align="center",
+            style={"gap": "14px"},
         ),
         width="100%",
         align="center",
@@ -26440,7 +26441,7 @@ def landing_page():
                     nav_link("Terms", "/terms"),
                     rx.link(
                         rx.text(
-                            "See Alex AI",
+                            "See Alex",
                             color="rgba(255,255,255,0.52)",
                             font_size="0.95rem",
                             font_weight="500",
