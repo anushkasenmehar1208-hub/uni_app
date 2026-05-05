@@ -742,6 +742,15 @@
       window.__alex_voice_session_active = true;
       window.__alex_mic_muted = true;
     } catch (eSess) {}
+    // GA funnel event: voice session truly started after microphone access succeeds; no transcript is sent.
+    try {
+      if (window.alexTrack) {
+        window.alexTrack('voice_session_started', {
+          scope: window.ALEX_VOICE_SCOPE || 'home',
+          page_path: window.location.pathname
+        });
+      }
+    } catch (eTrack) {}
     syncMicToggleButton();
     voiceStartedAt = Date.now();
     hideUpgradeButton();

@@ -34,7 +34,6 @@ from reflex.utils.imports import ImportVar
 from reflex.vars import VarData
 from reflex.vars.base import Var
 import httpx
-from dodopayments import APIWebhookValidationError, DodoPayments, DodoPaymentsError
 from sqlmodel import Field, select, Column, DateTime, Date, String, func
 from sqlalchemy import or_
 from fastapi.responses import (
@@ -145,6 +144,12 @@ BACKEND_PUBLIC_ORIGIN = (
 FISH_AUDIO_API_KEY = os.getenv("FISH_AUDIO_API_KEY", "").strip()
 FISH_AUDIO_REFERENCE_ID = (os.getenv("FISH_AUDIO_REFERENCE_ID") or "cb41574b02f44753b5a9ee4fb929dd8d").strip()
 FISH_AUDIO_MODEL = (os.getenv("FISH_AUDIO_MODEL") or "s2-pro").strip() or "s2-pro"
+
+
+def _load_dodo_payments():
+    from dodopayments import APIWebhookValidationError, DodoPayments, DodoPaymentsError
+
+    return APIWebhookValidationError, DodoPayments, DodoPaymentsError
 
 
 def _openai_tts_speech_json(input_text: str) -> dict[str, Any]:
@@ -4701,6 +4706,84 @@ def _replace_route(route: str):
     """Replace stale browser history entries with the canonical workspace route."""
     return rx.call_script(f"window.location.replace({json.dumps(route)})")
 
+
+_GA_ALLOWED_PARAM_KEYS = {
+    "auth_method",
+    "button_location",
+    "currency",
+    "degree_key",
+    "page_path",
+    "payment_status",
+    "plan_name",
+    "plan_scope",
+    "price_usd",
+    "pricing_variant",
+    "route",
+    "scope",
+    "semester",
+    "year",
+}
+
+
+def _safe_ga_params(params: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Keep GA4 funnel params non-personal and JSON-safe."""
+    safe: dict[str, Any] = {}
+    for key, value in (params or {}).items():
+        if key not in _GA_ALLOWED_PARAM_KEYS or value is None:
+            continue
+        if isinstance(value, bool):
+            safe[key] = value
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            safe[key] = value
+        else:
+            safe[key] = str(value)[:120]
+    return safe
+
+
+def track_ga_event(event_name: str, params: dict[str, Any] | None = None):
+    """Fire a safe GA4 custom event through the global alexTrack helper."""
+    safe_name = re.sub(r"[^A-Za-z0-9_]", "", str(event_name or ""))[:80]
+    if not safe_name:
+        return rx.call_script("")
+    return rx.call_script(
+        "try{if(window.alexTrack){window.alexTrack("
+        + json.dumps(safe_name)
+        + ","
+        + json.dumps(_safe_ga_params(params))
+        + ");}}catch(e){}"
+    )
+
+
+def _ga_degree_key(degree: str) -> str:
+    """Non-personal degree identifier for analytics; never includes custom text."""
+    value = (degree or "").strip()
+    if not value:
+        return ""
+    if _degree_is_custom(value):
+        return "custom"
+    return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")[:80]
+
+
+def _ga_study_params(
+    *,
+    degree: str = "",
+    year: str = "",
+    semester: str = "",
+    plan_scope: str = "",
+) -> dict[str, Any]:
+    params: dict[str, Any] = {}
+    degree_key = _ga_degree_key(degree)
+    if degree_key:
+        params["degree_key"] = degree_key
+    if year:
+        params["year"] = year
+    if semester:
+        params["semester"] = semester
+    if plan_scope:
+        params["plan_scope"] = plan_scope
+    return params
+
+
 ONBOARDING_FINAL_STEP = 6
 
 
@@ -5203,6 +5286,12 @@ async def dodo_webhook(request: Request) -> PlainTextResponse:
 
     raw_payload = await request.body()
     payload = raw_payload.decode("utf-8")
+
+    try:
+        APIWebhookValidationError, DodoPayments, DodoPaymentsError = _load_dodo_payments()
+    except Exception as e:
+        print(f"[Dodo Payments] webhook SDK unavailable: {e}")
+        return PlainTextResponse("webhook unavailable", status_code=500)
 
     try:
         client = DodoPayments(
@@ -6179,6 +6268,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                     print(f"[Dodo Payments] profile lookup error: {profile_error}")
 
             def _create_checkout() -> str:
+                _, DodoPayments, _ = _load_dodo_payments()
                 client = DodoPayments(
                     bearer_token=DODO_PAYMENTS_API_KEY,
                     environment=environment,  # type: ignore[arg-type]
@@ -6211,6 +6301,16 @@ class AppState(reflex_local_auth.LocalAuthState):
                 raise ValueError("Missing checkout_url in Dodo Payments response.")
 
             self.show_pricing_modal = False
+            # GA funnel event: checkout redirect is about to start; no customer data is sent.
+            if plan == PLAN_PRO:
+                yield track_ga_event(
+                    "checkout_started",
+                    {
+                        "plan_name": "pro",
+                        "price_usd": 3,
+                        "currency": "USD",
+                    },
+                )
             yield rx.call_script(f"window.location.assign({json.dumps(checkout_url)});")
         except Exception as e:
             print(f"[Dodo Payments] checkout error: {e}")
@@ -6705,6 +6805,20 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception as e:
             print(f"[AUTH BRIDGE] redirect load error: {e}")
             target_route = APP_DASHBOARD_ROUTE
+        # GA funnel event: OAuth signup/login completed. Method is stored by the callback bootstrap, never PII.
+        yield rx.call_script(
+            """
+            (function(){
+              try {
+                var method = localStorage.getItem('alex_ga_auth_method');
+                if (method && window.alexTrack) {
+                  window.alexTrack('signup_complete', { auth_method: method, page_path: window.location.pathname });
+                }
+                if (method) localStorage.removeItem('alex_ga_auth_method');
+              } catch (e) {}
+            })();
+            """
+        )
         yield rx.redirect(target_route)
 
     @rx.event
@@ -6897,6 +7011,8 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.auth_csrf_token = secrets.token_urlsafe(24)
         new_token = self.auth_token
 
+        # GA funnel event: frontend Google auth flow completed; no email/name is sent.
+        yield track_ga_event("signup_complete", {"auth_method": "google"})
         yield rx.call_script(
             f"""
         (function() {{
@@ -6969,6 +7085,8 @@ class AppState(reflex_local_auth.LocalAuthState):
         print("[Google Complete] login done, navigating home...")
 
     # Set localStorage directly via JS THEN navigate — avoids async race condition
+        # GA funnel event: legacy Google auth completion; no email/name is sent.
+        yield track_ga_event("signup_complete", {"auth_method": "google"})
         yield rx.call_script(f"""
     (function() {{
         try {{
@@ -7028,7 +7146,8 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.app_auth_token = self.auth_token
         self._migrate_guest_data_to_user(int(new_user.id))
         self._load_profile(int(new_user.id))
-        return [rx.redirect(APP_DASHBOARD_ROUTE)]
+        # GA funnel event: email account registration completed; username/email is never sent.
+        return [track_ga_event("signup_complete", {"auth_method": "email"}), rx.redirect(APP_DASHBOARD_ROUTE)]
 
     @rx.event
     def handle_password_reset(self, form_data: dict[str, Any]):
@@ -7165,26 +7284,54 @@ class AppState(reflex_local_auth.LocalAuthState):
             return rx.redirect(auth_routes.LOGIN_ROUTE)
         self._load_profile(uid)
         self.show_pricing_modal = True
+        # GA funnel event: authenticated pricing page/modal viewed.
+        return track_ga_event(
+            "pricing_view",
+            {
+                "pricing_variant": "free_pro_only",
+            },
+        )
 
     @rx.event
-    def on_load_payment_success(self):
+    async def on_load_payment_success(self):
         uid = self._uid()
         self._cached_uid = uid
         if uid < 0:
-            return rx.redirect(auth_routes.LOGIN_ROUTE)
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            return
         self._load_profile(uid)
-        return _hard_navigate(self._authenticated_landing_route())
+        # GA funnel event: success page/callback reached after checkout; no customer data is sent.
+        yield track_ga_event(
+            "payment_success",
+            {
+                "plan_name": "pro",
+                "price_usd": 3,
+                "currency": "USD",
+                "payment_status": "success",
+            },
+        )
+        yield _hard_navigate(self._authenticated_landing_route())
 
     @rx.event
-    def on_load_payment_retry(self):
+    async def on_load_payment_retry(self):
         uid = self._uid()
         self._cached_uid = uid
         if uid < 0:
             self.post_login_redirect = "/pricing"
-            return rx.redirect(auth_routes.LOGIN_ROUTE)
+            yield rx.redirect(auth_routes.LOGIN_ROUTE)
+            return
         self._load_profile(uid)
         self.show_pricing_modal = True
-        return rx.redirect("/pricing")
+        # GA funnel event: checkout cancel/failure page reached; no customer data is sent.
+        yield track_ga_event(
+            "payment_failed",
+            {
+                "plan_name": "pro",
+                "currency": "USD",
+                "payment_status": "cancelled",
+            },
+        )
+        yield rx.redirect("/pricing")
 
     @rx.event
     def set_name(self, value: str):
@@ -12044,6 +12191,7 @@ Quality rules:
             overlay_flag
             + f"window.ALEX_API_BASE = {json.dumps(api_base)};"
             f"window.ALEX_VOICE_KEY = {json.dumps(voice_key)};"
+            f"window.ALEX_VOICE_SCOPE = {json.dumps(self.active_scope or 'home')};"
             f"window.ALEX_VOICE_ALLOWED = {str(bool(voice_allowed)).lower()};"
             f"window.ALEX_VOICE_REMAINING_SEC = {int(remaining_sec)};"
             f"window.ALEX_VOICE_BLOCK_REASON = {json.dumps(block_reason)};"
@@ -13059,6 +13207,11 @@ Quality rules:
                 uid = self._active_data_uid()
                 if uid >= 0:
                     self._save_memory(uid)
+                # GA funnel event: onboarding saved a custom degree path; no custom text is sent.
+                yield track_ga_event(
+                    "degree_selected",
+                    _ga_study_params(degree=self.degree),
+                )
                 yield _hard_navigate("/free")
                 return
 
@@ -13095,6 +13248,15 @@ Quality rules:
                 self._set_default_semester_workspace(uid, year, self.selected_semester)
                 self._save_memory(uid)
             scope = self._scope_key(year, self.selected_semester)
+            # GA funnel event: onboarding saved degree/year/semester; no name or free text is sent.
+            yield track_ga_event(
+                "degree_selected",
+                _ga_study_params(
+                    degree=self.degree,
+                    year=year,
+                    semester=self.selected_semester,
+                ),
+            )
             yield _hard_navigate(scope_to_route(scope))
         except Exception as e:
             import traceback
@@ -13139,6 +13301,15 @@ Quality rules:
                 scope = self._scope_key(year, semester)
             print(f"[COMPLETE_ONBOARD] scope={scope}, route={scope_to_route(scope)}", flush=True)
             if scope:
+                # GA funnel event: single-page onboarding saved degree/year/semester.
+                yield track_ga_event(
+                    "degree_selected",
+                    _ga_study_params(
+                        degree=self.degree,
+                        year=year,
+                        semester=semester,
+                    ),
+                )
                 yield _hard_navigate(scope_to_route(scope))
             else:
                 self.onboarding_message = "Something went wrong setting up your workspace. Please try again."
@@ -13165,6 +13336,15 @@ Quality rules:
                 return
             self.onboarding_message = ""
             scope = self._set_default_semester_workspace(uid, self.selected_year, self.selected_semester)
+            # GA funnel event: legacy onboarding start saved degree/year/semester.
+            yield track_ga_event(
+                "degree_selected",
+                _ga_study_params(
+                    degree=self.degree,
+                    year=self.selected_year,
+                    semester=self.selected_semester,
+                ),
+            )
             yield _hard_navigate(scope_to_route(scope))
         except Exception as e:
             print(f"ERROR start_app: {e}")
@@ -13343,6 +13523,7 @@ Course units to cover:\n{courses_text}"""
             raw_text = ""
 
         # ── Process result under lock ──
+        plan_generated_ga = False
         async with self:
             active = self.active_scope
             try:
@@ -13366,6 +13547,7 @@ Course units to cover:\n{courses_text}"""
                 self._save_day_progress(uid, target_scope, 1, 0)
                 self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
                 print(f"[PLAN-GEN] SUCCESS: saved {len(plan)} entries for {target_scope}", flush=True)
+                plan_generated_ga = True
                 if target_scope == active:
                     self.current_day = 1
                     self.current_topic_index = 0
@@ -13391,6 +13573,18 @@ Course units to cover:\n{courses_text}"""
                     self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
             if target_scope == active:
                 self.is_generating_plan = False
+
+        if plan_generated_ga:
+            # GA funnel event: semester plan generation succeeded; plan contents are never sent.
+            yield track_ga_event(
+                "plan_generated",
+                _ga_study_params(
+                    degree=degree,
+                    year=target_year,
+                    semester=target_semester,
+                    plan_scope=target_scope,
+                ),
+            )
 
 
     @rx.event
@@ -13863,6 +14057,14 @@ Course units to cover:\n{courses_text}"""
         self.chat_input = ""
         if self.active_scope:
             self.chat_drafts[self.active_scope] = ""
+
+        # GA funnel event: user sent a chat turn; message text/content is never sent.
+        yield track_ga_event(
+            "chat_message_sent",
+            {
+                "scope": self.active_scope or "home",
+            },
+        )
 
         if (not self.has_premium_access) and (not self.is_in_trial):
             self._increment_daily_count(uid)
@@ -24942,8 +25144,21 @@ def landing_page():
             },
         )
 
-    def hero_button(label: str, href: str, variant: str = "solid") -> rx.Component:
+    def hero_button(
+        label: str,
+        href: str,
+        variant: str = "solid",
+        tracking_event: str = "",
+        tracking_params: dict[str, Any] | None = None,
+    ) -> rx.Component:
         is_solid = variant == "solid"
+        link_props: dict[str, Any] = {
+            "href": href,
+            "text_decoration": "none",
+        }
+        if tracking_event:
+            # GA funnel event: landing CTA click, then normal link navigation continues.
+            link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
         return rx.link(
             rx.button(
                 label,
@@ -24982,11 +25197,10 @@ def landing_page():
                     },
                 },
             ),
-            href=href,
-            text_decoration="none",
+            **link_props,
         )
 
-    def proof_chip(label: str) -> rx.Component:
+    def proof_chip(label: str, animate: str = "") -> rx.Component:
         return rx.box(
             rx.text(
                 label,
@@ -25000,6 +25214,7 @@ def landing_page():
             border_radius="999px",
             background="rgba(255,255,255,0.04)",
             backdrop_filter="blur(16px)",
+            custom_attrs={"data-landing-animate": animate} if animate else {},
         )
 
     def feature_card(title: str, description: str, image_src: str, eyebrow: str) -> rx.Component:
@@ -25068,6 +25283,12 @@ def landing_page():
         href: str,
         accent: str = "neutral",
         primary: bool = False,
+        badge_label: str = "",
+        local_price: str = "",
+        local_price_id: str = "",
+        footer_note: str = "",
+        tracking_event: str = "",
+        tracking_params: dict[str, Any] | None = None,
     ) -> rx.Component:
         accent_styles = {
             "free": {
@@ -25095,10 +25316,49 @@ def landing_page():
         )
         button_color = "#1c1915" if primary else "rgba(255,255,255,0.88)"
         button_border = "1px solid rgba(255,255,255,0.10)" if primary else f"1px solid {theme['border']}"
+        badge = (
+            rx.box(
+                rx.text(
+                    badge_label,
+                    color="rgba(10,14,11,0.9)",
+                    font_size="0.74rem",
+                    font_weight="800",
+                    letter_spacing="-0.01em",
+                ),
+                padding="7px 10px",
+                border_radius="999px",
+                background="linear-gradient(180deg, #bbf7d0 0%, #86efac 100%)",
+                border="1px solid rgba(255,255,255,0.22)",
+            )
+            if badge_label
+            else rx.fragment()
+        )
+        local_price_line = (
+            rx.text(
+                local_price,
+                id=local_price_id,
+                color="rgba(255,255,255,0.42)",
+                font_size="0.82rem",
+                font_weight="600",
+                letter_spacing="-0.02em",
+                custom_attrs={"data-usd-amount": "3"} if local_price_id else {},
+            )
+            if local_price
+            else rx.fragment()
+        )
+        link_props: dict[str, Any] = {
+            "href": href,
+            "width": "100%",
+            "text_decoration": "none",
+        }
+        if tracking_event:
+            # GA funnel event: pricing card click, then normal link navigation continues.
+            link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
 
         return rx.box(
             rx.vstack(
                 rx.vstack(
+                    badge,
                     rx.text(
                         title,
                         color="rgba(255,255,255,0.96)",
@@ -25125,6 +25385,7 @@ def landing_page():
                         spacing="2",
                         align="end",
                     ),
+                    local_price_line,
                     rx.text(
                         description,
                         color="rgba(255,255,255,0.58)",
@@ -25180,16 +25441,28 @@ def landing_page():
                             }
                         },
                     ),
-                    href=href,
-                    width="100%",
-                    text_decoration="none",
+                    **link_props,
+                ),
+                (
+                    rx.text(
+                        footer_note,
+                        color="rgba(255,255,255,0.54)",
+                        font_size="0.84rem",
+                        font_weight="650",
+                        letter_spacing="-0.02em",
+                        width="100%",
+                        text_align="center",
+                        margin_top="4px",
+                    )
+                    if footer_note
+                    else rx.fragment()
                 ),
                 spacing="4",
                 align_items="flex-start",
                 width="100%",
                 height="100%",
             ),
-            width=rx.breakpoints(initial="100%", md="calc(25% - 14px)"),
+            width=rx.breakpoints(initial="100%", md="calc(50% - 10px)"),
             min_width=rx.breakpoints(initial="100%", md="0"),
             min_height=rx.breakpoints(initial="auto", md="500px"),
             padding=rx.breakpoints(initial="24px", md="18px", lg="22px"),
@@ -25321,6 +25594,14 @@ def landing_page():
       object-fit: cover;
       border-radius: 999px;
       display: block;
+    }
+    #landing-live-chat-demo .landing-live-chat-demo__badge span {
+      color: rgba(255,255,255,0.86);
+      font-size: 0.68rem;
+      font-weight: 750;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      text-align: center;
     }
     #landing-live-chat-demo .landing-live-chat-demo__orbit-note {
       max-width: 300px;
@@ -25488,45 +25769,30 @@ def landing_page():
           <img class="landing-live-chat-demo__core-logo" src="/a_logo.png" alt="" />
           <span>Alex AI</span>
         </div>
-        <div class="landing-live-chat-demo__orbit-path landing-live-chat-demo__orbit-path--1">
-          <div class="landing-live-chat-demo__badge">
-            <img src="/landing-model-deepseek.png" alt="DeepSeek model" />
-          </div>
-        </div>
-        <div class="landing-live-chat-demo__orbit-path landing-live-chat-demo__orbit-path--2" style="transform: rotate(120deg);">
-          <div class="landing-live-chat-demo__badge">
-            <img src="/landing-model-claude.png" alt="Claude model" />
-          </div>
-        </div>
-        <div class="landing-live-chat-demo__orbit-path landing-live-chat-demo__orbit-path--3" style="transform: rotate(240deg);">
-          <div class="landing-live-chat-demo__badge">
-            <img src="/landing-model-chatgpt.png" alt="ChatGPT model" />
-          </div>
-        </div>
       </div>
       <p class="landing-live-chat-demo__orbit-note">
-        We use these models for teaching, clearer explanations, and faster study help inside Alex AI.
+        Plan. Learn. Quiz. Repeat.
       </p>
     </div>
 
     <div class="landing-live-chat-demo__chat">
       <div>
         <div class="landing-live-chat-demo__eyebrow">Live chat demo</div>
-        <h3 class="landing-live-chat-demo__title">Try a demo chat</h3>
+        <h3 class="landing-live-chat-demo__title">Ask Alex about your studies</h3>
         <p class="landing-live-chat-demo__sub">
-          Ask about Alex AI, semester planning, voice teaching, pricing, notes, or tasks and preview how the assistant responds.
+          Try asking what to study today, explain a hard topic, or make a quick quiz.
         </p>
       </div>
 
       <div class="landing-live-chat-demo__panel">
         <div id="landing-live-chat-demo-messages" class="landing-live-chat-demo__messages">
           <div class="landing-live-chat-demo__bubble landing-live-chat-demo__bubble--assistant">
-            Hello. Ask about Alex AI, semester planning, voice teaching, or pricing.
+            Today, start with your hardest subject. I can make a 30-minute plan, explain the topic, and quiz you after.
           </div>
         </div>
 
         <div class="landing-live-chat-demo__composer">
-          <input id="landing-live-chat-demo-input" class="landing-live-chat-demo__input" type="text" maxlength="120" placeholder="Ask Alex AI..." />
+          <input id="landing-live-chat-demo-input" class="landing-live-chat-demo__input" type="text" maxlength="120" placeholder="Ask Alex what to study today..." />
           <button id="landing-live-chat-demo-send" class="landing-live-chat-demo__send" type="button">Send</button>
         </div>
 
@@ -25548,14 +25814,15 @@ def landing_page():
 
                     const respond = (text) => {
                         const t = (text || '').trim().toLowerCase();
-                        if (!t) return "Ask about planning, pricing, voice teaching, or study tools.";
-                        if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Hello. Alex AI helps students choose a degree and get guided semester plans.";
-                        if (/(price|pricing|plan|pro|max|free|cost)/.test(t)) return "Plans start free. Pro is $3/month, and Max is $25/month.";
-                        if (/(voice|speak|talk|mentor|call)/.test(t)) return "Alex AI offers live voice teaching with a 3D mentor and typed chat.";
-                        if (/(semester|syllabus|planner|plan my semester)/.test(t)) return "Choose your degree and Alex AI organizes your semester automatically.";
-                        if (/(notes|tasks|todo|to-do)/.test(t)) return "Students can save notes, manage tasks, and keep study flow in one place.";
-                        if (/(models|deepseek|claude|chatgpt|teach)/.test(t)) return "Alex AI uses multiple models for teaching, explanations, and faster answers.";
-                        return "Alex AI is an academic mentor with planning, voice learning, notes, and study visuals.";
+                        if (!t) return "Today, start with your hardest subject. I can make a 30-minute plan, explain the topic, and quiz you after.";
+                        if (/(^|\\b)(hi|hello|hey)(\\b|$)/.test(t)) return "Today, start with your hardest subject. I can make a 30-minute plan, explain the topic, and quiz you after.";
+                        if (/(price|pricing|plan|pro|free|cost)/.test(t)) return "You can start free. Pro is for daily studying when Alex becomes part of your routine.";
+                        if (/(voice|speak|talk|mentor|call)/.test(t)) return "You can speak or type while Alex explains topics and keeps notes and tasks in one place.";
+                        if (/(semester|syllabus|planner|plan my semester|study today|today)/.test(t)) return "Today, start with your hardest subject. I can make a 30-minute plan, explain the topic, and quiz you after.";
+                        if (/(quiz|test|practice)/.test(t)) return "Alex can make quick quizzes so you can check whether the topic actually stuck.";
+                        if (/(notes|tasks|todo|to-do)/.test(t)) return "Alex helps save notes, track tasks, and keep your study flow organized.";
+                        if (/(models|deepseek|claude|chatgpt|teach)/.test(t)) return "Alex focuses on teaching your semester day by day, not making you choose tools.";
+                        return "Alex helps you study better every day with planning, teaching, quizzes, notes, voice, and tasks.";
                     };
 
                     const appendBubble = (messagesEl, text, kind) => {
@@ -25618,7 +25885,23 @@ def landing_page():
             """),
         )
 
-    def header_action(label: str, margin_left: str = "0") -> rx.Component:
+    def header_action(
+        label: str,
+        margin_left: str = "0",
+        tracking_event: str = "",
+        tracking_params: dict[str, Any] | None = None,
+    ) -> rx.Component:
+        link_props: dict[str, Any] = {
+            "href": SELECTION_ROUTE,
+            "text_decoration": "none",
+            "display": "inline-flex",
+            "flex_shrink": "0",
+            "margin_left": margin_left,
+            "custom_attrs": {"data-landing-animate": "nav"},
+        }
+        if tracking_event:
+            # GA funnel event: header CTA click, then normal link navigation continues.
+            link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
         return rx.link(
             rx.button(
                 label,
@@ -25640,12 +25923,7 @@ def landing_page():
                     },
                 },
             ),
-            href=SELECTION_ROUTE,
-            text_decoration="none",
-            display="inline-flex",
-            flex_shrink="0",
-            margin_left=margin_left,
-            custom_attrs={"data-landing-animate": "nav"},
+            **link_props,
         )
 
     hero_header = rx.hstack(
@@ -25675,7 +25953,12 @@ def landing_page():
         ),
         rx.hstack(
             header_action("Home"),
-            header_action("See Alex", "22px"),
+            header_action(
+                "See Alex",
+                "22px",
+                "see_alex_click",
+                {"button_location": "nav"},
+            ),
             spacing="0",
             align="center",
         ),
@@ -25707,7 +25990,7 @@ def landing_page():
             rx.hstack(
                 rx.hstack(
                     rx.text(
-                        "AI that organizes your",
+                        "AI that teaches your full",
                         color="rgba(255,255,255,0.96)",
                         font_size=rx.breakpoints(initial="clamp(1.92rem, 6.8vw, 3rem)", md="clamp(2.55rem, 4.1vw, 3.6rem)"),
                         font_weight="500",
@@ -25743,7 +26026,7 @@ def landing_page():
             rx.hstack(
                 rx.hstack(
                     rx.text(
-                        "entire semester automatically",
+                        "university semester day by day",
                         color="rgba(255,255,255,0.96)",
                         font_size=rx.breakpoints(initial="clamp(1.92rem, 6.8vw, 3rem)", md="clamp(2.55rem, 4.1vw, 3.6rem)"),
                         font_weight="500",
@@ -25785,7 +26068,7 @@ def landing_page():
             custom_attrs={"data-landing-animate": "headline-box"},
         ),
         rx.text(
-            "Choose your degree, generate a personalized semester plan, and study with voice, notes, tasks, and AI visuals in one place.",
+            "Choose your degree, get a real semester plan, and let Alex teach, quiz, track tasks, and help you study every day.",
             color="rgba(255,255,255,0.48)",
             font_size=rx.breakpoints(initial="0.98rem", md="1.06rem"),
             line_height="1.7",
@@ -25794,13 +26077,20 @@ def landing_page():
             custom_attrs={"data-landing-animate": "sub"},
         ),
         rx.hstack(
-            hero_button("Generate My Plan", SELECTION_ROUTE, "solid"),
+            hero_button(
+                "Start My Study Plan",
+                SELECTION_ROUTE,
+                "solid",
+                "start_study_plan_click",
+                {"button_location": "hero"},
+            ),
             spacing="4",
             justify="center",
             flex_wrap="wrap",
             width="100%",
             custom_attrs={"data-landing-animate": "actions"},
         ),
+        proof_chip("100+ students started studying with Alex AI", "proof"),
         spacing="5",
         align_items="center",
         width="100%",
@@ -25816,23 +26106,23 @@ def landing_page():
                 rx.hstack(
                     rx.vstack(
                         rx.text(
-                            "See Alex AI in action",
+                            "See how Alex teaches your semester",
                             color="rgba(255,255,255,0.96)",
                             font_size=rx.breakpoints(initial="1.3rem", md="1.55rem"),
                             font_weight="650",
                             letter_spacing="-0.04em",
                         ),
                         rx.text(
-                            "Real planner output for a university semester, plus the live AI mentor students can talk to or type with.",
+                            "Alex builds your semester plan, teaches each day's topic, and helps you continue without getting lost.",
                             color="rgba(255,255,255,0.58)",
                             font_size="0.98rem",
                             line_height="1.75",
                             max_width="360px",
                         ),
                         rx.vstack(
-                            proof_chip("Choose your degree -> get a semester system"),
-                            proof_chip("Learn with diagrams, notes, and to-dos"),
-                            proof_chip("Switch between planner, chat, and live mentor"),
+                            proof_chip("Choose degree -> get full semester plan"),
+                            proof_chip("Learn daily with AI teaching"),
+                            proof_chip("Notes, tasks, quizzes, and voice in one place"),
                             spacing="3",
                             align_items="flex-start",
                             width="100%",
@@ -25848,6 +26138,8 @@ def landing_page():
                             width="100%",
                             height="100%",
                             object_fit="cover",
+                            filter="brightness(1.38) contrast(1.08) saturate(1.05)",
+                            opacity="0.98",
                         ),
                         width="100%",
                         max_width=rx.breakpoints(initial="100%", md="760px"),
@@ -25888,7 +26180,7 @@ def landing_page():
                 rx.hstack(
                     rx.hstack(
                         rx.text(
-                            "Choose your degree and build a study system,",
+                            "Choose your degree. Alex builds",
                             color="rgba(255,255,255,0.95)",
                             font_size=rx.breakpoints(initial="clamp(2rem, 5.8vw, 3.1rem)", md="clamp(2.7rem, 4.15vw, 4rem)"),
                             font_weight="500",
@@ -25923,7 +26215,7 @@ def landing_page():
                 rx.hstack(
                     rx.hstack(
                         rx.text(
-                            "planned for your real semester workload.",
+                            "your daily study path.",
                             color="rgba(255,255,255,0.95)",
                             font_size=rx.breakpoints(initial="clamp(2rem, 5.8vw, 3.1rem)", md="clamp(2.7rem, 4.15vw, 4rem)"),
                             font_weight="500",
@@ -25958,7 +26250,7 @@ def landing_page():
                 rx.hstack(
                     rx.hstack(
                         rx.text(
-                            "Alex AI organizes tasks, teaches with live voice chat, saves notes, and keeps your semester moving with visuals and to-dos.",
+                            "From your semester subjects, Alex creates a clear daily path and helps you study without getting lost.",
                             color="rgba(255,255,255,0.52)",
                             font_size=rx.breakpoints(initial="clamp(1.12rem, 3.2vw, 1.38rem)", md="clamp(1.18rem, 1.65vw, 1.5rem)"),
                             font_weight="450",
@@ -26102,7 +26394,7 @@ def landing_page():
                 width=rx.breakpoints(initial="100%", md="240px"),
                 flex_shrink="0",
                 height=rx.breakpoints(initial="280px", md="400px"),
-                display="flex",
+                display="none",
                 align_items="center",
                 justify_content="center",
                 background="transparent",
@@ -26110,7 +26402,7 @@ def landing_page():
             # ── COL 2: Text ──────────────────────────────────────────────────
             rx.vstack(
                 rx.text(
-                    "Voice study space that feels alive",
+                    "Talk to Alex like a private tutor",
                     color="rgba(255,255,255,0.95)",
                     font_size=rx.breakpoints(initial="clamp(1.9rem, 5vw, 2.8rem)", md="clamp(1.8rem, 2.4vw, 2.6rem)"),
                     font_weight="600",
@@ -26118,16 +26410,16 @@ def landing_page():
                     line_height="1.08",
                 ),
                 rx.text(
-                    "Alex AI is more than a planner. Students can learn with a live 3D mentor, speak naturally, type into the same session, and keep building notes and tasks without breaking focus.",
+                    "Speak or type while Alex explains topics, creates diagrams, saves notes, and keeps your tasks in one study space.",
                     color="rgba(255,255,255,0.56)",
                     font_size="0.95rem",
                     line_height="1.8",
                 ),
                 rx.vstack(
                     proof_chip("Live voice teaching"),
-                    proof_chip("Type during voice chat"),
-                    proof_chip("Study visuals and diagrams"),
-                    proof_chip("Notes + to-do list in the same system"),
+                    proof_chip("Ask follow-up questions"),
+                    proof_chip("Diagrams for hard topics"),
+                    proof_chip("Notes + tasks saved automatically"),
                     spacing="3",
                     align_items="flex-start",
                     width="100%",
@@ -26142,17 +26434,24 @@ def landing_page():
                 rx.el.style("""
                     #landing-teacher-orb-wrap {
                         width: 100%;
-                        max-width: 280px;
-                        height: 360px;
+                        max-width: 320px;
+                        height: 420px;
                         display: flex;
-                        align-items: flex-start;
+                        flex-direction: column;
+                        align-items: center;
                         justify-content: center;
+                        gap: 12px;
                         overflow: hidden;
+                        padding: 18px 18px 16px;
+                        border: 1px solid rgba(255,255,255,0.08);
+                        border-radius: 30px;
+                        background: radial-gradient(circle at 50% 8%, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.035) 42%, rgba(255,255,255,0.015) 100%);
+                        box-shadow: 0 30px 86px rgba(0,0,0,0.34), 0 0 70px rgba(255,255,255,0.035) inset;
                     }
                     #landing-teacher-orb {
                         position: relative;
                         width: 100%;
-                        height: 100%;
+                        height: 338px;
                         max-width: 280px;
                         overflow: hidden !important;
                         border-radius: 28px;
@@ -26160,10 +26459,10 @@ def landing_page():
                     #landing-teacher-orb-avatar-canvas {
                         position: absolute !important;
                         left: 50% !important;
-                        top: 45% !important;
+                        top: 47% !important;
                         transform: translate(-50%, -50%) !important;
                         width: 255px !important;
-                        height: 390px !important;
+                        height: 374px !important;
                         max-width: none !important;
                         opacity: 1 !important;
                         z-index: 2 !important;
@@ -26209,13 +26508,13 @@ def landing_page():
                     }
                     @media (max-width: 768px) {
                         #landing-teacher-orb-wrap {
-                            max-width: 260px;
-                            height: 320px;
+                            max-width: 292px;
+                            height: 388px;
                         }
                         #landing-teacher-orb-avatar-canvas {
                             width: 220px !important;
-                            height: 340px !important;
-                            top: 43% !important;
+                            height: 330px !important;
+                            top: 47% !important;
                         }
                     }
                 """),
@@ -26235,13 +26534,13 @@ def landing_page():
                     "  var s=existing||document.createElement('style');"
                     "  s.id='landing-avatar-crop';"
                     "  s.textContent=["
-                    "    '#landing-teacher-orb-wrap { overflow: hidden !important; height: 360px !important; max-width: 280px !important; }',"
-                    "    '#landing-teacher-orb { overflow: hidden !important; max-height: 360px !important; max-width: 280px !important; }',"
+                    "    '#landing-teacher-orb-wrap { overflow: hidden !important; height: 420px !important; max-width: 320px !important; }',"
+                    "    '#landing-teacher-orb { overflow: hidden !important; height: 338px !important; max-height: 338px !important; max-width: 280px !important; }',"
                     "    '#landing-teacher-orb-avatar-canvas {',"
-                    "    '  width: 255px !important; height: 390px !important;',"
-                    "    '  top: 45% !important; transform: translate(-50%,-50%) !important;',"
+                    "    '  width: 255px !important; height: 374px !important;',"
+                    "    '  top: 47% !important; transform: translate(-50%,-50%) !important;',"
                     "    '  -webkit-mask-image: none !important; mask-image: none !important;',"
-                    "    '  clip-path: inset(0 0 8% 0) !important;',"
+                    "    '  clip-path: inset(0 0 0 0) !important;',"
                     "    '}'"
                     "  ].join('\\n');"
                     "  document.head.appendChild(s);"
@@ -26264,10 +26563,18 @@ def landing_page():
                     "var iv=setInterval(function(){ensure();patchLanding(); if(++tries>60) clearInterval(iv);}, 500);"
                     "})();"
                 ),
+                rx.text(
+                    "Your live AI study mentor",
+                    color="rgba(255,255,255,0.64)",
+                    font_size="0.88rem",
+                    font_weight="700",
+                    letter_spacing="-0.02em",
+                    text_align="center",
+                ),
                 id="landing-teacher-orb-wrap",
-                width=rx.breakpoints(initial="100%", md="280px"),
+                width=rx.breakpoints(initial="100%", md="320px"),
                 flex_shrink="0",
-                height=rx.breakpoints(initial="320px", md="360px"),
+                height=rx.breakpoints(initial="388px", md="420px"),
                 display="flex",
                 align_items="center",
                 justify_content="center",
@@ -26287,7 +26594,114 @@ def landing_page():
     )
 
     pricing_section = rx.box(
-        rx.vstack(
+        rx.script("""
+            (() => {
+                const el = document.getElementById('landing-pro-local-price');
+                if (!el || el.dataset.localPriceBound === 'true') return;
+                el.dataset.localPriceBound = 'true';
+
+                const USD_AMOUNT = Number(el.dataset.usdAmount || '3');
+                const CACHE_KEY = 'alex_landing_local_price_v1';
+                const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+                const countryCurrencyFallback = {
+                    AD: 'EUR', AE: 'AED', AF: 'AFN', AG: 'XCD', AI: 'XCD', AL: 'ALL', AM: 'AMD', AO: 'AOA', AR: 'ARS',
+                    AS: 'USD', AT: 'EUR', AU: 'AUD', AW: 'AWG', AZ: 'AZN', BA: 'BAM', BB: 'BBD', BD: 'BDT', BE: 'EUR',
+                    BF: 'XOF', BG: 'BGN', BH: 'BHD', BI: 'BIF', BJ: 'XOF', BM: 'BMD', BN: 'BND', BO: 'BOB', BR: 'BRL',
+                    BS: 'BSD', BT: 'BTN', BW: 'BWP', BY: 'BYN', BZ: 'BZD', CA: 'CAD', CD: 'CDF', CF: 'XAF', CG: 'XAF',
+                    CH: 'CHF', CI: 'XOF', CK: 'NZD', CL: 'CLP', CM: 'XAF', CN: 'CNY', CO: 'COP', CR: 'CRC', CU: 'CUP',
+                    CV: 'CVE', CY: 'EUR', CZ: 'CZK', DE: 'EUR', DJ: 'DJF', DK: 'DKK', DM: 'XCD', DO: 'DOP', DZ: 'DZD',
+                    EC: 'USD', EE: 'EUR', EG: 'EGP', ES: 'EUR', ET: 'ETB', FI: 'EUR', FJ: 'FJD', FR: 'EUR', GB: 'GBP',
+                    GD: 'XCD', GE: 'GEL', GH: 'GHS', GI: 'GIP', GM: 'GMD', GN: 'GNF', GQ: 'XAF', GR: 'EUR', GT: 'GTQ',
+                    GU: 'USD', GY: 'GYD', HK: 'HKD', HN: 'HNL', HR: 'EUR', HT: 'HTG', HU: 'HUF', ID: 'IDR', IE: 'EUR',
+                    IL: 'ILS', IN: 'INR', IQ: 'IQD', IR: 'IRR', IS: 'ISK', IT: 'EUR', JM: 'JMD', JO: 'JOD', JP: 'JPY',
+                    KE: 'KES', KG: 'KGS', KH: 'KHR', KM: 'KMF', KN: 'XCD', KR: 'KRW', KW: 'KWD', KY: 'KYD', KZ: 'KZT',
+                    LA: 'LAK', LB: 'LBP', LC: 'XCD', LK: 'LKR', LR: 'LRD', LS: 'LSL', LT: 'EUR', LU: 'EUR', LV: 'EUR',
+                    LY: 'LYD', MA: 'MAD', MC: 'EUR', MD: 'MDL', ME: 'EUR', MG: 'MGA', MK: 'MKD', MM: 'MMK', MN: 'MNT',
+                    MO: 'MOP', MP: 'USD', MR: 'MRU', MT: 'EUR', MU: 'MUR', MV: 'MVR', MW: 'MWK', MX: 'MXN', MY: 'MYR',
+                    MZ: 'MZN', NA: 'NAD', NE: 'XOF', NG: 'NGN', NI: 'NIO', NL: 'EUR', NO: 'NOK', NP: 'NPR', NZ: 'NZD',
+                    OM: 'OMR', PA: 'PAB', PE: 'PEN', PG: 'PGK', PH: 'PHP', PK: 'PKR', PL: 'PLN', PR: 'USD', PT: 'EUR',
+                    PY: 'PYG', QA: 'QAR', RO: 'RON', RS: 'RSD', RU: 'RUB', RW: 'RWF', SA: 'SAR', SB: 'SBD', SC: 'SCR',
+                    SD: 'SDG', SE: 'SEK', SG: 'SGD', SI: 'EUR', SK: 'EUR', SL: 'SLE', SN: 'XOF', SO: 'SOS', SR: 'SRD',
+                    SV: 'USD', SY: 'SYP', SZ: 'SZL', TH: 'THB', TJ: 'TJS', TN: 'TND', TR: 'TRY', TT: 'TTD', TW: 'TWD',
+                    TZ: 'TZS', UA: 'UAH', UG: 'UGX', US: 'USD', UY: 'UYU', UZ: 'UZS', VC: 'XCD', VE: 'VES', VN: 'VND',
+                    ZA: 'ZAR', ZM: 'ZMW', ZW: 'ZWL'
+                };
+
+                const setPrice = (currency, amount) => {
+                    if (!currency || !Number.isFinite(amount)) return;
+                    const rounded = Math.max(1, Math.round(amount));
+                    let formatted = currency + ' ' + rounded.toLocaleString();
+                    try {
+                        formatted = new Intl.NumberFormat(undefined, {
+                            style: 'currency',
+                            currency,
+                            maximumFractionDigits: 0,
+                        }).format(rounded);
+                    } catch (error) {}
+                    el.textContent = '~ ' + currency + ' ' + formatted.replace(/^[A-Z]{3}\\s*/, '') + ' / month';
+                };
+
+                try {
+                    const cached = JSON.parse(window.localStorage.getItem(CACHE_KEY) || 'null');
+                    if (cached && cached.currency && cached.amount && Date.now() - cached.time < CACHE_TTL_MS) {
+                        setPrice(cached.currency, cached.amount);
+                    }
+                } catch (error) {}
+
+                const getCurrency = async () => {
+                    const geo = await fetch('https://ipwho.is/', { cache: 'no-store' }).then((r) => r.json());
+                    const countryCode = (geo && (geo.country_code || geo.countryCode) || '').toUpperCase();
+                    if (countryCode && countryCurrencyFallback[countryCode]) return countryCurrencyFallback[countryCode];
+                    if (countryCode) {
+                        const country = await fetch('https://restcountries.com/v3.1/alpha/' + encodeURIComponent(countryCode) + '?fields=currencies').then((r) => r.json());
+                        const currencies = country && country.currencies ? Object.keys(country.currencies) : [];
+                        if (currencies[0]) return currencies[0];
+                    }
+                    return 'USD';
+                };
+
+                Promise.all([
+                    getCurrency(),
+                    fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-store' }).then((r) => r.json()),
+                ]).then(([currency, rates]) => {
+                    const rate = rates && rates.rates ? rates.rates[currency] : null;
+                    if (!rate) return;
+                    const amount = USD_AMOUNT * Number(rate);
+                    setPrice(currency, amount);
+                    try {
+                        window.localStorage.setItem(CACHE_KEY, JSON.stringify({ currency, amount, time: Date.now() }));
+                    } catch (error) {}
+                }).catch(() => {});
+            })();
+	        """),
+	        rx.script("""
+	            (() => {
+	                const section = document.getElementById('landing-pricing-section');
+	                if (!section || section.dataset.gaPricingTracked === 'true') return;
+	                const fire = () => {
+	                    if (section.dataset.gaPricingTracked === 'true') return;
+	                    section.dataset.gaPricingTracked = 'true';
+	                    // GA funnel event: pricing section became visible on the landing page.
+	                    if (window.alexTrack) window.alexTrack('pricing_view', {
+	                        pricing_variant: 'free_pro_only',
+	                        page_path: window.location.pathname,
+	                    });
+	                };
+	                if (!('IntersectionObserver' in window)) {
+	                    fire();
+	                    return;
+	                }
+	                const observer = new IntersectionObserver((entries) => {
+	                    if (entries[0] && entries[0].isIntersecting) {
+	                        fire();
+	                        observer.disconnect();
+	                    }
+	                }, { threshold: 0.18 });
+	                observer.observe(section);
+	                if (section.getBoundingClientRect().top < window.innerHeight * 0.9) fire();
+	            })();
+	        """),
+	        rx.vstack(
             rx.vstack(
                 rx.text(
                     "Pricing",
@@ -26298,7 +26712,7 @@ def landing_page():
                     text_transform="uppercase",
                 ),
                 rx.text(
-                    "Choose the upgrade path that fits your semester",
+                    "Start free. Upgrade when Alex becomes your daily study tool.",
                     color="rgba(255,255,255,0.95)",
                     font_size=rx.breakpoints(initial="clamp(2rem, 5.6vw, 2.8rem)", md="clamp(2.55rem, 3vw, 3.5rem)"),
                     font_weight="600",
@@ -26333,6 +26747,11 @@ def landing_page():
                     SELECTION_ROUTE,
                     "free",
                     False,
+                    tracking_event="start_free_click",
+                    tracking_params={
+                        "plan_name": "free",
+                        "button_location": "pricing",
+                    },
                 ),
                 landing_pricing_card(
                     "Pro",
@@ -26350,42 +26769,21 @@ def landing_page():
                     "/pricing",
                     "pro",
                     True,
-                ),
-                landing_pricing_card(
-                    "Max",
-                    "USD 25",
-                    "/ month",
-                    "For students who want manual access to the five Alex models, more video creation, and longer voice sessions.",
-                    [
-                        "Switch manually between 5 Alex models",
-                        "Per-model credits reset every 24h",
-                        "20 teaching-video generations/month",
-                        "2 hours/day voice mentor limit",
-                    ],
-                    "Upgrade to Max",
-                    "/pricing",
-                    "max",
-                    True,
-                ),
-                landing_pricing_card(
-                    "Ultra",
-                    "USD 100",
-                    "/ month",
-                    "For heavy study sessions with much larger model limits, the fastest reset window, and maximum voice time.",
-                    [
-                        "Higher credits across all 5 models",
-                        "Per-model credits reset every 5h",
-                        "100 teaching-video generations/month",
-                        "8 hours/day voice mentor limit",
-                    ],
-                    "Upgrade to Ultra",
-                    "/pricing",
-                    "ultra",
-                    True,
+                    "Best for daily studying",
+                    "~ LKR 959 / month",
+                    "landing-pro-local-price",
+                    "Cancel anytime",
+                    tracking_event="upgrade_pro_click",
+                    tracking_params={
+                        "plan_name": "pro",
+                        "price_usd": 3,
+                        "currency": "USD",
+                        "button_location": "pricing",
+                    },
                 ),
                 gap=rx.breakpoints(initial="18px", md="18px"),
                 align="stretch",
-                justify="between",
+                justify="center",
                 flex_wrap=rx.breakpoints(initial="wrap", md="nowrap"),
                 width="100%",
             ),
@@ -26394,10 +26792,11 @@ def landing_page():
             width="100%",
             max_width="1280px",
             margin="0 auto",
-        ),
-        padding=rx.breakpoints(initial="80px 16px 0", md="104px 28px 0"),
-        background="transparent",
-    )
+	        ),
+	        id="landing-pricing-section",
+	        padding=rx.breakpoints(initial="80px 16px 0", md="104px 28px 0"),
+	        background="transparent",
+	    )
 
     footer_section = rx.box(
         rx.vstack(
@@ -26414,7 +26813,6 @@ def landing_page():
                 justify="start",
             ),
             rx.hstack(
-                proof_chip("Used by 100+ students"),
                 proof_chip("support.alexstudies@gmail.com"),
                 proof_chip("AI academic mentor with planning included"),
                 spacing="3",
@@ -26448,10 +26846,12 @@ def landing_page():
                             font_size="0.95rem",
                             font_weight="500",
                             letter_spacing="-0.02em",
-                        ),
-                        href=SELECTION_ROUTE,
-                        text_decoration="none",
-                        style={
+	                        ),
+	                        href=SELECTION_ROUTE,
+	                        # GA funnel event: footer CTA click, then normal link navigation continues.
+	                        on_click=track_ga_event("see_alex_click", {"button_location": "footer"}),
+	                        text_decoration="none",
+	                        style={
                             "_hover": {
                                 "color": "rgba(255,255,255,0.92)",
                             },
@@ -26627,6 +27027,10 @@ def landing_page():
             [data-landing-animate="actions"] {
                 opacity: 0;
                 animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 2.0s forwards;
+            }
+            [data-landing-animate="proof"] {
+                opacity: 0;
+                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 2.7s forwards;
             }
             [data-landing-animate="logo-video"] {
                 opacity: 0;
@@ -29067,6 +29471,9 @@ class LearnState(AppState):
             self.active_tab = "chat"
             uid = self._active_data_uid()
 
+        # GA funnel event: a video learning session started; YouTube URL/video ID is not sent.
+        yield track_ga_event("video_learning_started", {})
+
         # Load or create the session row
         try:
             with rx.session() as session:
@@ -29207,6 +29614,9 @@ class LearnState(AppState):
             ]
             transcript = self.transcript
             history = list(self.chat_messages)
+
+        # GA funnel event: user sent a message in the Learn video chat; text is never sent.
+        yield track_ga_event("chat_message_sent", {"scope": "learn_video"})
 
         # Build LLM messages with the transcript as system context
         if transcript:
@@ -32167,12 +32577,37 @@ app = rx.App(
         rx.script(src="https://www.googletagmanager.com/gtag/js?id=G-H5G0QBSY2M"),
         rx.script(
             """
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-H5G0QBSY2M');
-"""
-        ),
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-H5G0QBSY2M');
+	(function(){
+	  var allowed = {
+	    auth_method:1, button_location:1, currency:1, degree_key:1,
+	    page_path:1, payment_status:1, plan_name:1, plan_scope:1,
+	    price_usd:1, pricing_variant:1, route:1, scope:1, semester:1, year:1
+	  };
+	  var isDev = /^(localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0)$/i.test(window.location.hostname || '') || window.__ALEX_GA_DEBUG === true;
+	  window.alexTrack = function(eventName, params){
+	    try {
+	      if (!eventName || typeof eventName !== 'string') return;
+	      var cleanParams = {};
+	      var source = params && typeof params === 'object' ? params : {};
+	      Object.keys(source).forEach(function(key){
+	        if (!allowed[key]) return;
+	        var value = source[key];
+	        if (value === undefined || value === null) return;
+	        if (typeof value === 'string') cleanParams[key] = value.slice(0, 120);
+	        else if (typeof value === 'number' || typeof value === 'boolean') cleanParams[key] = value;
+	      });
+	      if (!cleanParams.page_path) cleanParams.page_path = window.location.pathname || '/';
+	      if (isDev && window.console && console.log) console.log('[GA EVENT]', eventName, cleanParams);
+	      if (typeof window.gtag === 'function') window.gtag('event', eventName, cleanParams);
+	    } catch (e) {}
+	  };
+	})();
+	"""
+	        ),
         rx.el.link(rel="icon", type="image/x-icon", href=FAVICON_ICO),
         rx.el.link(rel="shortcut icon", type="image/x-icon", href=FAVICON_ICO),
         rx.el.link(rel="icon", type="image/png", sizes="32x32", href=FAVICON_32),
@@ -32346,14 +32781,15 @@ async def google_callback(request: Request):
   </head>
   <body style="margin:0;background:#050505;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;">
     <div>Signing you in...</div>
-    <script>
-      (function() {{
-        try {{
-          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
-        }} catch (e) {{}}
-        window.location.replace("/auth/post-login");
-      }})();
-    </script>
+	    <script>
+	      (function() {{
+	        try {{
+	          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
+	          localStorage.setItem('alex_ga_auth_method', 'google');
+	        }} catch (e) {{}}
+	        window.location.replace("/auth/post-login");
+	      }})();
+	    </script>
   </body>
 </html>"""
         response = HTMLResponse(
