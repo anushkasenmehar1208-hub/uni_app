@@ -199,6 +199,7 @@
       if (obj.type === 'done') {
         streamUiDone = true;
         alexSseDone = true;
+        applyAlexLanguagePrefsFromVoice(obj);
         try {
           window.__voiceLastUserLine = '';
         } catch (eZ) {}
@@ -329,6 +330,18 @@
     var t = authToken();
     if (t) h['X-Auth-Token'] = t;
     return h;
+  }
+
+  function applyAlexLanguagePrefsFromVoice(data) {
+    if (!data) return;
+    try {
+      if (data.voice_language_persist) {
+        localStorage.setItem('alex_voice_language', String(data.voice_language_persist));
+      }
+      if (data.reply_language_persist) {
+        localStorage.setItem('alex_reply_language', String(data.reply_language_persist));
+      }
+    } catch (e) {}
   }
 
   /** @returns {boolean} true if caller should abort normal flow */
@@ -1088,6 +1101,7 @@
   function playAlexVoiceResponse(data) {
     var uLine = window.__voiceLastUserLine || '';
     window.__voiceLastUserLine = '';
+    applyAlexLanguagePrefsFromVoice(data);
     console.log('[AlexVoice] response:', (data.text || '').substring(0, 80), '| audio:', (data.audio_b64 || '').length);
     disposeCurrentPlayback();
     setOrbState('ai-speaking');
