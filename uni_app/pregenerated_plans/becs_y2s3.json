@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Software engineering purpose",
+      "Building reliable software beyond just coding"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Software process models",
+      "Waterfall, iterative, incremental, agile overview"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Requirements engineering",
+      "Functional and non-functional requirements"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Practice: Requirement statements",
+      "Writing clear requirements for a BECS device/app"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Use cases and user stories",
+      "Capturing interactions and acceptance criteria"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Software design basics",
+      "Modularity, abstraction, coupling, cohesion"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Practice: UML overview",
+      "Use case, class, and sequence diagrams at BECS depth"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Testing levels",
+      "Unit, integration, system, and acceptance testing"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Practice: Test case design",
+      "Inputs, expected outputs, and boundary cases"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Version control and collaboration",
+      "Commits, branches, and teamwork basics"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Software quality",
+      "Maintainability, reliability, usability, and performance"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "BECS connection: Embedded/software boundary",
+      "Requirements for hardware-interfacing systems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Mini design task: Small monitoring system",
+      "Requirements, diagram, and test outline"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Tutorial: Software engineering questions",
+      "Process, requirements, design, testing"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Review: Software Engineering",
+      "Core lifecycle and documentation ideas"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "BECS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Self-check: Software Engineering closure",
+      "Prepare for design/project work"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Algorithm analysis",
+      "Time complexity, space complexity, and Big-O intuition"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Complexity of loops",
+      "Counting operations in simple code"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Arrays and dynamic lists",
+      "Storage, indexing, insertion, deletion tradeoffs"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Linked lists",
+      "Nodes, pointers/references, and traversal"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Linked list operations",
+      "Insert, delete, search, and debug"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Stacks",
+      "LIFO behavior and applications"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Queues",
+      "FIFO behavior, circular queues, and scheduling intuition"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Stack/queue problems",
+      "Trace operations and choose the right structure"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Recursion",
+      "Base case, recursive case, stack frames"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Recursive algorithms",
+      "Factorial, search, and simple divide-and-conquer"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Searching algorithms",
+      "Linear search and binary search with prerequisites"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Sorting basics",
+      "Bubble, selection, insertion sort behavior"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Efficient sorting overview",
+      "Merge sort and quicksort intuition"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Trees introduction",
+      "Binary trees, traversal, and use cases"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Binary search trees",
+      "Insert, search, and traversal behavior"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Graphs introduction",
+      "Vertices, edges, adjacency, and networks connection"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: BFS and DFS intuition",
+      "Traversal order and simple applications"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "BECS application: Processing device data",
+      "Choosing structures for logs/readings/events"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Review: Data Structures and Algorithms",
+      "Complexity plus structure selection"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "BECS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Self-check: DSA closure",
+      "Mixed trace and implementation practice"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Theory: Operational amplifier overview",
+      "Ideal op-amp assumptions and practical limitations"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Theory: Negative feedback",
+      "Virtual short idea and stable gain"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Practice: Inverting amplifier",
+      "Gain derivation and resistor selection"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Practice: Non-inverting amplifier",
+      "Gain, input impedance, and design examples"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Theory: Voltage follower",
+      "Buffering and loading effect"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Theory: Summing and difference amplifiers",
+      "Signal combination and subtraction"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Theory: Integrator and differentiator circuits",
+      "Calculus operations with op-amps"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Theory: Active filters intro",
+      "Low-pass and high-pass behavior"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Theory: Comparator basics",
+      "Saturation, thresholds, and switching"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Theory: Schmitt trigger idea",
+      "Hysteresis and noise immunity"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "BECS connection: Signal conditioning",
+      "Preparing sensor signals for digital systems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Practice: Op-amp circuit analysis",
+      "Identify configuration and calculate output"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Tutorial: Operational amplifier problems",
+      "Mixed ideal op-amp examples"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Review: Analogue Electronics II",
+      "Feedback, gain, filters, comparators"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "BECS",
+    "unit": "Analogue Electronics II (Operational Amplifiers)",
+    "topics": [
+      "Self-check: Op-amp unit closure",
+      "Common mistakes and readiness for measurement"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Theory: Electric charge and Coulomb law",
+      "Field idea and force between charges"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Theory: Electric field and potential",
+      "Relationship between field, work, and voltage"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Practice: Electric field calculations",
+      "Simple point-charge examples"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Theory: Capacitance and dielectrics",
+      "Energy storage and material effect"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Theory: Magnetic field basics",
+      "Magnetic force and field direction"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Theory: Biot-Savart/Ampere idea",
+      "Current as source of magnetic field at BECS depth"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Practice: Magnetic force examples",
+      "Force on current-carrying conductors"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Theory: Faraday law",
+      "Induced emf and changing magnetic flux"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Theory: Lenz law",
+      "Direction of induced current and energy reasoning"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Theory: Inductance",
+      "Self-inductance, mutual inductance, and stored energy"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "BECS connection: Transformers and actuators",
+      "How electromagnetism appears in devices"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Tutorial: Electromagnetism problems",
+      "Fields, induction, and units"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Review: Electromagnetism",
+      "Core laws and physical meaning"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "BECS",
+    "unit": "Electromagnetism",
+    "topics": [
+      "Self-check: Electromagnetism closure",
+      "Concept map for signals and electronics"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory II",
+    "topics": [
+      "Lab: Op-amp instrument setup",
+      "Dual supply, offset awareness, and safe limits"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory II",
+    "topics": [
+      "Lab: Inverting/non-inverting amplifier",
+      "Gain measurement and comparison with theory"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory II",
+    "topics": [
+      "Lab: Summing amplifier",
+      "Combining multiple input signals"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory II",
+    "topics": [
+      "Lab: Comparator and Schmitt trigger",
+      "Thresholds, saturation, and hysteresis"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory II",
+    "topics": [
+      "Lab: Active filter response",
+      "Frequency sweep and cutoff observation"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory II",
+    "topics": [
+      "Lab report: Op-amp results",
+      "Graphs, percentage error, and discussion"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory II",
+    "topics": [
+      "Review: Laboratory II readiness",
+      "Measurement mistakes and viva preparation"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory II",
+    "topics": [
+      "Self-check: Lab II closure",
+      "Practical assessment checklist"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Theory: First-order differential equations",
+      "Modeling changing quantities in circuits and systems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Practice: Separable equations",
+      "Solving simple first-order models"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Theory: Linear first-order equations",
+      "Integrating factor method at BECS depth"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Practice: RC/RL style equations",
+      "Time constant interpretation"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Theory: Second-order differential equations",
+      "Natural response and characteristic equation"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Practice: Second-order systems",
+      "Damping cases and solution form"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Theory: Laplace transform introduction",
+      "Transforming differential equations to algebra"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Practice: Basic Laplace transforms",
+      "Common functions and linearity"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Theory: Inverse Laplace transform",
+      "Partial fractions and response interpretation"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Theory: Fourier series overview",
+      "Periodic signals as sums of sinusoids"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Theory: Fourier transform intuition",
+      "Frequency content of signals"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Theory: Numerical methods overview",
+      "Why approximate methods matter in computing"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Practice: Root finding",
+      "Bisection and Newton-Raphson idea"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Practice: Numerical integration",
+      "Trapezoidal and Simpson rules"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Practice: Numerical solution of ODEs",
+      "Euler method and step-size effect"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "BECS application: Scientific computation",
+      "Using numerical methods for circuit/signal models"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Tutorial: DE and transforms",
+      "Mixed analytical problem practice"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Tutorial: Numerical methods",
+      "Approximation error and method choice"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Review: DE, transforms & numerical methods",
+      "Formula map and applications"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "BECS",
+    "unit": "Differential Equations, Integral Transforms & Numerical Methods",
+    "topics": [
+      "Self-check: Mathematics unit closure",
+      "Readiness for signals and scientific computing"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "BECS",
+    "unit": "Organizational Behavior",
+    "topics": [
+      "Theory: Individual behavior at work",
+      "Personality, perception, attitude, and motivation"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "BECS",
+    "unit": "Organizational Behavior",
+    "topics": [
+      "Theory: Motivation theories overview",
+      "Practical use in technical teams"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "BECS",
+    "unit": "Organizational Behavior",
+    "topics": [
+      "Theory: Groups and teams",
+      "Roles, norms, cohesion, and conflict"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "BECS",
+    "unit": "Organizational Behavior",
+    "topics": [
+      "Theory: Leadership basics",
+      "Leadership styles and communication"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "BECS",
+    "unit": "Organizational Behavior",
+    "topics": [
+      "Practice: Team scenario analysis",
+      "Diagnosing a project team problem"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "BECS",
+    "unit": "Organizational Behavior",
+    "topics": [
+      "Theory: Organizational culture",
+      "How culture shapes engineering work"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "BECS",
+    "unit": "Organizational Behavior",
+    "topics": [
+      "Review: Organizational Behavior",
+      "Key concepts for project collaboration"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "BECS",
+    "unit": "Organizational Behavior",
+    "topics": [
+      "Self-check: OB unit closure",
+      "Short reflective questions"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Writing: Professional email",
+      "Tone, clarity, and concise technical communication"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Writing: Technical summaries",
+      "Summarizing a method, result, or design"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Speaking: Presentation structure",
+      "Opening, body, evidence, and closing"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Speaking: Explaining diagrams",
+      "Describe circuits, algorithms, and system blocks clearly"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Reading: Research/technical text",
+      "Finding claims, evidence, and limitations"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Writing: Report improvement",
+      "Abstract, introduction, method, result, discussion"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Practice: Vocabulary and grammar polish",
+      "Common academic writing corrections"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Review: Professional English",
+      "Communication checklist"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "BECS",
+    "unit": "Professional English",
+    "topics": [
+      "Integrated semester review",
+      "Software, DSA, op-amps, electromagnetism, math, and communication together"
+    ]
+  }
+]
