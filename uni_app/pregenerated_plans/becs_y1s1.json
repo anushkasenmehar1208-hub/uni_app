@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: What computer science studies",
+      "BECS view: computing as hardware, software, and data working together"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Number systems for computing",
+      "Binary, decimal, hexadecimal, and why electronics uses binary"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Practice: Base conversions",
+      "Converting binary, decimal, and hexadecimal by hand"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Data representation",
+      "Bits, bytes, characters, images, and simple encodings"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Boolean logic foundations",
+      "Truth tables, logical operators, and simple digital decisions"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Practice: Boolean expressions",
+      "Simplifying small logic expressions used in programs and circuits"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Computer organization overview",
+      "CPU, memory, storage, I/O, and buses at a surface BECS level"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Operating systems overview",
+      "Processes, files, memory, and user interfaces"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Algorithms as step-by-step procedures",
+      "Inputs, outputs, correctness, and efficiency intuition"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Practice: Flowcharts and pseudocode",
+      "Representing a simple calculation before coding"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Software categories",
+      "System software, application software, embedded software"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Networking basics",
+      "Hosts, links, packets, and Internet services overview"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Databases and information systems",
+      "Tables, records, queries, and why structured data matters"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Theory: Computer security basics",
+      "Authentication, malware, backups, and safe computing habits"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "BECS connection: Computing in electronic systems",
+      "Microcontrollers, sensors, instruments, and control software"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Tutorial: Integrated computing questions",
+      "Short answers across data, algorithms, systems, and networks"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Review: Foundations in Computer Science",
+      "Core vocabulary and relationships between hardware and software"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "BECS",
+    "unit": "Foundations in Computer Science",
+    "topics": [
+      "Self-check: Foundations unit closure",
+      "Mini quiz plus weak-area revision plan"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Theory: What programming does",
+      "Source code, compilers/interpreters, and program execution"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Lab: Development environment setup",
+      "Writing, running, and saving a first simple program"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Theory: Variables and data types",
+      "Integers, floats, strings, booleans, and type choice"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Practice: Expressions and operators",
+      "Arithmetic, precedence, assignment, and simple calculations"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Lab: Input and output",
+      "Reading values and printing formatted results"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Theory: Selection control",
+      "if, else-if, nested conditions, and decision tables"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Practice: Condition problems",
+      "Grade, range, and validation examples"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Theory: Iteration with loops",
+      "while loops, for loops, counters, and accumulators"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Lab: Loop tracing",
+      "Tracing variable changes to debug logic errors"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Practice: Nested loops",
+      "Patterns, tables, and repeated measurement-style calculations"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Theory: Functions",
+      "Parameters, return values, scope, and modular thinking"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Lab: Function-based programs",
+      "Breaking a calculation into small testable functions"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Theory: Arrays/lists",
+      "Indexing, traversal, searching, and simple aggregation"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Practice: Array problems",
+      "Maximum, minimum, average, and count operations"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Theory: Strings",
+      "Character access, comparison, and simple text processing"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Lab: Debugging fundamentals",
+      "Syntax errors, runtime errors, and logic errors"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Theory: Files at introductory level",
+      "Reading/writing simple text data for practical records"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Practice: Program design",
+      "From problem statement to pseudocode to code"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "BECS application: Sensor-style data processing",
+      "Processing sample readings with loops and arrays"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "BECS application: Unit conversion program",
+      "Voltage/current/resistance calculation practice"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Tutorial: Mixed programming questions",
+      "Control flow, functions, arrays, and debugging"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Mini project: Console utility",
+      "Build a small calculator or record-processing program"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Review: Fundamentals of Programming",
+      "Core constructs and common errors"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Exam practice: Programming fundamentals",
+      "Trace code and write short programs"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "BECS",
+    "unit": "Fundamentals of Programming",
+    "topics": [
+      "Self-check: Programming unit closure",
+      "Identify weak constructs before OOP"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Electrical quantities recap",
+      "Voltage, current, resistance, power, and units"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Semiconductor basics",
+      "Intrinsic/extrinsic material and p-n junction intuition"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Diode operation",
+      "Forward bias, reverse bias, I-V curve, and ideal model"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Practice: Diode circuit calculations",
+      "Piecewise-linear approximation at BECS depth"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Rectifier circuits",
+      "Half-wave, full-wave, bridge rectifiers, and ripple"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Filtering and smoothing",
+      "Capacitor filter behavior and ripple reduction"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Zener diode regulation",
+      "Voltage regulation idea and simple load calculations"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Bipolar junction transistor basics",
+      "BJT structure, regions, and current gain"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Practice: BJT biasing basics",
+      "Operating point and simple bias circuits"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Common-emitter amplifier idea",
+      "Small-signal gain, input, and output behavior"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Field-effect transistor overview",
+      "FET control idea and comparison with BJT"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Theory: Frequency response intuition",
+      "Why capacitors change amplifier behavior with frequency"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "BECS connection: Analogue front-end role",
+      "Signals from sensors before digital processing"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Tutorial: Diodes and transistors",
+      "Mixed worked examples with units and signs"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Practice: Reading circuit diagrams",
+      "Identifying components, nodes, and expected signal flow"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Review: Analogue Electronics I",
+      "Diode, transistor, and amplifier fundamentals"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Exam practice: Analogue Electronics I",
+      "Short calculations and concept questions"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "BECS",
+    "unit": "Analogue Electronics I",
+    "topics": [
+      "Self-check: Analogue unit closure",
+      "Common misconceptions and revision targets"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Circuit variables and passive sign convention",
+      "Voltage, current, power, energy, and reference directions"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Ohm law and resistance networks",
+      "Series, parallel, and equivalent resistance"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Practice: Resistive circuit reduction",
+      "Step-by-step simplification with units"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Kirchhoff current law",
+      "Node current balance and conservation of charge"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Kirchhoff voltage law",
+      "Loop voltage balance and conservation of energy"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Practice: KCL and KVL equations",
+      "Writing and solving small circuit equations"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Nodal analysis",
+      "Choosing reference node and solving node voltages"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Mesh analysis",
+      "Loop currents and when mesh analysis is convenient"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Practice: Nodal vs mesh selection",
+      "Choosing the simpler method for a given circuit"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Source transformations",
+      "Voltage/current source equivalence idea"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Superposition",
+      "Linear circuit response from one source at a time"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Thevenin theorem",
+      "Equivalent source and resistance at a terminal pair"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Norton theorem",
+      "Norton equivalent and relation to Thevenin"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Theory: Capacitors and inductors introduction",
+      "Stored energy and transient intuition"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Practice: First-order RC/RL intuition",
+      "Charging, discharging, and time constant meaning"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Tutorial: Circuit fundamentals",
+      "Mixed KCL, KVL, and equivalent circuit questions"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Review: Electric Circuit Fundamentals",
+      "Core methods and sign conventions"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "BECS",
+    "unit": "Electric Circuit Fundamentals",
+    "topics": [
+      "Self-check: Circuits unit closure",
+      "Timed problem set and error review"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab: Safety and instrument basics",
+      "Breadboard, DC supply, multimeter, oscilloscope overview"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab: Measuring resistance and DC values",
+      "Instrument range, polarity, and uncertainty notes"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab: Diode I-V characteristics",
+      "Collecting readings and plotting the curve"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab: Rectifier experiment",
+      "Waveform observation and ripple interpretation"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab: Zener regulator experiment",
+      "Line/load regulation at introductory depth"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab: BJT characteristic observation",
+      "Input/output behavior and operating regions"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab: Simple amplifier setup",
+      "Bias point, gain estimate, and waveform capture"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab: Oscilloscope practice",
+      "Amplitude, period, frequency, coupling, and triggering"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Lab report: Data tables and graphs",
+      "Writing clear observations and calculations"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Review: Laboratory I readiness",
+      "Common wiring and measurement mistakes"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "BECS",
+    "unit": "Analogue Electronics Laboratory I",
+    "topics": [
+      "Self-check: Lab I closure",
+      "Prepare for practical assessment and viva questions"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Algebraic expressions and equations",
+      "Manipulation needed for circuit and computing formulas"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Practice: Linear equations",
+      "Solving single and simultaneous equations"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Functions and graphs",
+      "Domain, range, intercepts, slope, and interpretation"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Matrices introduction",
+      "Matrix notation, addition, multiplication, and identity"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Practice: Matrix operations",
+      "Small systems and transformations at BECS level"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Determinants and inverses",
+      "Solving linear systems with matrix methods"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Vectors basics",
+      "Magnitude, direction, dot product, and applications"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Complex numbers introduction",
+      "Rectangular/polar form for AC and signals preparation"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Practice: Complex arithmetic",
+      "Magnitude, angle, multiplication, and division"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Descriptive statistics",
+      "Mean, median, variance, standard deviation"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Practice: Data summaries",
+      "Summarizing small experimental data sets"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Probability basics",
+      "Events, sample spaces, conditional probability intuition"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Common distributions overview",
+      "Binomial and normal ideas at surface level"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Theory: Sampling and estimation",
+      "Sample mean, variability, and confidence idea"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Practice: Normal distribution calculations",
+      "Standardization and interpretation"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "BECS application: Measurement data",
+      "Noise, repeated readings, and summary statistics"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Tutorial: Algebra and statistics mix",
+      "Linear algebra plus data interpretation questions"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Review: Applied Algebra & Statistics",
+      "Formulas, methods, and when to use each"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Exam practice: Algebra/statistics",
+      "Short problems under time pressure"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "BECS",
+    "unit": "Applied Algebra & Statistics",
+    "topics": [
+      "Integrated semester review",
+      "Programming, circuits, electronics, lab, and mathematics together"
+    ]
+  }
+]

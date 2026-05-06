@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Computer architecture recap",
+      "Instruction cycle, datapath, control, and memory"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: CPU organization",
+      "Registers, ALU, control unit, and buses"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Instruction set architecture",
+      "Instruction formats and addressing modes at BECS depth"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Memory hierarchy",
+      "Cache, RAM, secondary storage, and locality"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: I/O organization",
+      "Interrupts, polling, DMA, and device controllers"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Operating system purpose",
+      "Resource management and abstraction"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Processes and threads",
+      "States, context switching, and scheduling"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Practice: CPU scheduling",
+      "FCFS, SJF, priority, and round-robin examples"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Process synchronization",
+      "Race conditions, critical sections, and semaphores overview"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Deadlocks",
+      "Conditions, prevention idea, and examples"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Memory management",
+      "Paging, segmentation overview, and virtual memory"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: File systems",
+      "Files, directories, allocation, and permissions"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Theory: Device management",
+      "Drivers and hardware/software interface"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "BECS connection: OS for hardware-facing applications",
+      "Timing, I/O, and reliability constraints"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Tutorial: Architecture questions",
+      "Instruction cycle, memory, I/O"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Tutorial: OS questions",
+      "Processes, scheduling, memory, files"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Review: Computer Architecture and OS",
+      "Core concepts and relationships"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "BECS",
+    "unit": "Computer Architecture and Operating Systems",
+    "topics": [
+      "Self-check: Architecture/OS closure",
+      "Mixed exam-style practice"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Database purpose",
+      "Data persistence, consistency, and sharing"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Relational model",
+      "Tables, rows, columns, keys, and relationships"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Practice: ER modeling",
+      "Entities, attributes, relationships for a BECS system"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Normalization basics",
+      "1NF, 2NF, 3NF and reducing redundancy"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Practice: Table design",
+      "Transforming ER model into relational schema"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: SQL basics",
+      "SELECT, WHERE, ORDER BY, INSERT, UPDATE, DELETE"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Practice: SQL queries",
+      "Filtering, joining, grouping, and aggregation"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Constraints and integrity",
+      "Primary keys, foreign keys, unique, not null"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Transactions",
+      "ACID idea and why consistency matters"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Theory: Indexing overview",
+      "Why indexes improve lookup speed"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "BECS application: Measurement data storage",
+      "Designing tables for instruments and readings"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Lab: Build a small database",
+      "Schema, sample rows, and basic queries"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Tutorial: DBMS mixed questions",
+      "ER, normalization, SQL"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Review: Database Management Systems",
+      "Design-to-query workflow"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "BECS",
+    "unit": "Database Management Systems",
+    "topics": [
+      "Self-check: DBMS closure",
+      "Prepare for web/software project data"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Measurement system overview",
+      "Measurand, sensor, signal conditioning, display/recording"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Static characteristics",
+      "Accuracy, precision, sensitivity, resolution, linearity"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Practice: Error analysis",
+      "Absolute, relative, percentage error, and uncertainty"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Dynamic characteristics",
+      "Response time, bandwidth, damping, and loading"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Transducers and sensors",
+      "Resistive, capacitive, inductive, thermal, optical overview"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Bridge circuits",
+      "Wheatstone bridge and small resistance changes"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Signal conditioning",
+      "Amplification, filtering, isolation, and impedance matching"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: ADC and DAC overview",
+      "Sampling, quantization, resolution, and conversion error"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Oscilloscope and waveform measurement",
+      "Amplitude, frequency, phase, and triggering"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Digital multimeter and counters",
+      "Ranges, loading, and practical limits"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Theory: Noise in measurement",
+      "Grounding, shielding, averaging, and filtering"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "BECS connection: Instrumentation with computing",
+      "Collecting, storing, and interpreting readings"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Practice: Instrument selection",
+      "Choosing sensors/instruments for a given quantity"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Tutorial: Measurement calculations",
+      "Sensitivity, resolution, error, and calibration"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Review: Measurement & Instrumentation",
+      "System chain and error vocabulary"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation",
+    "topics": [
+      "Self-check: Instrumentation closure",
+      "Concept and calculation readiness"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation Laboratory",
+    "topics": [
+      "Lab: Calibration exercise",
+      "Reference value, calibration curve, and error estimate"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation Laboratory",
+    "topics": [
+      "Lab: Bridge measurement",
+      "Small resistance/strain-style measurement setup"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation Laboratory",
+    "topics": [
+      "Lab: Sensor characterization",
+      "Sensitivity, range, and linearity observation"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation Laboratory",
+    "topics": [
+      "Lab: Oscilloscope measurement",
+      "Frequency, phase, and triggering practice"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation Laboratory",
+    "topics": [
+      "Lab: ADC/data acquisition demonstration",
+      "Sampling and quantization observation"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation Laboratory",
+    "topics": [
+      "Lab report: Instrumentation results",
+      "Uncertainty, graphs, and interpretation"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation Laboratory",
+    "topics": [
+      "Review: Instrumentation lab readiness",
+      "Safety and measurement mistakes"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "BECS",
+    "unit": "Measurement & Instrumentation Laboratory",
+    "topics": [
+      "Self-check: Lab closure",
+      "Practical viva preparation"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: What is a signal",
+      "Continuous/discrete, analogue/digital, deterministic/random"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Basic signal operations",
+      "Shifting, scaling, reversal, and amplitude scaling"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Elementary signals",
+      "Impulse, step, ramp, exponential, sinusoid"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Systems and properties",
+      "Linearity, time invariance, causality, stability"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Practice: Classifying systems",
+      "Testing properties from input-output rules"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Convolution intuition",
+      "System response from impulse response"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Practice: Discrete convolution",
+      "Step-by-step table method"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Differential equation system models",
+      "Link with circuits and dynamic systems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Fourier series",
+      "Periodic signals in frequency components"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Fourier transform",
+      "Non-periodic signal frequency content"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Laplace transform for systems",
+      "Transfer function and poles/zeros overview"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Frequency response",
+      "Magnitude, phase, filters, and bandwidth"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Theory: Sampling theorem",
+      "Nyquist rate and aliasing"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Practice: Sampling examples",
+      "Choosing sampling frequency for a signal"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "BECS connection: Signals in instrumentation",
+      "From sensor waveform to computation"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Tutorial: Signals and systems problems",
+      "Convolution, transforms, and properties"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Review: Signals and Systems",
+      "Time-domain and frequency-domain links"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "BECS",
+    "unit": "Signals and Systems",
+    "topics": [
+      "Self-check: Signals closure",
+      "Prepare for scientific computing and measurements"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Theory: Scientific computing workflow",
+      "Model, discretize, compute, verify, interpret"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Theory: Floating point and error",
+      "Rounding, truncation, and numerical stability intuition"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Practice: Root-finding implementation",
+      "Bisection/Newton methods in code or pseudocode"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Practice: Solving linear systems",
+      "Gaussian elimination idea and matrix computation"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Theory: Interpolation",
+      "Lagrange/linear interpolation and data estimation"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Practice: Curve fitting overview",
+      "Least-squares line and experimental data"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Practice: Numerical differentiation",
+      "Finite difference approximations"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Practice: Numerical integration",
+      "Trapezoidal/Simpson methods in scientific problems"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Practice: Numerical ODE solution",
+      "Euler and Runge-Kutta overview"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "BECS application: Signal/measurement data",
+      "Computing summaries and model predictions"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Lab-style task: Small scientific script",
+      "Input data, compute result, plot/table output"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Tutorial: Numerical methods",
+      "Error, method choice, and interpretation"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Review: Numerical Methods in Scientific Computing",
+      "Algorithm map and limitations"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "BECS",
+    "unit": "Numerical Methods in Scientific Computing",
+    "topics": [
+      "Self-check: Scientific computing closure",
+      "Coding and calculation readiness"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "BECS",
+    "unit": "English in Today's World",
+    "topics": [
+      "Communication: Global English context",
+      "Clarity and audience awareness"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "BECS",
+    "unit": "English in Today's World",
+    "topics": [
+      "Writing: Professional online communication",
+      "Emails, messages, and concise updates"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "BECS",
+    "unit": "English in Today's World",
+    "topics": [
+      "Speaking: Discussion and disagreement",
+      "Polite technical conversation"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "BECS",
+    "unit": "English in Today's World",
+    "topics": [
+      "Reading: Current technical article",
+      "Summarize main idea and evidence"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "BECS",
+    "unit": "English in Today's World",
+    "topics": [
+      "Review: English in Today's World",
+      "Practical communication checklist"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "BECS",
+    "unit": "Creative Design Project I",
+    "topics": [
+      "Project: Problem identification",
+      "Choose a small BECS-relevant need or opportunity"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "BECS",
+    "unit": "Creative Design Project I",
+    "topics": [
+      "Project: User and requirement analysis",
+      "Define users, constraints, and success criteria"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "BECS",
+    "unit": "Creative Design Project I",
+    "topics": [
+      "Project: Concept generation",
+      "Brainstorm hardware/software solution options"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "BECS",
+    "unit": "Creative Design Project I",
+    "topics": [
+      "Project: Feasibility and risk",
+      "Components, time, cost, and technical uncertainty"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "BECS",
+    "unit": "Creative Design Project I",
+    "topics": [
+      "Project: Prototype planning",
+      "Blocks, interfaces, tasks, and responsibilities"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "BECS",
+    "unit": "Creative Design Project I",
+    "topics": [
+      "Project: Testing plan",
+      "Measurements, expected behavior, and acceptance checks"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "BECS",
+    "unit": "Creative Design Project I",
+    "topics": [
+      "Project: Documentation",
+      "Design rationale, diagrams, and progress evidence"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "BECS",
+    "unit": "Creative Design Project I",
+    "topics": [
+      "Review: Creative Design Project I",
+      "Prepare presentation/demo plan"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "BECS",
+    "unit": "Marketing Fundamentals",
+    "topics": [
+      "Theory: What marketing does",
+      "Customer value, needs, and market orientation"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "BECS",
+    "unit": "Marketing Fundamentals",
+    "topics": [
+      "Theory: Market segmentation",
+      "Segmentation, targeting, positioning basics"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "BECS",
+    "unit": "Marketing Fundamentals",
+    "topics": [
+      "Theory: Marketing mix",
+      "Product, price, place, promotion"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "BECS",
+    "unit": "Marketing Fundamentals",
+    "topics": [
+      "Practice: Product value proposition",
+      "Explain a BECS project benefit clearly"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "BECS",
+    "unit": "Marketing Fundamentals",
+    "topics": [
+      "Theory: Consumer behavior basics",
+      "Buying decisions and adoption barriers"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "BECS",
+    "unit": "Marketing Fundamentals",
+    "topics": [
+      "Theory: Digital marketing overview",
+      "Channels, content, and metrics"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "BECS",
+    "unit": "Marketing Fundamentals",
+    "topics": [
+      "Review: Marketing Fundamentals",
+      "Key vocabulary and applications"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "BECS",
+    "unit": "Marketing Fundamentals",
+    "topics": [
+      "Integrated semester review",
+      "Architecture, databases, measurement, signals, computing, project, and marketing together"
+    ]
+  }
+]

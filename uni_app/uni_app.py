@@ -3084,9 +3084,47 @@ SAFARI_PINNED_TAB = f"/safari-pinned-tab.svg?v={ICON_ASSET_VERSION}"
 LANDING_LOGO_PREVIEW_VIDEO = "/logo_preview.mp4"
 
 APP_ROOT_DIR = Path(__file__).resolve().parent.parent
+PREGENERATED_PLAN_DIR = APP_ROOT_DIR / "uni_app" / "pregenerated_plans"
 TRAINING_DATA_PATH = APP_ROOT_DIR / ".states" / "training_data.jsonl"
 TRAINING_LOG_ENABLED = os.getenv("TRAINING_LOG_ENABLED", "false").lower() == "true"
 TRAINING_MAX_BYTES = int(os.getenv("TRAINING_MAX_BYTES", "5242880"))
+
+
+def _pregenerated_plan_filename(degree: str, scope: str, active_subject: str = "") -> str:
+    """Return the pregenerated plan filename for a degree/scope, if one exists."""
+    base_scope, _, scoped_subject = (scope or "").partition(":")
+    subject = (scoped_subject or active_subject or "").strip().lower()
+    if not base_scope:
+        return ""
+    if degree == "Software Engineering":
+        return f"se_{base_scope}.json"
+    if degree == "Electronics and Computer Science (BECS)":
+        return f"becs_{base_scope}.json"
+    if degree == "Physical Science" and subject:
+        return f"ps_{base_scope}_{subject}.json"
+    return ""
+
+
+def _load_pregenerated_study_plan(degree: str, scope: str, active_subject: str = "") -> list:
+    filename = _pregenerated_plan_filename(degree, scope, active_subject)
+    if not filename:
+        return []
+    path = (PREGENERATED_PLAN_DIR / filename).resolve()
+    root = PREGENERATED_PLAN_DIR.resolve()
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return []
+    if not path.is_file():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        logger.warning("Could not load pregenerated plan %s: %s", path.name, e)
+        return []
+    if not isinstance(data, list):
+        return []
+    return data
 
 
 def _redact_training_text(text: str) -> str:
@@ -9511,6 +9549,9 @@ Update the saved profile instead of overwriting randomly. Keep only durable tuto
             row.plan_json = json.dumps(plan)
             session.add(row); session.commit()
 
+    def _pregenerated_study_plan(self, scope: str) -> list:
+        return _load_pregenerated_study_plan(self.degree, scope, self.active_subject)
+
     def _get_day_progress(self, uid: int, scope: str) -> tuple[int, int]:
         if uid < 0: return (1, 0)
         with rx.session() as session:
@@ -13478,7 +13519,7 @@ Quality rules:
                 f"sem={target_semester} openrouter={'ok' if llm_ready else 'None'}",
                 flush=True,
             )
-            if uid < 0 or not llm_ready or not target_scope:
+            if uid < 0 or not target_scope:
                 print(
                     f"[PLAN-GEN] BAIL: uid={uid} openrouter={'ok' if llm_ready else 'None'} "
                     f"scope='{target_scope}'",
@@ -13495,7 +13536,49 @@ Quality rules:
                     self.is_generating_plan = False
                     self.plan_generation_error = ""
                 return
-            if self._is_multi_subject_degree():
+            pregenerated_plan = self._pregenerated_study_plan(target_scope)
+            if pregenerated_plan:
+                self._save_study_plan(uid, target_scope, pregenerated_plan)
+                self._save_day_progress(uid, target_scope, 1, 0)
+                self._set_plan_generation_state(uid, target_scope, PLAN_GENERATION_STATUS_IDLE)
+                print(f"[PLAN-GEN] Loaded pregenerated plan with {len(pregenerated_plan)} entries for {target_scope}", flush=True)
+                if target_scope == active:
+                    self.current_day = 1
+                    self.current_topic_index = 0
+                    self._refresh_today_plan(uid)
+                    self.is_generating_plan = False
+                    self.plan_generation_error = ""
+                    msg = "Your personalized 110 day study plan is ready\n\n" + self._build_today_message(pregenerated_plan, 1, 0)
+                    self.chat_history.append(
+                        {
+                            "role": "assistant",
+                            **self._assistant_content_meta(msg),
+                            "followup_actions": "proceed_only",
+                        }
+                    )
+                    self._save_message(uid, "assistant", msg, assistant_flags="proceed_only")
+                pregenerated_plan_loaded = True
+            else:
+                pregenerated_plan_loaded = False
+            if pregenerated_plan_loaded:
+                degree_for_ga = degree
+                year_for_ga = target_year
+                semester_for_ga = target_semester
+                scope_for_ga = target_scope
+            if not pregenerated_plan_loaded and not llm_ready:
+                print(
+                    f"[PLAN-GEN] BAIL: uid={uid} openrouter={'ok' if llm_ready else 'None'} "
+                    f"scope='{target_scope}'",
+                    flush=True,
+                )
+                if target_scope == active:
+                    self.is_generating_plan = False
+                    self.plan_generation_error = PLAN_GENERATION_FAILURE_TEXT
+                return
+            if pregenerated_plan_loaded:
+                courses_text = ""
+                curriculum_context = ""
+            elif self._is_multi_subject_degree():
                 plan_units = self._semester_course_units(target_year, target_semester)
                 active_subject_code = self.active_subject or ""
                 active_subject_name = subject_code_display_name(active_subject_code)
@@ -13517,7 +13600,7 @@ Quality rules:
                 curriculum_context = self._semester_curriculum_context(
                     target_year, target_semester, include_all_pathway=False
                 )
-            if not target_year or not target_semester or not courses_text.strip():
+            if not pregenerated_plan_loaded and (not target_year or not target_semester or not courses_text.strip()):
                 print(f"[PLAN-GEN] BAIL: no courses year='{target_year}' sem='{target_semester}'", flush=True)
                 self._set_plan_generation_state(
                     uid, target_scope, PLAN_GENERATION_STATUS_FAILED,
@@ -13527,6 +13610,18 @@ Quality rules:
                     self.is_generating_plan = False
                     self.plan_generation_error = "This semester is not ready for study plan generation yet."
                 return
+
+        if pregenerated_plan_loaded:
+            yield track_ga_event(
+                "plan_generated",
+                _ga_study_params(
+                    degree=degree_for_ga,
+                    year=year_for_ga,
+                    semester=semester_for_ga,
+                    plan_scope=scope_for_ga,
+                ),
+            )
+            return
 
         # ── Web search for latest syllabus/curriculum info ──
         is_intl_degree = degree in _INTL_DEGREES
