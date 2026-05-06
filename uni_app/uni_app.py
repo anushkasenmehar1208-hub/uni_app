@@ -3713,6 +3713,15 @@ SE_TEACHING_STYLE: dict[str, str] = {
     "emphasis": "teach from foundations to implementation, balancing software theory, architecture, modelling, verification, and project delivery with practical coding and engineering tradeoffs.",
 }
 
+BECS_TEACHING_STYLE: dict[str, str] = {
+    "discipline": "electronics and computer science",
+    "emphasis": (
+        "teach at BECS level: balance computer science implementation with electronics, circuits, signals, "
+        "measurement, and laboratory practice. Match depth to the BECS syllabus instead of expanding into "
+        "pure CS, pure electronics, or unrelated engineering coverage."
+    ),
+}
+
 # ── Software Engineering (flat: semester → modules) ──
 SE_CURRICULUM = {
     "Year 1": {
@@ -4133,6 +4142,63 @@ KELANIYA_SENG_CURRICULUM: dict[str, dict[str, list[dict[str, Any]]]] = {
             _course_unit("SENG 24272", "Management for Software Engineering II", prerequisites=["SENG 12242"], depth="intermediate"),
         ],
     },
+}
+
+# University of Kelaniya BSc Hons Electronics and Computer Science (BECS)
+# Years 1-2 only, per the current product scope.
+KELANIYA_BECS_CURRICULUM: dict[str, dict[str, list[dict[str, Any]]]] = {
+    "Year 1": {
+        "Semester 1": [
+            _course_unit("BECS 11212", "Foundations in Computer Science", prerequisites=["G.C.E. A/L"], corequisites=["BECS 11223"], depth="foundational"),
+            _course_unit("BECS 11223", "Fundamentals of Programming", prerequisites=["G.C.E. A/L"], corequisites=["BECS 11212"], delivery="theory-practice", depth="foundational"),
+            _course_unit("BECS 11413", "Analogue Electronics I", prerequisites=["A/L Physics"], corequisites=["BECS 11431"], delivery="theory-practice", depth="foundational"),
+            _course_unit("BECS 11422", "Electric Circuit Fundamentals", prerequisites=["A/L Physics"], corequisites=["BECS 11431"], delivery="theory-practice", depth="foundational"),
+            _course_unit("BECS 11431", "Analogue Electronics Laboratory I", prerequisites=["A/L Physics"], corequisites=["BECS 11413", "BECS 11422"], delivery="lab", depth="foundational"),
+            _course_unit("BECS 11613", "Applied Algebra & Statistics", prerequisites=["A/L Combined Mathematics"], depth="foundational"),
+        ],
+        "Semester 2": [
+            _course_unit("BECS 11722", "Fundamentals of Management Accounting", prerequisites=["None"], depth="foundational"),
+            _course_unit("BECS 12233", "Data Communications and Networks", prerequisites=["BECS 11212"], depth="foundational"),
+            _course_unit("BECS 12243", "Object Oriented Programming", prerequisites=["BECS 11223"], delivery="theory-practice", depth="foundational"),
+            _course_unit("BECS 12443", "Digital Electronics", prerequisites=["BECS 11413"], corequisites=["BECS 12451"], delivery="theory-practice", depth="foundational"),
+            _course_unit("BECS 12451", "Digital Electronics Laboratory", prerequisites=["BECS 11431"], corequisites=["BECS 12443"], delivery="lab", depth="foundational"),
+            _course_unit("BECS 12462", "Mechanics & Properties of Materials", prerequisites=["A/L Physics"], depth="foundational"),
+            _course_unit("BECS 12623", "Calculus", prerequisites=["BECS 11613"], depth="foundational"),
+            _course_unit("BECS 12712", "Foundation Course in English", prerequisites=["None"], depth="foundational"),
+            _course_unit("BECS 12742", "Project Management and Financing", prerequisites=["None"], depth="foundational"),
+        ],
+    },
+    "Year 2": {
+        "Semester 3": [
+            _course_unit("BECS 21213", "Software Engineering", prerequisites=["BECS 12243"], depth="intermediate"),
+            _course_unit("BECS 21223", "Data Structures and Algorithms", prerequisites=["BECS 12243"], delivery="theory-practice", depth="intermediate"),
+            _course_unit("BECS 21413", "Analogue Electronics II (Operational Amplifiers)", prerequisites=["BECS 11413"], corequisites=["BECS 21431"], delivery="theory-practice", depth="intermediate"),
+            _course_unit("BECS 21422", "Electromagnetism", prerequisites=["BECS 11613"], corequisites=["BECS 21431"], depth="intermediate"),
+            _course_unit("BECS 21431", "Analogue Electronics Laboratory II", prerequisites=["BECS 11431"], corequisites=["BECS 21413", "BECS 21422"], delivery="lab", depth="intermediate"),
+            _course_unit("BECS 21613", "Differential Equations, Integral Transforms & Numerical Methods", prerequisites=["A/L Combined Mathematics"], depth="intermediate"),
+            _course_unit("BECS 21722", "Organizational Behavior", prerequisites=["None"], depth="foundational"),
+            _course_unit("BECS 21732", "Professional English", prerequisites=["BECS 12712"], depth="foundational"),
+        ],
+        "Semester 4": [
+            _course_unit("BECS 22233", "Computer Architecture and Operating Systems", prerequisites=["BECS 11212", "BECS 12443"], depth="intermediate"),
+            _course_unit("BECS 22243", "Database Management Systems", prerequisites=["BECS 21223"], delivery="theory-practice", depth="intermediate"),
+            _course_unit("BECS 22443", "Measurement & Instrumentation", prerequisites=["All previous compulsory courses in Electronics"], corequisites=["BECS 22451"], delivery="theory-practice", depth="intermediate"),
+            _course_unit("BECS 22451", "Measurement & Instrumentation Laboratory", prerequisites=["All previous laboratory classes in Electronics"], corequisites=["BECS 22443"], delivery="lab", depth="intermediate"),
+            _course_unit("BECS 22462", "Signals and Systems", prerequisites=["BECS 21613"], depth="intermediate"),
+            _course_unit("BECS 22623", "Numerical Methods in Scientific Computing", prerequisites=["BECS 21613"], delivery="theory-practice", depth="intermediate"),
+            _course_unit("BECS 22712", "English in Today's World", prerequisites=["BECS 21732"], depth="foundational"),
+            _course_unit("BECS 22811", "Creative Design Project I", prerequisites=["All previous compulsory courses"], delivery="project", depth="intermediate"),
+            _course_unit("BECS 22732", "Marketing Fundamentals", prerequisites=["None"], depth="foundational"),
+        ],
+    },
+}
+
+BECS_CURRICULUM: dict[str, dict[str, list[str]]] = {
+    year: {
+        semester: [f"BECS:{unit['title']}" for unit in units]
+        for semester, units in semesters.items()
+    }
+    for year, semesters in KELANIYA_BECS_CURRICULUM.items()
 }
 
 # Official University of Kelaniya handbook metadata for Physical Science
@@ -4573,6 +4639,7 @@ MULTI_SUBJECT_DEGREES: set[str] = {"Physical Science", "Biological Science"}
 # ── Flat degree → curriculum mapping (single-subject degrees like SE) ──
 FLAT_DEGREE_CURRICULUM: dict[str, dict] = {
     "Software Engineering":       SE_CURRICULUM,
+    "Electronics and Computer Science (BECS)": BECS_CURRICULUM,
     "Computer Science (UK)":      UK_CS_CURRICULUM,
     "Software Engineering (UK)":  UK_SE_CURRICULUM,
     "Computer Science (US)":      US_CS_CURRICULUM,
@@ -4584,6 +4651,7 @@ FLAT_DEGREE_CURRICULUM: dict[str, dict] = {
 # ── Flat degree → discipline label for AI context ──
 FLAT_DEGREE_DISCIPLINE: dict[str, str] = {
     "Software Engineering":       "Software Engineering",
+    "Electronics and Computer Science (BECS)": "Electronics and Computer Science",
     "Computer Science (UK)":      "Computer Science",
     "Software Engineering (UK)":  "Software Engineering",
     "Computer Science (US)":      "Computer Science",
@@ -4594,7 +4662,7 @@ FLAT_DEGREE_DISCIPLINE: dict[str, str] = {
 
 # ── Per-region degree choices shown in onboarding ──
 REGION_DEGREE_OPTIONS: dict[str, list[str]] = {
-    "LK":     ["Software Engineering", "Physical Science", "Biological Science"],
+    "LK":     ["Software Engineering", "Electronics and Computer Science (BECS)", "Physical Science", "Biological Science"],
     "UK":     ["Computer Science (UK)", "Software Engineering (UK)"],
     "US":     ["Computer Science (US)", "Computer Engineering (US)"],
     "IN":     ["B.Tech Computer Science", "B.Tech Information Technology"],
@@ -4605,7 +4673,7 @@ REGION_DEGREE_OPTIONS: dict[str, list[str]] = {
 CUSTOM_DEGREE = "Custom"
 LEGACY_CUSTOM_DEGREE = "Others"  # Still honored for existing stored profiles
 DEGREE_OPTIONS: list[str] = [
-    "Software Engineering", "Physical Science", "Biological Science",
+    "Software Engineering", "Electronics and Computer Science (BECS)", "Physical Science", "Biological Science",
     "Computer Science (UK)", "Software Engineering (UK)",
     "Computer Science (US)", "Computer Engineering (US)",
     "B.Tech Computer Science", "B.Tech Information Technology",
@@ -7730,10 +7798,10 @@ class AppState(reflex_local_auth.LocalAuthState):
     def _semester_course_units(self, year: str, semester: str) -> list[dict[str, Any]]:
         if self._is_multi_subject_degree() and self.active_subject:
             return self._semester_course_units_for_subject(self.active_subject, year, semester)
-        # Detailed Kelaniya course units only apply to SL Software Engineering.
-        # International degrees use the flat FLAT_DEGREE_CURRICULUM via _semester_courses fallback.
         if self.degree == "Software Engineering":
             return KELANIYA_SENG_CURRICULUM.get(year, {}).get(semester, [])
+        if self.degree == "Electronics and Computer Science (BECS)":
+            return KELANIYA_BECS_CURRICULUM.get(year, {}).get(semester, [])
         return []
 
     def _all_semester_course_units_ps(self, year: str, semester: str) -> list[dict[str, Any]]:
@@ -7811,6 +7879,9 @@ class AppState(reflex_local_auth.LocalAuthState):
         discipline = FLAT_DEGREE_DISCIPLINE.get(self.degree, "Software Engineering")
         if self.degree == "Software Engineering":
             guidance = f"- Software Engineering: {SE_TEACHING_STYLE['discipline']}; {SE_TEACHING_STYLE['emphasis']}"
+            source_line = f"Official curriculum source: {UNIVERSITY_NAME} Faculty of Science Student Handbook 2024/2025 ({KELANIYA_SCIENCE_HANDBOOK_URL})"
+        elif self.degree == "Electronics and Computer Science (BECS)":
+            guidance = f"- Electronics and Computer Science (BECS): {BECS_TEACHING_STYLE['discipline']}; {BECS_TEACHING_STYLE['emphasis']}"
             source_line = f"Official curriculum source: {UNIVERSITY_NAME} Faculty of Science Student Handbook 2024/2025 ({KELANIYA_SCIENCE_HANDBOOK_URL})"
         else:
             guidance = f"- {discipline}: teach core concepts clearly with practical examples; balance theory and applied problem-solving."
@@ -21405,7 +21476,15 @@ def onboarding_page():
             rx.cond(
                 AppState.onboarding_region == "LK",
                 rx.vstack(
-                    *[degree_btn(d) for d in ["Software Engineering", "Physical Science", "Biological Science"]],
+                    *[
+                        degree_btn(d)
+                        for d in [
+                            "Software Engineering",
+                            "Electronics and Computer Science (BECS)",
+                            "Physical Science",
+                            "Biological Science",
+                        ]
+                    ],
                     spacing="2", width="100%",
                 ),
                 rx.fragment(),
