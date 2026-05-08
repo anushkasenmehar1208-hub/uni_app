@@ -26394,9 +26394,9 @@ def landing_page():
                 align_items="flex-start",
                 width="100%",
             ),
-            width=rx.breakpoints(initial="100%", md="calc(33.333% - 14px)"),
+            width=rx.breakpoints(initial="100%", md="calc(50% - 10px)", lg="calc(25% - 15px)"),
             min_width=rx.breakpoints(initial="100%", md="260px"),
-            max_width=rx.breakpoints(initial="100%", md="380px"),
+            max_width=rx.breakpoints(initial="100%", md="380px", lg="none"),
             padding="18px",
             border="1px solid rgba(255,255,255,0.08)",
             border_radius="24px",
@@ -28002,7 +28002,7 @@ def landing_page():
                 align_items="center",
                 width="100%",
             ),
-            # ── 3-card grid of feature cards ──
+            # ── 4-card grid of feature cards ──
             rx.box(
                 rx.flex(
                     feature_card(
@@ -28023,13 +28023,19 @@ def landing_page():
                         "/landing-tracker-demo.png",
                         "Habit Tracker",
                     ),
+                    feature_card(
+                        "Save and organize your notes",
+                        "Create rich study notes, attach media, and keep AI explanations saved in one library for every subject.",
+                        "/landing-notes-demo.png",
+                        "Notes",
+                    ),
                     gap=rx.breakpoints(initial="16px", md="20px"),
                     flex_wrap="wrap",
                     justify="center",
                     width="100%",
                 ),
                 width="100%",
-                max_width="1080px",
+                max_width="1520px",
             ),
             spacing="8",
             align_items="center",
