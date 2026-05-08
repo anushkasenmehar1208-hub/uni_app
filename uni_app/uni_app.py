@@ -658,6 +658,46 @@ def _note_title_from_body(body: str) -> str:
     return "Note from Alex"
 
 
+def _note_preview_from_body(body: str) -> str:
+    """Plain text preview for the notes library."""
+    text = body or ""
+    text = re.sub(r"```[\w+-]*\n?", " ", text)
+    text = text.replace("```", " ")
+    text = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    cleaned: list[str] = []
+    for line in text.splitlines():
+        t = line.strip()
+        if not t:
+            continue
+        t = re.sub(r"^#{1,6}\s*", "", t)
+        t = re.sub(r"^>\s*", "", t)
+        t = re.sub(r"^[-*+]\s+", "", t)
+        t = re.sub(r"^\d+[.)]\s+", "", t)
+        cleaned.append(t)
+    text = " ".join(cleaned)
+    text = re.sub(r"(\*\*|__)(.*?)\1", r"\2", text)
+    text = re.sub(r"(\*|_)(.*?)\1", r"\2", text)
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+    text = re.sub(r"[*_`~#]+", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) > 140:
+        text = text[:137].rstrip() + "..."
+    return text
+
+
+def _note_empty_preview_from_attachments(attachments_json: str) -> str:
+    items = _parse_note_attachments_json(attachments_json)
+    if not items:
+        return "No body text yet"
+    count = len(items)
+    if count == 1:
+        kind = str(items[0].get("kind") or "file").strip() or "file"
+        name = str(items[0].get("name") or "").strip()
+        return f"{kind.title()} attachment" + (f": {name}" if name else "")
+    return f"{count} attachments"
+
+
 # Compact “tech” toast for save-to-notes (Sonner `data-*` hooks; see semester_page provider).
 _NOTE_SAVED_TOAST_STYLE = {
     "background": "linear-gradient(145deg, rgba(10, 18, 34, 0.94), rgba(6, 12, 26, 0.92))",
@@ -3059,7 +3099,7 @@ async def _openrouter_stream_async(model: str, messages: list[dict], max_tokens:
         yield friendly_llm_error(e)
 
 
-FREE_DAILY_LIMIT = 5  # 5 messages/day free (first 3 days fully free via trial)
+FREE_DAILY_LIMIT = 10  # 10 messages/day free (first 3 days fully free via trial)
 TRIAL_DAYS       = 3
 ADAPTIVE_PROFILE_SCOPE = "__adaptive_profile__"
 PLAN_GENERATION_STATUS_IDLE = "idle"
@@ -8273,7 +8313,9 @@ class AppState(reflex_local_auth.LocalAuthState):
                 ).all()
             items: list[dict] = []
             for r in rows:
-                prev = (r.body or "").replace("\n", " ").strip()[:140]
+                prev = _note_preview_from_body(r.body or "")
+                if not prev:
+                    prev = _note_empty_preview_from_attachments(getattr(r, "attachments_json", "") or "[]")
                 items.append({
                     "id": str(r.id),
                     "title": (r.title or "").strip() or "Untitled",
@@ -13973,7 +14015,7 @@ Course units to cover:\n{courses_text}"""
         self._check_and_reset_daily_count(uid)
 
         if not self.can_send_message:
-            gate_msg = "🔒 You've used all 5 free messages for today.\n\nUpgrade to **Premium** to continue learning without limits."
+            gate_msg = f"🔒 You've used all {FREE_DAILY_LIMIT} free messages for today.\n\nUpgrade to **Premium** to continue learning without limits."
             self.chat_history.append({"role": "assistant", **self._assistant_content_meta(gate_msg)})
             self._save_message(uid, "assistant", gate_msg)
             self.show_pricing_modal = True
@@ -15822,6 +15864,313 @@ ENTER_TO_SEND_JS = """
 
 # Notes panel: hidden file input id for mobile camera (must match `rx.el.input` id in `notes_panel`).
 _NOTE_UPL_CAMERA_INPUT_ID = "note_upl_camera_in"
+
+_NOTES_MD_CSS = """
+<style>
+.notes-md-preview {
+  min-height: 180px;
+}
+.notes-body-shell {
+  position: relative;
+  cursor: text;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+.notes-rich-editor {
+  width: 100%;
+  height: calc(100vh - 360px);
+  max-height: calc(100vh - 360px);
+  min-height: 260px;
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(52,211,153,0.16);
+  border-radius: 12px;
+  padding: 18px 20px;
+  outline: none;
+  overflow-y: auto;
+  white-space: normal;
+}
+@media (max-width: 768px) {
+  .notes-rich-editor {
+    height: calc(100vh - 330px);
+    max-height: calc(100vh - 330px);
+    min-height: 220px;
+  }
+}
+.notes-rich-editor::-webkit-scrollbar {
+  width: 5px;
+}
+.notes-rich-editor::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px;
+}
+.notes-rich-editor:focus {
+  border-color: rgba(52,211,153,0.34);
+  box-shadow: 0 0 0 1px rgba(52,211,153,0.08);
+}
+.notes-rich-editor:empty::before {
+  content: "Write in Markdown — definitions, exam tips, code snippets...";
+  color: rgba(160,170,185,0.35);
+  pointer-events: none;
+}
+.notes-md {
+  color: rgba(220, 228, 238, 0.92);
+  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+.notes-md p {
+  margin: 0 0 0.85em 0;
+}
+.notes-md p:last-child {
+  margin-bottom: 0;
+}
+.notes-md h1,
+.notes-md h2,
+.notes-md h3,
+.notes-md h4 {
+  color: rgba(244, 248, 252, 0.96);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1em 0 0.45em;
+}
+.notes-md > h1:first-child,
+.notes-md > h2:first-child,
+.notes-md > h3:first-child,
+.notes-md > h4:first-child {
+  margin-top: 0;
+}
+.notes-md h1 { font-size: 1.3rem; }
+.notes-md h2 { font-size: 1.08rem; }
+.notes-md h3 { font-size: 0.95rem; }
+.notes-md h4 { font-size: 0.9rem; }
+.notes-md strong {
+  color: rgba(255, 255, 255, 0.98);
+  font-weight: 800;
+}
+.notes-md em {
+  color: rgba(231, 236, 244, 0.9);
+  font-style: italic;
+}
+.notes-md ul,
+.notes-md ol {
+  margin: 0 0 0.9em 0;
+  padding-left: 1.45em;
+}
+.notes-md li {
+  margin-bottom: 0.35em;
+}
+.notes-md li::marker {
+  color: rgba(52, 211, 153, 0.8);
+}
+.notes-md code {
+  color: rgba(167, 219, 255, 0.95);
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-family: 'Söhne Mono', 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.86em;
+}
+.notes-md pre {
+  margin: 0.8em 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.42);
+}
+.notes-md pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  white-space: pre;
+}
+.notes-md blockquote {
+  margin: 0 0 0.9em 0;
+  padding-left: 0.9em;
+  border-left: 3px solid rgba(52, 211, 153, 0.45);
+  color: rgba(202, 213, 225, 0.82);
+}
+.notes-md a {
+  color: rgba(125, 211, 252, 0.96);
+}
+</style>
+"""
+_NOTES_RICH_EDITOR_JS = r"""
+(function() {
+  function escapeHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function inlineMd(s) {
+    return escapeHtml(s)
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/__([^_]+)__/g, "<strong>$1</strong>")
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+      .replace(/_([^_]+)_/g, "<em>$1</em>");
+  }
+
+  function mdToHtml(md) {
+    const lines = String(md || "").replace(/\r\n/g, "\n").split("\n");
+    let html = "";
+    let inList = false;
+    const closeList = () => {
+      if (inList) {
+        html += "</ul>";
+        inList = false;
+      }
+    };
+
+    for (const raw of lines) {
+      const line = raw.trimEnd();
+      const trimmed = line.trim();
+      if (!trimmed) {
+        closeList();
+        continue;
+      }
+      const h = trimmed.match(/^(#{1,6})\s+(.+)$/);
+      if (h) {
+        closeList();
+        const level = Math.min(4, h[1].length);
+        html += "<h" + level + ">" + inlineMd(h[2]) + "</h" + level + ">";
+        continue;
+      }
+      const li = trimmed.match(/^[-*+]\s+(.+)$/);
+      if (li) {
+        if (!inList) {
+          html += "<ul>";
+          inList = true;
+        }
+        html += "<li>" + inlineMd(li[1]) + "</li>";
+        continue;
+      }
+      closeList();
+      html += "<p>" + inlineMd(trimmed) + "</p>";
+    }
+    closeList();
+    return html;
+  }
+
+  function textOf(node) {
+    return (node.textContent || "").replace(/\u00a0/g, " ");
+  }
+
+  function htmlNodeToMd(node) {
+    if (!node) return "";
+    if (node.nodeType === Node.TEXT_NODE) return textOf(node);
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+    const tag = node.tagName.toLowerCase();
+    const children = Array.from(node.childNodes).map(htmlNodeToMd).join("");
+    if (tag === "strong" || tag === "b") return "**" + children + "**";
+    if (tag === "em" || tag === "i") return "*" + children + "*";
+    if (tag === "code") return "`" + children + "`";
+    if (tag === "br") return "\n";
+    if (tag === "h1") return "# " + children.trim() + "\n\n";
+    if (tag === "h2") return "## " + children.trim() + "\n\n";
+    if (tag === "h3") return "### " + children.trim() + "\n\n";
+    if (tag === "h4") return "#### " + children.trim() + "\n\n";
+    if (tag === "li") return "* " + children.trim() + "\n";
+    if (tag === "ul" || tag === "ol") return children + "\n";
+    if (tag === "div" || tag === "p") return children.trim() ? children.trim() + "\n\n" : "\n";
+    return children;
+  }
+
+  function editorToMarkdown(editor) {
+    return Array.from(editor.childNodes)
+      .map(htmlNodeToMd)
+      .join("")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  function caretOffset(root) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return 0;
+    const range = sel.getRangeAt(0);
+    const pre = range.cloneRange();
+    pre.selectNodeContents(root);
+    pre.setEnd(range.endContainer, range.endOffset);
+    return pre.toString().length;
+  }
+
+  function setCaretOffset(root, offset) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let current = 0;
+    let node;
+    while ((node = walker.nextNode())) {
+      const next = current + node.nodeValue.length;
+      if (offset <= next) {
+        const range = document.createRange();
+        range.setStart(node, Math.max(0, offset - current));
+        range.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        return;
+      }
+      current = next;
+    }
+    root.focus();
+  }
+
+  function syncHidden(hidden, markdown) {
+    if (!hidden || hidden.value === markdown) return;
+    hidden.value = markdown;
+    hidden.dispatchEvent(new Event("input", { bubbles: true }));
+    hidden.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function bind() {
+    const editor = document.getElementById("notes_rich_body_editor");
+    const hidden = document.getElementById("notes_editor_body_input");
+    if (!editor || !hidden) return false;
+    if (editor.dataset.richBound === "1") return true;
+    editor.dataset.richBound = "1";
+
+    const renderFromHidden = () => {
+      const md = hidden.value || "";
+      if (editor.dataset.markdown === md) return;
+      editor.dataset.markdown = md;
+      editor.innerHTML = mdToHtml(md);
+    };
+
+    renderFromHidden();
+
+    editor.addEventListener("input", function() {
+      const before = caretOffset(editor);
+      const markdown = editorToMarkdown(editor);
+      editor.dataset.markdown = markdown;
+      syncHidden(hidden, markdown);
+      editor.innerHTML = mdToHtml(markdown);
+      setCaretOffset(editor, Math.min(before, editor.textContent.length));
+    });
+
+    editor.addEventListener("paste", function(e) {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+      document.execCommand("insertText", false, text);
+    });
+
+    setInterval(function() {
+      if (document.activeElement !== editor) renderFromHidden();
+    }, 600);
+
+    return true;
+  }
+
+  bind();
+  let tries = 0;
+  const iv = setInterval(function() {
+    if (bind() || ++tries > 80) clearInterval(iv);
+  }, 250);
+})();
+"""
 NOTE_CAMERA_OPEN_JS = (
     f"(function(){{var e=document.getElementById('{_NOTE_UPL_CAMERA_INPUT_ID}');"
     f"if(e){{e.value='';e.click();}}}})()"
@@ -16467,6 +16816,19 @@ def pricing_modal() -> rx.Component:
                     width="100%",
                 ),
                 action,
+                rx.hstack(
+                    rx.text("✓", color="rgba(134,239,172,0.92)", font_size="0.74rem", font_weight="800"),
+                    rx.text(
+                        "7-day money-back guarantee",
+                        color="rgba(226,223,214,0.78)",
+                        font_size="0.72rem",
+                        font_weight="650",
+                    ),
+                    spacing="1",
+                    align="center",
+                    justify="center",
+                    width="100%",
+                ),
                 rx.text(note, color="rgba(226,223,214,0.46)", font_size="0.68rem", text_align="center", width="100%"),
                 rx.box(height="1px", width="100%", background="rgba(255,255,255,0.08)", margin_y="2px"),
                 rx.vstack(
@@ -17964,6 +18326,37 @@ def chat_input_field() -> rx.Component:
 
 
 def empty_chat_panel() -> rx.Component:
+    def _suggestion_chip(text: str) -> rx.Component:
+        return rx.button(
+            text,
+            on_click=AppState.set_chat_input(text),
+            variant="ghost",
+            cursor="pointer",
+            style={
+                "padding": "10px 14px",
+                "border_radius": "999px",
+                "border": "1px solid rgba(255,255,255,0.10)",
+                "background": "rgba(255,255,255,0.035)",
+                "color": "rgba(220,225,232,0.78)",
+                "font_size": "0.86rem",
+                "font_weight": "550",
+                "line_height": "1.3",
+                "letter_spacing": "-0.01em",
+                "white_space": "normal",
+                "text_align": "left",
+                "height": "auto",
+                "min_height": "38px",
+                "max_width": "100%",
+                "_hover": {
+                    "background": "rgba(255,255,255,0.075)",
+                    "border_color": "rgba(255,255,255,0.22)",
+                    "color": "rgba(240,244,248,0.95)",
+                    "transform": "translateY(-1px)",
+                },
+                "transition": "all 0.16s ease",
+            },
+        )
+
     return rx.box(
         # Centered content group — greeting + input stay together
         rx.vstack(
@@ -18001,6 +18394,24 @@ def empty_chat_panel() -> rx.Component:
                 width="100%",
                 max_width="740px",
                 margin_top=rx.breakpoints(initial="14px", md="16px"),
+            ),
+            # ── Starter prompts (activation: don't let new users bounce on a blank chat) ──
+            rx.cond(
+                AppState.can_send_message,
+                rx.flex(
+                    _suggestion_chip("Plan my next study session"),
+                    _suggestion_chip("Explain my hardest topic this week"),
+                    _suggestion_chip("Quiz me on what I just learned"),
+                    _suggestion_chip("Summarise a YouTube lecture for me"),
+                    spacing="2",
+                    wrap="wrap",
+                    justify="center",
+                    width="100%",
+                    max_width="640px",
+                    margin_top="14px",
+                    gap="8px",
+                ),
+                rx.fragment(),
             ),
             # ── Tier status (below input) ──
             tier_status_bar(),
@@ -23198,6 +23609,7 @@ def notes_panel() -> rx.Component:
     return rx.cond(
         AppState.show_notes_panel,
         rx.box(
+                rx.html(_NOTES_MD_CSS),
                 rx.vstack(
                     rx.hstack(
                         rx.hstack(
@@ -23350,7 +23762,7 @@ def notes_panel() -> rx.Component:
                                             ),
                                             rx.box(
                                                 rx.text(
-                                                    "No notes yet — use Make note on a reply, or New note.",
+                                                    'No notes yet — use "Make note" on a reply, or create a new note.',
                                                     color="rgba(150,165,180,0.38)",
                                                     font_size="0.76rem",
                                                     line_height="1.5",
@@ -23566,26 +23978,27 @@ def notes_panel() -> rx.Component:
                                             "&::placeholder": {"color": "rgba(255,255,255,0.22)"},
                                         },
                                     ),
-                                    rx.el.textarea(
-                                        id="notes_editor_body_input",
-                                        placeholder="Write in Markdown — definitions, exam tips, code snippets…",
-                                        value=AppState.notes_editor_body,
-                                        on_change=AppState.set_notes_editor_body,
-                                        style={
-                                            "width": "100%",
-                                            "min_height": rx.breakpoints(initial="180px", md="140px"),
-                                            "flex": "1",
-                                            "background": "rgba(0,0,0,0.35)",
-                                            "border": "1px solid rgba(255,255,255,0.08)",
-                                            "border_radius": "12px",
-                                            "color": "rgba(220,228,238,0.9)",
-                                            "font_size": "0.82rem",
-                                            "line_height": "1.55",
-                                            "font_family": "'Söhne Mono', 'SF Mono', Menlo, monospace",
-                                            "padding": "14px 14px",
-                                            "resize": "vertical",
-                                            "outline": "none",
-                                        },
+                                    rx.box(
+                                        rx.el.textarea(
+                                            id="notes_editor_body_input",
+                                            value=AppState.notes_editor_body,
+                                            on_change=AppState.set_notes_editor_body,
+                                            style={"display": "none"},
+                                        ),
+                                        rx.el.div(
+                                            id="notes_rich_body_editor",
+                                            class_name="notes-rich-editor notes-md",
+                                            custom_attrs={
+                                                "contenteditable": "true",
+                                                "role": "textbox",
+                                                "aria-multiline": "true",
+                                                "spellcheck": "true",
+                                            },
+                                        ),
+                                        rx.script(_NOTES_RICH_EDITOR_JS),
+                                        class_name="notes-body-shell",
+                                        width="100%",
+                                        flex="1",
                                     ),
                                     rx.hstack(
                                         rx.button(
@@ -23750,7 +24163,7 @@ def notes_panel() -> rx.Component:
                                             align_items="stretch",
                                         ),
                                         rx.text(
-                                            "No notes yet — use Make note on a reply, or New note.",
+                                            'No notes yet — use "Make note" on a reply, or create a new note.',
                                             color="rgba(150,165,180,0.42)",
                                             font_size="0.78rem",
                                             line_height="1.5",
@@ -25110,6 +25523,276 @@ def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
         background="linear-gradient(180deg, #050607 0%, #08090b 50%, #050607 100%)",
     )
 
+ALEX_DEMO_WIDGET_JS = r"""
+(() => {
+  if (window.__alexDemoBound) return;
+  window.__alexDemoBound = true;
+
+  const PROMPTS = [
+    {
+      q: "Explain Big-O notation like I'm in week 2 of my CS degree",
+      a: "**Big-O is how we describe how SLOW an algorithm gets as the input grows.**\n\nThink of it like this: if you double your input, what happens?\n\n• **O(1)** — Constant. Same time, no matter what. Like grabbing the first item in a list.\n• **O(n)** — Linear. Double the input, double the time. Like reading every page of a book.\n• **O(n^2)** — Quadratic. Double the input, time gets 4x worse. Like comparing every pair of students in a class.\n• **O(log n)** — Logarithmic. Time barely grows. Like binary search on a sorted list.\n\n**Quick check:** if you have a loop inside a loop, that's usually O(n^2). One loop = O(n). No loop = O(1).\n\nWant me to walk you through analysing one of your week-2 problems?",
+    },
+    {
+      q: "Solve: integral of x*ln(x) dx",
+      a: "**Integration by parts.** The formula is: integral of u*dv = u*v - integral of v*du.\n\n**Step 1 — pick u and dv:**\n• u = ln(x)   (because its derivative is simpler)\n• dv = x dx\n\n**Step 2 — find du and v:**\n• du = (1/x) dx\n• v = x^2/2\n\n**Step 3 — plug in:**\nintegral of x*ln(x) dx = (x^2/2)*ln(x) - integral of (x^2/2)*(1/x) dx\n                       = (x^2/2)*ln(x) - integral of (x/2) dx\n                       = (x^2/2)*ln(x) - x^2/4 + C\n\n**Final:**  (x^2 * ln(x))/2 - x^2/4 + C\n\nWant me to verify by differentiating it back? Or try a similar one yourself?",
+    },
+    {
+      q: "Plan tomorrow — I have an OS exam on Friday",
+      a: "**3 days to your OS exam. Here's tomorrow:**\n\n**Morning (90 min) — Process Scheduling**\n• FCFS, SJF, Round Robin, Priority — write the algorithm + 1 worked example each\n• I'll quiz you on a Gantt chart at the end\n\n**Afternoon (60 min) — Memory Management**\n• Paging vs Segmentation — when to use each\n• Page replacement: FIFO, LRU, Optimal — practice 1 reference string\n\n**Evening (30 min) — Quick recall**\n• Flashcards on Day 1 topics: process states, context switching, system calls\n\n**Day 2 (Wed):** Concurrency — semaphores, deadlock conditions.\n**Day 3 (Thu):** Past papers + weak-spot review.\n\nReady to start? Tell me your first topic and I'll teach it now.",
+    },
+  ];
+
+  const init = () => {
+    const wrap = document.getElementById('landing-try-demo');
+    if (!wrap || wrap.dataset.bound === 'true') return;
+    wrap.dataset.bound = 'true';
+
+    const promptRow = wrap.querySelector('.alex-demo-prompts');
+    const thread = wrap.querySelector('.alex-demo-thread');
+    const ctaRow = wrap.querySelector('.alex-demo-cta-row');
+    if (!promptRow || !thread) return;
+
+    let typingTimer = null;
+
+    const reset = () => {
+      if (typingTimer) { clearTimeout(typingTimer); typingTimer = null; }
+      thread.innerHTML = '<div class="alex-demo-empty">Pick a question above to see Alex teach it.</div>';
+      if (ctaRow) ctaRow.style.display = 'none';
+      promptRow.querySelectorAll('.alex-demo-chip').forEach(c => c.classList.remove('is-active'));
+    };
+
+    const renderMd = (text) => {
+      const esc = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return esc
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    };
+
+    const playAnswer = (qText, aText) => {
+      if (typingTimer) { clearTimeout(typingTimer); typingTimer = null; }
+      thread.innerHTML = '';
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'alex-demo-bubble-user';
+      userBubble.textContent = qText;
+      thread.appendChild(userBubble);
+
+      const alexBubble = document.createElement('div');
+      alexBubble.className = 'alex-demo-bubble-alex';
+      thread.appendChild(alexBubble);
+
+      let i = 0;
+      const total = aText.length;
+      const cursor = '<span class="alex-demo-cursor"></span>';
+      const tick = () => {
+        const burst = Math.max(2, Math.min(6, Math.floor(Math.random() * 5) + 2));
+        i = Math.min(total, i + burst);
+        alexBubble.innerHTML = renderMd(aText.slice(0, i)) + (i < total ? cursor : '');
+        if (i >= total) {
+          if (ctaRow) ctaRow.style.display = 'flex';
+          if (window.alexTrack) window.alexTrack('demo_answer_complete', { question: qText.slice(0, 80) });
+          return;
+        }
+        typingTimer = setTimeout(tick, 12 + Math.random() * 8);
+      };
+      tick();
+
+      if (window.alexTrack) window.alexTrack('demo_answer_start', { question: qText.slice(0, 80) });
+    };
+
+    PROMPTS.forEach((p, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'alex-demo-chip';
+      btn.dataset.idx = String(idx);
+      btn.textContent = p.q;
+      btn.addEventListener('click', () => {
+        promptRow.querySelectorAll('.alex-demo-chip').forEach(c => c.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        playAnswer(p.q, p.a);
+      });
+      promptRow.appendChild(btn);
+    });
+
+    reset();
+  };
+
+  init();
+  setTimeout(init, 200);
+  setTimeout(init, 800);
+  setTimeout(init, 2000);
+})();
+"""
+
+
+LANDING_ANALYTICS_JS = r"""
+(() => {
+  if (window.__alexLandingAnalyticsBound) return;
+  window.__alexLandingAnalyticsBound = true;
+
+  // alexTrack may load after this script (Reflex render order). Queue events
+  // until it's ready, then flush. Drop after 8s to avoid memory growth.
+  const queue = [];
+  let flushed = false;
+  const flush = () => {
+    if (flushed || !window.alexTrack) return;
+    flushed = true;
+    while (queue.length) {
+      const item = queue.shift();
+      try { window.alexTrack(item.name, item.params); } catch (e) {}
+    }
+  };
+  const track = (name, params) => {
+    try {
+      if (window.alexTrack) { window.alexTrack(name, params || {}); return; }
+      queue.push({ name: name, params: params || {} });
+    } catch (e) {}
+  };
+  // Poll briefly for alexTrack readiness, then flush queue once.
+  let pollAttempts = 0;
+  const pollAlexTrack = setInterval(() => {
+    pollAttempts++;
+    if (window.alexTrack) { flush(); clearInterval(pollAlexTrack); return; }
+    if (pollAttempts > 80) clearInterval(pollAlexTrack);
+  }, 100);
+
+  // --- 1. Section views (one-shot per session per section) ---
+  const SECTION_IDS = [
+    "landing-story-section",
+    "landing-try-demo",
+    "landing-feature-showcase",
+    "landing-founder-section",
+    "landing-comparison-section",
+    "landing-pricing-section",
+    "landing-faq-section",
+  ];
+  const seenSections = new Set();
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const id = entry.target.id;
+      if (!id || seenSections.has(id)) return;
+      seenSections.add(id);
+      track("section_view", { section_id: id });
+      sectionObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.4 });
+
+  // --- 2. Scroll depth (25/50/75/100) ---
+  const seenDepth = new Set();
+  const onScroll = () => {
+    const doc = document.documentElement;
+    const total = (doc.scrollHeight - doc.clientHeight) || 1;
+    const pct = Math.round((window.scrollY / total) * 100);
+    [25, 50, 75, 100].forEach((mark) => {
+      if (pct >= mark && !seenDepth.has(mark)) {
+        seenDepth.add(mark);
+        track("scroll_depth", { scroll_depth: mark });
+      }
+    });
+  };
+
+  // --- 3. Engaged time (30/60/120s, visibility-aware) ---
+  let activeMs = 0;
+  let lastTick = Date.now();
+  let visible = !document.hidden;
+  const seenTime = new Set();
+  document.addEventListener("visibilitychange", () => {
+    visible = !document.hidden;
+    lastTick = Date.now();
+  });
+  const timeLoop = () => {
+    const now = Date.now();
+    if (visible) activeMs += now - lastTick;
+    lastTick = now;
+    [30, 60, 120].forEach((mark) => {
+      if (activeMs >= mark * 1000 && !seenTime.has(mark)) {
+        seenTime.add(mark);
+        track("engaged_time", { time_seconds: mark });
+      }
+    });
+  };
+
+  // --- 4. FAQ opens ---
+  const bindFaq = () => {
+    const faq = document.getElementById("landing-faq-section");
+    if (!faq) return false;
+    const items = faq.querySelectorAll("details");
+    items.forEach((el, idx) => {
+      if (el.__alexFaqBound) return;
+      el.__alexFaqBound = true;
+      el.addEventListener("toggle", () => {
+        if (el.open) track("faq_open", { faq_id: "faq_" + (idx + 1) });
+      });
+    });
+    return items.length > 0;
+  };
+
+  // --- 5. CTA + feature-card click delegation ---
+  const onClick = (ev) => {
+    const target = ev.target instanceof Element ? ev.target : null;
+    if (!target) return;
+    const card = target.closest("#landing-feature-showcase [data-card-id], #landing-feature-showcase article, #landing-feature-showcase > div > div > div > div");
+    if (card && card.closest("#landing-feature-showcase")) {
+      const cardId = card.getAttribute("data-card-id") || "feature_card";
+      track("feature_card_click", { card_id: cardId });
+    }
+    const btn = target.closest("a, button");
+    if (!btn) return;
+    const text = (btn.innerText || btn.textContent || "").trim().toLowerCase();
+    if (!text) return;
+    let ctaId = null;
+    if (text.includes("start my study plan") || text.includes("get started") || text.includes("start free")) ctaId = "hero_primary";
+    else if (text.includes("choose pro") || text.includes("get pro")) ctaId = "pricing_pro";
+    else if (text.includes("choose max") || text.includes("get max")) ctaId = "pricing_max";
+    else if (text.includes("choose ultra") || text.includes("get ultra")) ctaId = "pricing_ultra";
+    else if (text.includes("try free") || text.includes("start free")) ctaId = "pricing_free";
+    if (ctaId) track("cta_click", { cta_id: ctaId });
+  };
+
+  // Sections render after React mounts (post-DOMContentLoaded). Retry observation
+  // until each section is found, then stop. Caps total attempts to avoid leaks.
+  const observedIds = new Set();
+  const tryObserveSections = () => {
+    let pendingCount = 0;
+    SECTION_IDS.forEach((id) => {
+      if (observedIds.has(id)) return;
+      const el = document.getElementById(id);
+      if (el) { sectionObserver.observe(el); observedIds.add(id); }
+      else pendingCount++;
+    });
+    return pendingCount;
+  };
+
+  // --- Init ---
+  const init = () => {
+    tryObserveSections();
+    let secAttempts = 0;
+    const secPoll = setInterval(() => {
+      secAttempts++;
+      const pending = tryObserveSections();
+      if (pending === 0 || secAttempts > 30) clearInterval(secPoll);
+    }, 500);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    setInterval(timeLoop, 1000);
+    bindFaq();
+    // FAQ may render late — re-bind a few times
+    setTimeout(bindFaq, 1500);
+    setTimeout(bindFaq, 4000);
+    document.addEventListener("click", onClick, true);
+    track("landing_loaded", { page_path: window.location.pathname || "/" });
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+"""
+
 
 @rx.page(
     route="/",
@@ -25125,6 +25808,8 @@ def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
         {"property": "og:type", "content": "website"},
     ],
 )
+
+
 def landing_page():
     def nav_link(label: str, href: str) -> rx.Component:
         return         rx.link(
@@ -25226,6 +25911,7 @@ def landing_page():
                         width="100%",
                         height="100%",
                         object_fit="cover",
+                        filter="brightness(1.25) contrast(1.06) saturate(1.04)",
                     ),
                     width="100%",
                     height=rx.breakpoints(initial="200px", md="220px"),
@@ -25264,8 +25950,9 @@ def landing_page():
                 align_items="flex-start",
                 width="100%",
             ),
-            width=rx.breakpoints(initial="100%", md="calc(33.333% - 16px)"),
-            min_width=rx.breakpoints(initial="100%", md="280px"),
+            width=rx.breakpoints(initial="100%", md="calc(33.333% - 14px)"),
+            min_width=rx.breakpoints(initial="100%", md="260px"),
+            max_width=rx.breakpoints(initial="100%", md="380px"),
             padding="18px",
             border="1px solid rgba(255,255,255,0.08)",
             border_radius="24px",
@@ -25417,6 +26104,25 @@ def landing_page():
                     width="100%",
                 ),
                 rx.box(flex="1"),
+                (
+                    rx.hstack(
+                        rx.text("✓", color="rgba(134,239,172,0.92)", font_size="0.78rem", font_weight="800"),
+                        rx.text(
+                            "7-day money-back guarantee",
+                            color="rgba(255,255,255,0.72)",
+                            font_size="0.78rem",
+                            font_weight="650",
+                            letter_spacing="-0.01em",
+                        ),
+                        spacing="1",
+                        align="center",
+                        justify="center",
+                        width="100%",
+                        margin_bottom="2px",
+                    )
+                    if primary
+                    else rx.fragment()
+                ),
                 rx.link(
                     rx.button(
                         action_label,
@@ -26090,7 +26796,7 @@ def landing_page():
             width="100%",
             custom_attrs={"data-landing-animate": "actions"},
         ),
-        proof_chip("100+ students started studying with Alex AI", "proof"),
+        proof_chip("Now in early access — be one of our first 500 students", "proof"),
         spacing="5",
         align_items="center",
         width="100%",
@@ -26376,28 +27082,30 @@ def landing_page():
     voice_section = rx.box(
         rx.script(_CHAT_TEACHER_AVATAR_JS),
         rx.hstack(
-            # ── COL 1: GIF ───────────────────────────────────────────────────
+            # ── COL 1: Real voice mentor screenshot ───────────────────────────
             rx.box(
                 rx.image(
-                    src="/landing-voice-demo.gif",
-                    alt="Alex AI live voice mentor",
+                    src="/landing-voice-demo.png",
+                    alt="Alex AI voice tutor — OS scheduling exam prep",
                     style={
                         "width": "100%",
                         "height": "100%",
-                        "objectFit": "contain",
+                        "objectFit": "cover",
                         "display": "block",
-                        "background": "transparent",
-                        "filter": "drop-shadow(0 32px 80px rgba(0,0,0,0.45))",
-                        "pointerEvents": "none",
+                        "borderRadius": "20px",
+                        "filter": "brightness(1.18) contrast(1.06) saturate(1.04) drop-shadow(0 32px 80px rgba(0,0,0,0.45))",
                     },
                 ),
-                width=rx.breakpoints(initial="100%", md="240px"),
+                width=rx.breakpoints(initial="100%", md="380px"),
                 flex_shrink="0",
-                height=rx.breakpoints(initial="280px", md="400px"),
-                display="none",
+                height=rx.breakpoints(initial="240px", md="400px"),
+                display=rx.breakpoints(initial="none", md="flex"),
                 align_items="center",
                 justify_content="center",
-                background="transparent",
+                border="1px solid rgba(255,255,255,0.08)",
+                border_radius="22px",
+                overflow="hidden",
+                background="rgba(255,255,255,0.02)",
             ),
             # ── COL 2: Text ──────────────────────────────────────────────────
             rx.vstack(
@@ -26593,6 +27301,481 @@ def landing_page():
         background="transparent",
     )
 
+    def _compare_cell(text: str, tone: str = "neutral") -> rx.Component:
+        color_map = {
+            "yes":     "rgba(134,239,172,0.95)",
+            "no":      "rgba(248,113,113,0.78)",
+            "neutral": "rgba(255,255,255,0.78)",
+            "strong":  "rgba(250,249,245,0.98)",
+        }
+        weight_map = {"yes": "750", "no": "650", "neutral": "550", "strong": "780"}
+        return rx.text(
+            text,
+            color=color_map.get(tone, color_map["neutral"]),
+            font_size=rx.breakpoints(initial="0.84rem", md="0.92rem"),
+            font_weight=weight_map.get(tone, "550"),
+            line_height="1.4",
+            text_align="center",
+        )
+
+    def _compare_row(label: str, alex_val: str, alex_tone: str, chatgpt_val: str, chatgpt_tone: str, claude_val: str, claude_tone: str, highlight: bool = False) -> rx.Component:
+        return rx.grid(
+            rx.text(
+                label,
+                color="rgba(255,255,255,0.84)",
+                font_size=rx.breakpoints(initial="0.86rem", md="0.94rem"),
+                font_weight="600",
+                line_height="1.4",
+                text_align="left",
+            ),
+            _compare_cell(alex_val, alex_tone),
+            _compare_cell(chatgpt_val, chatgpt_tone),
+            _compare_cell(claude_val, claude_tone),
+            grid_template_columns="2fr 1fr 1fr 1fr",
+            gap=rx.breakpoints(initial="10px", md="16px"),
+            width="100%",
+            padding=rx.breakpoints(initial="14px 14px", md="16px 22px"),
+            border_radius="14px",
+            background=(
+                "linear-gradient(180deg, rgba(94,211,132,0.08) 0%, rgba(94,211,132,0.02) 100%)"
+                if highlight
+                else "transparent"
+            ),
+            border=("1px solid rgba(94,211,132,0.18)" if highlight else "1px solid transparent"),
+            align_items="center",
+        )
+
+    demo_widget_section = rx.box(
+        rx.el.style("""
+            #landing-try-demo .alex-demo-card {
+                background: linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.018) 100%);
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 28px;
+                padding: 22px;
+                box-shadow: 0 28px 80px rgba(0,0,0,0.36);
+            }
+            #landing-try-demo .alex-demo-prompts { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+            #landing-try-demo .alex-demo-chip {
+                appearance: none;
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.10);
+                color: rgba(255,255,255,0.86);
+                padding: 10px 14px;
+                border-radius: 999px;
+                font-size: 0.86rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.16s ease;
+                font-family: inherit;
+            }
+            #landing-try-demo .alex-demo-chip:hover {
+                background: rgba(255,255,255,0.08);
+                border-color: rgba(255,255,255,0.22);
+                transform: translateY(-1px);
+            }
+            #landing-try-demo .alex-demo-chip.is-active {
+                background: linear-gradient(180deg, #f7f4ed 0%, #ebe4d7 100%);
+                color: #1c1915;
+                border-color: rgba(255,255,255,0.16);
+            }
+            #landing-try-demo .alex-demo-bubble-user {
+                align-self: flex-end;
+                max-width: 86%;
+                padding: 12px 16px;
+                border-radius: 16px 16px 4px 16px;
+                background: rgba(231,182,157,0.16);
+                border: 1px solid rgba(231,182,157,0.24);
+                color: rgba(255,255,255,0.92);
+                font-size: 0.95rem;
+                line-height: 1.55;
+            }
+            #landing-try-demo .alex-demo-bubble-alex {
+                align-self: flex-start;
+                max-width: 92%;
+                padding: 14px 18px;
+                border-radius: 16px 16px 16px 4px;
+                background: rgba(255,255,255,0.045);
+                border: 1px solid rgba(255,255,255,0.08);
+                color: rgba(255,255,255,0.88);
+                font-size: 0.95rem;
+                line-height: 1.65;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            #landing-try-demo .alex-demo-bubble-alex strong { color: rgba(255,255,255,0.98); font-weight: 700; }
+            #landing-try-demo .alex-demo-cursor {
+                display: inline-block;
+                width: 7px;
+                height: 1.05em;
+                vertical-align: text-bottom;
+                background: rgba(231,182,157,0.85);
+                margin-left: 2px;
+                animation: alexDemoBlink 0.9s step-end infinite;
+            }
+            @keyframes alexDemoBlink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+            #landing-try-demo .alex-demo-thread {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                min-height: 280px;
+                padding: 8px 4px;
+            }
+            #landing-try-demo .alex-demo-empty {
+                color: rgba(255,255,255,0.42);
+                text-align: center;
+                padding: 80px 20px;
+                font-size: 0.95rem;
+            }
+            #landing-try-demo .alex-demo-cta-row {
+                display: flex;
+                gap: 10px;
+                margin-top: 14px;
+                padding-top: 14px;
+                border-top: 1px solid rgba(255,255,255,0.06);
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            #landing-try-demo .alex-demo-cta-row .alex-demo-cta {
+                background: linear-gradient(180deg, #f7f4ed 0%, #ebe4d7 100%);
+                color: #1c1915;
+                padding: 12px 22px;
+                border-radius: 999px;
+                font-weight: 750;
+                font-size: 0.92rem;
+                text-decoration: none;
+                box-shadow: 0 12px 28px rgba(0,0,0,0.32);
+                transition: transform 0.16s ease;
+            }
+            #landing-try-demo .alex-demo-cta-row .alex-demo-cta:hover { transform: translateY(-1px); }
+            #landing-try-demo .alex-demo-cta-row .alex-demo-note {
+                color: rgba(255,255,255,0.5);
+                font-size: 0.84rem;
+                font-weight: 500;
+            }
+        """),
+# NOTE: ALEX_DEMO_WIDGET_JS is registered in head_components so it executes pre-hydration. This Box keeps the structure for hot-reload coverage.
+        rx.fragment(),
+        rx.vstack(
+            rx.vstack(
+                rx.text(
+                    "Try Alex",
+                    color="rgba(255,255,255,0.44)",
+                    font_size="0.78rem",
+                    font_weight="700",
+                    letter_spacing="0.2em",
+                    text_transform="uppercase",
+                ),
+                rx.text(
+                    "Ask one question. No signup.",
+                    color="rgba(255,255,255,0.95)",
+                    font_size=rx.breakpoints(initial="clamp(1.85rem, 5.4vw, 2.6rem)", md="clamp(2.4rem, 2.9vw, 3.3rem)"),
+                    font_weight="600",
+                    letter_spacing="-0.05em",
+                    text_align="center",
+                    line_height="1.05",
+                ),
+                rx.text(
+                    "Pick a sample question and watch Alex teach it. Then sign up free to ask your own.",
+                    color="rgba(255,255,255,0.54)",
+                    font_size="1rem",
+                    line_height="1.7",
+                    text_align="center",
+                    max_width="640px",
+                ),
+                spacing="3",
+                align_items="center",
+                width="100%",
+            ),
+            rx.box(
+                rx.box(
+                    rx.el.div(class_name="alex-demo-prompts"),
+                    rx.el.div(class_name="alex-demo-thread"),
+                    rx.el.div(
+                        rx.link(
+                            "Start free — ask your own question",
+                            href=SELECTION_ROUTE,
+                            class_name="alex-demo-cta",
+                            text_decoration="none",
+                            on_click=track_ga_event("demo_cta_click", {"button_location": "demo_widget"}),
+                        ),
+                        rx.el.span("3-day full trial · no card needed", class_name="alex-demo-note"),
+                        class_name="alex-demo-cta-row",
+                        style={"display": "none"},
+                    ),
+                    class_name="alex-demo-card",
+                    width="100%",
+                ),
+                width="100%",
+                max_width="780px",
+            ),
+            spacing="6",
+            align_items="center",
+            width="100%",
+            max_width="1280px",
+            margin="0 auto",
+        ),
+        id="landing-try-demo",
+        padding=rx.breakpoints(initial="80px 16px 0", md="104px 28px 0"),
+        background="transparent",
+    )
+
+    # ── Feature Showcase: real product screenshots ──────────────────────
+    feature_showcase_section = rx.box(
+        rx.vstack(
+            rx.vstack(
+                rx.text(
+                    "Everything you need",
+                    color="rgba(255,255,255,0.44)",
+                    font_size="0.78rem",
+                    font_weight="700",
+                    letter_spacing="0.2em",
+                    text_transform="uppercase",
+                ),
+                rx.text(
+                    "One app. Your entire semester.",
+                    color="rgba(255,255,255,0.95)",
+                    font_size=rx.breakpoints(initial="clamp(1.85rem, 5.4vw, 2.6rem)", md="clamp(2.4rem, 2.9vw, 3.3rem)"),
+                    font_weight="600",
+                    letter_spacing="-0.05em",
+                    text_align="center",
+                    line_height="1.05",
+                ),
+                rx.text(
+                    "Degree plan, daily lessons, notes, habit tracker, voice tutor — built for how students actually study.",
+                    color="rgba(255,255,255,0.54)",
+                    font_size="1rem",
+                    line_height="1.7",
+                    text_align="center",
+                    max_width="640px",
+                ),
+                spacing="3",
+                align_items="center",
+                width="100%",
+            ),
+            # ── 3-card grid of feature cards ──
+            rx.box(
+                rx.flex(
+                    feature_card(
+                        "Built for your degree",
+                        "Pick your country, degree, and semester — Alex builds a personalized day-by-day study plan instantly.",
+                        "/landing-onboarding-demo.png",
+                        "Onboarding",
+                    ),
+                    feature_card(
+                        "Watch any YouTube lesson, get a quiz instantly",
+                        "Drop any YouTube link — Alex reads the transcript and builds a quiz so you actually remember what you watched. No more passive watching.",
+                        "/landing-quiz-demo.png",
+                        "Auto Quizzes",
+                    ),
+                    feature_card(
+                        "Builds your study habit",
+                        "100-day streak tracker keeps you accountable. See your progress across every subject at a glance.",
+                        "/landing-tracker-demo.png",
+                        "Habit Tracker",
+                    ),
+                    gap=rx.breakpoints(initial="16px", md="20px"),
+                    flex_wrap="wrap",
+                    justify="center",
+                    width="100%",
+                ),
+                width="100%",
+                max_width="1080px",
+            ),
+            spacing="8",
+            align_items="center",
+            width="100%",
+            max_width="1280px",
+            margin="0 auto",
+        ),
+        id="landing-feature-showcase",
+        padding=rx.breakpoints(initial="80px 16px 0", md="112px 28px 0"),
+        background="transparent",
+    )
+
+    founder_section = rx.box(
+        rx.vstack(
+            rx.text(
+                "Built by a student",
+                color="rgba(255,255,255,0.44)",
+                font_size="0.78rem",
+                font_weight="700",
+                letter_spacing="0.2em",
+                text_transform="uppercase",
+            ),
+            rx.box(
+                rx.flex(
+                    rx.box(
+                        rx.text(
+                            "L",
+                            color="rgba(255,255,255,0.95)",
+                            font_size=rx.breakpoints(initial="3rem", md="3.6rem"),
+                            font_weight="700",
+                            letter_spacing="-0.04em",
+                            font_family="Georgia, 'Times New Roman', serif",
+                        ),
+                        width=rx.breakpoints(initial="120px", md="148px"),
+                        height=rx.breakpoints(initial="120px", md="148px"),
+                        flex_shrink="0",
+                        border_radius="999px",
+                        display="flex",
+                        align_items="center",
+                        justify_content="center",
+                        border="1px solid rgba(255,255,255,0.14)",
+                        background="linear-gradient(135deg, rgba(231,182,157,0.32) 0%, rgba(94,211,132,0.18) 100%)",
+                        box_shadow="0 24px 60px rgba(0,0,0,0.4)",
+                    ),
+                    rx.vstack(
+                        rx.text(
+                            "\"I built Alex because no AI tool actually understood what I was studying. ChatGPT could solve a problem, but it couldn't plan my semester, follow my syllabus, or teach me day by day. So I built one that does — for me, and for every other student trying to figure it out.\"",
+                            color="rgba(255,255,255,0.86)",
+                            font_size=rx.breakpoints(initial="1.05rem", md="1.18rem"),
+                            line_height="1.65",
+                            letter_spacing="-0.01em",
+                            font_style="italic",
+                        ),
+                        rx.hstack(
+                            rx.text(
+                                "Lenujan Paramanantham",
+                                color="rgba(255,255,255,0.94)",
+                                font_size="0.95rem",
+                                font_weight="700",
+                            ),
+                            rx.text(
+                                "·  Founder, university student",
+                                color="rgba(255,255,255,0.52)",
+                                font_size="0.92rem",
+                                font_weight="500",
+                            ),
+                            spacing="2",
+                            wrap="wrap",
+                        ),
+                        spacing="4",
+                        align_items="flex-start",
+                        flex="1",
+                    ),
+                    direction=rx.breakpoints(initial="column", md="row"),
+                    spacing="6",
+                    align="center",
+                    width="100%",
+                ),
+                width="100%",
+                max_width="900px",
+                padding=rx.breakpoints(initial="28px 22px", md="40px 48px"),
+                border="1px solid rgba(255,255,255,0.08)",
+                border_radius="28px",
+                background="linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
+                box_shadow="0 28px 80px rgba(0,0,0,0.36)",
+            ),
+            spacing="5",
+            align_items="center",
+            width="100%",
+            max_width="1280px",
+            margin="0 auto",
+        ),
+        id="landing-founder-section",
+        padding=rx.breakpoints(initial="80px 16px 0", md="112px 28px 0"),
+        background="transparent",
+    )
+
+    comparison_section = rx.box(
+        rx.vstack(
+            rx.vstack(
+                rx.text(
+                    "Why students switch",
+                    color="rgba(255,255,255,0.44)",
+                    font_size="0.78rem",
+                    font_weight="700",
+                    letter_spacing="0.2em",
+                    text_transform="uppercase",
+                ),
+                rx.text(
+                    "Alex vs ChatGPT vs Claude — for studying",
+                    color="rgba(255,255,255,0.95)",
+                    font_size=rx.breakpoints(initial="clamp(1.85rem, 5.4vw, 2.6rem)", md="clamp(2.4rem, 2.9vw, 3.3rem)"),
+                    font_weight="600",
+                    letter_spacing="-0.05em",
+                    text_align="center",
+                    line_height="1.05",
+                ),
+                rx.text(
+                    "Generic chatbots don't know your syllabus. Alex does. At a fraction of the price.",
+                    color="rgba(255,255,255,0.54)",
+                    font_size="1rem",
+                    line_height="1.7",
+                    text_align="center",
+                    max_width="660px",
+                ),
+                spacing="3",
+                align_items="center",
+                width="100%",
+            ),
+            rx.box(
+                rx.vstack(
+                    rx.grid(
+                        rx.text("", font_size="0.78rem"),
+                        rx.vstack(
+                            rx.text("Alex AI", color="rgba(250,249,245,0.98)", font_size=rx.breakpoints(initial="0.94rem", md="1.05rem"), font_weight="780", letter_spacing="-0.02em"),
+                            rx.text("Pro · $3/mo", color="rgba(134,239,172,0.95)", font_size="0.78rem", font_weight="700"),
+                            spacing="0",
+                            align="center",
+                        ),
+                        rx.vstack(
+                            rx.text("ChatGPT", color="rgba(255,255,255,0.78)", font_size=rx.breakpoints(initial="0.94rem", md="1.05rem"), font_weight="700"),
+                            rx.text("Plus · $20/mo", color="rgba(255,255,255,0.42)", font_size="0.78rem", font_weight="600"),
+                            spacing="0",
+                            align="center",
+                        ),
+                        rx.vstack(
+                            rx.text("Claude", color="rgba(255,255,255,0.78)", font_size=rx.breakpoints(initial="0.94rem", md="1.05rem"), font_weight="700"),
+                            rx.text("Pro · $20/mo", color="rgba(255,255,255,0.42)", font_size="0.78rem", font_weight="600"),
+                            spacing="0",
+                            align="center",
+                        ),
+                        grid_template_columns="2fr 1fr 1fr 1fr",
+                        gap=rx.breakpoints(initial="10px", md="16px"),
+                        width="100%",
+                        padding=rx.breakpoints(initial="14px 14px", md="18px 22px"),
+                        border_bottom="1px solid rgba(255,255,255,0.08)",
+                        align_items="center",
+                    ),
+                    _compare_row("Knows your university syllabus",  "Yes",       "yes",     "No",        "no",     "No",        "no", highlight=True),
+                    _compare_row("Day-by-day semester planner",     "Built in",  "yes",     "Manual",    "no",     "Manual",    "no"),
+                    _compare_row("Voice mentor (talk like a tutor)", "45 min/day","yes",    "Limited",   "neutral","No",        "no", highlight=True),
+                    _compare_row("YouTube lectures + auto quizzes", "Yes",       "yes",     "No",        "no",     "No",        "no"),
+                    _compare_row("Notes & task tracker",            "Yes",       "yes",     "No",        "no",     "No",        "no"),
+                    _compare_row("Study diagrams on demand",        "Yes",       "yes",     "Limited",   "neutral","Limited",   "neutral"),
+                    _compare_row("Auto-routes between 5 AI models", "Yes",       "yes",     "1 model",   "no",     "1 model",   "no"),
+                    _compare_row("Monthly price",                   "$3",        "strong",  "$20",       "neutral","$20",       "neutral", highlight=True),
+                    spacing="2",
+                    width="100%",
+                ),
+                width="100%",
+                max_width="1080px",
+                padding=rx.breakpoints(initial="14px", md="22px"),
+                border="1px solid rgba(255,255,255,0.08)",
+                border_radius="28px",
+                background="linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%)",
+                box_shadow="0 28px 80px rgba(0,0,0,0.38)",
+            ),
+            rx.text(
+                "Prices for ChatGPT Plus and Claude Pro per their public pricing pages (May 2026). Comparison reflects core consumer plans.",
+                color="rgba(255,255,255,0.36)",
+                font_size="0.74rem",
+                text_align="center",
+                line_height="1.5",
+                max_width="640px",
+            ),
+            spacing="6",
+            align_items="center",
+            width="100%",
+            max_width="1280px",
+            margin="0 auto",
+        ),
+        id="landing-comparison-section",
+        padding=rx.breakpoints(initial="80px 16px 0", md="104px 28px 0"),
+        background="transparent",
+    )
+
     pricing_section = rx.box(
         rx.script("""
             (() => {
@@ -26739,7 +27922,7 @@ def landing_page():
                     "Start with Alex AI, build your study workspace, and test the academic mentor before upgrading.",
                     [
                         "3-day trial for new users",
-                        "5 free messages/day after trial",
+                        "10 free messages/day after trial",
                         "Auto model routing",
                         "Basic workspace access",
                     ],
@@ -26797,6 +27980,133 @@ def landing_page():
 	        padding=rx.breakpoints(initial="80px 16px 0", md="104px 28px 0"),
 	        background="transparent",
 	    )
+
+    def _faq_item(question: str, answer: str) -> rx.Component:
+        return rx.box(
+            rx.el.details(
+                rx.el.summary(
+                    rx.hstack(
+                        rx.text(
+                            question,
+                            color="rgba(255,255,255,0.94)",
+                            font_size=rx.breakpoints(initial="0.98rem", md="1.05rem"),
+                            font_weight="650",
+                            letter_spacing="-0.02em",
+                            line_height="1.45",
+                            flex="1",
+                        ),
+                        rx.text(
+                            "+",
+                            color="rgba(255,255,255,0.62)",
+                            font_size="1.4rem",
+                            font_weight="500",
+                            line_height="1",
+                            class_name="alex-faq-icon",
+                        ),
+                        spacing="4",
+                        align="center",
+                        width="100%",
+                    ),
+                    style={
+                        "list_style": "none",
+                        "cursor": "pointer",
+                        "padding": "20px 22px",
+                    },
+                ),
+                rx.box(
+                    rx.text(
+                        answer,
+                        color="rgba(255,255,255,0.66)",
+                        font_size=rx.breakpoints(initial="0.92rem", md="0.98rem"),
+                        line_height="1.7",
+                    ),
+                    padding="0 22px 22px 22px",
+                ),
+                style={"width": "100%"},
+            ),
+            width="100%",
+            border="1px solid rgba(255,255,255,0.08)",
+            border_radius="16px",
+            background="linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%)",
+            overflow="hidden",
+            margin_bottom="10px",
+        )
+
+    faq_section = rx.box(
+        rx.el.style("""
+            #landing-faq-section details[open] .alex-faq-icon { transform: rotate(45deg); }
+            #landing-faq-section .alex-faq-icon { transition: transform 0.18s ease; display: inline-block; }
+            #landing-faq-section summary::-webkit-details-marker { display: none; }
+        """),
+        rx.vstack(
+            rx.vstack(
+                rx.text(
+                    "FAQ",
+                    color="rgba(255,255,255,0.44)",
+                    font_size="0.78rem",
+                    font_weight="700",
+                    letter_spacing="0.2em",
+                    text_transform="uppercase",
+                ),
+                rx.text(
+                    "Honest answers to what students actually ask",
+                    color="rgba(255,255,255,0.95)",
+                    font_size=rx.breakpoints(initial="clamp(1.85rem, 5.4vw, 2.6rem)", md="clamp(2.4rem, 2.9vw, 3.3rem)"),
+                    font_weight="600",
+                    letter_spacing="-0.05em",
+                    text_align="center",
+                    line_height="1.05",
+                ),
+                spacing="3",
+                align_items="center",
+                width="100%",
+            ),
+            rx.box(
+                _faq_item(
+                    "Is this just ChatGPT in a wrapper?",
+                    "No. Alex routes between 5 different AI models depending on the question, and pairs that with curriculum-aware planning, voice mentoring, notes, and quizzes. ChatGPT is one general model with no idea what semester you're in. Alex builds a real day-by-day study plan around your actual courses.",
+                ),
+                _faq_item(
+                    "Will my professor know I used AI?",
+                    "Alex is built for learning, not cheating. The default mode teaches you the topic step-by-step and quizzes you — it doesn't write your assignment for you. If you ask Alex to explain a concept and then write your own answer, you've used it the same way you'd use a tutor. We don't recommend submitting raw AI output as your work, and most universities have clear policies on what's allowed.",
+                ),
+                _faq_item(
+                    "What if my exact course or university isn't listed?",
+                    "Pick the 'Custom' degree option during signup and Alex lets you define your own subjects. Built-in curricula currently cover Sri Lanka, UK, US, and India — but Alex teaches any subject you give it.",
+                ),
+                _faq_item(
+                    "Can I cancel anytime?",
+                    "Yes. One click in your account, no email required, no questions asked. You also get a 7-day money-back guarantee on Pro — if you don't find it useful in the first week, email us for a full refund.",
+                ),
+                _faq_item(
+                    "How is the price so low compared to ChatGPT Plus?",
+                    "Three reasons. First, Alex is built specifically for studying — we route to cheaper models for routine questions and only use expensive ones when reasoning is genuinely needed. Second, we're a solo-founder product, not a venture-funded company. Third, students should be able to afford this — that's the whole point.",
+                ),
+                _faq_item(
+                    "Do I need a credit card to start?",
+                    "No. The first 3 days are fully free, no card required. After that, the free plan gives you 10 messages a day forever. You only enter payment details if you decide to upgrade to Pro.",
+                ),
+                _faq_item(
+                    "What happens to my chats and data?",
+                    "Your chats are private to your account. We don't sell student data and we don't train AI models on your conversations. Full details are in our Privacy Policy.",
+                ),
+                _faq_item(
+                    "Can I share an account with my classmate?",
+                    "Each account is meant for one student because Alex builds a personalised study plan around your specific degree, week, and progress. Sharing breaks the planner. If you want to study together, both of you should sign up.",
+                ),
+                width="100%",
+                max_width="780px",
+            ),
+            spacing="6",
+            align_items="center",
+            width="100%",
+            max_width="1280px",
+            margin="0 auto",
+        ),
+        id="landing-faq-section",
+        padding=rx.breakpoints(initial="96px 16px 0", md="120px 28px 0"),
+        background="transparent",
+    )
 
     footer_section = rx.box(
         rx.vstack(
@@ -26954,9 +28264,14 @@ def landing_page():
                 position="relative",
                 overflow="hidden",
             ),
+            demo_widget_section,
             story_section,
             voice_section,
+            feature_showcase_section,
+            founder_section,
+            comparison_section,
             pricing_section,
+            faq_section,
             footer_section,
             width="100%",
             position="relative",
@@ -32540,6 +33855,8 @@ app = rx.App(
         # Hide Reflex' raw websocket failure UI; reconnects continue silently.
         rx.el.style(_NETWORK_ERROR_SUPPRESSION_CSS),
         rx.el.script(_NETWORK_ERROR_SUPPRESSION_JS),
+        # Landing-page "Try Alex" demo widget — needs head-level so it executes pre-hydration.
+        rx.el.script(ALEX_DEMO_WIDGET_JS),
         # Native loading splash — runs before React.
         # Creates a dark overlay + animated top bar as soon as the DOM is ready,
         # then watches for React to render content and fades itself out.
@@ -32574,8 +33891,8 @@ app = rx.App(
   if(document.body){inject();}else{document.addEventListener('DOMContentLoaded',inject);}
 })();
 """),
-        rx.script(src="https://www.googletagmanager.com/gtag/js?id=G-H5G0QBSY2M"),
-        rx.script(
+        rx.el.script(src="https://www.googletagmanager.com/gtag/js?id=G-H5G0QBSY2M"),
+        rx.el.script(
             """
 	window.dataLayer = window.dataLayer || [];
 	function gtag(){dataLayer.push(arguments);}
@@ -32585,7 +33902,8 @@ app = rx.App(
 	  var allowed = {
 	    auth_method:1, button_location:1, currency:1, degree_key:1,
 	    page_path:1, payment_status:1, plan_name:1, plan_scope:1,
-	    price_usd:1, pricing_variant:1, route:1, scope:1, semester:1, year:1
+	    price_usd:1, pricing_variant:1, route:1, scope:1, semester:1, year:1,
+	    section_id:1, faq_id:1, scroll_depth:1, time_seconds:1, card_id:1, cta_id:1
 	  };
 	  var isDev = /^(localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0)$/i.test(window.location.hostname || '') || window.__ALEX_GA_DEBUG === true;
 	  window.alexTrack = function(eventName, params){
@@ -32608,6 +33926,7 @@ app = rx.App(
 	})();
 	"""
 	        ),
+        rx.el.script(LANDING_ANALYTICS_JS),
         rx.el.link(rel="icon", type="image/x-icon", href=FAVICON_ICO),
         rx.el.link(rel="shortcut icon", type="image/x-icon", href=FAVICON_ICO),
         rx.el.link(rel="icon", type="image/png", sizes="32x32", href=FAVICON_32),
