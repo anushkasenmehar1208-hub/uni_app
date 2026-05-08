@@ -26969,6 +26969,7 @@ def landing_page():
             max_width=rx.breakpoints(initial="100%", md="min(1160px, calc(100vw - 132px))"),
             padding=rx.breakpoints(initial="0 20px", md="0 66px"),
             text_align="center",
+            margin="0 auto",
             custom_attrs={"data-landing-animate": "headline-box"},
         ),
         rx.text(
@@ -27000,6 +27001,7 @@ def landing_page():
         width="100%",
         max_width=rx.breakpoints(initial="calc(100vw - 24px)", md="min(1080px, calc(100vw - 84px))"),
         padding=rx.breakpoints(initial="0 4px", md="0"),
+        margin="0 auto",
         position="relative",
         z_index="4",
     )
@@ -27067,6 +27069,7 @@ def landing_page():
                 border_radius="32px",
                 background="linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
                 box_shadow="0 32px 90px rgba(0,0,0,0.36)",
+                margin="0 auto",
             ),
             spacing="5",
             align_items="center",
@@ -27114,7 +27117,7 @@ def landing_page():
                         width="auto",
                     ),
                     width="100%",
-                    justify="start",
+                    justify="center",
                 ),
                 rx.hstack(
                     rx.hstack(
@@ -27149,7 +27152,7 @@ def landing_page():
                         width="auto",
                     ),
                     width="100%",
-                    justify="start",
+                    justify="center",
                 ),
                 rx.hstack(
                     rx.hstack(
@@ -27164,7 +27167,7 @@ def landing_page():
                             font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
                             display="inline-block",
                             overflow="hidden",
-                            max_width="860px",
+                            max_width=rx.breakpoints(initial="100%", md="min(1120px, calc(100vw - 56px))"),
                             custom_attrs={"data-landing-story-type": "line-3"},
                         ),
                         rx.box(
@@ -27183,11 +27186,12 @@ def landing_page():
                         width="auto",
                     ),
                     width="100%",
-                    justify="start",
+                    justify="center",
                 ),
                 spacing="0",
-                align_items="flex-start",
+                align_items="center",
                 width="100%",
+                text_align="center",
             ),
             rx.box(
                 rx.box(
@@ -27273,6 +27277,7 @@ def landing_page():
             margin="0 auto",
         ),
         id="landing-story-section",
+        width="100%",
         padding=rx.breakpoints(initial="56px 16px 0", md="80px 28px 0"),
         background="transparent",
     )
@@ -27469,6 +27474,7 @@ def landing_page():
             flex_wrap=rx.breakpoints(initial="wrap", md="nowrap"),
             flex_direction=rx.breakpoints(initial="column", md="row"),
         ),
+        width="100%",
         padding=rx.breakpoints(initial="72px 16px 0", md="96px 28px 0"),
         background="transparent",
     )
@@ -27674,6 +27680,7 @@ def landing_page():
             margin="0 auto",
 	        ),
 	        id="landing-pricing-section",
+            width="100%",
 	        padding=rx.breakpoints(initial="80px 16px 0", md="104px 28px 0"),
 	        background="transparent",
 	    )
@@ -27762,6 +27769,7 @@ def landing_page():
             max_width="1360px",
             margin="0 auto",
         ),
+        width="100%",
         padding=rx.breakpoints(initial="64px 16px 48px", md="80px 28px 64px"),
         background="transparent",
     )
@@ -27857,23 +27865,23 @@ def landing_page():
             }
             @keyframes landingTypeLine1 {
                 from { width: 0; }
-                to { width: 22ch; }
+                to { width: var(--landing-type-target, 22ch); }
             }
             @keyframes landingTypeLine2 {
                 from { width: 0; }
-                to { width: 31ch; }
+                to { width: var(--landing-type-target, 31ch); }
             }
             @keyframes landingStoryLine1 {
                 from { width: 0; }
-                to { width: 47ch; }
+                to { width: var(--landing-type-target, 31ch); }
             }
             @keyframes landingStoryLine2 {
                 from { width: 0; }
-                to { width: 41ch; }
+                to { width: var(--landing-type-target, 22ch); }
             }
             @keyframes landingStoryLine3 {
                 from { width: 0; }
-                to { width: 110ch; }
+                to { width: var(--landing-type-target, 92ch); }
             }
             @keyframes landingCursorBlink {
                 0%, 45% { opacity: 0; }
@@ -28082,6 +28090,38 @@ def landing_page():
         """),
         rx.script("""
             (() => {
+                const measureTypeTargets = () => {
+                    const selectors = [
+                        '[data-landing-type="line-1"]',
+                        '[data-landing-type="line-2"]',
+                        '[data-landing-story-type="line-1"]',
+                        '[data-landing-story-type="line-2"]',
+                        '[data-landing-story-type="line-3"]'
+                    ];
+                    selectors.forEach((selector) => {
+                        document.querySelectorAll(selector).forEach((el) => {
+                            const clone = el.cloneNode(true);
+                            clone.style.position = 'absolute';
+                            clone.style.left = '-10000px';
+                            clone.style.top = '0';
+                            clone.style.visibility = 'hidden';
+                            clone.style.pointerEvents = 'none';
+                            clone.style.animation = 'none';
+                            clone.style.transition = 'none';
+                            clone.style.width = 'max-content';
+                            clone.style.maxWidth = 'none';
+                            clone.style.overflow = 'visible';
+                            clone.style.whiteSpace = 'nowrap';
+                            document.body.appendChild(clone);
+                            const measured = Math.ceil(clone.getBoundingClientRect().width || clone.scrollWidth || 0);
+                            clone.remove();
+                            if (measured > 0) {
+                                el.style.setProperty('--landing-type-target', measured + 'px');
+                            }
+                        });
+                    });
+                };
+
                 const attachObservers = () => {
                     const section = document.getElementById('landing-story-section');
                     if (section && section.dataset.storyObserverAttached !== 'true') {
@@ -28116,7 +28156,13 @@ def landing_page():
                 };
 
                 // Run immediately and then poll to account for hydration delays
+                measureTypeTargets();
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(measureTypeTargets).catch(() => {});
+                }
                 attachObservers();
+                setTimeout(measureTypeTargets, 100);
+                setTimeout(measureTypeTargets, 600);
                 setTimeout(attachObservers, 200);
                 setTimeout(attachObservers, 800);
                 setTimeout(attachObservers, 2000);
@@ -34583,7 +34629,8 @@ def _render_voice_markdown_fallback(md: str) -> str:
     def flush_paragraph() -> None:
         nonlocal paragraph
         if paragraph:
-            blocks.append(f"<p>{'<br>\\n'.join(inline(line) for line in paragraph)}</p>")
+            paragraph_html = "<br>\n".join(inline(line) for line in paragraph)
+            blocks.append(f"<p>{paragraph_html}</p>")
             paragraph = []
 
     def flush_list() -> None:
