@@ -658,6 +658,51 @@ def _note_title_from_body(body: str) -> str:
     return "Note from Alex"
 
 
+def _note_preview_from_body(body: str) -> str:
+    """Plain text preview for the notes library."""
+    text = body or ""
+    # Strip HTML tags (Quill stores rich text as HTML)
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</(p|div|h[1-6]|li|ul|ol|blockquote)>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = text.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"').replace("&#39;", "'")
+    text = re.sub(r"```[\w+-]*\n?", " ", text)
+    text = text.replace("```", " ")
+    text = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    cleaned: list[str] = []
+    for line in text.splitlines():
+        t = line.strip()
+        if not t:
+            continue
+        t = re.sub(r"^#{1,6}\s*", "", t)
+        t = re.sub(r"^>\s*", "", t)
+        t = re.sub(r"^[-*+]\s+", "", t)
+        t = re.sub(r"^\d+[.)]\s+", "", t)
+        cleaned.append(t)
+    text = " ".join(cleaned)
+    text = re.sub(r"(\*\*|__)(.*?)\1", r"\2", text)
+    text = re.sub(r"(\*|_)(.*?)\1", r"\2", text)
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+    text = re.sub(r"[*_`~#]+", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) > 140:
+        text = text[:137].rstrip() + "..."
+    return text
+
+
+def _note_empty_preview_from_attachments(attachments_json: str) -> str:
+    items = _parse_note_attachments_json(attachments_json)
+    if not items:
+        return ""
+    count = len(items)
+    if count == 1:
+        kind = str(items[0].get("kind") or "file").strip() or "file"
+        name = str(items[0].get("name") or "").strip()
+        return f"{kind.title()} attachment" + (f": {name}" if name else "")
+    return f"{count} attachments"
+
+
 # Compact “tech” toast for save-to-notes (Sonner `data-*` hooks; see semester_page provider).
 _NOTE_SAVED_TOAST_STYLE = {
     "background": "linear-gradient(145deg, rgba(10, 18, 34, 0.94), rgba(6, 12, 26, 0.92))",
@@ -5759,6 +5804,8 @@ class AppState(reflex_local_auth.LocalAuthState):
     notes_upload_bucket: str = ""
     notes_attachment_error: str = ""
     notes_editor_error: str = ""
+    notes_body_key: int = 0          # increments on load/clear to trigger JS re-render
+    notes_just_saved: bool = False   # flashes true after a successful manual save
 
     # Settings page
     settings_tab: str = "general"
@@ -8633,9 +8680,14 @@ class AppState(reflex_local_auth.LocalAuthState):
                     .where(StudentNote.scope == scope)
                     .order_by(StudentNote.updated_at.desc())
                 ).all()
+            current_id = (self.notes_editor_id or "").strip()
             items: list[dict] = []
             for r in rows:
-                prev = (r.body or "").replace("\n", " ").strip()[:140]
+                is_active = bool(current_id and str(r.id) == current_id)
+                body_src = (self.notes_editor_body or "") if is_active else (r.body or "")
+                prev = _note_preview_from_body(body_src)
+                if not prev:
+                    prev = _note_empty_preview_from_attachments(getattr(r, "attachments_json", "") or "[]") if not is_active else ""
                 items.append({
                     "id": str(r.id),
                     "title": (r.title or "").strip() or "Untitled",
@@ -8777,11 +8829,13 @@ class AppState(reflex_local_auth.LocalAuthState):
     def set_notes_editor_title(self, v: str):
         self.notes_editor_title = v
         self.notes_editor_error = ""
+        self.notes_just_saved = False
 
     @rx.event
     def set_notes_editor_body(self, v: str):
         self.notes_editor_body = v
         self.notes_editor_error = ""
+        self.notes_just_saved = False
 
     @rx.event
     def notes_new_blank(self):
@@ -8793,6 +8847,8 @@ class AppState(reflex_local_auth.LocalAuthState):
         self.notes_upload_bucket = f"d{secrets.token_hex(6)}"
         self.notes_attachment_error = ""
         self.notes_editor_error = ""
+        self.notes_just_saved = False
+        self.notes_body_key += 1
         self.show_notes_library_drawer = False
 
     def _ensure_notes_upload_bucket(self) -> None:
@@ -8873,6 +8929,8 @@ class AppState(reflex_local_auth.LocalAuthState):
                     _parse_note_attachments_json(getattr(row, "attachments_json", None) or "[]")
                 )
                 self.notes_editor_error = ""
+                self.notes_body_key += 1
+                self.notes_just_saved = False
         except Exception as e:
             print(f"ERROR _load_note_for_editor: {e}")
 
@@ -8885,6 +8943,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             return
         self._notes_persist_editor(manual=False)
         self._load_note_for_editor(nid)
+        self._reload_notes_items()
         self.show_notes_library_drawer = False
 
     @rx.event
@@ -8902,8 +8961,13 @@ class AppState(reflex_local_auth.LocalAuthState):
         self._load_note_for_editor(nid)
 
     @rx.event
-    def notes_save_editor(self):
-        self._notes_persist_editor(manual=True)
+    async def notes_save_editor(self):
+        ok = self._notes_persist_editor(manual=True)
+        if ok:
+            self.notes_just_saved = True
+            yield
+            await asyncio.sleep(2.5)
+            self.notes_just_saved = False
 
     @rx.event
     def notes_delete_current(self):
@@ -14198,7 +14262,7 @@ Course units to cover:\n{courses_text}"""
 
     @rx.event
     async def confirm_edit_message(self):
-        """Save the edited user message, remove everything after it, and re-send."""
+        """Replace the edited user message, remove everything after it, and re-send."""
         uid = self._active_data_uid()
         idx = self.editing_msg_index
         new_text = self.editing_msg_text.strip()
@@ -14207,13 +14271,12 @@ Course units to cover:\n{courses_text}"""
             self.editing_msg_text = ""
             return
 
-        # Update the in-memory user message
-        self.chat_history[idx]["content"] = new_text
+        # Remove the edited turn and everything after it. send_message() will
+        # insert the edited text back at this same position instead of appending
+        # a duplicate line underneath the original.
+        self.chat_history = self.chat_history[:idx]
 
-        # Remove all messages after this index (both in memory and DB)
-        self.chat_history = self.chat_history[: idx + 1]
-
-        # Delete from DB: everything after the edited msg
+        # Delete from DB: the edited message and everything after it.
         sid = int(self.current_session_id) if self.current_session_id else 0
         if sid:
             with rx.session() as session:
@@ -14225,12 +14288,7 @@ Course units to cover:\n{courses_text}"""
                     .order_by(ChatMessage2.id)
                 ).all()
                 if idx < len(db_msgs):
-                    edit_row = db_msgs[idx]
-                    # Update the edited message text
-                    edit_row.content = new_text
-                    session.add(edit_row)
-                    # Delete all messages after it
-                    for row in db_msgs[idx + 1:]:
+                    for row in db_msgs[idx:]:
                         session.delete(row)
                     session.commit()
 
@@ -16258,6 +16316,392 @@ ENTER_TO_SEND_JS = """
 
 # Notes panel: hidden file input id for mobile camera (must match `rx.el.input` id in `notes_panel`).
 _NOTE_UPL_CAMERA_INPUT_ID = "note_upl_camera_in"
+
+_NOTES_MD_CSS = """
+<style>
+.notes-md-preview {
+  min-height: 180px;
+}
+.notes-body-shell {
+  position: relative;
+  cursor: text;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+.notes-quill-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+.notes-quill-mount {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.notes-fallback-textarea {
+  display: none;
+}
+.notes-quill-shell.quill-failed .notes-fallback-textarea {
+  display: block;
+}
+.notes-quill-shell.quill-failed .notes-quill-mount {
+  display: none;
+}
+.notes-fallback-textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 260px;
+  height: calc(100vh - 360px);
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(52,211,153,0.16);
+  border-radius: 12px;
+  color: rgba(220,228,238,0.92);
+  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  padding: 16px 18px;
+  outline: none;
+  resize: none;
+}
+.notes-fallback-textarea:focus {
+  border-color: rgba(52,211,153,0.34);
+  box-shadow: 0 0 0 1px rgba(52,211,153,0.08);
+}
+.notes-fallback-textarea::placeholder {
+  color: rgba(160,170,185,0.35);
+}
+@media (max-width: 768px) {
+  .notes-fallback-textarea {
+    height: calc(100vh - 330px);
+  }
+}
+.notes-quill-shell .ql-toolbar.ql-snow {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px 10px 0 0;
+  background: rgba(255,255,255,0.03);
+  padding: 6px 8px;
+}
+.notes-quill-shell .ql-container.ql-snow {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  background: rgba(0,0,0,0.28);
+  height: calc(100vh - 360px);
+  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.92rem;
+}
+@media (max-width: 768px) {
+  .notes-quill-shell .ql-container.ql-snow {
+    height: calc(100vh - 330px);
+  }
+}
+.notes-quill-shell .ql-editor {
+  color: rgba(220,228,238,0.92);
+  min-height: 100%;
+  padding: 16px 18px;
+  line-height: 1.6;
+}
+.notes-quill-shell .ql-editor.ql-blank::before {
+  color: rgba(160,170,185,0.35);
+  font-style: normal;
+  left: 18px;
+  right: 18px;
+}
+.notes-quill-shell .ql-editor h1 { font-size: 1.35rem; font-weight: 700; margin: 0.5em 0 0.3em; }
+.notes-quill-shell .ql-editor h2 { font-size: 1.15rem; font-weight: 700; margin: 0.5em 0 0.3em; }
+.notes-quill-shell .ql-editor h3 { font-size: 1.0rem; font-weight: 700; margin: 0.4em 0 0.25em; }
+.notes-quill-shell .ql-editor strong { color: rgba(240,244,248,1); }
+.notes-quill-shell .ql-editor a { color: #34D399; }
+.notes-quill-shell .ql-editor blockquote { border-left: 3px solid rgba(52,211,153,0.45); padding-left: 12px; color: rgba(220,228,238,0.78); }
+.notes-quill-shell .ql-editor pre.ql-syntax,
+.notes-quill-shell .ql-editor code {
+  background: rgba(0,0,0,0.42);
+  color: rgba(220,228,238,0.92);
+  border-radius: 6px;
+}
+.notes-quill-shell .ql-toolbar.ql-snow .ql-stroke { stroke: rgba(220,228,238,0.7); }
+.notes-quill-shell .ql-toolbar.ql-snow .ql-fill { fill: rgba(220,228,238,0.7); }
+.notes-quill-shell .ql-toolbar.ql-snow .ql-picker-label { color: rgba(220,228,238,0.7); }
+.notes-quill-shell .ql-toolbar.ql-snow button:hover .ql-stroke,
+.notes-quill-shell .ql-toolbar.ql-snow button.ql-active .ql-stroke,
+.notes-quill-shell .ql-toolbar.ql-snow .ql-picker-label:hover,
+.notes-quill-shell .ql-toolbar.ql-snow .ql-picker-label.ql-active { stroke: #34D399; color: #34D399; }
+.notes-quill-shell .ql-toolbar.ql-snow button:hover .ql-fill,
+.notes-quill-shell .ql-toolbar.ql-snow button.ql-active .ql-fill { fill: #34D399; }
+.notes-quill-shell .ql-toolbar.ql-snow .ql-picker-options {
+  background: #1a1f26;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(220,228,238,0.85);
+}
+.notes-rich-editor {
+  width: 100%;
+  height: calc(100vh - 360px);
+  max-height: calc(100vh - 360px);
+  min-height: 260px;
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(52,211,153,0.16);
+  border-radius: 12px;
+  padding: 18px 20px;
+  outline: none;
+  overflow-y: auto;
+  white-space: normal;
+}
+@media (max-width: 768px) {
+  .notes-rich-editor {
+    height: calc(100vh - 330px);
+    max-height: calc(100vh - 330px);
+    min-height: 220px;
+  }
+}
+.notes-rich-editor::-webkit-scrollbar {
+  width: 5px;
+}
+.notes-rich-editor::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px;
+}
+.notes-rich-editor:focus {
+  border-color: rgba(52,211,153,0.34);
+  box-shadow: 0 0 0 1px rgba(52,211,153,0.08);
+}
+.notes-rich-editor:empty::before {
+  content: "Write in Markdown — definitions, exam tips, code snippets...";
+  color: rgba(160,170,185,0.35);
+  pointer-events: none;
+}
+.notes-md {
+  color: rgba(220, 228, 238, 0.92);
+  font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+.notes-md p {
+  margin: 0 0 0.85em 0;
+}
+.notes-md p:last-child {
+  margin-bottom: 0;
+}
+.notes-md h1,
+.notes-md h2,
+.notes-md h3,
+.notes-md h4 {
+  color: rgba(244, 248, 252, 0.96);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1em 0 0.45em;
+}
+.notes-md > h1:first-child,
+.notes-md > h2:first-child,
+.notes-md > h3:first-child,
+.notes-md > h4:first-child {
+  margin-top: 0;
+}
+.notes-md h1 { font-size: 1.3rem; }
+.notes-md h2 { font-size: 1.08rem; }
+.notes-md h3 { font-size: 0.95rem; }
+.notes-md h4 { font-size: 0.9rem; }
+.notes-md strong {
+  color: rgba(255, 255, 255, 0.98);
+  font-weight: 800;
+}
+.notes-md em {
+  color: rgba(231, 236, 244, 0.9);
+  font-style: italic;
+}
+.notes-md ul,
+.notes-md ol {
+  margin: 0 0 0.9em 0;
+  padding-left: 1.45em;
+}
+.notes-md li {
+  margin-bottom: 0.35em;
+}
+.notes-md li::marker {
+  color: rgba(52, 211, 153, 0.8);
+}
+.notes-md code {
+  color: rgba(167, 219, 255, 0.95);
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-family: 'Söhne Mono', 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.86em;
+}
+.notes-md pre {
+  margin: 0.8em 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.42);
+}
+.notes-md pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  white-space: pre;
+}
+.notes-md blockquote {
+  margin: 0 0 0.9em 0;
+  padding-left: 0.9em;
+  border-left: 3px solid rgba(52, 211, 153, 0.45);
+  color: rgba(202, 213, 225, 0.82);
+}
+.notes-md a {
+  color: rgba(125, 211, 252, 0.96);
+}
+</style>
+"""
+_NOTES_RICH_EDITOR_JS = r"""
+(function() {
+  // ---------- Quill loader ----------
+  function ensureQuillCSS() {
+    if (document.getElementById("quill-snow-css")) return;
+    var l = document.createElement("link");
+    l.id = "quill-snow-css";
+    l.rel = "stylesheet";
+    l.href = "https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css";
+    document.head.appendChild(l);
+  }
+  function ensureQuillJS(cb, fail) {
+    if (window.Quill) { cb(); return; }
+    if (document.getElementById("quill-js")) {
+      var tries = 0;
+      var iv = setInterval(function() {
+        if (window.Quill) { clearInterval(iv); cb(); }
+        else if (++tries > 100) { clearInterval(iv); if (fail) fail(); }  // 5s
+      }, 50);
+      return;
+    }
+    var s = document.createElement("script");
+    s.id = "quill-js";
+    s.src = "https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js";
+    s.onload = cb;
+    s.onerror = function() { if (fail) fail(); };
+    document.head.appendChild(s);
+    // Safety timeout in case onerror doesn't fire
+    setTimeout(function() { if (!window.Quill && fail) fail(); }, 5000);
+  }
+
+  // ---------- React-aware sync (the critical fix) ----------
+  function syncHidden(hidden, html) {
+    if (!hidden || hidden.value === html) return;
+    var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value");
+    if (setter && setter.set) setter.set.call(hidden, html);
+    else hidden.value = html;
+    hidden.dispatchEvent(new Event("input", { bubbles: true }));
+    hidden.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  // ---------- Naive markdown -> HTML for legacy notes ----------
+  function legacyMdToHtml(md) {
+    var lines = String(md || "").replace(/\r\n/g, "\n").split("\n");
+    var out = "";
+    var inList = false;
+    var closeList = function() { if (inList) { out += "</ul>"; inList = false; } };
+    function inlineMd(s) {
+      return s
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/__([^_]+)__/g, "<strong>$1</strong>")
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+        .replace(/_([^_]+)_/g, "<em>$1</em>")
+        .replace(/`([^`]+)`/g, "<code>$1</code>");
+    }
+    for (var i = 0; i < lines.length; i++) {
+      var t = lines[i].trim();
+      if (!t) { closeList(); continue; }
+      var h = t.match(/^(#{1,6})\s+(.+)$/);
+      if (h) { closeList(); var lv = Math.min(3, h[1].length); out += "<h" + lv + ">" + inlineMd(h[2]) + "</h" + lv + ">"; continue; }
+      var li = t.match(/^[-*+]\s+(.+)$/);
+      if (li) { if (!inList) { out += "<ul>"; inList = true; } out += "<li>" + inlineMd(li[1]) + "</li>"; continue; }
+      closeList();
+      out += "<p>" + inlineMd(t) + "</p>";
+    }
+    closeList();
+    return out;
+  }
+  function looksLikeHtml(s) {
+    return /<\/?(p|h[1-6]|ul|ol|li|strong|em|br|blockquote|pre|code|div|span|a)\b/i.test(s);
+  }
+
+  // ---------- Bind ----------
+  function bind() {
+    var mount = document.getElementById("notes_quill_mount");
+    var hidden = document.getElementById("notes_editor_body_input");
+    if (!mount || !hidden) return false;
+    if (mount.dataset.quillBound === "1") return true;
+    mount.dataset.quillBound = "1";
+
+    ensureQuillCSS();
+    var shell = mount.closest(".notes-quill-shell");
+    ensureQuillJS(function() {
+      if (shell) shell.classList.remove("quill-failed");
+      var quill = new window.Quill(mount, {
+        theme: "snow",
+        placeholder: "Write here…",
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["blockquote", "code-block"],
+            ["link"],
+            ["clean"]
+          ]
+        }
+      });
+      window.__notesQuill = quill;
+
+      function renderFromHidden() {
+        var raw = hidden.value || "";
+        var html = looksLikeHtml(raw) ? raw : legacyMdToHtml(raw);
+        if (!raw) html = "";
+        if (mount.dataset.lastHtml === html) return;
+        mount.dataset.lastHtml = html;
+        if (html === "") {
+          quill.setText("");
+        } else {
+          quill.root.innerHTML = html;
+        }
+      }
+      renderFromHidden();
+
+      quill.on("text-change", function(delta, oldDelta, source) {
+        if (source !== "user") return;
+        var html = quill.root.innerHTML;
+        if (html === "<p><br></p>") html = "";
+        mount.dataset.lastHtml = html;
+        syncHidden(hidden, html);
+      });
+
+      var observer = new MutationObserver(function() {
+        renderFromHidden();
+      });
+      observer.observe(hidden, { attributes: true, attributeFilter: ["data-body-key"] });
+    }, function() {
+      // Quill failed to load — show fallback textarea
+      if (shell) shell.classList.add("quill-failed");
+      mount.dataset.quillBound = "";  // allow retry
+      console.warn("Quill failed to load; using plain textarea fallback");
+    });
+
+    return true;
+  }
+
+  bind();
+  var tries = 0;
+  var iv = setInterval(function() {
+    if (bind() || ++tries > 80) clearInterval(iv);
+  }, 250);
+})();
+"""
 NOTE_CAMERA_OPEN_JS = (
     f"(function(){{var e=document.getElementById('{_NOTE_UPL_CAMERA_INPUT_ID}');"
     f"if(e){{e.value='';e.click();}}}})()"
@@ -23642,6 +24086,7 @@ def notes_panel() -> rx.Component:
     return rx.cond(
         AppState.show_notes_panel,
         rx.box(
+                rx.html(_NOTES_MD_CSS),
                 rx.vstack(
                     rx.hstack(
                         rx.hstack(
@@ -23794,7 +24239,7 @@ def notes_panel() -> rx.Component:
                                             ),
                                             rx.box(
                                                 rx.text(
-                                                    "No notes yet — use Make note on a reply, or New note.",
+                                                    'No notes yet — use "Make note" on a reply, or create a new note.',
                                                     color="rgba(150,165,180,0.38)",
                                                     font_size="0.76rem",
                                                     line_height="1.5",
@@ -23991,12 +24436,12 @@ def notes_panel() -> rx.Component:
                                         ),
                                         rx.fragment(),
                                     ),
-                                    rx.input(
+                                    rx.el.input(
                                         id="notes_editor_title_input",
                                         placeholder="Title",
                                         value=AppState.notes_editor_title,
                                         on_change=AppState.set_notes_editor_title,
-                                        variant="soft",
+                                        type="text",
                                         style={
                                             "width": "100%",
                                             "background": "rgba(255,255,255,0.04)",
@@ -24005,49 +24450,64 @@ def notes_panel() -> rx.Component:
                                             "color": "rgba(240,244,248,0.94)",
                                             "font_size": "0.88rem",
                                             "font_weight": "600",
-                                            "padding": "10px 12px",
+                                            "line_height": "1.5",
+                                            "padding": "9px 12px",
                                             "box_shadow": "none",
+                                            "outline": "none",
                                             "&::placeholder": {"color": "rgba(255,255,255,0.22)"},
                                         },
                                     ),
-                                    rx.el.textarea(
-                                        id="notes_editor_body_input",
-                                        placeholder="Write in Markdown — definitions, exam tips, code snippets…",
-                                        value=AppState.notes_editor_body,
-                                        on_change=AppState.set_notes_editor_body,
-                                        style={
-                                            "width": "100%",
-                                            "min_height": rx.breakpoints(initial="180px", md="140px"),
-                                            "flex": "1",
-                                            "background": "rgba(0,0,0,0.35)",
-                                            "border": "1px solid rgba(255,255,255,0.08)",
-                                            "border_radius": "12px",
-                                            "color": "rgba(220,228,238,0.9)",
-                                            "font_size": "0.82rem",
-                                            "line_height": "1.55",
-                                            "font_family": "'Söhne Mono', 'SF Mono', Menlo, monospace",
-                                            "padding": "14px 14px",
-                                            "resize": "vertical",
-                                            "outline": "none",
-                                        },
+                                    rx.box(
+                                        rx.el.textarea(
+                                            id="notes_editor_body_input",
+                                            value=AppState.notes_editor_body,
+                                            on_change=AppState.set_notes_editor_body,
+                                            data_body_key=AppState.notes_body_key,
+                                            placeholder="Write here…",
+                                            class_name="notes-fallback-textarea",
+                                        ),
+                                        rx.el.div(id="notes_quill_mount", class_name="notes-quill-mount"),
+                                        rx.script(_NOTES_RICH_EDITOR_JS),
+                                        class_name="notes-quill-shell",
+                                        width="100%",
+                                        flex="1",
                                     ),
                                     rx.hstack(
                                         rx.button(
-                                            "Save",
+                                            rx.cond(
+                                                AppState.notes_just_saved,
+                                                rx.hstack(rx.icon(tag="check", size=14), rx.text("Saved"), spacing="1", align="center"),
+                                                rx.text("Save"),
+                                            ),
                                             on_click=AppState.notes_save_editor,
-                                            style={
-                                                "background": "linear-gradient(135deg, #34D399, #10B981)",
-                                                "color": "#04120a",
-                                                "font_weight": "700",
-                                                "font_size": "0.78rem",
-                                                "height": "34px",
-                                                "padding": "0 18px",
-                                                "border_radius": "10px",
-                                                "border": "none",
-                                                "cursor": "pointer",
-                                                "box_shadow": "0 4px 14px rgba(16,185,129,0.25)",
-                                                "_hover": {"filter": "brightness(1.06)"},
-                                            },
+                                            style=rx.cond(
+                                                AppState.notes_just_saved,
+                                                {
+                                                    "background": "rgba(52,211,153,0.15)",
+                                                    "color": "rgba(52,211,153,0.9)",
+                                                    "font_weight": "700",
+                                                    "font_size": "0.78rem",
+                                                    "height": "34px",
+                                                    "padding": "0 18px",
+                                                    "border_radius": "10px",
+                                                    "border": "1px solid rgba(52,211,153,0.3)",
+                                                    "cursor": "pointer",
+                                                    "box_shadow": "none",
+                                                },
+                                                {
+                                                    "background": "linear-gradient(135deg, #34D399, #10B981)",
+                                                    "color": "#04120a",
+                                                    "font_weight": "700",
+                                                    "font_size": "0.78rem",
+                                                    "height": "34px",
+                                                    "padding": "0 18px",
+                                                    "border_radius": "10px",
+                                                    "border": "none",
+                                                    "cursor": "pointer",
+                                                    "box_shadow": "0 4px 14px rgba(16,185,129,0.25)",
+                                                    "_hover": {"filter": "brightness(1.06)"},
+                                                },
+                                            ),
                                         ),
                                         rx.cond(
                                             AppState.notes_editor_id != "",
@@ -24194,7 +24654,7 @@ def notes_panel() -> rx.Component:
                                             align_items="stretch",
                                         ),
                                         rx.text(
-                                            "No notes yet — use Make note on a reply, or New note.",
+                                            'No notes yet — use "Make note" on a reply, or create a new note.',
                                             color="rgba(150,165,180,0.42)",
                                             font_size="0.78rem",
                                             line_height="1.5",
@@ -26820,30 +27280,6 @@ def landing_page():
     voice_section = rx.box(
         rx.script(_CHAT_TEACHER_AVATAR_JS),
         rx.hstack(
-            # ── COL 1: GIF ───────────────────────────────────────────────────
-            rx.box(
-                rx.image(
-                    src="/landing-voice-demo.gif",
-                    alt="Alex AI live voice mentor",
-                    style={
-                        "width": "100%",
-                        "height": "100%",
-                        "objectFit": "contain",
-                        "display": "block",
-                        "background": "transparent",
-                        "filter": "drop-shadow(0 32px 80px rgba(0,0,0,0.45))",
-                        "pointerEvents": "none",
-                    },
-                ),
-                width=rx.breakpoints(initial="100%", md="240px"),
-                flex_shrink="0",
-                height=rx.breakpoints(initial="280px", md="400px"),
-                display="none",
-                align_items="center",
-                justify_content="center",
-                background="transparent",
-            ),
-            # ── COL 2: Text ──────────────────────────────────────────────────
             rx.vstack(
                 rx.text(
                     "Talk to Alex like a private tutor",
@@ -26872,8 +27308,8 @@ def landing_page():
                 align_items="flex-start",
                 flex="1",
                 min_width="0",
+                max_width="560px",
             ),
-            # ── COL 3: 3-D model ─────────────────────────────────────────────
             rx.box(
                 rx.el.style("""
                     #landing-teacher-orb-wrap {
@@ -27026,9 +27462,9 @@ def landing_page():
             ),
             spacing="6",
             align="center",
-            justify="between",
+            justify="center",
             width="100%",
-            max_width="1280px",
+            max_width="980px",
             margin="0 auto",
             flex_wrap=rx.breakpoints(initial="wrap", md="nowrap"),
             flex_direction=rx.breakpoints(initial="column", md="row"),
@@ -33021,11 +33457,149 @@ _NETWORK_ERROR_SUPPRESSION_JS = """
 })();
 """
 
+_NOTES_LIB_AUGMENT_CSS = """
+.notes-lib-del-btn{position:absolute;top:50%;right:8px;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(240,180,180,0.78);cursor:pointer;opacity:0;pointer-events:none;transition:opacity 120ms ease, background 120ms ease, color 120ms ease, border-color 120ms ease;z-index:5;padding:0;}
+[data-notes-lib-item="1"]:hover .notes-lib-del-btn,[data-notes-lib-item="1"].show-del .notes-lib-del-btn{opacity:1;pointer-events:auto;}
+.notes-lib-del-btn:hover{background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.42);color:rgba(255,210,210,1);}
+@media (hover:none){[data-notes-lib-item="1"]:hover .notes-lib-del-btn{opacity:0;pointer-events:none;}[data-notes-lib-item="1"].show-del .notes-lib-del-btn{opacity:1;pointer-events:auto;}}
+[data-notes-lib-item="1"].notes-lib-active{background:rgba(52,211,153,0.10) !important;border-color:rgba(52,211,153,0.30) !important;box-shadow:inset 3px 0 0 #34D399;}
+"""
+
+_NOTES_LIB_AUGMENT_JS = """
+(function(){
+  function findLibraryContainers(){
+    var heads=[];
+    document.querySelectorAll('div, span, p').forEach(function(el){
+      if(el.children.length===0 && (el.textContent||'').trim()==='Library'){heads.push(el);}
+    });
+    var containers=[];
+    heads.forEach(function(h){
+      var parent=h.parentElement;
+      if(!parent) return;
+      var sibs=parent.children;
+      for(var i=0;i<sibs.length;i++){
+        if(sibs[i]===h) continue;
+        var vs=sibs[i].querySelector(':scope > div, :scope > .rt-Flex, :scope > section');
+        if(vs && vs.children && vs.children.length>0){containers.push(vs);break;}
+      }
+    });
+    return containers;
+  }
+  function findBottomDeleteBtn(){
+    var btns=document.querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){
+      var b=btns[i];
+      var t=(b.textContent||'').trim();
+      if(t==='Delete' && b.id!=='notes_pending_delete_button'){return b;}
+    }
+    return null;
+  }
+  function getActiveTitle(){
+    var ti=document.getElementById('notes_editor_title_input');
+    return ti ? (ti.value||'').trim() : '';
+  }
+  function getItemTitle(item){
+    var leaves=item.querySelectorAll('span, p, div, h1, h2, h3, h4');
+    for(var k=0;k<leaves.length;k++){
+      var le=leaves[k];
+      if(le.children.length===0){
+        var tx=(le.textContent||'').trim();
+        if(tx) return tx;
+      }
+    }
+    return '';
+  }
+  function processItems(){
+    var containers=findLibraryContainers();
+    var activeTitle=getActiveTitle();
+    containers.forEach(function(container){
+      Array.prototype.forEach.call(container.children, function(item){
+        if(!item || !item.querySelector) return;
+        if(item.tagName==='BUTTON') return;
+        if(item.dataset.notesLibItem!=='1'){
+          item.dataset.notesLibItem='1';
+          if(getComputedStyle(item).position==='static'){item.style.position='relative';}
+          var btn=document.createElement('button');
+          btn.type='button';
+          btn.className='notes-lib-del-btn';
+          btn.setAttribute('aria-label','Delete note');
+          btn.title='Delete note';
+          btn.innerHTML='<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/><path d=\"M10 11v6\"/><path d=\"M14 11v6\"/><path d=\"M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2\"/></svg>';
+          btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            if(!window.confirm('Delete this note?')) return;
+            item.click();
+            setTimeout(function(){
+              var del=findBottomDeleteBtn();
+              if(del){del.click();}
+            }, 350);
+          });
+          var lpTimer=null;
+          item.addEventListener('touchstart', function(){
+            if(lpTimer) clearTimeout(lpTimer);
+            lpTimer=setTimeout(function(){
+              document.querySelectorAll('.show-del').forEach(function(o){if(o!==item) o.classList.remove('show-del');});
+              item.classList.add('show-del');
+            }, 450);
+          }, {passive:true});
+          var cancel=function(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null;}};
+          item.addEventListener('touchmove', cancel, {passive:true});
+          item.addEventListener('touchend', cancel);
+          item.addEventListener('touchcancel', cancel);
+          item.appendChild(btn);
+        }
+        var itemTitle=getItemTitle(item);
+        if(activeTitle && itemTitle===activeTitle){
+          item.classList.add('notes-lib-active');
+        } else {
+          item.classList.remove('notes-lib-active');
+        }
+      });
+    });
+  }
+  var pending=null;
+  function schedule(){
+    if(pending) return;
+    pending=setTimeout(function(){pending=null; processItems();}, 250);
+  }
+  function start(){
+    var waited=0;
+    var waitIv=setInterval(function(){
+      waited++;
+      if(document.querySelector('.ql-toolbar') || waited>80){
+        clearInterval(waitIv);
+        schedule();
+        try{
+          new MutationObserver(schedule).observe(document.body, {childList:true, subtree:true});
+        }catch(e){}
+        document.addEventListener('input', function(e){
+          if(e.target && e.target.id==='notes_editor_title_input'){schedule();}
+        }, true);
+        document.addEventListener('touchstart', function(e){
+          var t=e.target;
+          if(t && t.closest && !t.closest('.show-del')){
+            document.querySelectorAll('.show-del').forEach(function(el){el.classList.remove('show-del');});
+          }
+        }, {passive:true});
+      }
+    }, 250);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+"""
+
 app = rx.App(
     toaster=_APP_TOASTER,
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        rx.el.style(_NOTES_LIB_AUGMENT_CSS),
+        rx.el.script(_NOTES_LIB_AUGMENT_JS),
         # Hide Reflex' raw websocket failure UI; reconnects continue silently.
         rx.el.style(_NETWORK_ERROR_SUPPRESSION_CSS),
         rx.el.script(_NETWORK_ERROR_SUPPRESSION_JS),
@@ -33971,6 +34545,89 @@ def _voice_display_markdown(source: str) -> str:
     return t.strip()
 
 
+def _render_voice_markdown_fallback(md: str) -> str:
+    """Small safe markdown renderer for the voice pane when optional deps are missing."""
+    from html import escape as _esc
+
+    source = (md or "").strip()
+    if not source:
+        return ""
+
+    def inline(text: str) -> str:
+        escaped = _esc(text or "", quote=True)
+        tokens: list[str] = []
+
+        def stash(html: str) -> str:
+            token = f"\u0000{len(tokens)}\u0000"
+            tokens.append(html)
+            return token
+
+        escaped = re.sub(
+            r"`([^`\n]+)`",
+            lambda m: stash(f"<code>{m.group(1)}</code>"),
+            escaped,
+        )
+        escaped = re.sub(r"\*\*([^*\n]+)\*\*", r"<strong>\1</strong>", escaped)
+        escaped = re.sub(r"__([^_\n]+)__", r"<strong>\1</strong>", escaped)
+        escaped = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"<em>\1</em>", escaped)
+        escaped = re.sub(r"(?<![\w_])_([^_\n]+)_(?![\w_])", r"<em>\1</em>", escaped)
+        for i, html in enumerate(tokens):
+            escaped = escaped.replace(f"\u0000{i}\u0000", html)
+        return escaped
+
+    blocks: list[str] = []
+    paragraph: list[str] = []
+    list_mode = ""
+    list_items: list[str] = []
+
+    def flush_paragraph() -> None:
+        nonlocal paragraph
+        if paragraph:
+            blocks.append(f"<p>{'<br>\\n'.join(inline(line) for line in paragraph)}</p>")
+            paragraph = []
+
+    def flush_list() -> None:
+        nonlocal list_mode, list_items
+        if list_mode and list_items:
+            blocks.append(f"<{list_mode}>{''.join(list_items)}</{list_mode}>")
+        list_mode = ""
+        list_items = []
+
+    for raw_line in source.splitlines():
+        line = raw_line.strip()
+        if not line:
+            flush_paragraph()
+            flush_list()
+            continue
+
+        heading = re.match(r"^(#{1,4})\s+(.+)$", line)
+        if heading:
+            flush_paragraph()
+            flush_list()
+            level = min(len(heading.group(1)) + 1, 4)
+            blocks.append(f"<h{level}>{inline(heading.group(2).strip())}</h{level}>")
+            continue
+
+        ordered = re.match(r"^\d+[.)]\s+(.+)$", line)
+        unordered = re.match(r"^[-*+]\s+(.+)$", line)
+        if ordered or unordered:
+            flush_paragraph()
+            next_mode = "ol" if ordered else "ul"
+            if list_mode and list_mode != next_mode:
+                flush_list()
+            list_mode = next_mode
+            item = (ordered or unordered).group(1).strip()
+            list_items.append(f"<li>{inline(item)}</li>")
+            continue
+
+        flush_list()
+        paragraph.append(line)
+
+    flush_paragraph()
+    flush_list()
+    return "".join(blocks)
+
+
 def _markdown_to_safe_html_for_voice(md: str) -> str:
     """Render markdown to sanitized HTML for the voice-call reading pane (matches .claude-md styling)."""
     if not (md or "").strip():
@@ -33979,9 +34636,7 @@ def _markdown_to_safe_html_for_voice(md: str) -> str:
         import nh3  # type: ignore
         from markdown import markdown as _md_render  # type: ignore
     except ImportError:
-        from html import escape as _esc
-
-        return f'<p class="voice-md-fallback">{_esc(md.strip())}</p>'
+        return _render_voice_markdown_fallback(md)
     try:
         raw_html = _md_render(
             md.strip(),
@@ -33990,9 +34645,7 @@ def _markdown_to_safe_html_for_voice(md: str) -> str:
         )
         return str(nh3.clean(raw_html))
     except Exception:
-        from html import escape as _esc
-
-        return f'<p class="voice-md-fallback">{_esc(md.strip())}</p>'
+        return _render_voice_markdown_fallback(md)
 
 
 def _prepare_tts_text(text: str, *, is_voice_mode: bool) -> str:
