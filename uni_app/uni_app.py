@@ -5987,6 +5987,18 @@ class AppState(reflex_local_auth.LocalAuthState):
         return len(self.chat_history) == 0
 
     @rx.var
+    def should_show_plan_generation_error(self) -> bool:
+        if not self.plan_generation_error:
+            return False
+        for msg in self.chat_history or []:
+            if not isinstance(msg, dict):
+                continue
+            content = str(msg.get("content", "")).lower()
+            if "personalized 110 day study plan is ready" in content:
+                return False
+        return True
+
+    @rx.var
     def last_assistant_chat_index(self) -> int:
         """Index of the latest assistant message in `chat_history` (-1 if none)."""
         for i in range(len(self.chat_history) - 1, -1, -1):
@@ -25232,7 +25244,7 @@ def semester_page():
                     border_bottom="1px solid rgba(255,255,255,0.03)",
                 ),
                 rx.cond(
-                    AppState.plan_generation_error != "",
+                    AppState.should_show_plan_generation_error,
                     rx.box(
                         rx.hstack(
                             rx.text(
@@ -26336,45 +26348,52 @@ def landing_page():
         link_props: dict[str, Any] = {
             "href": href,
             "text_decoration": "none",
+            "display": "inline-flex",
+            "width": "fit-content",
+            "max_width": "100%",
+            "color": "#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
+            "custom_attrs": {"data-landing-link": "primary" if is_solid else "secondary"},
         }
         if tracking_event:
             # GA funnel event: landing CTA click, then normal link navigation continues.
             link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
         return rx.link(
-            rx.button(
-                label,
-                type="button",
-                variant="ghost",
+            rx.box(
+                rx.text(
+                    label,
+                    color="#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
+                    font_size="0.98rem",
+                    font_weight="650",
+                    line_height="1",
+                    white_space="nowrap",
+                ),
+                display="inline-flex",
+                align_items="center",
+                justify_content="center",
+                height="52px",
+                padding="0 24px",
+                border_radius="999px",
+                border=(
+                    "1px solid rgba(255,255,255,0.14)"
+                    if not is_solid
+                    else "1px solid rgba(255,255,255,0.10)"
+                ),
+                background=(
+                    "linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%)"
+                    if is_solid
+                    else "rgba(255,255,255,0.04)"
+                ),
+                box_shadow=(
+                    "0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset"
+                    if is_solid
+                    else "none"
+                ),
                 style={
-                    "height": "52px",
-                    "padding": "0 24px",
-                    "border_radius": "999px",
-                    "border": (
-                        "1px solid rgba(255,255,255,0.14)"
-                        if not is_solid
-                        else "1px solid rgba(255,255,255,0.08)"
-                    ),
-                    "background": (
-                        "linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%)"
-                        if is_solid
-                        else "rgba(255,255,255,0.04)"
-                    ),
-                    "color": "#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
-                    "font_size": "0.98rem",
-                    "font_weight": "600",
-                    "letter_spacing": "-0.02em",
-                    "box_shadow": (
-                        "0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset"
-                        if is_solid
-                        else "none"
-                    ),
+                    "cursor": "pointer",
+                    "transition": "transform 0.18s ease, background 0.18s ease, border-color 0.18s ease",
                     "_hover": {
                         "transform": "translateY(-1px)",
-                        "background": (
-                            "#ffffff"
-                            if is_solid
-                            else "rgba(255,255,255,0.09)"
-                        ),
+                        "background": "#ffffff" if is_solid else "rgba(255,255,255,0.09)",
                     },
                 },
             ),
@@ -27093,38 +27112,31 @@ def landing_page():
         tracking_event: str = "",
         tracking_params: dict[str, Any] | None = None,
     ) -> rx.Component:
+        href = "/" if label == "Home" else "#landing-feature-showcase"
         link_props: dict[str, Any] = {
-            "href": SELECTION_ROUTE,
+            "href": href,
             "text_decoration": "none",
             "display": "inline-flex",
             "flex_shrink": "0",
             "margin_left": margin_left,
-            "custom_attrs": {"data-landing-animate": "nav"},
+            "color": "rgba(255,255,255,0.68)",
+            "custom_attrs": {"data-landing-animate": "nav", "data-landing-link": "nav"},
         }
         if tracking_event:
             # GA funnel event: header CTA click, then normal link navigation continues.
             link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
         return rx.link(
-            rx.button(
+            rx.text(
                 label,
-                type="button",
-                variant="ghost",
-                style={
-                    "height": "44px",
-                    "padding": "0 22px",
-                    "border_radius": "999px",
-                    "background": "rgba(255,255,255,0.08)",
-                    "border": "1px solid rgba(255,255,255,0.12)",
-                    "color": "rgba(255,255,255,0.92)",
-                    "font_size": "0.92rem",
-                    "font_weight": "600",
-                    "letter_spacing": "-0.02em",
-                    "box_shadow": "0 10px 36px rgba(0,0,0,0.35)",
-                    "_hover": {
-                        "background": "rgba(255,255,255,0.14)",
-                    },
-                },
+                color="rgba(255,255,255,0.68)",
+                font_size="0.95rem",
+                font_weight="600",
+                line_height="1",
             ),
+            style={
+                "transition": "color 0.16s ease",
+                "_hover": {"color": "rgba(255,255,255,0.94)"},
+            },
             **link_props,
         )
 
@@ -27151,7 +27163,8 @@ def landing_page():
             ),
             href=SELECTION_ROUTE,
             text_decoration="none",
-            custom_attrs={"data-landing-animate": "nav"},
+            color="rgba(255,255,255,0.94)",
+            custom_attrs={"data-landing-animate": "nav", "data-landing-link": "brand"},
         ),
         rx.hstack(
             header_action("Home"),
@@ -27526,16 +27539,20 @@ def landing_page():
                             text_align="center",
                             custom_attrs={"data-landing-journey-item": "1"},
                         ),
-                        rx.center(
-                            rx.icon(
-                                tag="arrow_down",
-                                size=22,
+                        rx.hstack(
+                            rx.text(
+                                "↓",
                                 color="rgba(255,255,255,0.38)",
-                                stroke_width=1.5,
+                                font_size="1.35rem",
+                                font_weight="400",
+                                line_height="1",
+                                text_align="center",
                             ),
+                            justify="center",
+                            align="center",
                             width="100%",
                             padding_y="2",
-                            custom_attrs={"data-landing-journey-item": "2"},
+                            custom_attrs={"data-landing-journey-item": "2", "data-landing-journey-arrow": "true"},
                         ),
                         rx.text(
                             "Alex AI analyzes your semester",
@@ -27548,16 +27565,20 @@ def landing_page():
                             text_align="center",
                             custom_attrs={"data-landing-journey-item": "3"},
                         ),
-                        rx.center(
-                            rx.icon(
-                                tag="arrow_down",
-                                size=22,
+                        rx.hstack(
+                            rx.text(
+                                "↓",
                                 color="rgba(255,255,255,0.38)",
-                                stroke_width=1.5,
+                                font_size="1.35rem",
+                                font_weight="400",
+                                line_height="1",
+                                text_align="center",
                             ),
+                            justify="center",
+                            align="center",
                             width="100%",
                             padding_y="2",
-                            custom_attrs={"data-landing-journey-item": "4"},
+                            custom_attrs={"data-landing-journey-item": "4", "data-landing-journey-arrow": "true"},
                         ),
                         rx.text(
                             "Get your personalized study system",
@@ -27837,8 +27858,14 @@ def landing_page():
             color=color_map.get(tone, color_map["neutral"]),
             font_size=rx.breakpoints(initial="0.84rem", md="0.92rem"),
             font_weight=weight_map.get(tone, "550"),
-            line_height="1.4",
+            line_height="1.35",
             text_align="center",
+            width="100%",
+            min_height="44px",
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            white_space="normal",
         )
 
     def _compare_row(label: str, alex_val: str, alex_tone: str, chatgpt_val: str, chatgpt_tone: str, claude_val: str, claude_tone: str, highlight: bool = False) -> rx.Component:
@@ -27850,13 +27877,16 @@ def landing_page():
                 font_weight="600",
                 line_height="1.4",
                 text_align="left",
+                width="100%",
+                custom_attrs={"data-landing-comparison-label": "true"},
             ),
             _compare_cell(alex_val, alex_tone),
             _compare_cell(chatgpt_val, chatgpt_tone),
             _compare_cell(claude_val, claude_tone),
-            grid_template_columns="2fr 1fr 1fr 1fr",
+            grid_template_columns="minmax(300px, 2fr) repeat(3, minmax(128px, 1fr))",
             gap=rx.breakpoints(initial="10px", md="16px"),
             width="100%",
+            min_width="760px",
             padding=rx.breakpoints(initial="14px 14px", md="16px 22px"),
             border_radius="14px",
             background=(
@@ -27866,6 +27896,7 @@ def landing_page():
             ),
             border=("1px solid rgba(94,211,132,0.18)" if highlight else "1px solid transparent"),
             align_items="center",
+            custom_attrs={"data-landing-comparison-grid": "row"},
         )
 
     demo_widget_section = rx.box(
@@ -28139,8 +28170,13 @@ def landing_page():
                             color="rgba(255,255,255,0.95)",
                             font_size=rx.breakpoints(initial="3rem", md="3.6rem"),
                             font_weight="700",
-                            letter_spacing="-0.04em",
+                            letter_spacing="0",
                             font_family="Georgia, 'Times New Roman', serif",
+                            line_height="1",
+                            display="block",
+                            width="100%",
+                            text_align="center",
+                            transform="translateX(3px) translateY(-1px)",
                         ),
                         width=rx.breakpoints(initial="120px", md="148px"),
                         height=rx.breakpoints(initial="120px", md="148px"),
@@ -28202,6 +28238,9 @@ def landing_page():
             margin="0 auto",
         ),
         id="landing-founder-section",
+        width="100%",
+        display="flex",
+        justify_content="center",
         padding=rx.breakpoints(initial="80px 16px 0", md="112px 28px 0"),
         background="transparent",
     )
@@ -28260,12 +28299,14 @@ def landing_page():
                             spacing="0",
                             align="center",
                         ),
-                        grid_template_columns="2fr 1fr 1fr 1fr",
+                        grid_template_columns="minmax(300px, 2fr) repeat(3, minmax(128px, 1fr))",
                         gap=rx.breakpoints(initial="10px", md="16px"),
                         width="100%",
+                        min_width="760px",
                         padding=rx.breakpoints(initial="14px 14px", md="18px 22px"),
                         border_bottom="1px solid rgba(255,255,255,0.08)",
                         align_items="center",
+                        custom_attrs={"data-landing-comparison-grid": "header"},
                     ),
                     _compare_row("Knows your university syllabus",  "Yes",       "yes",     "No",        "no",     "No",        "no", highlight=True),
                     _compare_row("Day-by-day semester planner",     "Built in",  "yes",     "Manual",    "no",     "Manual",    "no"),
@@ -28280,11 +28321,16 @@ def landing_page():
                 ),
                 width="100%",
                 max_width="1080px",
+                min_width="0",
+                overflow_x="auto",
+                margin_x="auto",
+                align_self="center",
                 padding=rx.breakpoints(initial="14px", md="22px"),
                 border="1px solid rgba(255,255,255,0.08)",
                 border_radius="28px",
                 background="linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%)",
                 box_shadow="0 28px 80px rgba(0,0,0,0.38)",
+                custom_attrs={"data-landing-comparison-table": "true"},
             ),
             rx.text(
                 "Prices for ChatGPT Plus and Claude Pro per their public pricing pages (May 2026). Comparison reflects core consumer plans.",
@@ -28301,6 +28347,9 @@ def landing_page():
             margin="0 auto",
         ),
         id="landing-comparison-section",
+        width="100%",
+        display="flex",
+        justify_content="center",
         padding=rx.breakpoints(initial="80px 16px 0", md="104px 28px 0"),
         background="transparent",
     )
@@ -28968,6 +29017,70 @@ def landing_page():
                     transform 0.72s cubic-bezier(0.16, 1, 0.3, 1);
                 will-change: opacity, transform;
             }
+            [data-landing-link],
+            [data-landing-link]:visited,
+            [data-landing-link]:hover,
+            [data-landing-link]:active {
+                text-decoration: none !important;
+            }
+            [data-landing-link="primary"],
+            [data-landing-link="primary"] * {
+                color: #0a0a0b !important;
+            }
+            [data-landing-link="secondary"],
+            [data-landing-link="secondary"] *,
+            [data-landing-link="brand"],
+            [data-landing-link="brand"] * {
+                color: rgba(255,255,255,0.9) !important;
+            }
+            [data-landing-link="nav"],
+            [data-landing-link="nav"] * {
+                color: rgba(255,255,255,0.68) !important;
+            }
+            [data-landing-link="nav"]:hover,
+            [data-landing-link="nav"]:hover * {
+                color: rgba(255,255,255,0.94) !important;
+            }
+            #landing-journey-flow [data-landing-journey-arrow] {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                text-align: center !important;
+            }
+            #landing-founder-section,
+            #landing-comparison-section {
+                width: 100% !important;
+                display: flex !important;
+                justify-content: center !important;
+            }
+            #landing-founder-section > div,
+            #landing-comparison-section > div {
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            #landing-comparison-section [data-landing-comparison-table] {
+                margin-left: auto !important;
+                margin-right: auto !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+            }
+            #landing-comparison-section [data-landing-comparison-table]::-webkit-scrollbar {
+                height: 4px;
+            }
+            #landing-comparison-section [data-landing-comparison-table]::-webkit-scrollbar-thumb {
+                background: rgba(255,255,255,0.16);
+                border-radius: 999px;
+            }
+            #landing-comparison-section [data-landing-comparison-grid] {
+                grid-template-columns: minmax(300px, 2fr) repeat(3, minmax(128px, 1fr)) !important;
+                min-width: 760px;
+            }
+            #landing-comparison-section [data-landing-comparison-grid] > * {
+                min-width: 0;
+            }
+            #landing-comparison-section [data-landing-comparison-label] {
+                text-align: left !important;
+            }
             #landing-journey-flow.journey-visible [data-landing-journey-item="1"] {
                 opacity: 1;
                 transform: translateY(0);
@@ -29043,6 +29156,9 @@ def landing_page():
                 }
                 #landing-journey-flow {
                     max-width: 100% !important;
+                }
+                #landing-comparison-section [data-landing-comparison-grid] {
+                    min-width: 680px;
                 }
             }
         """),
