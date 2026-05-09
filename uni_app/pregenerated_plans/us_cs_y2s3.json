@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Orientation: Algorithm design goals and problem specification",
+      "Module roadmap: how algorithm design goals and problem specification fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Practice: Asymptotic analysis: Big O, Omega, Theta",
+      "Applied focus: connect asymptotic analysis: Big O, Omega, Theta to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Lab: Worst-case, average-case, and amortized analysis",
+      "Applied focus: connect worst-case, average-case, and amortized analysis to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Tutorial: Recurrences and the Master Theorem intuition",
+      "Applied focus: connect recurrences and the Master Theorem intuition to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Theory: Divide and conquer: merge sort and binary search",
+      "Applied focus: connect divide and conquer: merge sort and binary search to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Practice: Quicksort analysis and randomized algorithms",
+      "Applied focus: connect quicksort analysis and randomized algorithms to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Lab: Selection algorithms and order statistics",
+      "Applied focus: connect selection algorithms and order statistics to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Tutorial: Greedy algorithms and exchange arguments",
+      "Applied focus: connect greedy algorithms and exchange arguments to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Theory: Interval scheduling and activity selection",
+      "Applied focus: connect interval scheduling and activity selection to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Practice: Minimum spanning trees: Kruskal and Prim",
+      "Applied focus: connect minimum spanning trees: Kruskal and Prim to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Lab: Shortest paths: Dijkstra and Bellman-Ford overview",
+      "Applied focus: connect shortest paths: Dijkstra and Bellman-Ford overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Tutorial: Dynamic programming principles",
+      "Applied focus: connect dynamic programming principles to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Theory: Dynamic programming on sequences: LIS and edit distance",
+      "Applied focus: connect dynamic programming on sequences: LIS and edit distance to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Practice: Dynamic programming on grids and knapsack",
+      "Applied focus: connect dynamic programming on grids and knapsack to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Lab: Graph traversal applications: topological sort and SCCs",
+      "Applied focus: connect graph traversal applications: topological sort and SCCs to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Tutorial: Network flow intuition and max-flow applications",
+      "Applied focus: connect network flow intuition and max-flow applications to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Theory: String matching overview",
+      "Applied focus: connect string matching overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Practice: Hashing and randomized data structures",
+      "Applied focus: connect hashing and randomized data structures to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Lab: Lower bounds and comparison sorting limits",
+      "Applied focus: connect lower bounds and comparison sorting limits to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Tutorial: NP, reductions, and intractability overview",
+      "Applied focus: connect nP, reductions, and intractability overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Theory: Approximation and heuristic algorithms overview",
+      "Applied focus: connect approximation and heuristic algorithms overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Practice: Correctness proofs with invariants and induction",
+      "Applied focus: connect correctness proofs with invariants and induction to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Lab: implement and benchmark sorting algorithms",
+      "Applied focus: connect implement and benchmark sorting algorithms to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Lab: implement graph algorithms",
+      "Applied focus: connect implement graph algorithms to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Lab: solve a dynamic programming problem",
+      "Applied focus: connect solve a dynamic programming problem to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Tutorial: recurrence and proof practice",
+      "Applied focus: connect recurrence and proof practice to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Review: algorithms design pattern guide",
+      "Exam readiness: consolidate algorithms analysis and design notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CS",
+    "unit": "Algorithms Analysis and Design",
+    "topics": [
+      "Self-check: algorithms mixed assessment",
+      "Exam readiness: consolidate algorithms analysis and design notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Orientation: Computer organization from ISA to hardware implementation",
+      "Module roadmap: how computer organization from ISA to hardware implementation fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Practice: Instruction set architecture and machine instructions",
+      "Applied focus: connect instruction set architecture and machine instructions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Lab: Assembly language reading and simple instruction traces",
+      "Applied focus: connect assembly language reading and simple instruction traces to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Tutorial: Registers, ALU, control signals, and datapaths",
+      "Applied focus: connect registers, ALU, control signals, and datapaths to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Theory: Single-cycle and multi-cycle CPU ideas",
+      "Applied focus: connect single-cycle and multi-cycle CPU ideas to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Practice: Pipelining, hazards, forwarding, and stalls",
+      "Applied focus: connect pipelining, hazards, forwarding, and stalls to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Lab: Memory hierarchy and locality",
+      "Applied focus: connect memory hierarchy and locality to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Tutorial: Cache organization: blocks, sets, associativity",
+      "Applied focus: connect cache organization: blocks, sets, associativity to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Theory: Cache performance and miss penalties",
+      "Applied focus: connect cache performance and miss penalties to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Practice: Virtual memory, address translation, and TLBs",
+      "Applied focus: connect virtual memory, address translation, and TLBs to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Lab: Storage systems and I/O buses overview",
+      "Applied focus: connect storage systems and I/O buses overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Tutorial: Interrupts, exceptions, and system-call entry",
+      "Applied focus: connect interrupts, exceptions, and system-call entry to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Theory: Integer arithmetic circuits and overflow",
+      "Applied focus: connect integer arithmetic circuits and overflow to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Practice: Floating-point representation and IEEE-style issues",
+      "Applied focus: connect floating-point representation and IEEE-style issues to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Lab: Performance metrics: CPI, clock rate, and execution time",
+      "Applied focus: connect performance metrics: CPI, clock rate, and execution time to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Tutorial: Parallelism: SIMD, multicore, and GPU overview",
+      "Applied focus: connect parallelism: SIMD, multicore, and GPU overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Theory: Energy, heat, and architecture trade-offs",
+      "Applied focus: connect energy, heat, and architecture trade-offs to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Practice: Compiler, assembler, linker, and loader roles",
+      "Applied focus: connect compiler, assembler, linker, and loader roles to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Lab: Stack frames, calling conventions, and memory layout",
+      "Applied focus: connect stack frames, calling conventions, and memory layout to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Tutorial: Security implications: buffer overflow and memory safety overview",
+      "Applied focus: connect security implications: buffer overflow and memory safety overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Lab: write and trace small assembly snippets",
+      "Applied focus: connect write and trace small assembly snippets to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Lab: measure cache or memory-access behaviour",
+      "Applied focus: connect measure cache or memory-access behaviour to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Lab: inspect executable layout and stack behaviour",
+      "Applied focus: connect inspect executable layout and stack behaviour to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Tutorial: CPU performance calculations",
+      "Applied focus: connect cPU performance calculations to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Tutorial: cache and virtual-memory exercises",
+      "Applied focus: connect cache and virtual-memory exercises to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Case study: architecture choices in modern processors",
+      "Applied focus: connect architecture choices in modern processors to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Review: computer organization map",
+      "Exam readiness: consolidate computer organization and architecture notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CS",
+    "unit": "Computer Organization and Architecture",
+    "topics": [
+      "Self-check: architecture mixed assessment",
+      "Exam readiness: consolidate computer organization and architecture notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Orientation: Vectors, scalars, coordinates, and geometric interpretation",
+      "Module roadmap: how vectors, scalars, coordinates, and geometric interpretation fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Practice: Vector addition, scalar multiplication, and linear combinations",
+      "Applied focus: connect vector addition, scalar multiplication, and linear combinations to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Lab: Dot product, norms, distance, and angles",
+      "Applied focus: connect dot product, norms, distance, and angles to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Matrices as transformations and data structures",
+      "Applied focus: connect matrices as transformations and data structures to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Matrix addition, multiplication, and transpose",
+      "Applied focus: connect matrix addition, multiplication, and transpose to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Practice: Systems of linear equations and augmented matrices",
+      "Applied focus: connect systems of linear equations and augmented matrices to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Lab: Gaussian elimination and row echelon form",
+      "Applied focus: connect gaussian elimination and row echelon form to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Matrix inverses and invertibility conditions",
+      "Applied focus: connect matrix inverses and invertibility conditions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Determinants and geometric meaning",
+      "Applied focus: connect determinants and geometric meaning to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Practice: Vector spaces and subspaces",
+      "Applied focus: connect vector spaces and subspaces to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Lab: Span, linear independence, basis, and dimension",
+      "Applied focus: connect span, linear independence, basis, and dimension to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Column space, null space, rank, and rank-nullity",
+      "Applied focus: connect column space, null space, rank, and rank-nullity to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Orthogonality and projections",
+      "Applied focus: connect orthogonality and projections to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Practice: Least squares and data fitting",
+      "Applied focus: connect least squares and data fitting to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Lab: Eigenvalues and eigenvectors",
+      "Applied focus: connect eigenvalues and eigenvectors to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Diagonalization overview",
+      "Applied focus: connect diagonalization overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Theory: Singular value decomposition intuition",
+      "Applied focus: connect singular value decomposition intuition to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Practice: Linear algebra for graphics transformations",
+      "Applied focus: connect linear algebra for graphics transformations to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Lab: Linear algebra for machine learning features and embeddings",
+      "Applied focus: connect linear algebra for machine learning features and embeddings to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: Numerical stability and conditioning overview",
+      "Applied focus: connect numerical stability and conditioning overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Lab: solve systems with a computational tool",
+      "Applied focus: connect solve systems with a computational tool to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Lab: visualize matrix transformations",
+      "Applied focus: connect visualize matrix transformations to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: elimination and inverse exercises",
+      "Applied focus: connect elimination and inverse exercises to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Tutorial: eigenvalue and projection exercises",
+      "Applied focus: connect eigenvalue and projection exercises to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Review: linear algebra formula and concept sheet",
+      "Applied focus: connect linear algebra formula and concept sheet to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Self-check: linear algebra mixed assessment",
+      "Exam readiness: consolidate linear algebra notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CS",
+    "unit": "Linear Algebra",
+    "topics": [
+      "Weak-area repair: systems, spaces, projections, or eigenvectors",
+      "Exam readiness: consolidate linear algebra notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Orientation: Software engineering lifecycle and professional practice",
+      "Module roadmap: how software engineering lifecycle and professional practice fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Practice: Requirements elicitation and stakeholder analysis",
+      "Applied focus: connect requirements elicitation and stakeholder analysis to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab: Functional and non-functional requirements",
+      "Applied focus: connect functional and non-functional requirements to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Tutorial: User stories, use cases, and acceptance criteria",
+      "Applied focus: connect user stories, use cases, and acceptance criteria to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Architecture basics: layers, components, and interfaces",
+      "Applied focus: connect architecture basics: layers, components, and interfaces to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Practice: Design quality: cohesion, coupling, and modularity",
+      "Applied focus: connect design quality: cohesion, coupling, and modularity to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab: UML class, sequence, and component diagrams",
+      "Applied focus: connect uML class, sequence, and component diagrams to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Tutorial: Version control workflows for teams",
+      "Applied focus: connect version control workflows for teams to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Issue tracking, branching, code reviews, and pull requests",
+      "Applied focus: connect issue tracking, branching, code reviews, and pull requests to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Practice: Testing pyramid: unit, integration, system, and acceptance",
+      "Applied focus: connect testing pyramid: unit, integration, system, and acceptance to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab: Test design from requirements and edge cases",
+      "Applied focus: connect test design from requirements and edge cases to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Tutorial: Continuous integration and automated quality gates",
+      "Applied focus: connect continuous integration and automated quality gates to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Refactoring, technical debt, and maintainability",
+      "Applied focus: connect refactoring, technical debt, and maintainability to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Practice: Documentation for users, developers, and operations",
+      "Applied focus: connect documentation for users, developers, and operations to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab: Agile planning, estimation, and retrospectives",
+      "Applied focus: connect agile planning, estimation, and retrospectives to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Tutorial: Risk management and project communication",
+      "Applied focus: connect risk management and project communication to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Theory: Ethics, privacy, accessibility, and responsible software",
+      "Applied focus: connect ethics, privacy, accessibility, and responsible software to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Practice: Security and reliability requirements in software products",
+      "Applied focus: connect security and reliability requirements in software products to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab: write requirements for a small product",
+      "Applied focus: connect write requirements for a small product to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab: design components and interfaces",
+      "Applied focus: connect design components and interfaces to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab: implement tests from acceptance criteria",
+      "Applied focus: connect implement tests from acceptance criteria to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Lab: review and refactor a small codebase",
+      "Applied focus: connect review and refactor a small codebase to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Tutorial: requirements and design scenarios",
+      "Applied focus: connect requirements and design scenarios to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Tutorial: testing and maintenance scenarios",
+      "Applied focus: connect testing and maintenance scenarios to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Case study: team project delivery workflow",
+      "Applied focus: connect team project delivery workflow to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Review: software engineering lifecycle map",
+      "Exam readiness: consolidate software engineering notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CS",
+    "unit": "Software Engineering",
+    "topics": [
+      "Self-check: software engineering mini assessment",
+      "Exam readiness: consolidate software engineering notes, worked examples, and weak areas"
+    ]
+  }
+]

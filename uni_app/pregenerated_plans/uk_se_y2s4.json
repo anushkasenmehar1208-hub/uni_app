@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Orientation: Quality assurance versus testing in software engineering",
+      "Module roadmap: how quality assurance versus testing in software engineering supports a UK Software Engineering progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Practice: Quality attributes: reliability, usability, security, maintainability",
+      "Applied focus: connect quality attributes: reliability, usability, security, maintainability to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: Test levels: unit, integration, system, and acceptance",
+      "Applied focus: connect test levels: unit, integration, system, and acceptance to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Tutorial: Black-box test design from requirements",
+      "Applied focus: connect black-box test design from requirements to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Theory: White-box test design from control flow",
+      "Applied focus: connect white-box test design from control flow to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Practice: Equivalence partitioning and boundary-value analysis",
+      "Applied focus: connect equivalence partitioning and boundary-value analysis to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: Decision tables and state-transition testing",
+      "Applied focus: connect decision tables and state-transition testing to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Tutorial: Test doubles: stubs, fakes, mocks, and spies",
+      "Applied focus: connect test doubles: stubs, fakes, mocks, and spies to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Theory: Automated unit testing and test naming",
+      "Applied focus: connect automated unit testing and test naming to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Practice: Integration testing and contract testing",
+      "Applied focus: connect integration testing and contract testing to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: End-to-end testing and user journeys",
+      "Applied focus: connect end-to-end testing and user journeys to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Tutorial: Regression testing and change impact analysis",
+      "Applied focus: connect regression testing and change impact analysis to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Theory: Static analysis, linting, formatting, and code quality gates",
+      "Applied focus: connect static analysis, linting, formatting, and code quality gates to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Practice: Code reviews as quality assurance",
+      "Applied focus: connect code reviews as quality assurance to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: Continuous integration and build pipelines",
+      "Applied focus: connect continuous integration and build pipelines to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Tutorial: Defect reporting, triage, severity, and priority",
+      "Applied focus: connect defect reporting, triage, severity, and priority to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Theory: Performance, load, and stress testing overview",
+      "Applied focus: connect performance, load, and stress testing overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Practice: Security testing and vulnerability checks",
+      "Applied focus: connect security testing and vulnerability checks to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: Accessibility and usability testing in QA",
+      "Applied focus: connect accessibility and usability testing in QA to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Tutorial: Test coverage, mutation testing, and limits of metrics",
+      "Applied focus: connect test coverage, mutation testing, and limits of metrics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: write tests for a small module",
+      "Applied focus: connect write tests for a small module to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: build a CI quality check workflow",
+      "Applied focus: connect build a CI quality check workflow to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: find and report defects in a sample app",
+      "Applied focus: connect find and report defects in a sample app to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Lab: create an acceptance-test checklist",
+      "Applied focus: connect create an acceptance-test checklist to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Tutorial: test-case design exercises",
+      "Applied focus: connect test-case design exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Case study: preventing regression in a changing codebase",
+      "Applied focus: connect preventing regression in a changing codebase to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Review: QA strategy checklist",
+      "Exam readiness: consolidate software testing and quality assurance notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "SE",
+    "unit": "Software Testing and Quality Assurance",
+    "topics": [
+      "Self-check: testing and quality assurance assessment",
+      "Exam readiness: consolidate software testing and quality assurance notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Orientation: Project management in software engineering contexts",
+      "Module roadmap: how project management in software engineering contexts supports a UK Software Engineering progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Practice: Agile values, principles, and empirical process control",
+      "Applied focus: connect agile values, principles, and empirical process control to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Lab: Scrum roles, events, artefacts, and sprint cadence",
+      "Applied focus: connect scrum roles, events, artefacts, and sprint cadence to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Tutorial: Kanban workflow, WIP limits, and cycle time",
+      "Applied focus: connect kanban workflow, WIP limits, and cycle time to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Theory: Product vision, roadmap, and release planning",
+      "Applied focus: connect product vision, roadmap, and release planning to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Practice: Backlog refinement and prioritisation",
+      "Applied focus: connect backlog refinement and prioritisation to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Lab: Estimation with story points and uncertainty",
+      "Applied focus: connect estimation with story points and uncertainty to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Tutorial: Sprint planning, daily coordination, review, and retrospective",
+      "Applied focus: connect sprint planning, daily coordination, review, and retrospective to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Theory: Risk, assumptions, issues, and dependency tracking",
+      "Applied focus: connect risk, assumptions, issues, and dependency tracking to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Practice: Stakeholder communication and expectation management",
+      "Applied focus: connect stakeholder communication and expectation management to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Lab: Team agreements and collaboration norms",
+      "Hands-on task: apply team agreements and collaboration norms and record evidence for portfolio or coursework review"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Tutorial: Definition of ready and definition of done",
+      "Applied focus: connect definition of ready and definition of done to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Theory: Metrics: velocity, throughput, burn-up, and burn-down",
+      "Applied focus: connect metrics: velocity, throughput, burn-up, and burn-down to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Practice: Managing scope change and technical debt",
+      "Applied focus: connect managing scope change and technical debt to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Lab: Documentation in agile projects",
+      "Engineering focus: connect documentation in agile projects to collaborative delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Tutorial: Project governance, ethics, and professional accountability",
+      "Engineering focus: connect project governance, ethics, and professional accountability to collaborative delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Theory: Procurement, budgeting, and resource awareness overview",
+      "Applied focus: connect procurement, budgeting, and resource awareness overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Practice: DevOps culture and collaboration across delivery stages",
+      "Hands-on task: apply devOps culture and collaboration across delivery stages and record evidence for portfolio or coursework review"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Lab: create a product backlog from a client brief",
+      "Applied focus: connect create a product backlog from a client brief to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Lab: plan a sprint and identify delivery risks",
+      "Applied focus: connect plan a sprint and identify delivery risks to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Lab: run a lightweight retrospective",
+      "Applied focus: connect run a lightweight retrospective to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Lab: build a release plan with milestones",
+      "Applied focus: connect build a release plan with milestones to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Tutorial: project failure analysis",
+      "Engineering focus: connect project failure analysis to collaborative delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Tutorial: prioritisation and estimation practice",
+      "Applied focus: connect prioritisation and estimation practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Case study: agile team project with external client",
+      "Engineering focus: connect agile team project with external client to collaborative delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Review: agile and project management toolkit",
+      "Exam readiness: consolidate agile and project management notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "SE",
+    "unit": "Agile and Project Management",
+    "topics": [
+      "Self-check: project management scenario assessment",
+      "Exam readiness: consolidate agile and project management notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Orientation: Mobile platforms, app stores, and device constraints",
+      "Module roadmap: how mobile platforms, app stores, and device constraints supports a UK Software Engineering progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Practice: Mobile UI patterns and navigation structures",
+      "Applied focus: connect mobile UI patterns and navigation structures to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: Responsive layouts, density, orientation, and safe areas",
+      "Applied focus: connect responsive layouts, density, orientation, and safe areas to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Tutorial: Touch interaction and gesture design",
+      "Applied focus: connect touch interaction and gesture design to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: State management in mobile applications",
+      "Applied focus: connect state management in mobile applications to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Practice: Local storage and offline-first thinking",
+      "Applied focus: connect local storage and offline-first thinking to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: Networking, API calls, and unreliable connectivity",
+      "Applied focus: connect networking, API calls, and unreliable connectivity to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Tutorial: Authentication flows on mobile devices",
+      "Applied focus: connect authentication flows on mobile devices to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Push notifications and background work overview",
+      "Applied focus: connect push notifications and background work overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Practice: Camera, location, sensors, and permissions",
+      "Applied focus: connect camera, location, sensors, and permissions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: Accessibility on mobile platforms",
+      "Applied focus: connect accessibility on mobile platforms to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Tutorial: Performance, battery use, and resource management",
+      "Applied focus: connect performance, battery use, and resource management to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Security: secure storage, transport, and permission minimization",
+      "Applied focus: connect security: secure storage, transport, and permission minimization to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Practice: Testing on simulators, emulators, and physical devices",
+      "Applied focus: connect testing on simulators, emulators, and physical devices to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: Crash reporting and analytics basics",
+      "Applied focus: connect crash reporting and analytics basics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Tutorial: Release builds, signing, and deployment workflow",
+      "Applied focus: connect release builds, signing, and deployment workflow to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Theory: Cross-platform versus native development trade-offs",
+      "Applied focus: connect cross-platform versus native development trade-offs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Practice: Mobile architecture patterns: MVC, MVVM, and clean boundaries",
+      "Applied focus: connect mobile architecture patterns: MVC, MVVM, and clean boundaries to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: create a small mobile screen flow",
+      "Applied focus: connect create a small mobile screen flow to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: connect a mobile app to a JSON API",
+      "Applied focus: connect connect a mobile app to a JSON API to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: add local storage and offline behaviour",
+      "Applied focus: connect add local storage and offline behaviour to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Lab: test accessibility and responsive states",
+      "Applied focus: connect test accessibility and responsive states to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Tutorial: mobile UX critique",
+      "Applied focus: connect mobile UX critique to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Tutorial: permissions and security scenarios",
+      "Applied focus: connect permissions and security scenarios to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Case study: designing a maintainable mobile feature",
+      "Applied focus: connect designing a maintainable mobile feature to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Review: mobile application development checklist",
+      "Applied focus: connect mobile application development checklist to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Self-check: mobile mini project plan",
+      "Exam readiness: consolidate mobile application development notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "SE",
+    "unit": "Mobile Application Development",
+    "topics": [
+      "Weak-area repair: UI, data, networking, testing, or deployment",
+      "Exam readiness: consolidate mobile application development notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Orientation: HCI goals for usable and useful software systems",
+      "Module roadmap: how hCI goals for usable and useful software systems supports a UK Software Engineering progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Human perception, cognition, memory, and attention",
+      "Applied focus: connect human perception, cognition, memory, and attention to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: User research: interviews, observation, surveys, and analytics",
+      "Applied focus: connect user research: interviews, observation, surveys, and analytics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: Personas, scenarios, journeys, and task analysis",
+      "Applied focus: connect personas, scenarios, journeys, and task analysis to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Theory: Usability requirements and success metrics",
+      "Applied focus: connect usability requirements and success metrics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Information architecture and navigation design",
+      "Applied focus: connect information architecture and navigation design to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: Interaction design patterns and affordances",
+      "Applied focus: connect interaction design patterns and affordances to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: Visual hierarchy, layout, colour, and typography basics",
+      "Applied focus: connect visual hierarchy, layout, colour, and typography basics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Theory: Wireframes, prototypes, and iterative design",
+      "Applied focus: connect wireframes, prototypes, and iterative design to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Heuristic evaluation and expert review",
+      "Applied focus: connect heuristic evaluation and expert review to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: Usability testing plans, tasks, and consent",
+      "Applied focus: connect usability testing plans, tasks, and consent to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: Accessibility standards and inclusive design",
+      "Applied focus: connect accessibility standards and inclusive design to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Theory: Designing forms, errors, feedback, and recovery flows",
+      "Applied focus: connect designing forms, errors, feedback, and recovery flows to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Designing for mobile, web, and cross-device workflows",
+      "Applied focus: connect designing for mobile, web, and cross-device workflows to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: Data visualization and dashboard interaction basics",
+      "Applied focus: connect data visualization and dashboard interaction basics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: Ethics, dark patterns, consent, and privacy in interfaces",
+      "Applied focus: connect ethics, dark patterns, consent, and privacy in interfaces to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: create a user-research plan",
+      "Applied focus: connect create a user-research plan to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: sketch alternative interaction flows",
+      "Applied focus: connect sketch alternative interaction flows to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: build and critique a clickable prototype",
+      "Applied focus: connect build and critique a clickable prototype to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: run a small usability test and analyse findings",
+      "Applied focus: connect run a small usability test and analyse findings to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: heuristic evaluation practice",
+      "Applied focus: connect heuristic evaluation practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: accessibility audit practice",
+      "Applied focus: connect accessibility audit practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Case study: redesigning a poor software workflow",
+      "Applied focus: connect redesigning a poor software workflow to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Review: HCI methods and when to use them",
+      "Applied focus: connect hCI methods and when to use them to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Self-check: HCI design and evaluation assessment",
+      "Applied focus: connect hCI design and evaluation assessment to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Weak-area repair: research, prototyping, accessibility, or evaluation",
+      "Exam readiness: consolidate human-computer interaction notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "SE",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Self-check: Integrated practice: connect HCI findings to software requirements",
+      "Exam readiness: consolidate human-computer interaction notes, examples, and weak areas"
+    ]
+  }
+]

@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Orientation: Operating-system purpose, abstractions, and responsibilities",
+      "Module roadmap: how operating-system purpose, abstractions, and responsibilities supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Practice: Kernel mode, user mode, and system calls",
+      "Applied focus: connect kernel mode, user mode, and system calls to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Lab: Processes, process states, and process control blocks",
+      "Applied focus: connect processes, process states, and process control blocks to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Tutorial: Threads and shared address spaces",
+      "Applied focus: connect threads and shared address spaces to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Theory: CPU scheduling goals and common algorithms",
+      "Applied focus: connect cPU scheduling goals and common algorithms to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Practice: Context switching and scheduling overhead",
+      "Applied focus: connect context switching and scheduling overhead to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Lab: Concurrency problems and race conditions",
+      "Applied focus: connect concurrency problems and race conditions to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Tutorial: Locks, semaphores, monitors, and deadlock basics",
+      "Applied focus: connect locks, semaphores, monitors, and deadlock basics to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Theory: Memory management and address translation",
+      "Applied focus: connect memory management and address translation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Practice: Paging, segmentation, and page tables",
+      "Applied focus: connect paging, segmentation, and page tables to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Lab: Virtual memory and page replacement",
+      "Applied focus: connect virtual memory and page replacement to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Tutorial: File systems, directories, metadata, and permissions",
+      "Applied focus: connect file systems, directories, metadata, and permissions to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Theory: I/O management, buffering, caching, and device drivers",
+      "Applied focus: connect i/O management, buffering, caching, and device drivers to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Practice: Boot process and service management overview",
+      "Applied focus: connect boot process and service management overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Lab: Shells, scripts, and process pipelines",
+      "Applied focus: connect shells, scripts, and process pipelines to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Tutorial: Security boundaries in operating systems",
+      "Applied focus: connect security boundaries in operating systems to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Theory: Virtualization and containers overview",
+      "Applied focus: connect virtualization and containers overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Practice: Performance monitoring with OS tools",
+      "Applied focus: connect performance monitoring with OS tools to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Lab: inspect processes and system resources",
+      "Applied focus: connect inspect processes and system resources to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Lab: write shell scripts for file and process tasks",
+      "Applied focus: connect write shell scripts for file and process tasks to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Lab: concurrency simulation and race detection",
+      "Applied focus: connect concurrency simulation and race detection to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Lab: memory and file-system observation",
+      "Applied focus: connect memory and file-system observation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Tutorial: scheduling and memory worked problems",
+      "Applied focus: connect scheduling and memory worked problems to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Tutorial: deadlock and synchronization exercises",
+      "Applied focus: connect deadlock and synchronization exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Case study: Unix-like OS design choices",
+      "Applied focus: connect unix-like OS design choices to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Review: operating-system architecture map",
+      "Applied focus: connect operating-system architecture map to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Self-check: OS exam-style short answers",
+      "Exam readiness: consolidate operating systems notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CS",
+    "unit": "Operating Systems",
+    "topics": [
+      "Weak-area repair: processes, memory, files, or concurrency",
+      "Exam readiness: consolidate operating systems notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Orientation: Database-system purpose and data-management trade-offs",
+      "Module roadmap: how database-system purpose and data-management trade-offs supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: Relational model: tables, tuples, attributes, and keys",
+      "Applied focus: connect relational model: tables, tuples, attributes, and keys to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: Entity-relationship modelling and cardinality",
+      "Applied focus: connect entity-relationship modelling and cardinality to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: Mapping ER models to relational schemas",
+      "Applied focus: connect mapping ER models to relational schemas to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Theory: Functional dependencies and normalization goals",
+      "Applied focus: connect functional dependencies and normalization goals to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: First, second, and third normal form",
+      "Applied focus: connect first, second, and third normal form to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: SQL data definition and table constraints",
+      "Applied focus: connect sQL data definition and table constraints to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: SQL queries: selection, projection, and filtering",
+      "Applied focus: connect sQL queries: selection, projection, and filtering to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Theory: Joins, grouping, aggregation, and subqueries",
+      "Applied focus: connect joins, grouping, aggregation, and subqueries to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: Views and derived data",
+      "Applied focus: connect views and derived data to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: Indexes and query-performance intuition",
+      "Applied focus: connect indexes and query-performance intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: Transactions and ACID properties",
+      "Applied focus: connect transactions and ACID properties to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Theory: Concurrency control and isolation anomalies",
+      "Applied focus: connect concurrency control and isolation anomalies to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: Backup, recovery, and data integrity",
+      "Applied focus: connect backup, recovery, and data integrity to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: Database security and access control",
+      "Applied focus: connect database security and access control to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: NoSQL overview and when relational design fits better",
+      "Applied focus: connect noSQL overview and when relational design fits better to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Theory: Application-database interaction patterns",
+      "Applied focus: connect application-database interaction patterns to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: design a small relational schema",
+      "Applied focus: connect design a small relational schema to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: write SQL queries from requirements",
+      "Applied focus: connect write SQL queries from requirements to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: normalize a flawed data model",
+      "Applied focus: connect normalize a flawed data model to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: inspect query plans and indexes",
+      "Applied focus: connect inspect query plans and indexes to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: ERD and normalization exercises",
+      "Applied focus: connect eRD and normalization exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: SQL joins and aggregation practice",
+      "Applied focus: connect sQL joins and aggregation practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Case study: database design for a web application",
+      "Applied focus: connect database design for a web application to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Review: database systems checklist",
+      "Applied focus: connect database systems checklist to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Self-check: SQL and design mixed questions",
+      "Exam readiness: consolidate database systems notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CS",
+    "unit": "Database Systems",
+    "topics": [
+      "Weak-area repair: modelling, SQL, or transactions",
+      "Exam readiness: consolidate database systems notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Orientation: Network goals, services, edge, core, and access networks",
+      "Module roadmap: how network goals, services, edge, core, and access networks supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Practice: Layered models: OSI, TCP/IP, and encapsulation",
+      "Applied focus: connect layered models: OSI, TCP/IP, and encapsulation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: Physical and data-link layer concepts",
+      "Applied focus: connect physical and data-link layer concepts to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Tutorial: Ethernet, MAC addressing, switching, and ARP",
+      "Applied focus: connect ethernet, MAC addressing, switching, and ARP to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: IP addressing, subnetting, and CIDR notation",
+      "Applied focus: connect iP addressing, subnetting, and CIDR notation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Practice: Routing, forwarding tables, and path selection",
+      "Applied focus: connect routing, forwarding tables, and path selection to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: ICMP and network diagnostic tools",
+      "Applied focus: connect iCMP and network diagnostic tools to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Tutorial: UDP and connectionless transport",
+      "Applied focus: connect uDP and connectionless transport to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: TCP connection setup, reliability, and flow control",
+      "Applied focus: connect tCP connection setup, reliability, and flow control to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Practice: Congestion control and network performance",
+      "Applied focus: connect congestion control and network performance to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: DNS, naming, and resolution workflow",
+      "Applied focus: connect dNS, naming, and resolution workflow to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Tutorial: HTTP, HTTPS, and web protocol behaviour",
+      "Applied focus: connect hTTP, HTTPS, and web protocol behaviour to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Email, SSH, and common application protocols",
+      "Applied focus: connect email, SSH, and common application protocols to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Practice: Wireless networks and mobile connectivity",
+      "Applied focus: connect wireless networks and mobile connectivity to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: Network security basics: TLS, firewalls, and VPNs",
+      "Applied focus: connect network security basics: TLS, firewalls, and VPNs to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Tutorial: Network measurement: latency, throughput, jitter, loss",
+      "Applied focus: connect network measurement: latency, throughput, jitter, loss to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Theory: Client-server, peer-to-peer, and cloud networking",
+      "Applied focus: connect client-server, peer-to-peer, and cloud networking to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Practice: Socket programming overview",
+      "Applied focus: connect socket programming overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: inspect packets with a network analyser",
+      "Applied focus: connect inspect packets with a network analyser to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: calculate subnets and address ranges",
+      "Applied focus: connect calculate subnets and address ranges to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: trace DNS and HTTP requests",
+      "Applied focus: connect trace DNS and HTTP requests to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Lab: build a simple socket client-server demo",
+      "Applied focus: connect build a simple socket client-server demo to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Tutorial: layered protocol problem practice",
+      "Applied focus: connect layered protocol problem practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Tutorial: TCP/IP and subnetting exercises",
+      "Applied focus: connect tCP/IP and subnetting exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Case study: web request from browser to server",
+      "Applied focus: connect web request from browser to server to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Review: computer networks concept map",
+      "Applied focus: connect computer networks concept map to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Self-check: networking exam-style questions",
+      "Exam readiness: consolidate computer networks notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CS",
+    "unit": "Computer Networks",
+    "topics": [
+      "Weak-area repair: addressing, transport, or application protocols",
+      "Exam readiness: consolidate computer networks notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Orientation: Software engineering purpose, scale, and professional practice",
+      "Module roadmap: how software engineering purpose, scale, and professional practice supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Practice: Software process models: waterfall, iterative, and agile",
+      "Applied focus: connect software process models: waterfall, iterative, and agile to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Lab: Requirements elicitation and stakeholder analysis",
+      "Applied focus: connect requirements elicitation and stakeholder analysis to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Tutorial: Functional and non-functional requirements",
+      "Applied focus: connect functional and non-functional requirements to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Theory: User stories, acceptance criteria, and prioritisation",
+      "Applied focus: connect user stories, acceptance criteria, and prioritisation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Practice: Use cases and domain modelling",
+      "Applied focus: connect use cases and domain modelling to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Lab: Architecture basics: layers, components, and interfaces",
+      "Applied focus: connect architecture basics: layers, components, and interfaces to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Tutorial: UML sequence and class diagrams for communication",
+      "Applied focus: connect uML sequence and class diagrams for communication to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Theory: Design quality: cohesion, coupling, and modularity",
+      "Applied focus: connect design quality: cohesion, coupling, and modularity to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Practice: Version control workflow for team development",
+      "Applied focus: connect version control workflow for team development to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Lab: Issue tracking, branching, reviews, and code ownership",
+      "Applied focus: connect issue tracking, branching, reviews, and code ownership to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Tutorial: Testing pyramid: unit, integration, system, acceptance",
+      "Applied focus: connect testing pyramid: unit, integration, system, acceptance to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Theory: Test design from requirements and edge cases",
+      "Applied focus: connect test design from requirements and edge cases to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Practice: Continuous integration and automated quality checks",
+      "Applied focus: connect continuous integration and automated quality checks to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Lab: Refactoring and technical debt management",
+      "Applied focus: connect refactoring and technical debt management to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Tutorial: Documentation for users, developers, and maintainers",
+      "Applied focus: connect documentation for users, developers, and maintainers to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Theory: Risk management and software project estimation",
+      "Applied focus: connect risk management and software project estimation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Practice: Ethics, privacy, accessibility, and professional responsibility",
+      "Applied focus: connect ethics, privacy, accessibility, and professional responsibility to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Lab: write requirements for a small system",
+      "Applied focus: connect write requirements for a small system to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Lab: design an architecture and component interface",
+      "Applied focus: connect design an architecture and component interface to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Lab: create tests from acceptance criteria",
+      "Applied focus: connect create tests from acceptance criteria to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Lab: review and refactor a small codebase",
+      "Applied focus: connect review and refactor a small codebase to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Tutorial: requirements and design scenarios",
+      "Applied focus: connect requirements and design scenarios to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Tutorial: testing and maintenance problem practice",
+      "Applied focus: connect testing and maintenance problem practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Case study: team project planning and retrospectives",
+      "Applied focus: connect team project planning and retrospectives to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Review: software engineering lifecycle map",
+      "Exam readiness: consolidate software engineering principles notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CS",
+    "unit": "Software Engineering Principles",
+    "topics": [
+      "Self-check: SE principles mini assessment",
+      "Exam readiness: consolidate software engineering principles notes, examples, and weak areas"
+    ]
+  }
+]

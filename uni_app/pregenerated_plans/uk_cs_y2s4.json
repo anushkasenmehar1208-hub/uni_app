@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Orientation: AI scope, history, applications, and limitations",
+      "Module roadmap: how aI scope, history, applications, and limitations supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Practice: Intelligent agents, environments, and rational behaviour",
+      "Applied focus: connect intelligent agents, environments, and rational behaviour to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Lab: Uninformed search: breadth-first and depth-first search",
+      "Applied focus: connect uninformed search: breadth-first and depth-first search to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Tutorial: Informed search: heuristics and A-star intuition",
+      "Applied focus: connect informed search: heuristics and A-star intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Theory: Constraint satisfaction problems",
+      "Applied focus: connect constraint satisfaction problems to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Practice: Game playing, minimax, and alpha-beta pruning",
+      "Applied focus: connect game playing, minimax, and alpha-beta pruning to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Lab: Knowledge representation and logical inference",
+      "Applied focus: connect knowledge representation and logical inference to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Tutorial: Rule-based systems and expert-system reasoning",
+      "Applied focus: connect rule-based systems and expert-system reasoning to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Theory: Planning concepts and state-space modelling",
+      "Applied focus: connect planning concepts and state-space modelling to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Practice: Uncertainty and probability in AI systems",
+      "Applied focus: connect uncertainty and probability in AI systems to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Lab: Naive Bayes and simple probabilistic classification",
+      "Applied focus: connect naive Bayes and simple probabilistic classification to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Tutorial: Machine learning workflow and train-test evaluation",
+      "Applied focus: connect machine learning workflow and train-test evaluation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Theory: Linear models and classification intuition",
+      "Applied focus: connect linear models and classification intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Practice: Decision trees and model interpretability",
+      "Applied focus: connect decision trees and model interpretability to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Lab: Clustering and unsupervised learning overview",
+      "Applied focus: connect clustering and unsupervised learning overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Tutorial: Neural-network foundations at conceptual level",
+      "Applied focus: connect neural-network foundations at conceptual level to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Theory: Natural language processing overview",
+      "Applied focus: connect natural language processing overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Practice: Computer vision overview",
+      "Applied focus: connect computer vision overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Lab: Reinforcement learning concepts",
+      "Applied focus: connect reinforcement learning concepts to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Tutorial: AI evaluation: accuracy, precision, recall, and confusion matrix",
+      "Applied focus: connect aI evaluation: accuracy, precision, recall, and confusion matrix to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Theory: Bias, fairness, explainability, and responsible AI",
+      "Applied focus: connect bias, fairness, explainability, and responsible AI to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Lab: implement a simple search problem",
+      "Applied focus: connect implement a simple search problem to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Lab: build a small classifier and evaluate it",
+      "Applied focus: connect build a small classifier and evaluate it to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Lab: analyse an AI failure case",
+      "Applied focus: connect analyse an AI failure case to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Tutorial: search and probability exercises",
+      "Applied focus: connect search and probability exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Tutorial: machine-learning interpretation practice",
+      "Applied focus: connect machine-learning interpretation practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Review: AI methods comparison table",
+      "Exam readiness: consolidate artificial intelligence notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CS",
+    "unit": "Artificial Intelligence",
+    "topics": [
+      "Self-check: AI mixed question set",
+      "Exam readiness: consolidate artificial intelligence notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Orientation: Formal languages and why theory matters in CS",
+      "Module roadmap: how formal languages and why theory matters in CS supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Practice: Alphabets, strings, languages, and operations",
+      "Applied focus: connect alphabets, strings, languages, and operations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Lab: Regular expressions and regular languages",
+      "Applied focus: connect regular expressions and regular languages to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: Finite automata: DFA design",
+      "Applied focus: connect finite automata: DFA design to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Theory: Finite automata: NFA and equivalence intuition",
+      "Applied focus: connect finite automata: NFA and equivalence intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Practice: Converting between regex and automata at overview level",
+      "Applied focus: connect converting between regex and automata at overview level to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Lab: Closure properties of regular languages",
+      "Applied focus: connect closure properties of regular languages to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: Pumping lemma intuition for regular languages",
+      "Applied focus: connect pumping lemma intuition for regular languages to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Theory: Context-free grammars and derivations",
+      "Applied focus: connect context-free grammars and derivations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Practice: Parse trees and ambiguity",
+      "Applied focus: connect parse trees and ambiguity to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Lab: Pushdown automata concept",
+      "Applied focus: connect pushdown automata concept to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: Syntax, parsing, and programming-language links",
+      "Applied focus: connect syntax, parsing, and programming-language links to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Theory: Turing machines as a model of computation",
+      "Applied focus: connect turing machines as a model of computation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Practice: Decidability and recognisability",
+      "Applied focus: connect decidability and recognisability to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Lab: The halting problem and undecidability",
+      "Applied focus: connect the halting problem and undecidability to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: Reductions and proof strategy overview",
+      "Applied focus: connect reductions and proof strategy overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Theory: Time complexity classes: P, NP, and NP-completeness",
+      "Applied focus: connect time complexity classes: P, NP, and NP-completeness to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Practice: Polynomial-time reductions at beginner level",
+      "Applied focus: connect polynomial-time reductions at beginner level to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Lab: Computability limits and practical consequences",
+      "Applied focus: connect computability limits and practical consequences to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: Formal specification links to software correctness",
+      "Applied focus: connect formal specification links to software correctness to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: automata construction exercises",
+      "Applied focus: connect automata construction exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: grammar and parsing exercises",
+      "Applied focus: connect grammar and parsing exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: decidability short-answer practice",
+      "Applied focus: connect decidability short-answer practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Tutorial: complexity classification examples",
+      "Applied focus: connect complexity classification examples to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Review: theory of computation map",
+      "Applied focus: connect theory of computation map to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Self-check: automata, grammars, and complexity",
+      "Exam readiness: consolidate theory of computation notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CS",
+    "unit": "Theory of Computation",
+    "topics": [
+      "Weak-area repair: formal definitions and proof sketches",
+      "Exam readiness: consolidate theory of computation notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Orientation: Security goals: confidentiality, integrity, availability",
+      "Module roadmap: how security goals: confidentiality, integrity, availability supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Practice: Threat modelling, attack surfaces, and trust boundaries",
+      "Applied focus: connect threat modelling, attack surfaces, and trust boundaries to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Lab: Risk, impact, likelihood, and mitigation planning",
+      "Applied focus: connect risk, impact, likelihood, and mitigation planning to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Tutorial: Authentication, authorization, and access control",
+      "Applied focus: connect authentication, authorization, and access control to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Theory: Password storage, hashing, salting, and MFA",
+      "Applied focus: connect password storage, hashing, salting, and MFA to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Practice: Symmetric encryption and key-management basics",
+      "Applied focus: connect symmetric encryption and key-management basics to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Lab: Public-key cryptography and digital signatures",
+      "Applied focus: connect public-key cryptography and digital signatures to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Tutorial: TLS, certificates, and secure channels",
+      "Applied focus: connect tLS, certificates, and secure channels to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Theory: Network security: firewalls, IDS, VPNs, and segmentation",
+      "Applied focus: connect network security: firewalls, IDS, VPNs, and segmentation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Practice: Web security: XSS, CSRF, SQL injection, and input validation",
+      "Applied focus: connect web security: XSS, CSRF, SQL injection, and input validation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Lab: Secure coding principles and dependency risk",
+      "Applied focus: connect secure coding principles and dependency risk to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Tutorial: Operating-system security and privilege separation",
+      "Applied focus: connect operating-system security and privilege separation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Theory: Malware, phishing, and social engineering",
+      "Applied focus: connect malware, phishing, and social engineering to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Practice: Security logging, monitoring, and incident response",
+      "Applied focus: connect security logging, monitoring, and incident response to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Lab: Privacy, data protection, and secure data handling",
+      "Applied focus: connect privacy, data protection, and secure data handling to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Tutorial: Cloud and API security overview",
+      "Applied focus: connect cloud and API security overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Theory: Vulnerability assessment and responsible disclosure",
+      "Applied focus: connect vulnerability assessment and responsible disclosure to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Practice: Usable security and human factors",
+      "Applied focus: connect usable security and human factors to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Lab: analyse a simple threat model",
+      "Applied focus: connect analyse a simple threat model to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Lab: fix input-validation vulnerabilities",
+      "Applied focus: connect fix input-validation vulnerabilities to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Lab: inspect TLS and certificate information",
+      "Applied focus: connect inspect TLS and certificate information to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Lab: configure basic access-control rules",
+      "Applied focus: connect configure basic access-control rules to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Tutorial: cryptography and authentication exercises",
+      "Applied focus: connect cryptography and authentication exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Tutorial: web-security attack and defence scenarios",
+      "Applied focus: connect web-security attack and defence scenarios to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Case study: security breach analysis",
+      "Applied focus: connect security breach analysis to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Review: security control checklist",
+      "Applied focus: connect security control checklist to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Self-check: computer security mixed questions",
+      "Exam readiness: consolidate computer security notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CS",
+    "unit": "Computer Security",
+    "topics": [
+      "Weak-area repair: crypto, web, network, or policy topics",
+      "Exam readiness: consolidate computer security notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Orientation: HCI goals, users, contexts, and interaction quality",
+      "Module roadmap: how hCI goals, users, contexts, and interaction quality supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Human perception, cognition, memory, and attention",
+      "Applied focus: connect human perception, cognition, memory, and attention to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: User research methods: interviews, observation, and surveys",
+      "Applied focus: connect user research methods: interviews, observation, and surveys to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: Personas, scenarios, and task analysis",
+      "Applied focus: connect personas, scenarios, and task analysis to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Theory: Requirements for usability and accessibility",
+      "Applied focus: connect requirements for usability and accessibility to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Information architecture and navigation design",
+      "Applied focus: connect information architecture and navigation design to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: Interaction design patterns and affordances",
+      "Applied focus: connect interaction design patterns and affordances to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: Visual hierarchy, layout, colour, and typography basics",
+      "Applied focus: connect visual hierarchy, layout, colour, and typography basics to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Theory: Wireframes, sketches, and low-fidelity prototypes",
+      "Applied focus: connect wireframes, sketches, and low-fidelity prototypes to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Interactive prototypes and design iteration",
+      "Applied focus: connect interactive prototypes and design iteration to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: Usability heuristics and expert evaluation",
+      "Applied focus: connect usability heuristics and expert evaluation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: Usability testing: planning, tasks, metrics, and ethics",
+      "Applied focus: connect usability testing: planning, tasks, metrics, and ethics to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Theory: Accessibility standards and inclusive design practice",
+      "Applied focus: connect accessibility standards and inclusive design practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Mobile, responsive, and cross-device interaction",
+      "Applied focus: connect mobile, responsive, and cross-device interaction to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: Forms, errors, feedback, and recovery flows",
+      "Applied focus: connect forms, errors, feedback, and recovery flows to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: Data visualisation and dashboard interaction basics",
+      "Applied focus: connect data visualisation and dashboard interaction basics to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Theory: Collaborative and social computing overview",
+      "Hands-on task: apply collaborative and social computing overview and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Practice: Ethics, dark patterns, consent, and privacy in UI design",
+      "Applied focus: connect ethics, dark patterns, consent, and privacy in UI design to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: conduct a lightweight user-research plan",
+      "Applied focus: connect conduct a lightweight user-research plan to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: sketch and critique alternative interface flows",
+      "Applied focus: connect sketch and critique alternative interface flows to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: build a clickable prototype",
+      "Applied focus: connect build a clickable prototype to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Lab: run a small usability test and record findings",
+      "Applied focus: connect run a small usability test and record findings to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: heuristic evaluation practice",
+      "Applied focus: connect heuristic evaluation practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Tutorial: accessibility audit practice",
+      "Applied focus: connect accessibility audit practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Case study: redesign a poor interaction flow",
+      "Applied focus: connect redesign a poor interaction flow to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Review: HCI method selection guide",
+      "Exam readiness: consolidate human-computer interaction notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CS",
+    "unit": "Human-Computer Interaction",
+    "topics": [
+      "Self-check: HCI design and evaluation questions",
+      "Exam readiness: consolidate human-computer interaction notes, examples, and weak areas"
+    ]
+  }
+]

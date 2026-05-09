@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Orientation: Discrete structures as foundations for software engineering",
+      "Module roadmap: how discrete structures as foundations for software engineering supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Practice: Sets, subsets, operations, and identities",
+      "Applied focus: connect sets, subsets, operations, and identities to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Lab: Propositional logic and truth tables",
+      "Applied focus: connect propositional logic and truth tables to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Tutorial: Predicates, quantifiers, and negation",
+      "Applied focus: connect predicates, quantifiers, and negation to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Theory: Direct proof, contradiction, and contraposition",
+      "Applied focus: connect direct proof, contradiction, and contraposition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Practice: Mathematical induction and strong induction",
+      "Applied focus: connect mathematical induction and strong induction to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Lab: Functions, relations, equivalence relations, and partial orders",
+      "Applied focus: connect functions, relations, equivalence relations, and partial orders to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Tutorial: Counting principles: sum, product, inclusion-exclusion",
+      "Applied focus: connect counting principles: sum, product, inclusion-exclusion to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Theory: Permutations, combinations, and binomial coefficients",
+      "Applied focus: connect permutations, combinations, and binomial coefficients to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Practice: Recurrence relations and recursive definitions",
+      "Applied focus: connect recurrence relations and recursive definitions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Lab: Asymptotic notation and growth of functions",
+      "Applied focus: connect asymptotic notation and growth of functions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Tutorial: Graphs: vertices, edges, paths, cycles, and connectivity",
+      "Applied focus: connect graphs: vertices, edges, paths, cycles, and connectivity to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Theory: Trees, rooted trees, and spanning trees",
+      "Applied focus: connect trees, rooted trees, and spanning trees to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Practice: Directed graphs for dependencies and workflows",
+      "Applied focus: connect directed graphs for dependencies and workflows to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Lab: Boolean algebra and digital logic links",
+      "Applied focus: connect boolean algebra and digital logic links to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Tutorial: Finite-state machines and state modelling",
+      "Applied focus: connect finite-state machines and state modelling to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Theory: Regular expressions and simple automata overview",
+      "Applied focus: connect regular expressions and simple automata overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Practice: Probability foundations with finite sample spaces",
+      "Applied focus: connect probability foundations with finite sample spaces to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Lab: Modular arithmetic and hashing/cryptography links",
+      "Applied focus: connect modular arithmetic and hashing/cryptography links to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Tutorial: Formal reasoning about program correctness",
+      "Applied focus: connect formal reasoning about program correctness to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Lab: model a software workflow as a graph or state machine",
+      "Applied focus: connect model a software workflow as a graph or state machine to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Lab: apply induction to a recursive program",
+      "Applied focus: connect apply induction to a recursive program to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Tutorial: proof-writing practice",
+      "Applied focus: connect proof-writing practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Tutorial: counting and recurrence exercises",
+      "Applied focus: connect counting and recurrence exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Tutorial: graph and tree exercises",
+      "Applied focus: connect graph and tree exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Review: discrete structures formula and proof sheet",
+      "Applied focus: connect discrete structures formula and proof sheet to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Self-check: discrete math mixed assessment",
+      "Exam readiness: consolidate discrete mathematical structures notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "SE",
+    "unit": "Discrete Mathematical Structures",
+    "topics": [
+      "Weak-area repair: proof, counting, graphs, or state machines",
+      "Exam readiness: consolidate discrete mathematical structures notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Orientation: Computer organization from ISA to running software",
+      "Module roadmap: how computer organization from ISA to running software supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Practice: Instruction set architecture and machine instructions",
+      "Applied focus: connect instruction set architecture and machine instructions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Lab: Assembly-language syntax and simple instruction traces",
+      "Applied focus: connect assembly-language syntax and simple instruction traces to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Tutorial: Registers, memory addresses, and load/store operations",
+      "Applied focus: connect registers, memory addresses, and load/store operations to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Theory: Arithmetic, logical, branch, and jump instructions",
+      "Applied focus: connect arithmetic, logical, branch, and jump instructions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Practice: Stack frames, function calls, and calling conventions",
+      "Applied focus: connect stack frames, function calls, and calling conventions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Lab: Data representation in memory",
+      "Applied focus: connect data representation in memory to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Tutorial: ALU, control unit, datapath, and buses",
+      "Applied focus: connect aLU, control unit, datapath, and buses to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Theory: Single-cycle CPU idea and control signals",
+      "Applied focus: connect single-cycle CPU idea and control signals to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Practice: Pipelining, hazards, forwarding, and stalls overview",
+      "Applied focus: connect pipelining, hazards, forwarding, and stalls overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Lab: Memory hierarchy and locality",
+      "Applied focus: connect memory hierarchy and locality to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Tutorial: Cache organization and performance intuition",
+      "Applied focus: connect cache organization and performance intuition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Theory: Virtual memory, address translation, and TLBs",
+      "Applied focus: connect virtual memory, address translation, and TLBs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Practice: Interrupts, exceptions, and system-call entry",
+      "Applied focus: connect interrupts, exceptions, and system-call entry to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Lab: Assembler, linker, loader, and executable layout",
+      "Applied focus: connect assembler, linker, loader, and executable layout to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Tutorial: C or systems-language memory model overview",
+      "Applied focus: connect c or systems-language memory model overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Theory: Buffer overflow and memory safety awareness",
+      "Applied focus: connect buffer overflow and memory safety awareness to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Practice: Performance metrics: clock rate, CPI, and execution time",
+      "Applied focus: connect performance metrics: clock rate, CPI, and execution time to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Lab: Parallelism: SIMD, multicore, and GPU overview",
+      "Applied focus: connect parallelism: SIMD, multicore, and GPU overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Lab: write and trace small assembly snippets",
+      "Applied focus: connect write and trace small assembly snippets to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Lab: inspect stack frames and memory layout",
+      "Applied focus: connect inspect stack frames and memory layout to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Lab: measure cache or memory-access behaviour",
+      "Applied focus: connect measure cache or memory-access behaviour to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Tutorial: CPU performance calculations",
+      "Applied focus: connect cPU performance calculations to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Tutorial: cache and virtual-memory exercises",
+      "Applied focus: connect cache and virtual-memory exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Case study: architecture constraints in software performance",
+      "Applied focus: connect architecture constraints in software performance to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Review: computer organization concept map",
+      "Exam readiness: consolidate computer organization and assembly language notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "SE",
+    "unit": "Computer Organization and Assembly Language",
+    "topics": [
+      "Self-check: assembly and architecture assessment",
+      "Exam readiness: consolidate computer organization and assembly language notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Orientation: Programming language design goals and trade-offs",
+      "Module roadmap: how programming language design goals and trade-offs supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Practice: Syntax, semantics, and pragmatics",
+      "Applied focus: connect syntax, semantics, and pragmatics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Lab: Names, scopes, bindings, and environments",
+      "Applied focus: connect names, scopes, bindings, and environments to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Tutorial: Types, type systems, and type checking",
+      "Applied focus: connect types, type systems, and type checking to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Theory: Primitive, composite, generic, and algebraic data types",
+      "Applied focus: connect primitive, composite, generic, and algebraic data types to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Practice: Control flow: expressions, statements, and evaluation order",
+      "Applied focus: connect control flow: expressions, statements, and evaluation order to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Lab: Procedural programming and modular decomposition",
+      "Applied focus: connect procedural programming and modular decomposition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Tutorial: Object-oriented programming and dynamic dispatch",
+      "Applied focus: connect object-oriented programming and dynamic dispatch to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Theory: Functional programming: pure functions and immutability",
+      "Applied focus: connect functional programming: pure functions and immutability to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Practice: Higher-order functions, closures, and lambdas",
+      "Applied focus: connect higher-order functions, closures, and lambdas to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Lab: Recursion, pattern matching, and declarative style",
+      "Applied focus: connect recursion, pattern matching, and declarative style to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Tutorial: Logic programming overview",
+      "Applied focus: connect logic programming overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Theory: Memory management: stack, heap, garbage collection",
+      "Applied focus: connect memory management: stack, heap, garbage collection to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Practice: Parameter passing and function-call mechanisms",
+      "Applied focus: connect parameter passing and function-call mechanisms to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Lab: Exceptions and error-handling models",
+      "Applied focus: connect exceptions and error-handling models to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Tutorial: Concurrency models and asynchronous programming overview",
+      "Applied focus: connect concurrency models and asynchronous programming overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Theory: Interpreters, compilers, and runtime systems",
+      "Applied focus: connect interpreters, compilers, and runtime systems to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Practice: Lexing, parsing, and abstract syntax trees overview",
+      "Applied focus: connect lexing, parsing, and abstract syntax trees overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Lab: Language safety, expressiveness, and performance trade-offs",
+      "Applied focus: connect language safety, expressiveness, and performance trade-offs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Tutorial: Domain-specific languages and scripting",
+      "Applied focus: connect domain-specific languages and scripting to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Lab: compare the same algorithm across paradigms",
+      "Applied focus: connect compare the same algorithm across paradigms to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Lab: implement a tiny expression evaluator",
+      "Applied focus: connect implement a tiny expression evaluator to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Lab: use higher-order functions for data processing",
+      "Applied focus: connect use higher-order functions for data processing to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Tutorial: scope, types, and evaluation exercises",
+      "Applied focus: connect scope, types, and evaluation exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Case study: choosing a language for a software project",
+      "Engineering focus: connect choosing a language for a software project to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Review: programming paradigms comparison table",
+      "Applied focus: connect programming paradigms comparison table to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Self-check: programming languages mixed assessment",
+      "Exam readiness: consolidate programming languages notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "SE",
+    "unit": "Programming Languages",
+    "topics": [
+      "Weak-area repair: types, scopes, paradigms, or runtimes",
+      "Exam readiness: consolidate programming languages notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Orientation: Team-based software delivery and enterprise context",
+      "Module roadmap: how team-based software delivery and enterprise context supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Practice: Product vision, stakeholders, and value proposition",
+      "Applied focus: connect product vision, stakeholders, and value proposition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Lab: Backlog creation from requirements and constraints",
+      "Applied focus: connect backlog creation from requirements and constraints to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Tutorial: Agile planning, sprint goals, and iteration cadence",
+      "Applied focus: connect agile planning, sprint goals, and iteration cadence to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Theory: Definition of ready and definition of done",
+      "Applied focus: connect definition of ready and definition of done to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Practice: Issue tracking, branching, pull requests, and reviews",
+      "Applied focus: connect issue tracking, branching, pull requests, and reviews to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Lab: Continuous integration and automated quality gates",
+      "Applied focus: connect continuous integration and automated quality gates to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Tutorial: Team communication, meeting notes, and progress reporting",
+      "Engineering focus: connect team communication, meeting notes, and progress reporting to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Theory: Risk, assumptions, dependencies, and mitigation tracking",
+      "Applied focus: connect risk, assumptions, dependencies, and mitigation tracking to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Practice: Architecture sketching for a team project",
+      "Engineering focus: connect architecture sketching for a team project to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Lab: Interface contracts and integration planning",
+      "Applied focus: connect interface contracts and integration planning to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Tutorial: Testing responsibilities across a team",
+      "Engineering focus: connect testing responsibilities across a team to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Theory: Documentation for handoff and maintainability",
+      "Applied focus: connect documentation for handoff and maintainability to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Practice: Demo preparation and stakeholder feedback",
+      "Applied focus: connect demo preparation and stakeholder feedback to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Lab: Ethics, privacy, accessibility, and professionalism in team work",
+      "Engineering focus: connect ethics, privacy, accessibility, and professionalism in team work to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Tutorial: Technical debt and sustainable delivery pace",
+      "Applied focus: connect technical debt and sustainable delivery pace to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Theory: Metrics: velocity, cycle time, defects, and quality signals",
+      "Applied focus: connect metrics: velocity, cycle time, defects, and quality signals to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Lab: set up a team repository and workflow",
+      "Engineering focus: connect set up a team repository and workflow to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Lab: create a backlog and sprint plan",
+      "Applied focus: connect create a backlog and sprint plan to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Lab: write architecture notes and interface contracts",
+      "Applied focus: connect write architecture notes and interface contracts to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Lab: integrate a small feature through CI",
+      "Applied focus: connect integrate a small feature through CI to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Tutorial: team project risk scenarios",
+      "Engineering focus: connect team project risk scenarios to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Tutorial: code review and pull request practice",
+      "Applied focus: connect code review and pull request practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Case study: recovering a troubled team software project",
+      "Engineering focus: connect recovering a troubled team software project to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Review: software enterprise delivery checklist",
+      "Engineering focus: connect software enterprise delivery checklist to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Self-check: team contribution and process reflection",
+      "Exam readiness: consolidate software enterprise i notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "SE",
+    "unit": "Software Enterprise I",
+    "topics": [
+      "Weak-area repair: planning, integration, communication, or quality evidence",
+      "Exam readiness: consolidate software enterprise i notes, examples, and weak areas"
+    ]
+  }
+]

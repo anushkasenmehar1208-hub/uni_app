@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Orientation: Algorithmic problem solving for software engineers",
+      "Module roadmap: how algorithmic problem solving for software engineers supports a UK Software Engineering progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Complexity analysis: time, space, and Big O",
+      "Applied focus: connect complexity analysis: time, space, and Big O to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Arrays, lists, and indexed traversal patterns",
+      "Applied focus: connect arrays, lists, and indexed traversal patterns to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Linked structures and pointer-style reasoning",
+      "Applied focus: connect linked structures and pointer-style reasoning to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Stacks, queues, and abstract data types",
+      "Applied focus: connect stacks, queues, and abstract data types to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Recursion, base cases, and call-stack tracing",
+      "Applied focus: connect recursion, base cases, and call-stack tracing to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Searching: linear search and binary search",
+      "Applied focus: connect searching: linear search and binary search to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Sorting: insertion, selection, merge, and quicksort ideas",
+      "Applied focus: connect sorting: insertion, selection, merge, and quicksort ideas to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Hash tables, maps, sets, collisions, and load factor",
+      "Applied focus: connect hash tables, maps, sets, collisions, and load factor to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Trees, binary search trees, and traversal orders",
+      "Applied focus: connect trees, binary search trees, and traversal orders to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Heaps and priority queues",
+      "Applied focus: connect heaps and priority queues to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Graphs, adjacency lists, and adjacency matrices",
+      "Applied focus: connect graphs, adjacency lists, and adjacency matrices to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Breadth-first search and depth-first search",
+      "Applied focus: connect breadth-first search and depth-first search to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Shortest-path intuition and Dijkstra's algorithm overview",
+      "Applied focus: connect shortest-path intuition and Dijkstra's algorithm overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Greedy algorithms and when they fail",
+      "Applied focus: connect greedy algorithms and when they fail to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Dynamic programming intuition with small examples",
+      "Applied focus: connect dynamic programming intuition with small examples to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Algorithm correctness and loop invariants",
+      "Applied focus: connect algorithm correctness and loop invariants to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Choosing data structures from product requirements",
+      "Applied focus: connect choosing data structures from product requirements to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Testing data-structure operations and edge cases",
+      "Applied focus: connect testing data-structure operations and edge cases to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Benchmarking algorithms and interpreting results",
+      "Applied focus: connect benchmarking algorithms and interpreting results to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Memory trade-offs in real software systems",
+      "Applied focus: connect memory trade-offs in real software systems to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: implement stacks, queues, and maps",
+      "Applied focus: connect implement stacks, queues, and maps to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: implement tree or graph traversal",
+      "Applied focus: connect implement tree or graph traversal to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: benchmark two solutions to the same problem",
+      "Applied focus: connect benchmark two solutions to the same problem to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: complexity and tracing exercises",
+      "Applied focus: connect complexity and tracing exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: algorithm design from requirements",
+      "Applied focus: connect algorithm design from requirements to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Review: data structures and algorithms decision guide",
+      "Exam readiness: consolidate data structures and algorithms notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "SE",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Self-check: mixed algorithms problem set",
+      "Exam readiness: consolidate data structures and algorithms notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Orientation: Objects, classes, responsibilities, and collaboration",
+      "Module roadmap: how objects, classes, responsibilities, and collaboration supports a UK Software Engineering progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Practice: Encapsulation and information hiding",
+      "Applied focus: connect encapsulation and information hiding to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: Constructors, fields, methods, and object state",
+      "Applied focus: connect constructors, fields, methods, and object state to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Tutorial: Class invariants and defensive object design",
+      "Applied focus: connect class invariants and defensive object design to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Theory: Composition, aggregation, and association",
+      "Applied focus: connect composition, aggregation, and association to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Practice: Inheritance and careful reuse",
+      "Applied focus: connect inheritance and careful reuse to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: Polymorphism, interfaces, and substitutability",
+      "Applied focus: connect polymorphism, interfaces, and substitutability to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Tutorial: Abstract classes and contract-style APIs",
+      "Applied focus: connect abstract classes and contract-style APIs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Theory: UML class diagrams and communication with stakeholders",
+      "Applied focus: connect uML class diagrams and communication with stakeholders to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Practice: Sequence diagrams for object interactions",
+      "Applied focus: connect sequence diagrams for object interactions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: Cohesion, coupling, and separation of concerns",
+      "Applied focus: connect cohesion, coupling, and separation of concerns to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Tutorial: SOLID principles at introductory level",
+      "Applied focus: connect sOLID principles at introductory level to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Theory: Design patterns: strategy and factory",
+      "Applied focus: connect design patterns: strategy and factory to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Practice: Design patterns: observer and adapter",
+      "Applied focus: connect design patterns: observer and adapter to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: Object equality, identity, and hashing",
+      "Applied focus: connect object equality, identity, and hashing to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Tutorial: Error handling and exceptions in object-oriented systems",
+      "Applied focus: connect error handling and exceptions in object-oriented systems to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Theory: Unit testing objects with mocks or fakes",
+      "Applied focus: connect unit testing objects with mocks or fakes to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Practice: Refactoring object-oriented code safely",
+      "Applied focus: connect refactoring object-oriented code safely to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: Package/module organization and dependency direction",
+      "Applied focus: connect package/module organization and dependency direction to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: model a domain from user stories",
+      "Applied focus: connect model a domain from user stories to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: implement a small object-oriented application",
+      "Applied focus: connect implement a small object-oriented application to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: add automated tests to an object model",
+      "Applied focus: connect add automated tests to an object model to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Lab: refactor a procedural design into collaborating objects",
+      "Hands-on task: apply refactor a procedural design into collaborating objects and record evidence for portfolio or coursework review"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Tutorial: design critique using UML",
+      "Applied focus: connect design critique using UML to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Case study: maintainability in an object-oriented codebase",
+      "Applied focus: connect maintainability in an object-oriented codebase to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Review: object-oriented design principles",
+      "Exam readiness: consolidate object-oriented design notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "SE",
+    "unit": "Object-Oriented Design",
+    "topics": [
+      "Self-check: object-oriented mini design assessment",
+      "Exam readiness: consolidate object-oriented design notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Orientation: Database purpose in software products",
+      "Module roadmap: how database purpose in software products supports a UK Software Engineering progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Practice: Relational model: tables, rows, attributes, and keys",
+      "Applied focus: connect relational model: tables, rows, attributes, and keys to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: Requirements analysis for persistent data",
+      "Applied focus: connect requirements analysis for persistent data to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Tutorial: Entity-relationship modelling and cardinality",
+      "Applied focus: connect entity-relationship modelling and cardinality to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Theory: Mapping ER diagrams to relational schemas",
+      "Applied focus: connect mapping ER diagrams to relational schemas to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Practice: Primary keys, foreign keys, and referential integrity",
+      "Applied focus: connect primary keys, foreign keys, and referential integrity to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: Functional dependencies and normalization goals",
+      "Applied focus: connect functional dependencies and normalization goals to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Tutorial: First, second, and third normal form",
+      "Applied focus: connect first, second, and third normal form to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Theory: SQL data definition and constraints",
+      "Applied focus: connect sQL data definition and constraints to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Practice: SQL queries: filtering, projection, and sorting",
+      "Engineering focus: connect sQL queries: filtering, projection, and sorting to collaborative delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: Joins, grouping, aggregation, and subqueries",
+      "Applied focus: connect joins, grouping, aggregation, and subqueries to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Tutorial: Views, stored logic, and derived data overview",
+      "Applied focus: connect views, stored logic, and derived data overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Theory: Indexes and query-performance intuition",
+      "Applied focus: connect indexes and query-performance intuition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Practice: Transactions, ACID properties, and consistency",
+      "Applied focus: connect transactions, ACID properties, and consistency to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: Concurrency anomalies and isolation levels",
+      "Applied focus: connect concurrency anomalies and isolation levels to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Tutorial: Backup, recovery, and migration planning",
+      "Applied focus: connect backup, recovery, and migration planning to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Theory: Database security and least-privilege access",
+      "Applied focus: connect database security and least-privilege access to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Practice: Application-database connection patterns",
+      "Applied focus: connect application-database connection patterns to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: ORM concepts and trade-offs",
+      "Applied focus: connect oRM concepts and trade-offs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Tutorial: NoSQL overview and document-store use cases",
+      "Applied focus: connect noSQL overview and document-store use cases to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: design an ER model from a brief",
+      "Applied focus: connect design an ER model from a brief to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: build a normalized relational schema",
+      "Applied focus: connect build a normalized relational schema to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: write SQL queries for a product feature",
+      "Applied focus: connect write SQL queries for a product feature to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Lab: inspect query plans and add indexes",
+      "Applied focus: connect inspect query plans and add indexes to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Tutorial: normalization and SQL join exercises",
+      "Applied focus: connect normalization and SQL join exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Case study: database design for a web application",
+      "Applied focus: connect database design for a web application to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Review: database design checklist",
+      "Exam readiness: consolidate database design notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "SE",
+    "unit": "Database Design",
+    "topics": [
+      "Self-check: data modelling and SQL assessment",
+      "Exam readiness: consolidate database design notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Orientation: Web application architecture: browser, server, database, API",
+      "Module roadmap: how web application architecture: browser, server, database, API supports a UK Software Engineering progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Practice: HTML structure, semantic elements, and forms",
+      "Applied focus: connect hTML structure, semantic elements, and forms to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: CSS layout, responsive design, and visual consistency",
+      "Applied focus: connect cSS layout, responsive design, and visual consistency to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Tutorial: JavaScript for client-side interaction",
+      "Applied focus: connect javaScript for client-side interaction to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Theory: DOM events, state, and UI updates",
+      "Applied focus: connect dOM events, state, and UI updates to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Practice: HTTP methods, headers, status codes, and request flow",
+      "Applied focus: connect hTTP methods, headers, status codes, and request flow to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: URLs, routing, query strings, and path parameters",
+      "Applied focus: connect uRLs, routing, query strings, and path parameters to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Tutorial: JSON and API request-response design",
+      "Applied focus: connect jSON and API request-response design to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Theory: Server-side request handling and routing overview",
+      "Applied focus: connect server-side request handling and routing overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Practice: Template rendering and component-based UI concepts",
+      "Applied focus: connect template rendering and component-based UI concepts to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: Form validation on client and server",
+      "Applied focus: connect form validation on client and server to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Tutorial: Sessions, cookies, and authentication overview",
+      "Applied focus: connect sessions, cookies, and authentication overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Theory: Authorization and role-based access basics",
+      "Applied focus: connect authorization and role-based access basics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Practice: Database-backed web features",
+      "Applied focus: connect database-backed web features to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: Web security: XSS, CSRF, SQL injection, and safe input",
+      "Applied focus: connect web security: XSS, CSRF, SQL injection, and safe input to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Tutorial: Accessibility for forms, navigation, and dynamic content",
+      "Applied focus: connect accessibility for forms, navigation, and dynamic content to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Theory: Performance basics: assets, caching, and network cost",
+      "Applied focus: connect performance basics: assets, caching, and network cost to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Practice: Browser developer tools and debugging workflow",
+      "Applied focus: connect browser developer tools and debugging workflow to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: Deployment basics: environment variables and build outputs",
+      "Applied focus: connect deployment basics: environment variables and build outputs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: build a static responsive page",
+      "Applied focus: connect build a static responsive page to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: add client-side interactivity",
+      "Applied focus: connect add client-side interactivity to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: create a small server-side route",
+      "Applied focus: connect create a small server-side route to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Lab: connect a page to stored data",
+      "Applied focus: connect connect a page to stored data to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Tutorial: HTTP and API design exercises",
+      "Applied focus: connect hTTP and API design exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Tutorial: web security scenario practice",
+      "Applied focus: connect web security scenario practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Review: web application architecture map",
+      "Exam readiness: consolidate web application basics notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "SE",
+    "unit": "Web Application Basics",
+    "topics": [
+      "Self-check: web application mini project plan",
+      "Exam readiness: consolidate web application basics notes, examples, and weak areas"
+    ]
+  }
+]

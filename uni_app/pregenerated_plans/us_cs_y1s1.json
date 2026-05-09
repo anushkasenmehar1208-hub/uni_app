@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Orientation: Computing as problem solving, abstraction, and automation",
+      "Module roadmap: how computing as problem solving, abstraction, and automation fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Practice: Programming environment setup, terminals, editors, and notebooks",
+      "Applied focus: connect programming environment setup, terminals, editors, and notebooks to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Lab: Values, variables, assignment, and primitive data types",
+      "Applied focus: connect values, variables, assignment, and primitive data types to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Tutorial: Expressions, operators, precedence, and evaluation order",
+      "Applied focus: connect expressions, operators, precedence, and evaluation order to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Theory: Input, output, formatting, and simple interactive programs",
+      "Applied focus: connect input, output, formatting, and simple interactive programs to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Practice: Boolean logic, comparisons, and conditional execution",
+      "Applied focus: connect boolean logic, comparisons, and conditional execution to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Lab: Loops, counters, accumulators, and sentinel patterns",
+      "Applied focus: connect loops, counters, accumulators, and sentinel patterns to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Tutorial: Functions, parameters, return values, and decomposition",
+      "Applied focus: connect functions, parameters, return values, and decomposition to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Theory: Scope, local state, and avoiding accidental side effects",
+      "Applied focus: connect scope, local state, and avoiding accidental side effects to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Practice: Strings, indexing, slicing, and text processing",
+      "Applied focus: connect strings, indexing, slicing, and text processing to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Lab: Lists, arrays, and collection traversal",
+      "Applied focus: connect lists, arrays, and collection traversal to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Tutorial: Dictionaries/maps and key-value data modelling",
+      "Applied focus: connect dictionaries/maps and key-value data modelling to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Theory: File input-output and simple persistent data",
+      "Applied focus: connect file input-output and simple persistent data to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Practice: Debugging workflow, tracebacks, and breakpoints",
+      "Applied focus: connect debugging workflow, tracebacks, and breakpoints to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Lab: Testing small functions with examples and edge cases",
+      "Applied focus: connect testing small functions with examples and edge cases to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Tutorial: Algorithm design with pseudocode and trace tables",
+      "Applied focus: connect algorithm design with pseudocode and trace tables to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Theory: Searching and simple sorting at introductory level",
+      "Applied focus: connect searching and simple sorting at introductory level to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Practice: Recursion intuition with base and recursive cases",
+      "Applied focus: connect recursion intuition with base and recursive cases to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Lab: Object-oriented preview: objects, classes, and methods",
+      "Applied focus: connect object-oriented preview: objects, classes, and methods to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Tutorial: Data representation: bits, bytes, characters, and images",
+      "Applied focus: connect data representation: bits, bytes, characters, and images to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Theory: Ethics, privacy, accessibility, and social impact of computing",
+      "Applied focus: connect ethics, privacy, accessibility, and social impact of computing to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Practice: Version control basics: commits, branches, and diffs",
+      "Applied focus: connect version control basics: commits, branches, and diffs to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Lab: build a small command-line program",
+      "Applied focus: connect build a small command-line program to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Lab: process data from a file and produce a report",
+      "Applied focus: connect process data from a file and produce a report to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Tutorial: debug and refactor a flawed beginner program",
+      "Applied focus: connect debug and refactor a flawed beginner program to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Case study: decomposing a real-world problem into code",
+      "Applied focus: connect decomposing a real-world problem into code to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Review: introduction to computer science foundations",
+      "Exam readiness: consolidate introduction to computer science notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CS",
+    "unit": "Introduction to Computer Science",
+    "topics": [
+      "Self-check: programming mini assessment and weak-area plan",
+      "Exam readiness: consolidate introduction to computer science notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Orientation: Functions, graphs, domains, ranges, and transformations",
+      "Module roadmap: how functions, graphs, domains, ranges, and transformations fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Practice: Linear, polynomial, exponential, logarithmic, and trigonometric functions",
+      "Applied focus: connect linear, polynomial, exponential, logarithmic, and trigonometric functions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Lab: Limits from tables, graphs, and algebraic simplification",
+      "Applied focus: connect limits from tables, graphs, and algebraic simplification to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Tutorial: One-sided limits and limits at infinity",
+      "Applied focus: connect one-sided limits and limits at infinity to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Theory: Continuity and discontinuities",
+      "Applied focus: connect continuity and discontinuities to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Practice: Derivative as instantaneous rate of change",
+      "Applied focus: connect derivative as instantaneous rate of change to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Lab: Derivative as slope of a tangent line",
+      "Applied focus: connect derivative as slope of a tangent line to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Tutorial: Derivative rules: constant, power, sum, and difference",
+      "Applied focus: connect derivative rules: constant, power, sum, and difference to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Theory: Product rule and quotient rule",
+      "Applied focus: connect product rule and quotient rule to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Practice: Chain rule and composite functions",
+      "Applied focus: connect chain rule and composite functions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Lab: Derivatives of exponential and logarithmic functions",
+      "Applied focus: connect derivatives of exponential and logarithmic functions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Tutorial: Derivatives of trigonometric functions",
+      "Applied focus: connect derivatives of trigonometric functions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Theory: Implicit differentiation",
+      "Applied focus: connect implicit differentiation to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Practice: Related rates and modelling changing quantities",
+      "Applied focus: connect related rates and modelling changing quantities to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Lab: Linear approximation and differentials",
+      "Applied focus: connect linear approximation and differentials to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Tutorial: Critical points, increasing/decreasing intervals, and extrema",
+      "Applied focus: connect critical points, increasing/decreasing intervals, and extrema to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Theory: Concavity, inflection points, and second derivative test",
+      "Applied focus: connect concavity, inflection points, and second derivative test to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Practice: Optimization problems with constraints",
+      "Applied focus: connect optimization problems with constraints to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Lab: Mean value theorem and interpretation",
+      "Applied focus: connect mean value theorem and interpretation to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Tutorial: Curve sketching from derivative information",
+      "Applied focus: connect curve sketching from derivative information to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Theory: Antiderivatives and indefinite integrals",
+      "Applied focus: connect antiderivatives and indefinite integrals to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Practice: Riemann sums and area approximation",
+      "Applied focus: connect riemann sums and area approximation to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Lab: Definite integrals and the Fundamental Theorem of Calculus",
+      "Applied focus: connect definite integrals and the Fundamental Theorem of Calculus to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Tutorial: derivative computation practice",
+      "Applied focus: connect derivative computation practice to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Tutorial: optimization and related-rates practice",
+      "Applied focus: connect optimization and related-rates practice to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Review: Calculus I formula and method sheet",
+      "Exam readiness: consolidate calculus i notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CS",
+    "unit": "Calculus I",
+    "topics": [
+      "Self-check: mixed Calculus I exam-style questions",
+      "Exam readiness: consolidate calculus i notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Orientation: Discrete structures as the language of computer science",
+      "Module roadmap: how discrete structures as the language of computer science fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Sets, subsets, union, intersection, complement, and power sets",
+      "Applied focus: connect sets, subsets, union, intersection, complement, and power sets to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Set identities and Venn diagram reasoning",
+      "Applied focus: connect set identities and Venn diagram reasoning to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Propositional logic and truth tables",
+      "Applied focus: connect propositional logic and truth tables to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Logical equivalence, implication, converse, inverse, and contrapositive",
+      "Applied focus: connect logical equivalence, implication, converse, inverse, and contrapositive to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Predicates, quantifiers, and negating quantified statements",
+      "Applied focus: connect predicates, quantifiers, and negating quantified statements to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Direct proof and proof by cases",
+      "Applied focus: connect direct proof and proof by cases to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Proof by contradiction and contraposition",
+      "Applied focus: connect proof by contradiction and contraposition to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Mathematical induction and strong induction",
+      "Applied focus: connect mathematical induction and strong induction to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Functions, injections, surjections, bijections, and inverses",
+      "Applied focus: connect functions, injections, surjections, bijections, and inverses to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Relations, equivalence relations, and partial orders",
+      "Applied focus: connect relations, equivalence relations, and partial orders to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Counting rules: sum, product, inclusion-exclusion",
+      "Applied focus: connect counting rules: sum, product, inclusion-exclusion to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Permutations, combinations, and binomial coefficients",
+      "Applied focus: connect permutations, combinations, and binomial coefficients to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Recurrence relations and recursive definitions",
+      "Applied focus: connect recurrence relations and recursive definitions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Asymptotic notation and growth of functions",
+      "Applied focus: connect asymptotic notation and growth of functions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Modular arithmetic and congruences",
+      "Applied focus: connect modular arithmetic and congruences to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Number theory basics for cryptography and hashing",
+      "Applied focus: connect number theory basics for cryptography and hashing to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Graphs: vertices, edges, degree, paths, and cycles",
+      "Applied focus: connect graphs: vertices, edges, degree, paths, and cycles to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Graph connectivity, trees, and spanning trees",
+      "Applied focus: connect graph connectivity, trees, and spanning trees to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Directed graphs and dependency modelling",
+      "Applied focus: connect directed graphs and dependency modelling to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Boolean algebra and links to digital logic",
+      "Applied focus: connect boolean algebra and links to digital logic to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Finite state machines and simple automata preview",
+      "Applied focus: connect finite state machines and simple automata preview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Probability foundations with finite sample spaces",
+      "Applied focus: connect probability foundations with finite sample spaces to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: proof-writing practice",
+      "Applied focus: connect proof-writing practice to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: counting and recurrence exercises",
+      "Applied focus: connect counting and recurrence exercises to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: graph and tree exercises",
+      "Applied focus: connect graph and tree exercises to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Review: discrete mathematics proof and formula sheet",
+      "Exam readiness: consolidate discrete mathematics notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Self-check: mixed discrete math assessment",
+      "Exam readiness: consolidate discrete mathematics notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Orientation: Physical quantities, units, dimensions, and measurement uncertainty",
+      "Module roadmap: how physical quantities, units, dimensions, and measurement uncertainty fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Practice: Vectors, components, dot products, and cross products",
+      "Applied focus: connect vectors, components, dot products, and cross products to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: One-dimensional kinematics with constant acceleration",
+      "Applied focus: connect one-dimensional kinematics with constant acceleration to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Tutorial: Two-dimensional motion and projectile motion",
+      "Applied focus: connect two-dimensional motion and projectile motion to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Theory: Newton's laws and free-body diagrams",
+      "Applied focus: connect newton's laws and free-body diagrams to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Practice: Friction, tension, normal force, and connected systems",
+      "Applied focus: connect friction, tension, normal force, and connected systems to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: Circular motion and centripetal acceleration",
+      "Applied focus: connect circular motion and centripetal acceleration to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Tutorial: Work, kinetic energy, and the work-energy theorem",
+      "Applied focus: connect work, kinetic energy, and the work-energy theorem to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Theory: Potential energy and conservation of mechanical energy",
+      "Applied focus: connect potential energy and conservation of mechanical energy to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Practice: Power and efficiency in physical systems",
+      "Applied focus: connect power and efficiency in physical systems to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: Momentum, impulse, and conservation of momentum",
+      "Applied focus: connect momentum, impulse, and conservation of momentum to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Tutorial: Collisions in one and two dimensions",
+      "Applied focus: connect collisions in one and two dimensions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Theory: Rotational kinematics and angular variables",
+      "Applied focus: connect rotational kinematics and angular variables to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Practice: Torque, equilibrium, and rotational dynamics",
+      "Applied focus: connect torque, equilibrium, and rotational dynamics to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: Moment of inertia and rotational kinetic energy",
+      "Applied focus: connect moment of inertia and rotational kinetic energy to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Tutorial: Angular momentum and conservation laws",
+      "Applied focus: connect angular momentum and conservation laws to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Theory: Simple harmonic motion and oscillations",
+      "Applied focus: connect simple harmonic motion and oscillations to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Practice: Gravitation and orbital motion overview",
+      "Applied focus: connect gravitation and orbital motion overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: Fluids: density, pressure, buoyancy, and flow basics",
+      "Applied focus: connect fluids: density, pressure, buoyancy, and flow basics to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Tutorial: Thermal physics introduction: temperature, heat, and energy",
+      "Applied focus: connect thermal physics introduction: temperature, heat, and energy to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: measurement, uncertainty, and graphing data",
+      "Applied focus: connect measurement, uncertainty, and graphing data to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: motion analysis from experimental data",
+      "Applied focus: connect motion analysis from experimental data to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: force and acceleration experiment",
+      "Applied focus: connect force and acceleration experiment to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Lab: energy and momentum experiment",
+      "Applied focus: connect energy and momentum experiment to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Tutorial: mechanics problem-solving strategies",
+      "Applied focus: connect mechanics problem-solving strategies to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Review: University Physics I concept map",
+      "Exam readiness: consolidate university physics i notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CS",
+    "unit": "University Physics I",
+    "topics": [
+      "Self-check: mechanics mixed problem set",
+      "Exam readiness: consolidate university physics i notes, worked examples, and weak areas"
+    ]
+  }
+]

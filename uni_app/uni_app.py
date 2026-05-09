@@ -3138,6 +3138,14 @@ def _pregenerated_plan_filename(degree: str, scope: str, active_subject: str = "
         return ""
     if degree == "Software Engineering":
         return f"se_{base_scope}.json"
+    if degree == "Computer Science (UK)":
+        return f"uk_cs_{base_scope}.json"
+    if degree == "Software Engineering (UK)":
+        return f"uk_se_{base_scope}.json"
+    if degree == "Computer Science (US)":
+        return f"us_cs_{base_scope}.json"
+    if degree == "Software Engineering (US)":
+        return f"us_se_{base_scope}.json"
     if degree == "Electronics and Computer Science (BECS)":
         return f"becs_{base_scope}.json"
     if degree == "Physical Science" and subject:
@@ -4189,62 +4197,62 @@ US_CS_CURRICULUM = {
     },
 }
 
-# ── US Computer Engineering (generic 4-year ABET-accredited structure) ──
-US_CE_CURRICULUM = {
+# ── US Software Engineering (generic 4-year ABET-style structure) ──
+US_SE_CURRICULUM = {
     "Year 1": {
         "Semester 1": [
-            "CE:Introduction to Programming",
-            "CE:Calculus I",
-            "CE:Engineering Physics I",
-            "CE:Engineering Drawing and Design",
+            "SE:Introduction to Software Engineering",
+            "SE:Programming Fundamentals",
+            "SE:Calculus for Engineers I",
+            "SE:Engineering Design and Communication",
         ],
         "Semester 2": [
-            "CE:Digital Logic Design",
-            "CE:Calculus II",
-            "CE:Engineering Physics II",
-            "CE:Circuits and Electronics",
+            "SE:Object-Oriented Programming and Data Structures",
+            "SE:Calculus for Engineers II",
+            "SE:Computer Systems Fundamentals",
+            "SE:University Physics I",
         ],
     },
     "Year 2": {
         "Semester 3": [
-            "CE:Data Structures and Algorithms",
-            "CE:Computer Organization",
-            "CE:Discrete Mathematics",
-            "CE:Signals and Systems",
+            "SE:Discrete Mathematical Structures",
+            "SE:Computer Organization and Assembly Language",
+            "SE:Programming Languages",
+            "SE:Software Enterprise I",
         ],
         "Semester 4": [
-            "CE:Microprocessors and Embedded Systems",
-            "CE:Computer Architecture",
-            "CE:Linear Algebra and Differential Equations",
-            "CE:Software Engineering",
+            "SE:Design and Analysis of Algorithms",
+            "SE:Probability and Statistics for Engineering",
+            "SE:Software Process and Quality",
+            "SE:Database Systems",
         ],
     },
     "Year 3": {
         "Semester 5": [
-            "CE:Operating Systems",
-            "CE:Computer Networks",
-            "CE:VLSI Design",
-            "CE:Technical Elective I",
+            "SE:Operating Systems",
+            "SE:Software Requirements Engineering",
+            "SE:Computer Networks",
+            "SE:Human-Computer Interaction",
         ],
         "Semester 6": [
-            "CE:Real-Time Systems",
-            "CE:Digital Signal Processing",
-            "CE:Computer Security",
-            "CE:Technical Elective II",
+            "SE:Software Architecture and Design",
+            "SE:Software Testing and Validation",
+            "SE:Cybersecurity for Software Systems",
+            "SE:Web and Mobile Application Engineering",
         ],
     },
     "Year 4": {
         "Semester 7": [
-            "CE:Senior Design Project I",
-            "CE:Internet of Things",
-            "CE:Machine Learning for Engineers",
-            "CE:Elective III",
+            "SE:Software Engineering Capstone I",
+            "SE:Project and Process Management",
+            "SE:Cloud and Distributed Software Systems",
+            "SE:Software Engineering Elective I",
         ],
         "Semester 8": [
-            "CE:Senior Design Project II",
-            "CE:Cloud and Edge Computing",
-            "CE:Engineering Ethics and Professionalism",
-            "CE:Elective IV",
+            "SE:Software Engineering Capstone II",
+            "SE:Professional Ethics and Engineering Practice",
+            "SE:Software Maintenance and Evolution",
+            "SE:Software Engineering Elective II",
         ],
     },
 }
@@ -4918,7 +4926,7 @@ FLAT_DEGREE_CURRICULUM: dict[str, dict] = {
     "Computer Science (UK)":      UK_CS_CURRICULUM,
     "Software Engineering (UK)":  UK_SE_CURRICULUM,
     "Computer Science (US)":      US_CS_CURRICULUM,
-    "Computer Engineering (US)":  US_CE_CURRICULUM,
+    "Software Engineering (US)":  US_SE_CURRICULUM,
     "B.Tech Computer Science":    IN_CSE_CURRICULUM,
     "B.Tech Information Technology": IN_IT_CURRICULUM,
 }
@@ -4930,7 +4938,7 @@ FLAT_DEGREE_DISCIPLINE: dict[str, str] = {
     "Computer Science (UK)":      "Computer Science",
     "Software Engineering (UK)":  "Software Engineering",
     "Computer Science (US)":      "Computer Science",
-    "Computer Engineering (US)":  "Computer Engineering",
+    "Software Engineering (US)":  "Software Engineering",
     "B.Tech Computer Science":    "Computer Science Engineering",
     "B.Tech Information Technology": "Information Technology",
 }
@@ -4939,7 +4947,7 @@ FLAT_DEGREE_DISCIPLINE: dict[str, str] = {
 REGION_DEGREE_OPTIONS: dict[str, list[str]] = {
     "LK":     ["Software Engineering", "Electronics and Computer Science (BECS)", "Physical Science", "Biological Science"],
     "UK":     ["Computer Science (UK)", "Software Engineering (UK)"],
-    "US":     ["Computer Science (US)", "Computer Engineering (US)"],
+    "US":     ["Computer Science (US)", "Software Engineering (US)"],
     "IN":     ["B.Tech Computer Science", "B.Tech Information Technology"],
     "custom": [],
 }
@@ -4950,7 +4958,7 @@ LEGACY_CUSTOM_DEGREE = "Others"  # Still honored for existing stored profiles
 DEGREE_OPTIONS: list[str] = [
     "Software Engineering", "Electronics and Computer Science (BECS)", "Physical Science", "Biological Science",
     "Computer Science (UK)", "Software Engineering (UK)",
-    "Computer Science (US)", "Computer Engineering (US)",
+    "Computer Science (US)", "Software Engineering (US)",
     "B.Tech Computer Science", "B.Tech Information Technology",
     CUSTOM_DEGREE,
 ]
@@ -4990,7 +4998,7 @@ COMING_SOON_MSG = "Year 3 and Year 4 content is being prepared and will be avail
 # \u2500\u2500 International degrees have all content built \u2014 nothing locked \u2500\u2500
 _INTL_DEGREES: set[str] = {
     "Computer Science (UK)", "Software Engineering (UK)",
-    "Computer Science (US)", "Computer Engineering (US)",
+    "Computer Science (US)", "Software Engineering (US)",
     "B.Tech Computer Science", "B.Tech Information Technology",
 }
 
@@ -5933,7 +5941,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             locked = _locked_years_for_degree(degree)
             available_years = set(SEMESTER_NAVIGATION.keys()) - locked
         else:
-            available_years = set(SEMESTER_NAVIGATION.keys()) - LOCKED_YEARS
+            return []
         return [
             sem
             for yr, sems in SEMESTER_NAVIGATION.items()
@@ -8106,7 +8114,9 @@ class AppState(reflex_local_auth.LocalAuthState):
                 .get(year, {})
                 .get(semester, [])
             )
-        curriculum = FLAT_DEGREE_CURRICULUM.get(self.degree, SE_CURRICULUM)
+        curriculum = FLAT_DEGREE_CURRICULUM.get(self.degree)
+        if curriculum is None:
+            return []
         return curriculum.get(year, {}).get(semester, [])
 
     def _semester_courses_for_subject(self, subject: str, year: str, semester: str) -> list[str]:
@@ -8207,7 +8217,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                 f"Subject teaching guidance:\n{guidance or '- No subject guidance loaded'}"
             )
         course_units = self._semester_course_units(year, semester)
-        discipline = FLAT_DEGREE_DISCIPLINE.get(self.degree, "Software Engineering")
+        discipline = FLAT_DEGREE_DISCIPLINE.get(self.degree, self.degree or "Unknown degree")
         if self.degree == "Software Engineering":
             guidance = f"- Software Engineering: {SE_TEACHING_STYLE['discipline']}; {SE_TEACHING_STYLE['emphasis']}"
             source_line = f"Official curriculum source: {UNIVERSITY_NAME} Faculty of Science Student Handbook 2024/2025 ({KELANIYA_SCIENCE_HANDBOOK_URL})"
@@ -8218,7 +8228,8 @@ class AppState(reflex_local_auth.LocalAuthState):
             guidance = f"- {discipline}: teach core concepts clearly with practical examples; balance theory and applied problem-solving."
             source_line = f"Degree: {self.degree} | Discipline: {discipline} | Generic international curriculum"
         block = self._course_unit_list_text(course_units)
-        courses = FLAT_DEGREE_CURRICULUM.get(self.degree, SE_CURRICULUM).get(year, {}).get(semester, [])
+        flat_curriculum = FLAT_DEGREE_CURRICULUM.get(self.degree)
+        courses = flat_curriculum.get(year, {}).get(semester, []) if flat_curriculum is not None else []
         courses_text = "\n".join(f"  - {c.split(':', 1)[-1]}" for c in courses) if courses else ""
         if not block and courses_text:
             block = courses_text
@@ -9382,7 +9393,9 @@ class AppState(reflex_local_auth.LocalAuthState):
     def _ensure_progress_for_year(self, uid: int, year: str) -> None:
         if uid < 0:
             return
-        curriculum = FLAT_DEGREE_CURRICULUM.get(self.degree, FULL_CURRICULUM)
+        curriculum = FLAT_DEGREE_CURRICULUM.get(self.degree)
+        if curriculum is None:
+            return
         if year not in curriculum:
             return
         items, idx = [], 0
@@ -22282,7 +22295,7 @@ def onboarding_page():
                 AppState.onboarding_region == "US",
                 rx.vstack(
                     degree_btn("Computer Science (US)", "Computer Science"),
-                    degree_btn("Computer Engineering (US)", "Computer Engineering"),
+                    degree_btn("Software Engineering (US)", "Software Engineering"),
                     spacing="2", width="100%",
                 ),
                 rx.fragment(),
