@@ -28027,6 +28027,7 @@ def landing_page():
                     letter_spacing="-0.05em",
                     text_align="center",
                     line_height="1.05",
+                    width="100%",
                 ),
                 rx.text(
                     "Pick a sample question and watch Alex teach it. Then sign up free to ask your own.",
@@ -28037,6 +28038,7 @@ def landing_page():
                     max_width="640px",
                 ),
                 spacing="3",
+                align="center",
                 align_items="center",
                 width="100%",
             ),
@@ -28161,6 +28163,8 @@ def landing_page():
                 font_weight="700",
                 letter_spacing="0.2em",
                 text_transform="uppercase",
+                width="100%",
+                text_align="center",
             ),
             rx.box(
                 rx.flex(
@@ -28225,6 +28229,8 @@ def landing_page():
                 ),
                 width="100%",
                 max_width="900px",
+                margin="0 auto",
+                align_self="center",
                 padding=rx.breakpoints(initial="28px 22px", md="40px 48px"),
                 border="1px solid rgba(255,255,255,0.08)",
                 border_radius="28px",
@@ -28232,6 +28238,7 @@ def landing_page():
                 box_shadow="0 28px 80px rgba(0,0,0,0.36)",
             ),
             spacing="5",
+            align="center",
             align_items="center",
             width="100%",
             max_width="1280px",
@@ -28255,6 +28262,8 @@ def landing_page():
                     font_weight="700",
                     letter_spacing="0.2em",
                     text_transform="uppercase",
+                    width="100%",
+                    text_align="center",
                 ),
                 rx.text(
                     "Alex vs ChatGPT vs Claude — for studying",
@@ -28341,6 +28350,7 @@ def landing_page():
                 max_width="640px",
             ),
             spacing="6",
+            align="center",
             align_items="center",
             width="100%",
             max_width="1280px",
@@ -29057,6 +29067,13 @@ def landing_page():
             #landing-comparison-section > div {
                 margin-left: auto !important;
                 margin-right: auto !important;
+                align-items: center !important;
+            }
+            #landing-founder-section > div > div,
+            #landing-comparison-section > div > div:first-child {
+                margin-left: auto !important;
+                margin-right: auto !important;
+                text-align: center !important;
             }
             #landing-comparison-section [data-landing-comparison-table] {
                 margin-left: auto !important;
