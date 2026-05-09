@@ -25052,8 +25052,24 @@ def _notes_unload_autosave_dom() -> rx.Component:
     )
 
 
+_SEMESTER_SHELL_CSS = """
+<style>
+/* Keep the semester route shell stable during the first hydration paint. */
+@media (min-width: 768px) {
+  .semester-mobile-header { display: none !important; }
+  .semester-desktop-header { display: block !important; }
+}
+@media (max-width: 767px) {
+  .semester-mobile-header { display: block !important; }
+  .semester-desktop-header { display: none !important; }
+}
+</style>
+"""
+
+
 def semester_page():
     return rx.fragment(
+        rx.html(_SEMESTER_SHELL_CSS),
         rx.script(SIDEBAR_GESTURES_JS),
         _semester_sidebar_swipe_open_hook_btn(),
         _notes_unload_autosave_dom(),
@@ -25140,6 +25156,7 @@ def semester_page():
                     margin_bottom="6px",
                     max_width="calc(100% - 28px)",
                 ),
+                class_name="semester-mobile-header",
                 display=rx.breakpoints(initial="block", md="none"),
                 flex_shrink="0",
             ),
@@ -25222,6 +25239,7 @@ def semester_page():
                     flex_shrink="0",
                     align="center",
                 ),
+                class_name="semester-desktop-header",
                 display=rx.breakpoints(initial="none", md="block"),
             ),
             rx.cond(
@@ -29331,25 +29349,25 @@ def selection_page():
     )
 
 
-def scope_page() -> rx.Component:
+def scope_page(route_scope: str = "home") -> rx.Component:
+    page_scope = str(route_scope or "home").split(":", 1)[0]
     return rx.fragment(
         guest_auth_buttons(),
-        rx.cond(
-            AppState.current_scope_from_path == "home",
-            home_page(),
-            semester_page_with_search(),
-        ),
+        home_page() if page_scope == "home" else semester_page_with_search(),
     )
 
 
 def _register_scope_pages() -> None:
     for scope_key, scope_info in SCOPE_ROUTE_MAP.items():
-        def _page(current_scope: str = scope_key) -> rx.Component:
-            return scope_page()
+        def _make_page(route_scope: str):
+            def _page() -> rx.Component:
+                return scope_page(route_scope)
 
-        _page.__name__ = f"scope_page_{scope_key}"
+            _page.__name__ = f"scope_page_{route_scope}"
+            return _page
+
         app.add_page(
-            require_app_login(_page),
+            require_app_login(_make_page(scope_key)),
             route=scope_info["route"],
             title="Alex AI",
             description="Alex AI study workspace",
