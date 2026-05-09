@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Orientation: Abstract data types and implementation trade-offs",
+      "Module roadmap: how abstract data types and implementation trade-offs fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Practice: Arrays, dynamic arrays, and indexed access",
+      "Applied focus: connect arrays, dynamic arrays, and indexed access to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Lab: Linked lists: nodes, references, insertion, and deletion",
+      "Applied focus: connect linked lists: nodes, references, insertion, and deletion to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Tutorial: Stacks and queues with application examples",
+      "Applied focus: connect stacks and queues with application examples to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Theory: Deque and priority queue use cases",
+      "Applied focus: connect deque and priority queue use cases to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Practice: Recursion, call stacks, and structural recursion",
+      "Applied focus: connect recursion, call stacks, and structural recursion to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Lab: Algorithm analysis for data-structure operations",
+      "Applied focus: connect algorithm analysis for data-structure operations to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Tutorial: Searching: linear search and binary search",
+      "Applied focus: connect searching: linear search and binary search to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Theory: Sorting overview: stability, adaptivity, and comparison cost",
+      "Applied focus: connect sorting overview: stability, adaptivity, and comparison cost to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Practice: Insertion sort, selection sort, and merge sort",
+      "Applied focus: connect insertion sort, selection sort, and merge sort to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Lab: Quicksort partitioning and average-case intuition",
+      "Applied focus: connect quicksort partitioning and average-case intuition to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Tutorial: Hash tables, hash functions, collisions, and resizing",
+      "Applied focus: connect hash tables, hash functions, collisions, and resizing to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Theory: Sets and maps as client-facing abstractions",
+      "Applied focus: connect sets and maps as client-facing abstractions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Practice: Trees, binary trees, and tree traversals",
+      "Applied focus: connect trees, binary trees, and tree traversals to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Lab: Binary search trees and balanced-tree motivation",
+      "Applied focus: connect binary search trees and balanced-tree motivation to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Tutorial: Heaps and heap-based priority queues",
+      "Applied focus: connect heaps and heap-based priority queues to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Theory: Graphs, adjacency lists, and adjacency matrices",
+      "Applied focus: connect graphs, adjacency lists, and adjacency matrices to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Practice: Breadth-first search and shortest unweighted paths",
+      "Applied focus: connect breadth-first search and shortest unweighted paths to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Lab: Depth-first search and connected components",
+      "Applied focus: connect depth-first search and connected components to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Tutorial: Weighted graphs and Dijkstra's algorithm overview",
+      "Applied focus: connect weighted graphs and Dijkstra's algorithm overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Theory: Memory management and object references",
+      "Applied focus: connect memory management and object references to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Practice: Iterators and collection APIs",
+      "Applied focus: connect iterators and collection APIs to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Lab: Testing data-structure invariants",
+      "Applied focus: connect testing data-structure invariants to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Lab: implement linked list, stack, and queue",
+      "Applied focus: connect implement linked list, stack, and queue to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Lab: implement hash map or binary search tree",
+      "Applied focus: connect implement hash map or binary search tree to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Tutorial: data-structure tracing exercises",
+      "Applied focus: connect data-structure tracing exercises to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Review: data structures decision guide",
+      "Exam readiness: consolidate data structures notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CS",
+    "unit": "Data Structures",
+    "topics": [
+      "Self-check: data structures mixed problem set",
+      "Exam readiness: consolidate data structures notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Review: definite integrals and the Fundamental Theorem of Calculus",
+      "Module roadmap: how definite integrals and the Fundamental Theorem of Calculus fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Practice: Substitution rule for integration",
+      "Applied focus: connect substitution rule for integration to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Lab: Integration by parts",
+      "Applied focus: connect integration by parts to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Tutorial: Trigonometric integrals and substitutions overview",
+      "Applied focus: connect trigonometric integrals and substitutions overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Theory: Partial fractions for rational functions",
+      "Applied focus: connect partial fractions for rational functions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Practice: Improper integrals and convergence",
+      "Applied focus: connect improper integrals and convergence to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Lab: Applications of integration: area, volume, and average value",
+      "Applied focus: connect applications of integration: area, volume, and average value to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Tutorial: Differential equations and separable models",
+      "Applied focus: connect differential equations and separable models to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Theory: Parametric equations and calculus with parametric curves",
+      "Applied focus: connect parametric equations and calculus with parametric curves to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Practice: Polar coordinates and polar graph interpretation",
+      "Applied focus: connect polar coordinates and polar graph interpretation to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Lab: Sequences and convergence",
+      "Applied focus: connect sequences and convergence to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Tutorial: Infinite series and partial sums",
+      "Applied focus: connect infinite series and partial sums to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Theory: Geometric series and telescoping series",
+      "Applied focus: connect geometric series and telescoping series to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Practice: Integral test and comparison tests",
+      "Applied focus: connect integral test and comparison tests to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Lab: Ratio test and root test",
+      "Applied focus: connect ratio test and root test to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Tutorial: Alternating series and error bounds",
+      "Applied focus: connect alternating series and error bounds to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Theory: Power series and radius of convergence",
+      "Applied focus: connect power series and radius of convergence to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Practice: Taylor and Maclaurin series",
+      "Applied focus: connect taylor and Maclaurin series to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Lab: Taylor polynomial approximation and error",
+      "Applied focus: connect taylor polynomial approximation and error to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Tutorial: Multivariable preview: vectors and surfaces",
+      "Applied focus: connect multivariable preview: vectors and surfaces to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Theory: Numerical integration and approximation error",
+      "Applied focus: connect numerical integration and approximation error to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Practice: Applications to growth, decay, and computational modelling",
+      "Applied focus: connect applications to growth, decay, and computational modelling to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Tutorial: integration technique practice",
+      "Applied focus: connect integration technique practice to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Tutorial: sequence and series convergence practice",
+      "Applied focus: connect sequence and series convergence practice to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Tutorial: Taylor series approximation practice",
+      "Applied focus: connect taylor series approximation practice to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Review: Calculus II formula and method sheet",
+      "Exam readiness: consolidate calculus ii notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CS",
+    "unit": "Calculus II",
+    "topics": [
+      "Self-check: mixed Calculus II assessment",
+      "Exam readiness: consolidate calculus ii notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Orientation: Digital abstraction, voltage levels, and binary signals",
+      "Module roadmap: how digital abstraction, voltage levels, and binary signals fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Practice: Number systems: binary, octal, decimal, and hexadecimal",
+      "Applied focus: connect number systems: binary, octal, decimal, and hexadecimal to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Lab: Binary arithmetic, overflow, and two's complement",
+      "Applied focus: connect binary arithmetic, overflow, and two's complement to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Tutorial: Boolean algebra and truth-table reasoning",
+      "Applied focus: connect boolean algebra and truth-table reasoning to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Theory: Logic gates: AND, OR, NOT, NAND, NOR, XOR, XNOR",
+      "Applied focus: connect logic gates: AND, OR, NOT, NAND, NOR, XOR, XNOR to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Practice: Boolean expressions from circuit requirements",
+      "Applied focus: connect boolean expressions from circuit requirements to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Lab: Circuit diagrams from Boolean expressions",
+      "Applied focus: connect circuit diagrams from Boolean expressions to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Tutorial: Simplification using Boolean laws",
+      "Applied focus: connect simplification using Boolean laws to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Theory: Karnaugh maps for two, three, and four variables",
+      "Applied focus: connect karnaugh maps for two, three, and four variables to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Practice: Combinational circuits: adders, subtractors, comparators",
+      "Applied focus: connect combinational circuits: adders, subtractors, comparators to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Lab: Multiplexers, decoders, encoders, and demultiplexers",
+      "Applied focus: connect multiplexers, decoders, encoders, and demultiplexers to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Tutorial: Propagation delay and timing constraints",
+      "Applied focus: connect propagation delay and timing constraints to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Theory: Latches and flip-flops",
+      "Applied focus: connect latches and flip-flops to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Practice: Registers, counters, and shift registers",
+      "Applied focus: connect registers, counters, and shift registers to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Lab: Finite-state machine design",
+      "Applied focus: connect finite-state machine design to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Tutorial: Datapath and control-unit basics",
+      "Applied focus: connect datapath and control-unit basics to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Theory: Memory elements: RAM, ROM, and programmable logic",
+      "Applied focus: connect memory elements: RAM, ROM, and programmable logic to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Practice: Hardware description language concepts",
+      "Applied focus: connect hardware description language concepts to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Lab: Digital system testing and simulation workflow",
+      "Applied focus: connect digital system testing and simulation workflow to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Tutorial: Microcontrollers and digital input-output overview",
+      "Applied focus: connect microcontrollers and digital input-output overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Lab: simulate combinational logic",
+      "Applied focus: connect simulate combinational logic to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Lab: design and test a finite-state machine",
+      "Applied focus: connect design and test a finite-state machine to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Lab: build an arithmetic or control circuit",
+      "Applied focus: connect build an arithmetic or control circuit to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Tutorial: Boolean simplification exercises",
+      "Applied focus: connect boolean simplification exercises to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Tutorial: timing and state-machine problems",
+      "Applied focus: connect timing and state-machine problems to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Case study: from logic gates to a simple CPU component",
+      "Applied focus: connect from logic gates to a simple CPU component to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Review: logic design and digital systems map",
+      "Exam readiness: consolidate logic design and digital systems notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CS",
+    "unit": "Logic Design and Digital Systems",
+    "topics": [
+      "Self-check: digital systems assessment",
+      "Exam readiness: consolidate logic design and digital systems notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Orientation: Electric charge, Coulomb's law, and electric force",
+      "Module roadmap: how electric charge, Coulomb's law, and electric force fits a US Computer Science core sequence"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Practice: Electric fields and field-line interpretation",
+      "Applied focus: connect electric fields and field-line interpretation to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Lab: Gauss's law and symmetry arguments",
+      "Applied focus: connect gauss's law and symmetry arguments to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Tutorial: Electric potential and potential energy",
+      "Applied focus: connect electric potential and potential energy to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Theory: Capacitance, dielectrics, and stored energy",
+      "Applied focus: connect capacitance, dielectrics, and stored energy to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Practice: Current, resistance, Ohm's law, and power",
+      "Applied focus: connect current, resistance, Ohm's law, and power to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Lab: DC circuits, Kirchhoff's rules, and equivalent resistance",
+      "Applied focus: connect dC circuits, Kirchhoff's rules, and equivalent resistance to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Tutorial: RC circuits and transient behaviour",
+      "Applied focus: connect rC circuits and transient behaviour to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Theory: Magnetic fields and magnetic force",
+      "Applied focus: connect magnetic fields and magnetic force to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Practice: Motion of charged particles in magnetic fields",
+      "Applied focus: connect motion of charged particles in magnetic fields to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Lab: Sources of magnetic fields and Ampere's law overview",
+      "Applied focus: connect sources of magnetic fields and Ampere's law overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Tutorial: Electromagnetic induction and Faraday's law",
+      "Applied focus: connect electromagnetic induction and Faraday's law to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Theory: Inductance and RL circuits overview",
+      "Applied focus: connect inductance and RL circuits overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Practice: AC circuits and impedance intuition",
+      "Applied focus: connect aC circuits and impedance intuition to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Lab: Electromagnetic waves and spectrum overview",
+      "Applied focus: connect electromagnetic waves and spectrum overview to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Tutorial: Geometric optics: reflection, refraction, lenses, and mirrors",
+      "Applied focus: connect geometric optics: reflection, refraction, lenses, and mirrors to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Theory: Wave optics: interference and diffraction",
+      "Applied focus: connect wave optics: interference and diffraction to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Practice: Modern physics preview: photons and matter waves",
+      "Applied focus: connect modern physics preview: photons and matter waves to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Lab: electric field or circuit measurement",
+      "Applied focus: connect electric field or circuit measurement to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Lab: RC circuit data collection and modelling",
+      "Applied focus: connect rC circuit data collection and modelling to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Lab: magnetic force or induction experiment",
+      "Applied focus: connect magnetic force or induction experiment to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Lab: optics measurement and uncertainty",
+      "Applied focus: connect optics measurement and uncertainty to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Tutorial: electrostatics problem solving",
+      "Applied focus: connect electrostatics problem solving to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Tutorial: circuit and magnetism problems",
+      "Applied focus: connect circuit and magnetism problems to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Tutorial: waves and optics practice",
+      "Applied focus: connect waves and optics practice to programs, systems, models, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Review: University Physics II concept map",
+      "Exam readiness: consolidate university physics ii notes, worked examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CS",
+    "unit": "University Physics II",
+    "topics": [
+      "Self-check: electricity, magnetism, and optics assessment",
+      "Exam readiness: consolidate university physics ii notes, worked examples, and weak areas"
+    ]
+  }
+]

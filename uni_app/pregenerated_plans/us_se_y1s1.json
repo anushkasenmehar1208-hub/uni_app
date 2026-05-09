@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Orientation: Software engineering as engineering discipline and profession",
+      "Module roadmap: how software engineering as engineering discipline and profession supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Practice: Software products, stakeholders, constraints, and trade-offs",
+      "Applied focus: connect software products, stakeholders, constraints, and trade-offs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: Software lifecycle models: waterfall, iterative, agile, and DevOps",
+      "Applied focus: connect software lifecycle models: waterfall, iterative, agile, and DevOps to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Tutorial: Requirements, design, implementation, testing, deployment, maintenance",
+      "Applied focus: connect requirements, design, implementation, testing, deployment, maintenance to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Theory: Functional and non-functional requirements overview",
+      "Applied focus: connect functional and non-functional requirements overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Practice: User stories, use cases, and acceptance criteria",
+      "Applied focus: connect user stories, use cases, and acceptance criteria to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: Architecture, modules, interfaces, and abstraction",
+      "Applied focus: connect architecture, modules, interfaces, and abstraction to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Tutorial: Quality attributes: reliability, usability, security, maintainability",
+      "Applied focus: connect quality attributes: reliability, usability, security, maintainability to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Theory: Engineering ethics, public safety, privacy, and accessibility",
+      "Applied focus: connect engineering ethics, public safety, privacy, and accessibility to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Practice: Team roles, communication, and professional accountability",
+      "Engineering focus: connect team roles, communication, and professional accountability to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: Version control basics: commits, branches, diffs, and merges",
+      "Applied focus: connect version control basics: commits, branches, diffs, and merges to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Tutorial: Issue tracking and task decomposition",
+      "Applied focus: connect issue tracking and task decomposition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Theory: Code review, pair programming, and constructive feedback",
+      "Applied focus: connect code review, pair programming, and constructive feedback to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Practice: Testing mindset and defect prevention",
+      "Applied focus: connect testing mindset and defect prevention to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: Documentation for users, developers, and maintainers",
+      "Applied focus: connect documentation for users, developers, and maintainers to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Tutorial: Technical debt and long-term software evolution",
+      "Applied focus: connect technical debt and long-term software evolution to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Theory: Risk identification and mitigation in software projects",
+      "Engineering focus: connect risk identification and mitigation in software projects to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Practice: Project estimation and uncertainty",
+      "Engineering focus: connect project estimation and uncertainty to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: Introductory modelling with UML-style diagrams",
+      "Applied focus: connect introductory modelling with UML-style diagrams to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Tutorial: Software process metrics and quality evidence",
+      "Applied focus: connect software process metrics and quality evidence to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: create a team working agreement and workflow",
+      "Engineering focus: connect create a team working agreement and workflow to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: write requirements for a small software product",
+      "Applied focus: connect write requirements for a small software product to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: model components and interfaces for a small system",
+      "Applied focus: connect model components and interfaces for a small system to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Lab: create a test checklist from acceptance criteria",
+      "Applied focus: connect create a test checklist from acceptance criteria to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Tutorial: ethics and professional responsibility scenarios",
+      "Applied focus: connect ethics and professional responsibility scenarios to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Case study: why software projects fail or succeed",
+      "Engineering focus: connect why software projects fail or succeed to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Review: software engineering foundation map",
+      "Exam readiness: consolidate introduction to software engineering notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "SE",
+    "unit": "Introduction to Software Engineering",
+    "topics": [
+      "Self-check: software engineering profession and process assessment",
+      "Exam readiness: consolidate introduction to software engineering notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Orientation: Development environment setup, command line, and source files",
+      "Module roadmap: how development environment setup, command line, and source files supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Practice: Values, variables, assignment, and primitive data types",
+      "Applied focus: connect values, variables, assignment, and primitive data types to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Lab: Expressions, operators, precedence, and evaluation order",
+      "Applied focus: connect expressions, operators, precedence, and evaluation order to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Tutorial: Input, output, formatting, and simple console programs",
+      "Applied focus: connect input, output, formatting, and simple console programs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Theory: Boolean logic, comparisons, and conditional execution",
+      "Applied focus: connect boolean logic, comparisons, and conditional execution to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Practice: Loops, counters, accumulators, and sentinel patterns",
+      "Applied focus: connect loops, counters, accumulators, and sentinel patterns to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Lab: Functions, parameters, return values, and decomposition",
+      "Applied focus: connect functions, parameters, return values, and decomposition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Tutorial: Scope, local state, and avoiding hidden dependencies",
+      "Applied focus: connect scope, local state, and avoiding hidden dependencies to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Theory: Strings, arrays, and indexed data",
+      "Applied focus: connect strings, arrays, and indexed data to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Practice: Lists or vectors and collection traversal",
+      "Applied focus: connect lists or vectors and collection traversal to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Lab: Maps or dictionaries and key-value modelling",
+      "Applied focus: connect maps or dictionaries and key-value modelling to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Tutorial: File input-output and simple data persistence",
+      "Applied focus: connect file input-output and simple data persistence to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Theory: Exception handling and defensive programming",
+      "Applied focus: connect exception handling and defensive programming to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Practice: Debugging with traces, breakpoints, and stack traces",
+      "Applied focus: connect debugging with traces, breakpoints, and stack traces to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Lab: Testing functions with examples and edge cases",
+      "Applied focus: connect testing functions with examples and edge cases to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Tutorial: Pseudocode and algorithm sketches before coding",
+      "Applied focus: connect pseudocode and algorithm sketches before coding to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Theory: Searching and basic sorting at introductory level",
+      "Applied focus: connect searching and basic sorting at introductory level to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Practice: Recursion preview with base and recursive cases",
+      "Applied focus: connect recursion preview with base and recursive cases to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Lab: Modular program organization",
+      "Applied focus: connect modular program organization to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Tutorial: Code style, naming, comments, and readability",
+      "Applied focus: connect code style, naming, comments, and readability to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Theory: Git workflow for individual programming assignments",
+      "Applied focus: connect git workflow for individual programming assignments to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Lab: build a small command-line calculator or converter",
+      "Applied focus: connect build a small command-line calculator or converter to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Lab: process a file and generate a structured report",
+      "Applied focus: connect process a file and generate a structured report to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Lab: debug and refactor a flawed beginner program",
+      "Applied focus: connect debug and refactor a flawed beginner program to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Tutorial: tracing loops, functions, and collections",
+      "Applied focus: connect tracing loops, functions, and collections to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Review: programming fundamentals checklist",
+      "Exam readiness: consolidate programming fundamentals notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "SE",
+    "unit": "Programming Fundamentals",
+    "topics": [
+      "Self-check: programming mini assessment",
+      "Exam readiness: consolidate programming fundamentals notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Orientation: Functions, graphs, domains, ranges, and engineering models",
+      "Module roadmap: how functions, graphs, domains, ranges, and engineering models supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Practice: Linear, polynomial, exponential, logarithmic, and trigonometric functions",
+      "Applied focus: connect linear, polynomial, exponential, logarithmic, and trigonometric functions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Lab: Limits from tables, graphs, and algebraic simplification",
+      "Applied focus: connect limits from tables, graphs, and algebraic simplification to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Tutorial: One-sided limits and limits at infinity",
+      "Applied focus: connect one-sided limits and limits at infinity to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Theory: Continuity and discontinuities",
+      "Applied focus: connect continuity and discontinuities to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Practice: Derivative as instantaneous rate of change",
+      "Applied focus: connect derivative as instantaneous rate of change to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Lab: Derivative as slope of a tangent line",
+      "Applied focus: connect derivative as slope of a tangent line to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Tutorial: Derivative rules: constant, power, sum, and difference",
+      "Applied focus: connect derivative rules: constant, power, sum, and difference to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Theory: Product rule and quotient rule",
+      "Applied focus: connect product rule and quotient rule to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Practice: Chain rule and composite functions",
+      "Applied focus: connect chain rule and composite functions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Lab: Derivatives of exponential and logarithmic functions",
+      "Applied focus: connect derivatives of exponential and logarithmic functions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Tutorial: Derivatives of trigonometric functions",
+      "Applied focus: connect derivatives of trigonometric functions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Theory: Implicit differentiation",
+      "Applied focus: connect implicit differentiation to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Practice: Related rates and engineering change models",
+      "Applied focus: connect related rates and engineering change models to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Lab: Linear approximation and differentials",
+      "Applied focus: connect linear approximation and differentials to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Tutorial: Critical points, extrema, and optimization",
+      "Applied focus: connect critical points, extrema, and optimization to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Theory: Concavity, inflection points, and second derivative test",
+      "Applied focus: connect concavity, inflection points, and second derivative test to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Practice: Curve sketching from derivative information",
+      "Applied focus: connect curve sketching from derivative information to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Lab: Antiderivatives and indefinite integrals",
+      "Applied focus: connect antiderivatives and indefinite integrals to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Tutorial: Riemann sums and area approximation",
+      "Applied focus: connect riemann sums and area approximation to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Theory: Definite integrals and the Fundamental Theorem of Calculus",
+      "Applied focus: connect definite integrals and the Fundamental Theorem of Calculus to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Practice: Applications of integration to accumulated change",
+      "Applied focus: connect applications of integration to accumulated change to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Lab: Numerical approximation and error awareness",
+      "Applied focus: connect numerical approximation and error awareness to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Tutorial: derivative computation practice",
+      "Applied focus: connect derivative computation practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Tutorial: optimization and related-rates practice",
+      "Applied focus: connect optimization and related-rates practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Tutorial: integration basics practice",
+      "Applied focus: connect integration basics practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Review: Calculus for Engineers I formula sheet",
+      "Exam readiness: consolidate calculus for engineers i notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "SE",
+    "unit": "Calculus for Engineers I",
+    "topics": [
+      "Self-check: mixed calculus assessment",
+      "Exam readiness: consolidate calculus for engineers i notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Orientation: Engineering design process and problem framing",
+      "Module roadmap: how engineering design process and problem framing supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Practice: Stakeholder discovery and user needs",
+      "Applied focus: connect stakeholder discovery and user needs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Lab: Design constraints, criteria, and trade-off decisions",
+      "Applied focus: connect design constraints, criteria, and trade-off decisions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Tutorial: Brainstorming, sketching, and concept selection",
+      "Applied focus: connect brainstorming, sketching, and concept selection to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Theory: Requirements written as measurable design goals",
+      "Applied focus: connect requirements written as measurable design goals to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Practice: Technical communication for engineering audiences",
+      "Applied focus: connect technical communication for engineering audiences to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Lab: Writing concise memos, reports, and design rationales",
+      "Applied focus: connect writing concise memos, reports, and design rationales to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Tutorial: Presenting design decisions with evidence",
+      "Applied focus: connect presenting design decisions with evidence to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Theory: Team collaboration, roles, and meeting discipline",
+      "Hands-on task: apply team collaboration, roles, and meeting discipline and record evidence for portfolio or coursework review"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Practice: Project planning with milestones and deliverables",
+      "Engineering focus: connect project planning with milestones and deliverables to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Lab: Risk logs, assumptions, and dependency tracking",
+      "Applied focus: connect risk logs, assumptions, and dependency tracking to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Tutorial: Prototyping methods and design iteration",
+      "Applied focus: connect prototyping methods and design iteration to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Theory: Basic human factors and accessibility awareness",
+      "Applied focus: connect basic human factors and accessibility awareness to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Practice: Sustainability and social impact in engineering design",
+      "Applied focus: connect sustainability and social impact in engineering design to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Lab: Data visualization and communicating measurements",
+      "Applied focus: connect data visualization and communicating measurements to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Tutorial: Academic integrity, citations, and responsible use of sources",
+      "Applied focus: connect academic integrity, citations, and responsible use of sources to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Theory: Portfolio thinking and documenting engineering work",
+      "Applied focus: connect portfolio thinking and documenting engineering work to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Practice: Client feedback and design revision",
+      "Applied focus: connect client feedback and design revision to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Lab: write a problem statement and design brief",
+      "Applied focus: connect write a problem statement and design brief to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Lab: compare alternative design concepts",
+      "Applied focus: connect compare alternative design concepts to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Lab: prepare a technical presentation",
+      "Applied focus: connect prepare a technical presentation to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Lab: write a short engineering report",
+      "Applied focus: connect write a short engineering report to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Tutorial: critique requirements and design claims",
+      "Applied focus: connect critique requirements and design claims to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Tutorial: communication scenarios for engineering teams",
+      "Engineering focus: connect communication scenarios for engineering teams to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Case study: design trade-offs in a software-enabled product",
+      "Applied focus: connect design trade-offs in a software-enabled product to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Review: engineering design and communication toolkit",
+      "Exam readiness: consolidate engineering design and communication notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "SE",
+    "unit": "Engineering Design and Communication",
+    "topics": [
+      "Self-check: design communication action plan",
+      "Exam readiness: consolidate engineering design and communication notes, examples, and weak areas"
+    ]
+  }
+]

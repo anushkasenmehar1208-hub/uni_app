@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Orientation: Algorithmic thinking and input-output contracts",
+      "Module roadmap: how algorithmic thinking and input-output contracts supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Time complexity, space complexity, and Big O notation",
+      "Applied focus: connect time complexity, space complexity, and Big O notation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Arrays, lists, indexing, and traversal patterns",
+      "Applied focus: connect arrays, lists, indexing, and traversal patterns to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Linked lists and pointer-style reasoning",
+      "Applied focus: connect linked lists and pointer-style reasoning to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Stacks, queues, and abstract data types",
+      "Applied focus: connect stacks, queues, and abstract data types to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Recursion, base cases, and recursive traces",
+      "Applied focus: connect recursion, base cases, and recursive traces to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Searching: linear search and binary search",
+      "Applied focus: connect searching: linear search and binary search to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Sorting overview and stability",
+      "Applied focus: connect sorting overview and stability to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Selection sort, insertion sort, and merge sort",
+      "Applied focus: connect selection sort, insertion sort, and merge sort to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Quicksort idea and partitioning intuition",
+      "Applied focus: connect quicksort idea and partitioning intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Hash tables, hashing, collisions, and load factor",
+      "Applied focus: connect hash tables, hashing, collisions, and load factor to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Sets and maps as implementation choices",
+      "Applied focus: connect sets and maps as implementation choices to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Trees, binary search trees, and ordered data",
+      "Applied focus: connect trees, binary search trees, and ordered data to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Tree traversal: preorder, inorder, postorder, breadth-first",
+      "Applied focus: connect tree traversal: preorder, inorder, postorder, breadth-first to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Heaps and priority queues",
+      "Applied focus: connect heaps and priority queues to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Graphs, adjacency lists, and adjacency matrices",
+      "Applied focus: connect graphs, adjacency lists, and adjacency matrices to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Breadth-first search and shortest unweighted paths",
+      "Applied focus: connect breadth-first search and shortest unweighted paths to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Depth-first search and connected components",
+      "Applied focus: connect depth-first search and connected components to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Weighted graphs and Dijkstra's algorithm overview",
+      "Applied focus: connect weighted graphs and Dijkstra's algorithm overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Greedy algorithm design",
+      "Applied focus: connect greedy algorithm design to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Dynamic programming intuition with small examples",
+      "Applied focus: connect dynamic programming intuition with small examples to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Practice: Algorithm correctness arguments",
+      "Applied focus: connect algorithm correctness arguments to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Lab: Testing data-structure operations",
+      "Applied focus: connect testing data-structure operations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: Implementation lab: build a small collection library",
+      "Hands-on task: apply implementation lab: build a small collection library and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Theory: Implementation lab: benchmark algorithm choices",
+      "Hands-on task: apply implementation lab: benchmark algorithm choices and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Tutorial: complexity and tracing exercises",
+      "Applied focus: connect complexity and tracing exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Review: data structures decision guide",
+      "Exam readiness: consolidate data structures and algorithms notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CS",
+    "unit": "Data Structures and Algorithms",
+    "topics": [
+      "Self-check: algorithms mixed problem set",
+      "Exam readiness: consolidate data structures and algorithms notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Orientation: Objects, classes, and modelling real-world entities",
+      "Module roadmap: how objects, classes, and modelling real-world entities supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Practice: Fields, methods, constructors, and object state",
+      "Applied focus: connect fields, methods, constructors, and object state to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Lab: Encapsulation and information hiding",
+      "Applied focus: connect encapsulation and information hiding to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Tutorial: Class invariants and defensive method design",
+      "Applied focus: connect class invariants and defensive method design to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Theory: Composition and object relationships",
+      "Applied focus: connect composition and object relationships to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Practice: Inheritance and reuse boundaries",
+      "Applied focus: connect inheritance and reuse boundaries to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Lab: Polymorphism and dynamic dispatch",
+      "Applied focus: connect polymorphism and dynamic dispatch to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Tutorial: Interfaces, abstract classes, and contracts",
+      "Applied focus: connect interfaces, abstract classes, and contracts to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Theory: Method overriding and overload-style design choices",
+      "Applied focus: connect method overriding and overload-style design choices to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Practice: Exception handling in object-oriented programs",
+      "Applied focus: connect exception handling in object-oriented programs to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Lab: Collections, generics, and type-safe APIs",
+      "Applied focus: connect collections, generics, and type-safe APIs to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Tutorial: Object equality, identity, and hashing",
+      "Applied focus: connect object equality, identity, and hashing to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Theory: Immutable objects and controlled mutability",
+      "Applied focus: connect immutable objects and controlled mutability to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Practice: UML class diagrams for design communication",
+      "Applied focus: connect uML class diagrams for design communication to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Lab: Unit testing classes and object interactions",
+      "Applied focus: connect unit testing classes and object interactions to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Tutorial: Refactoring long methods and duplicated code",
+      "Applied focus: connect refactoring long methods and duplicated code to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Theory: Design patterns overview: strategy and factory",
+      "Applied focus: connect design patterns overview: strategy and factory to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Practice: SOLID principles at beginner level",
+      "Applied focus: connect sOLID principles at beginner level to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Lab: File-backed object persistence overview",
+      "Applied focus: connect file-backed object persistence overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Tutorial: GUI or console application structure",
+      "Applied focus: connect gUI or console application structure to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Theory: Project lab: domain model and class responsibilities",
+      "Hands-on task: apply project lab: domain model and class responsibilities and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Practice: Project lab: implement core classes",
+      "Hands-on task: apply project lab: implement core classes and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Lab: Project lab: add tests and error handling",
+      "Hands-on task: apply project lab: add tests and error handling and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Tutorial: OOP design scenarios",
+      "Applied focus: connect oOP design scenarios to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Tutorial: code-reading and bug-fixing practice",
+      "Applied focus: connect code-reading and bug-fixing practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Review: OOP vocabulary and design rules",
+      "Exam readiness: consolidate object-oriented programming notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CS",
+    "unit": "Object-Oriented Programming",
+    "topics": [
+      "Self-check: object-oriented mini assessment",
+      "Exam readiness: consolidate object-oriented programming notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Orientation: Mathematical modelling in computer science",
+      "Module roadmap: how mathematical modelling in computer science supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Practice: Algebraic manipulation and equation solving",
+      "Applied focus: connect algebraic manipulation and equation solving to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Lab: Functions, graphs, and transformations",
+      "Applied focus: connect functions, graphs, and transformations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Tutorial: Logarithms and exponentials in algorithm analysis",
+      "Applied focus: connect logarithms and exponentials in algorithm analysis to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Theory: Sequences, series, and summation notation",
+      "Applied focus: connect sequences, series, and summation notation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Practice: Limits and rates of growth intuition",
+      "Applied focus: connect limits and rates of growth intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Lab: Basic differentiation for optimization context",
+      "Applied focus: connect basic differentiation for optimization context to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Tutorial: Basic integration and area interpretation",
+      "Applied focus: connect basic integration and area interpretation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Theory: Vectors, dot products, and geometric meaning",
+      "Applied focus: connect vectors, dot products, and geometric meaning to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Practice: Matrices, matrix operations, and transformations",
+      "Applied focus: connect matrices, matrix operations, and transformations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Lab: Linear systems and Gaussian elimination overview",
+      "Applied focus: connect linear systems and Gaussian elimination overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Tutorial: Eigenvalue intuition for computing applications",
+      "Applied focus: connect eigenvalue intuition for computing applications to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Theory: Probability spaces and events",
+      "Applied focus: connect probability spaces and events to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Practice: Conditional probability and Bayes' rule",
+      "Applied focus: connect conditional probability and Bayes' rule to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Lab: Random variables and common discrete distributions",
+      "Applied focus: connect random variables and common discrete distributions to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Tutorial: Expected value and variance",
+      "Applied focus: connect expected value and variance to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Theory: Basic statistics: mean, median, spread, and plots",
+      "Applied focus: connect basic statistics: mean, median, spread, and plots to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Practice: Correlation and simple regression intuition",
+      "Applied focus: connect correlation and simple regression intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Lab: Logic and sets recap for formal reasoning",
+      "Applied focus: connect logic and sets recap for formal reasoning to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Tutorial: Counting, binomial coefficients, and recurrence examples",
+      "Applied focus: connect counting, binomial coefficients, and recurrence examples to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Theory: Graph matrices and network-style representations",
+      "Applied focus: connect graph matrices and network-style representations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Practice: Numerical error and floating-point awareness",
+      "Applied focus: connect numerical error and floating-point awareness to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Lab: Mathematical notation for machine learning previews",
+      "Applied focus: connect mathematical notation for machine learning previews to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Tutorial: algebra and logarithm exercises",
+      "Applied focus: connect algebra and logarithm exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Tutorial: probability and statistics exercises",
+      "Applied focus: connect probability and statistics exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Tutorial: vectors and matrices exercises",
+      "Applied focus: connect vectors and matrices exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Review: mathematics formula sheet",
+      "Exam readiness: consolidate mathematics for computer science notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CS",
+    "unit": "Mathematics for Computer Science",
+    "topics": [
+      "Self-check: mixed mathematics for CS questions",
+      "Exam readiness: consolidate mathematics for computer science notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Orientation: Web architecture: clients, servers, browsers, and URLs",
+      "Module roadmap: how web architecture: clients, servers, browsers, and URLs supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Practice: HTML document structure and semantic elements",
+      "Applied focus: connect hTML document structure and semantic elements to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: Forms, inputs, validation, and data submission",
+      "Applied focus: connect forms, inputs, validation, and data submission to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Tutorial: CSS selectors, cascade, inheritance, and specificity",
+      "Applied focus: connect cSS selectors, cascade, inheritance, and specificity to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Theory: Box model, spacing, layout, and responsive design",
+      "Applied focus: connect box model, spacing, layout, and responsive design to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Practice: Flexbox and grid for page structure",
+      "Applied focus: connect flexbox and grid for page structure to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: Accessibility fundamentals: labels, headings, and keyboard flow",
+      "Hands-on task: apply accessibility fundamentals: labels, headings, and keyboard flow and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Tutorial: JavaScript syntax for browser programming",
+      "Applied focus: connect javaScript syntax for browser programming to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Theory: DOM selection, events, and interactive pages",
+      "Applied focus: connect dOM selection, events, and interactive pages to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Practice: State, rendering, and simple UI update patterns",
+      "Applied focus: connect state, rendering, and simple UI update patterns to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: HTTP requests, responses, headers, and status codes",
+      "Applied focus: connect hTTP requests, responses, headers, and status codes to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Tutorial: JSON and API data exchange",
+      "Applied focus: connect jSON and API data exchange to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Theory: Fetch API and asynchronous programming basics",
+      "Applied focus: connect fetch API and asynchronous programming basics to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Practice: Server-side routing and request handling overview",
+      "Applied focus: connect server-side routing and request handling overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: Databases in web applications overview",
+      "Applied focus: connect databases in web applications overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Tutorial: Authentication and sessions at a conceptual level",
+      "Applied focus: connect authentication and sessions at a conceptual level to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Theory: Web security basics: XSS, CSRF, injection awareness",
+      "Applied focus: connect web security basics: XSS, CSRF, injection awareness to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Practice: Performance basics: assets, caching, and network cost",
+      "Applied focus: connect performance basics: assets, caching, and network cost to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: Browser developer tools and debugging workflow",
+      "Applied focus: connect browser developer tools and debugging workflow to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Tutorial: Version control and deployment workflow for web coursework",
+      "Applied focus: connect version control and deployment workflow for web coursework to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: build a static responsive page",
+      "Applied focus: connect build a static responsive page to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: add JavaScript interaction",
+      "Applied focus: connect add JavaScript interaction to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: consume a small JSON API",
+      "Applied focus: connect consume a small JSON API to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Lab: test accessibility and responsive behaviour",
+      "Applied focus: connect test accessibility and responsive behaviour to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Tutorial: HTTP and DOM problem practice",
+      "Applied focus: connect hTTP and DOM problem practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Review: web development architecture map",
+      "Exam readiness: consolidate web development fundamentals notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CS",
+    "unit": "Web Development Fundamentals",
+    "topics": [
+      "Self-check: web fundamentals mini project plan",
+      "Exam readiness: consolidate web development fundamentals notes, examples, and weak areas"
+    ]
+  }
+]

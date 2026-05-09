@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Orientation: Algorithm design goals and precise problem specification",
+      "Module roadmap: how algorithm design goals and precise problem specification supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Practice: Asymptotic analysis: Big O, Omega, and Theta",
+      "Applied focus: connect asymptotic analysis: Big O, Omega, and Theta to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Lab: Worst-case, average-case, and amortized analysis",
+      "Applied focus: connect worst-case, average-case, and amortized analysis to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Tutorial: Recurrences and Master Theorem intuition",
+      "Applied focus: connect recurrences and Master Theorem intuition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Theory: Divide and conquer: merge sort and binary search",
+      "Applied focus: connect divide and conquer: merge sort and binary search to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Practice: Quicksort analysis and randomized algorithms",
+      "Applied focus: connect quicksort analysis and randomized algorithms to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Lab: Greedy algorithms and exchange arguments",
+      "Applied focus: connect greedy algorithms and exchange arguments to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Tutorial: Interval scheduling and activity selection",
+      "Applied focus: connect interval scheduling and activity selection to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Theory: Minimum spanning trees: Kruskal and Prim",
+      "Applied focus: connect minimum spanning trees: Kruskal and Prim to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Practice: Shortest paths: Dijkstra and Bellman-Ford overview",
+      "Applied focus: connect shortest paths: Dijkstra and Bellman-Ford overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Lab: Dynamic programming principles",
+      "Applied focus: connect dynamic programming principles to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Tutorial: Dynamic programming on sequences and grids",
+      "Applied focus: connect dynamic programming on sequences and grids to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Theory: Knapsack and resource-allocation problems",
+      "Applied focus: connect knapsack and resource-allocation problems to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Practice: Graph traversal applications: topological sort and SCCs",
+      "Applied focus: connect graph traversal applications: topological sort and SCCs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Lab: Network flow intuition and max-flow applications",
+      "Applied focus: connect network flow intuition and max-flow applications to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Tutorial: Hashing and randomized data structures",
+      "Applied focus: connect hashing and randomized data structures to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Theory: Lower bounds and comparison sorting limits",
+      "Applied focus: connect lower bounds and comparison sorting limits to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Practice: NP, reductions, and intractability overview",
+      "Applied focus: connect nP, reductions, and intractability overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Lab: Approximation and heuristic algorithms overview",
+      "Applied focus: connect approximation and heuristic algorithms overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Tutorial: Correctness proofs with invariants and induction",
+      "Applied focus: connect correctness proofs with invariants and induction to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Lab: implement and benchmark sorting algorithms",
+      "Applied focus: connect implement and benchmark sorting algorithms to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Lab: implement graph algorithms",
+      "Applied focus: connect implement graph algorithms to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Lab: solve a dynamic programming problem",
+      "Applied focus: connect solve a dynamic programming problem to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Tutorial: recurrence and proof practice",
+      "Applied focus: connect recurrence and proof practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Tutorial: algorithm design scenario practice",
+      "Applied focus: connect algorithm design scenario practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Review: algorithms design pattern guide",
+      "Applied focus: connect algorithms design pattern guide to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Self-check: algorithms mixed assessment",
+      "Exam readiness: consolidate design and analysis of algorithms notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "SE",
+    "unit": "Design and Analysis of Algorithms",
+    "topics": [
+      "Weak-area repair: analysis, graphs, greedy, or dynamic programming",
+      "Exam readiness: consolidate design and analysis of algorithms notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Orientation: Data, uncertainty, and statistical thinking in engineering",
+      "Module roadmap: how data, uncertainty, and statistical thinking in engineering supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Practice: Sample spaces, events, and probability axioms",
+      "Applied focus: connect sample spaces, events, and probability axioms to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Lab: Counting, permutations, and combinations for probability",
+      "Applied focus: connect counting, permutations, and combinations for probability to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Tutorial: Conditional probability and independence",
+      "Applied focus: connect conditional probability and independence to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Theory: Bayes' theorem and diagnostic reasoning",
+      "Applied focus: connect bayes' theorem and diagnostic reasoning to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Practice: Random variables and probability distributions",
+      "Applied focus: connect random variables and probability distributions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Lab: Expected value, variance, and standard deviation",
+      "Applied focus: connect expected value, variance, and standard deviation to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Tutorial: Bernoulli and binomial distributions",
+      "Applied focus: connect bernoulli and binomial distributions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Theory: Geometric and Poisson distributions",
+      "Applied focus: connect geometric and Poisson distributions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Practice: Continuous random variables and density functions",
+      "Applied focus: connect continuous random variables and density functions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Lab: Uniform, exponential, and normal distributions",
+      "Applied focus: connect uniform, exponential, and normal distributions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Tutorial: Joint distributions, covariance, and correlation",
+      "Applied focus: connect joint distributions, covariance, and correlation to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Theory: Sampling, estimators, and sampling distributions",
+      "Applied focus: connect sampling, estimators, and sampling distributions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Practice: Central limit theorem intuition",
+      "Applied focus: connect central limit theorem intuition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Lab: Confidence intervals for means and proportions",
+      "Applied focus: connect confidence intervals for means and proportions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Tutorial: Hypothesis testing and p-values",
+      "Applied focus: connect hypothesis testing and p-values to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Theory: Type I and Type II errors",
+      "Applied focus: connect type I and Type II errors to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Practice: Linear regression and least-squares interpretation",
+      "Applied focus: connect linear regression and least-squares interpretation to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Lab: Reliability, defect rates, and quality metrics",
+      "Applied focus: connect reliability, defect rates, and quality metrics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Tutorial: A/B testing and experiment design for software products",
+      "Applied focus: connect a/B testing and experiment design for software products to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Lab: analyze a dataset with summary statistics",
+      "Applied focus: connect analyze a dataset with summary statistics to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Lab: simulate probability distributions",
+      "Applied focus: connect simulate probability distributions to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Lab: interpret defect and reliability data",
+      "Applied focus: connect interpret defect and reliability data to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Tutorial: Bayes and expectation exercises",
+      "Applied focus: connect bayes and expectation exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Tutorial: confidence intervals and hypothesis testing",
+      "Applied focus: connect confidence intervals and hypothesis testing to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Review: probability and statistics formula sheet",
+      "Exam readiness: consolidate probability and statistics for engineering notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "SE",
+    "unit": "Probability and Statistics for Engineering",
+    "topics": [
+      "Self-check: probability/statistics assessment",
+      "Exam readiness: consolidate probability and statistics for engineering notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Orientation: Software process models and process improvement",
+      "Module roadmap: how software process models and process improvement supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Practice: Agile, plan-driven, incremental, and DevOps process comparison",
+      "Applied focus: connect agile, plan-driven, incremental, and DevOps process comparison to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: Quality assurance versus testing",
+      "Applied focus: connect quality assurance versus testing to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Tutorial: Quality attributes and measurable quality goals",
+      "Applied focus: connect quality attributes and measurable quality goals to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Theory: Requirements traceability through design, code, and tests",
+      "Applied focus: connect requirements traceability through design, code, and tests to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Practice: Test levels: unit, integration, system, and acceptance",
+      "Applied focus: connect test levels: unit, integration, system, and acceptance to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: Black-box test design from requirements",
+      "Applied focus: connect black-box test design from requirements to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Tutorial: White-box test design from control flow",
+      "Applied focus: connect white-box test design from control flow to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Theory: Equivalence partitioning and boundary-value analysis",
+      "Applied focus: connect equivalence partitioning and boundary-value analysis to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Practice: Regression testing and change impact analysis",
+      "Applied focus: connect regression testing and change impact analysis to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: Static analysis, linting, formatting, and quality gates",
+      "Applied focus: connect static analysis, linting, formatting, and quality gates to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Tutorial: Code reviews and inspection techniques",
+      "Applied focus: connect code reviews and inspection techniques to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Theory: Continuous integration and deployment pipeline quality",
+      "Applied focus: connect continuous integration and deployment pipeline quality to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Practice: Defect reporting, triage, severity, and priority",
+      "Applied focus: connect defect reporting, triage, severity, and priority to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: Configuration management and release control",
+      "Applied focus: connect configuration management and release control to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Tutorial: Metrics: coverage, defects, escaped defects, and cycle time",
+      "Applied focus: connect metrics: coverage, defects, escaped defects, and cycle time to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Theory: Risk-based testing and quality planning",
+      "Applied focus: connect risk-based testing and quality planning to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Practice: Process retrospectives and continuous improvement",
+      "Applied focus: connect process retrospectives and continuous improvement to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: Ethics and accountability in quality failures",
+      "Applied focus: connect ethics and accountability in quality failures to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: write a quality plan for a small product",
+      "Applied focus: connect write a quality plan for a small product to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: create tests from acceptance criteria",
+      "Applied focus: connect create tests from acceptance criteria to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: run static analysis and fix quality issues",
+      "Applied focus: connect run static analysis and fix quality issues to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Lab: triage defects and plan regression tests",
+      "Applied focus: connect triage defects and plan regression tests to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Tutorial: test-case design exercises",
+      "Applied focus: connect test-case design exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Tutorial: quality metric interpretation practice",
+      "Applied focus: connect quality metric interpretation practice to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Case study: process failure and quality recovery",
+      "Applied focus: connect process failure and quality recovery to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Review: software process and quality checklist",
+      "Exam readiness: consolidate software process and quality notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "SE",
+    "unit": "Software Process and Quality",
+    "topics": [
+      "Self-check: process/quality scenario assessment",
+      "Exam readiness: consolidate software process and quality notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Orientation: Database system goals for software products",
+      "Module roadmap: how database system goals for software products supports a US Software Engineering progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: Relational model: tables, rows, attributes, and keys",
+      "Applied focus: connect relational model: tables, rows, attributes, and keys to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: Entity-relationship modelling and cardinality",
+      "Applied focus: connect entity-relationship modelling and cardinality to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: Mapping ER models to relational schemas",
+      "Applied focus: connect mapping ER models to relational schemas to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Theory: Functional dependencies and normalization goals",
+      "Applied focus: connect functional dependencies and normalization goals to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: First, second, third normal form, and BCNF overview",
+      "Applied focus: connect first, second, third normal form, and BCNF overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: SQL data definition, constraints, and schema evolution",
+      "Applied focus: connect sQL data definition, constraints, and schema evolution to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: SQL queries: filtering, projection, joins, grouping",
+      "Engineering focus: connect sQL queries: filtering, projection, joins, grouping to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Theory: Views, indexes, and derived data",
+      "Applied focus: connect views, indexes, and derived data to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: Query processing and query optimization intuition",
+      "Applied focus: connect query processing and query optimization intuition to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: Transactions and ACID properties",
+      "Applied focus: connect transactions and ACID properties to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: Concurrency control, locking, and isolation levels",
+      "Applied focus: connect concurrency control, locking, and isolation levels to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Theory: Recovery, logging, backup, and durability",
+      "Applied focus: connect recovery, logging, backup, and durability to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: Database security and least-privilege access",
+      "Applied focus: connect database security and least-privilege access to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: Application-database interfaces and ORM trade-offs",
+      "Applied focus: connect application-database interfaces and ORM trade-offs to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: NoSQL systems and document-store use cases",
+      "Applied focus: connect noSQL systems and document-store use cases to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Theory: Distributed databases and consistency overview",
+      "Applied focus: connect distributed databases and consistency overview to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Practice: Database migration and versioning in software teams",
+      "Engineering focus: connect database migration and versioning in software teams to team delivery and maintainable software"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: design a relational schema from requirements",
+      "Applied focus: connect design a relational schema from requirements to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: write SQL joins and aggregation queries",
+      "Applied focus: connect write SQL joins and aggregation queries to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: normalize a flawed data model",
+      "Applied focus: connect normalize a flawed data model to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Lab: inspect query plans and indexes",
+      "Applied focus: connect inspect query plans and indexes to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: ERD and normalization exercises",
+      "Applied focus: connect eRD and normalization exercises to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Tutorial: transaction and concurrency scenarios",
+      "Applied focus: connect transaction and concurrency scenarios to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Case study: database design for a web application",
+      "Applied focus: connect database design for a web application to software products, teams, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Review: database systems checklist",
+      "Exam readiness: consolidate database systems notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "SE",
+    "unit": "Database Systems",
+    "topics": [
+      "Self-check: DBMS mixed assessment",
+      "Exam readiness: consolidate database systems notes, examples, and weak areas"
+    ]
+  }
+]

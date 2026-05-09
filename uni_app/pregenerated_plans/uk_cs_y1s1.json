@@ -1,0 +1,992 @@
+[
+  {
+    "day": 1,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Orientation: Programming environment setup and command-line workflow",
+      "Module roadmap: how programming environment setup and command-line workflow supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 2,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Practice: Source code, interpreters, compilers, and program execution",
+      "Applied focus: connect source code, interpreters, compilers, and program execution to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 3,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Lab: Variables, assignment, and primitive data types",
+      "Applied focus: connect variables, assignment, and primitive data types to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 4,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Tutorial: Expressions, arithmetic operators, and precedence",
+      "Applied focus: connect expressions, arithmetic operators, and precedence to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 5,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Theory: Input, output, formatting, and simple console programs",
+      "Applied focus: connect input, output, formatting, and simple console programs to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 6,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Practice: Boolean expressions and comparison operators",
+      "Applied focus: connect boolean expressions and comparison operators to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 7,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Lab: Selection control with if, elif, else, and nested decisions",
+      "Applied focus: connect selection control with if, elif, else, and nested decisions to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 8,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Tutorial: Trace tables for predicting program state",
+      "Applied focus: connect trace tables for predicting program state to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 9,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Theory: Iteration with while loops and loop invariants",
+      "Applied focus: connect iteration with while loops and loop invariants to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 10,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Practice: Iteration with for loops, ranges, and accumulation patterns",
+      "Applied focus: connect iteration with for loops, ranges, and accumulation patterns to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 11,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Lab: Functions as named reusable computations",
+      "Applied focus: connect functions as named reusable computations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 12,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Tutorial: Parameters, return values, and simple API design",
+      "Applied focus: connect parameters, return values, and simple API design to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 13,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Theory: Scope, lifetime, and avoiding hidden state",
+      "Applied focus: connect scope, lifetime, and avoiding hidden state to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 14,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Practice: Strings, indexing, slicing, and text processing",
+      "Applied focus: connect strings, indexing, slicing, and text processing to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 15,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Lab: Lists, arrays, and indexed collections",
+      "Applied focus: connect lists, arrays, and indexed collections to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 16,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Tutorial: Common collection algorithms: count, sum, min, max",
+      "Applied focus: connect common collection algorithms: count, sum, min, max to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 17,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Theory: File input and output for plain-text data",
+      "Applied focus: connect file input and output for plain-text data to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 18,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Practice: Debugging with print traces, breakpoints, and error messages",
+      "Applied focus: connect debugging with print traces, breakpoints, and error messages to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 19,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Lab: Testing small functions with examples and edge cases",
+      "Applied focus: connect testing small functions with examples and edge cases to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 20,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Tutorial: Defensive programming and basic exception handling",
+      "Applied focus: connect defensive programming and basic exception handling to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 21,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Theory: Problem decomposition before coding",
+      "Applied focus: connect problem decomposition before coding to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 22,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Practice: Pseudocode and flowcharts for simple algorithms",
+      "Applied focus: connect pseudocode and flowcharts for simple algorithms to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 23,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Lab: Code style, naming, comments, and readability",
+      "Applied focus: connect code style, naming, comments, and readability to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 24,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Tutorial: Version control basics for programming coursework",
+      "Applied focus: connect version control basics for programming coursework to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 25,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Theory: Mini-project planning: requirements and input-output design",
+      "Applied focus: connect mini-project planning: requirements and input-output design to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 26,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Practice: Mini-project implementation and test checklist",
+      "Applied focus: connect mini-project implementation and test checklist to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 27,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Tutorial: mixed programming exercises under exam timing",
+      "Exam readiness: consolidate introduction to programming notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 28,
+    "subject": "CS",
+    "unit": "Introduction to Programming",
+    "topics": [
+      "Review: programming foundations and personal weak-area plan",
+      "Exam readiness: consolidate introduction to programming notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 29,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Orientation: Computer systems overview: hardware, software, data, and users",
+      "Module roadmap: how computer systems overview: hardware, software, data, and users supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 30,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Practice: Binary numbers, hexadecimal notation, and base conversion",
+      "Applied focus: connect binary numbers, hexadecimal notation, and base conversion to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 31,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Lab: Integer representation, two's complement, and overflow",
+      "Applied focus: connect integer representation, two's complement, and overflow to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 32,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Tutorial: Floating-point representation and approximation errors",
+      "Applied focus: connect floating-point representation and approximation errors to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 33,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Theory: Character encodings, Unicode, and data storage units",
+      "Applied focus: connect character encodings, Unicode, and data storage units to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 34,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Practice: Boolean algebra and truth-table reasoning",
+      "Applied focus: connect boolean algebra and truth-table reasoning to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 35,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Lab: Logic gates and simple combinational circuits",
+      "Applied focus: connect logic gates and simple combinational circuits to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 36,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Tutorial: The fetch-decode-execute cycle",
+      "Applied focus: connect the fetch-decode-execute cycle to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 37,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Theory: Instruction sets, registers, and machine-level operations",
+      "Applied focus: connect instruction sets, registers, and machine-level operations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 38,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Practice: CPU datapath, control unit, ALU, and buses",
+      "Applied focus: connect cPU datapath, control unit, ALU, and buses to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 39,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Lab: Memory hierarchy: registers, cache, RAM, and storage",
+      "Applied focus: connect memory hierarchy: registers, cache, RAM, and storage to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 40,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Tutorial: Cache locality and performance intuition",
+      "Applied focus: connect cache locality and performance intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 41,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Theory: Input-output devices, interrupts, and controllers",
+      "Applied focus: connect input-output devices, interrupts, and controllers to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 42,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Practice: Assembly-language reading at a conceptual level",
+      "Applied focus: connect assembly-language reading at a conceptual level to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 43,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Lab: Operating-system role in managing hardware",
+      "Applied focus: connect operating-system role in managing hardware to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 44,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Tutorial: Processes, threads, and program execution overview",
+      "Applied focus: connect processes, threads, and program execution overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 45,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Theory: Virtual memory and address spaces overview",
+      "Applied focus: connect virtual memory and address spaces overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 46,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Practice: Files, directories, permissions, and storage layout",
+      "Applied focus: connect files, directories, permissions, and storage layout to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 47,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Lab: Performance measurement: latency, throughput, and bottlenecks",
+      "Applied focus: connect performance measurement: latency, throughput, and bottlenecks to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 48,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Tutorial: Parallelism and multicore processor basics",
+      "Applied focus: connect parallelism and multicore processor basics to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 49,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Theory: Energy, heat, and reliability in computer systems",
+      "Applied focus: connect energy, heat, and reliability in computer systems to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 50,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Practice: Systems lab: inspect CPU, memory, and OS information",
+      "Hands-on task: apply systems lab: inspect CPU, memory, and OS information and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 51,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Lab: Systems lab: trace a simple program from source to execution",
+      "Hands-on task: apply systems lab: trace a simple program from source to execution and record observations for coursework revision"
+    ]
+  },
+  {
+    "day": 52,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Tutorial: binary, memory, and CPU worked problems",
+      "Applied focus: connect binary, memory, and CPU worked problems to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 53,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Tutorial: architecture short-answer practice",
+      "Applied focus: connect architecture short-answer practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 54,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Review: systems architecture concept map",
+      "Exam readiness: consolidate computer systems and architecture notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 55,
+    "subject": "CS",
+    "unit": "Computer Systems and Architecture",
+    "topics": [
+      "Self-check: architecture calculations and definitions",
+      "Exam readiness: consolidate computer systems and architecture notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 56,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Orientation: Mathematical language for computer science",
+      "Module roadmap: how mathematical language for computer science supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 57,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Sets, subsets, union, intersection, and complement",
+      "Applied focus: connect sets, subsets, union, intersection, and complement to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 58,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Venn diagrams and set identities",
+      "Applied focus: connect venn diagrams and set identities to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 59,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Propositional logic and truth tables",
+      "Applied focus: connect propositional logic and truth tables to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 60,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Logical equivalence and implication",
+      "Applied focus: connect logical equivalence and implication to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 61,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Predicates, quantifiers, and negation of statements",
+      "Applied focus: connect predicates, quantifiers, and negation of statements to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 62,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Direct proof and proof by contradiction",
+      "Applied focus: connect direct proof and proof by contradiction to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 63,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Proof by induction for simple program properties",
+      "Applied focus: connect proof by induction for simple program properties to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 64,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Functions, domains, codomains, images, and preimages",
+      "Applied focus: connect functions, domains, codomains, images, and preimages to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 65,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Relations, equivalence relations, and partial orders",
+      "Applied focus: connect relations, equivalence relations, and partial orders to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 66,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Counting principles: sum rule and product rule",
+      "Applied focus: connect counting principles: sum rule and product rule to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 67,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Permutations, combinations, and simple arrangements",
+      "Applied focus: connect permutations, combinations, and simple arrangements to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 68,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Recurrence relations and growth intuition",
+      "Applied focus: connect recurrence relations and growth intuition to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 69,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Modular arithmetic and clock calculations",
+      "Applied focus: connect modular arithmetic and clock calculations to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 70,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Number theory basics for computing",
+      "Applied focus: connect number theory basics for computing to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 71,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Graphs: vertices, edges, degree, and paths",
+      "Applied focus: connect graphs: vertices, edges, degree, and paths to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 72,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Graph traversal intuition and connectivity",
+      "Applied focus: connect graph traversal intuition and connectivity to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 73,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Trees, rooted trees, and binary-tree terminology",
+      "Applied focus: connect trees, rooted trees, and binary-tree terminology to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 74,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Boolean algebra links to digital logic",
+      "Applied focus: connect boolean algebra links to digital logic to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 75,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: Matrices as discrete structures for data and graphs",
+      "Applied focus: connect matrices as discrete structures for data and graphs to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 76,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Theory: Probability basics for randomized computation",
+      "Applied focus: connect probability basics for randomized computation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 77,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Expected value with simple discrete examples",
+      "Applied focus: connect expected value with simple discrete examples to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 78,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Lab: Asymptotic notation as mathematical language",
+      "Applied focus: connect asymptotic notation as mathematical language to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 79,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: proof-writing practice",
+      "Applied focus: connect proof-writing practice to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 80,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Tutorial: counting and graph exercises",
+      "Applied focus: connect counting and graph exercises to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 81,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Practice: Applied session: modelling a small computing problem",
+      "Applied focus: connect applied session: modelling a small computing problem to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 82,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Review: discrete maths formula and proof sheet",
+      "Exam readiness: consolidate discrete mathematics notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 83,
+    "subject": "CS",
+    "unit": "Discrete Mathematics",
+    "topics": [
+      "Self-check: mixed discrete mathematics questions",
+      "Exam readiness: consolidate discrete mathematics notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 84,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Orientation: Digital abstraction: voltage levels, bits, and noise margins",
+      "Module roadmap: how digital abstraction: voltage levels, bits, and noise margins supports a UK Computer Science progression"
+    ]
+  },
+  {
+    "day": 85,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Practice: Logic gates: AND, OR, NOT, NAND, NOR, XOR, XNOR",
+      "Applied focus: connect logic gates: AND, OR, NOT, NAND, NOR, XOR, XNOR to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 86,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Lab: Truth tables for combinational logic",
+      "Applied focus: connect truth tables for combinational logic to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 87,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Tutorial: Boolean expressions from circuit diagrams",
+      "Applied focus: connect boolean expressions from circuit diagrams to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 88,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Theory: Circuit diagrams from Boolean expressions",
+      "Applied focus: connect circuit diagrams from Boolean expressions to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 89,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Practice: Simplification with Boolean laws",
+      "Applied focus: connect simplification with Boolean laws to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 90,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Lab: Karnaugh maps for two, three, and four variables",
+      "Applied focus: connect karnaugh maps for two, three, and four variables to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 91,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Tutorial: Half adders, full adders, and binary addition circuits",
+      "Applied focus: connect half adders, full adders, and binary addition circuits to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 92,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Theory: Multiplexers, demultiplexers, encoders, and decoders",
+      "Applied focus: connect multiplexers, demultiplexers, encoders, and decoders to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 93,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Practice: Comparators and arithmetic logic building blocks",
+      "Applied focus: connect comparators and arithmetic logic building blocks to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 94,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Lab: Propagation delay and timing in combinational circuits",
+      "Applied focus: connect propagation delay and timing in combinational circuits to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 95,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Tutorial: Latches and flip-flops",
+      "Applied focus: connect latches and flip-flops to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 96,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Theory: Registers and simple storage elements",
+      "Applied focus: connect registers and simple storage elements to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 97,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Practice: Counters and sequence generation",
+      "Applied focus: connect counters and sequence generation to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 98,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Lab: Finite-state machine concepts",
+      "Applied focus: connect finite-state machine concepts to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 99,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Tutorial: Designing a small state machine from requirements",
+      "Applied focus: connect designing a small state machine from requirements to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 100,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Theory: Memory cells, RAM, ROM, and programmable logic overview",
+      "Applied focus: connect memory cells, RAM, ROM, and programmable logic overview to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 101,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Practice: Clocking, setup time, hold time, and race conditions",
+      "Applied focus: connect clocking, setup time, hold time, and race conditions to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 102,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Lab: Digital interfaces and signal integrity basics",
+      "Applied focus: connect digital interfaces and signal integrity basics to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 103,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Tutorial: Microcontroller overview: pins, digital I/O, and timing",
+      "Applied focus: connect microcontroller overview: pins, digital I/O, and timing to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 104,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Lab: simulate a combinational circuit",
+      "Applied focus: connect simulate a combinational circuit to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 105,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Lab: simulate a sequential circuit",
+      "Applied focus: connect simulate a sequential circuit to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 106,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Lab: verify a truth table against a circuit",
+      "Applied focus: connect verify a truth table against a circuit to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 107,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Tutorial: simplification and circuit design problems",
+      "Applied focus: connect simplification and circuit design problems to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 108,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Tutorial: adders, multiplexers, and state diagrams",
+      "Applied focus: connect adders, multiplexers, and state diagrams to programs, systems, and assessment-style problems"
+    ]
+  },
+  {
+    "day": 109,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Review: digital logic design flow",
+      "Exam readiness: consolidate digital logic and electronics notes, examples, and weak areas"
+    ]
+  },
+  {
+    "day": 110,
+    "subject": "CS",
+    "unit": "Digital Logic and Electronics",
+    "topics": [
+      "Self-check: electronics and logic weak-area repair",
+      "Exam readiness: consolidate digital logic and electronics notes, examples, and weak areas"
+    ]
+  }
+]
