@@ -28262,8 +28262,12 @@ def landing_page():
                     font_weight="700",
                     letter_spacing="0.2em",
                     text_transform="uppercase",
-                    width="100%",
+                    width="fit-content",
+                    max_width="100%",
                     text_align="center",
+                    margin="0 auto",
+                    align_self="center",
+                    custom_attrs={"data-landing-comparison-heading": "eyebrow"},
                 ),
                 rx.text(
                     "Alex vs ChatGPT vs Claude — for studying",
@@ -28273,6 +28277,11 @@ def landing_page():
                     letter_spacing="-0.05em",
                     text_align="center",
                     line_height="1.05",
+                    width="fit-content",
+                    max_width="100%",
+                    margin="0 auto",
+                    align_self="center",
+                    custom_attrs={"data-landing-comparison-heading": "title"},
                 ),
                 rx.text(
                     "Generic chatbots don't know your syllabus. Alex does. At a fraction of the price.",
@@ -28281,6 +28290,10 @@ def landing_page():
                     line_height="1.7",
                     text_align="center",
                     max_width="660px",
+                    width="100%",
+                    margin="0 auto",
+                    align_self="center",
+                    custom_attrs={"data-landing-comparison-heading": "subtitle"},
                 ),
                 spacing="3",
                 align_items="center",
@@ -29074,6 +29087,20 @@ def landing_page():
                 margin-left: auto !important;
                 margin-right: auto !important;
                 text-align: center !important;
+            }
+            #landing-comparison-section [data-landing-comparison-heading] {
+                display: block !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                text-align: center !important;
+            }
+            #landing-comparison-section [data-landing-comparison-heading="title"] {
+                width: fit-content !important;
+                max-width: min(100%, calc(100vw - 56px)) !important;
+            }
+            #landing-comparison-section [data-landing-comparison-heading="subtitle"] {
+                width: 100% !important;
+                max-width: 660px !important;
             }
             #landing-comparison-section [data-landing-comparison-table] {
                 margin-left: auto !important;
