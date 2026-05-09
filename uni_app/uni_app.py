@@ -25055,11 +25055,11 @@ def _notes_unload_autosave_dom() -> rx.Component:
 _SEMESTER_SHELL_CSS = """
 <style>
 /* Keep the semester route shell stable during the first hydration paint. */
-@media (min-width: 768px) {
+@media screen and (min-width: 62em) {
   .semester-mobile-header { display: none !important; }
   .semester-desktop-header { display: block !important; }
 }
-@media (max-width: 767px) {
+@media screen and (max-width: 61.999em) {
   .semester-mobile-header { display: block !important; }
   .semester-desktop-header { display: none !important; }
 }
