@@ -27301,9 +27301,11 @@ def landing_page():
             width="100%",
             custom_attrs={"data-landing-animate": "actions"},
         ),
-        rx.center(
-            proof_chip("Now in early access — be one of our first 500 students", "proof"),
+        rx.hstack(
+            proof_chip("Now in early access — be one of our first 500 students"),
+            justify="center",
             width="100%",
+            custom_attrs={"data-landing-animate": "proof"},
         ),
         spacing="5",
         align_items="center",
