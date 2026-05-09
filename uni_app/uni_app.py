@@ -9218,6 +9218,28 @@ class AppState(reflex_local_auth.LocalAuthState):
         if msg.get("visual_html"):
             self._sync_canvas_from_message(index, open_panel=False)
 
+    def _assistant_system_message_dedupe_key(self, content: str) -> str:
+        body = (content or "").strip()
+        if not body or not self._assistant_body_wants_proceed_only(body):
+            return ""
+        return "\n".join(line.rstrip() for line in body.splitlines()).strip()
+
+    def _collapse_repeated_system_assistant_messages(self) -> None:
+        collapsed: list[dict] = []
+        previous_key = ""
+        for msg in self.chat_history or []:
+            if not isinstance(msg, dict):
+                continue
+            if msg.get("role") == "assistant":
+                key = self._assistant_system_message_dedupe_key(msg.get("content") or "")
+                if key and key == previous_key:
+                    continue
+                previous_key = key
+            else:
+                previous_key = ""
+            collapsed.append(msg)
+        self.chat_history = collapsed
+
     def _load_messages(self, uid: int, scope: str = "", *, _trusted: bool = False) -> None:
         effective_scope = scope or self.active_scope
         self._clear_canvas_state()
@@ -9309,6 +9331,8 @@ class AppState(reflex_local_auth.LocalAuthState):
                 if fup:
                     msg_dict["followup_actions"] = fup
 
+        self._collapse_repeated_system_assistant_messages()
+
         # Annotate messages with existing feedback
         if self.chat_history:
             try:
@@ -9354,11 +9378,26 @@ class AppState(reflex_local_auth.LocalAuthState):
         safe_content = sanitize_for_ui(content) if role == "assistant" else content
         disp = (content_display or "").strip() if role == "user" else ""
         aflags = (assistant_flags or "").strip() if role == "assistant" else ""
+        sid = int(self.current_session_id)
+        dedupe_key = self._assistant_system_message_dedupe_key(safe_content) if role == "assistant" else ""
         with rx.session() as session:
+            if dedupe_key:
+                last_msg = session.exec(
+                    select(ChatMessage2)
+                    .where(ChatMessage2.user_id == uid)
+                    .where(ChatMessage2.session_id == sid)
+                    .order_by(ChatMessage2.id.desc())
+                ).first()
+                if (
+                    last_msg is not None
+                    and last_msg.role == "assistant"
+                    and self._assistant_system_message_dedupe_key(last_msg.content) == dedupe_key
+                ):
+                    return
             session.add(
                 ChatMessage2(
                     user_id=uid,
-                    session_id=int(self.current_session_id),
+                    session_id=sid,
                     role=role,
                     content=safe_content,
                     content_display=disp,
