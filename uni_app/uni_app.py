@@ -20639,6 +20639,110 @@ def _marketing_button(label: str, href: str, variant: str = "solid") -> rx.Compo
     )
 
 
+def _json_ld_script(data: dict[str, Any] | list[dict[str, Any]]) -> rx.Component:
+    return rx.el.script(
+        json.dumps(data, ensure_ascii=False, separators=(",", ":")),
+        type="application/ld+json",
+    )
+
+
+def _canonical_public_url(path: str = "/") -> str:
+    if path == "/":
+        return "https://alexstudies.com/"
+    return f"https://alexstudies.com/{path.lstrip('/')}"
+
+
+def _landing_json_ld() -> rx.Component:
+    return _json_ld_script(
+        {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "WebSite",
+                    "name": "Alex Studies",
+                    "alternateName": "Alex AI",
+                    "url": "https://alexstudies.com/",
+                    "description": "AI-powered study platform for university students with degree study plans and academic guidance.",
+                },
+                {
+                    "@type": "Organization",
+                    "name": "Alex Studies",
+                    "alternateName": "Alex AI",
+                    "url": "https://alexstudies.com/",
+                    "description": "AI-powered study platform for university students with degree study plans and academic guidance.",
+                    "email": "support.alexstudies@gmail.com",
+                },
+            ],
+        }
+    )
+
+
+STUDY_PLAN_JSON_LD: dict[str, tuple[str, str]] = {
+    "/uk-computer-science-study-plan": (
+        "UK Computer Science Study Plan",
+        "AI study plan for UK Computer Science students. Learn your degree modules step by step with Alex AI, your academic mentor.",
+    ),
+    "/uk-software-engineering-study-plan": (
+        "UK Software Engineering Study Plan",
+        "AI study plan for UK Software Engineering students. Learn programming, software design, projects, revision, and exams step by step with Alex AI.",
+    ),
+    "/us-computer-science-study-plan": (
+        "US Computer Science Study Plan",
+        "AI study plan for US Computer Science students. Learn programming, algorithms, data structures, projects, revision, and exams step by step with Alex AI.",
+    ),
+    "/us-software-engineering-study-plan": (
+        "US Software Engineering Study Plan",
+        "AI study plan for US Software Engineering students. Learn programming, software design, projects, revision, and exams step by step with Alex AI.",
+    ),
+    "/sri-lanka-software-engineering-study-plan": (
+        "Sri Lanka Software Engineering Study Plan",
+        "AI study plan for Sri Lanka Software Engineering students. Learn programming, software engineering modules, revision, and exams step by step with Alex AI.",
+    ),
+    "/sri-lanka-becs-study-plan": (
+        "Sri Lanka BECS Study Plan",
+        "AI study plan for Sri Lanka Electronics and Computer Science students. Learn BECS modules, programming, electronics, revision, and exams step by step with Alex AI.",
+    ),
+    "/sri-lanka-physical-science-study-plan": (
+        "Sri Lanka Physical Science Study Plan",
+        "AI study plan for Sri Lanka Physical Science students. Learn mathematics, physics, computer science, revision, and exams step by step with Alex AI.",
+    ),
+    "/sri-lanka-biological-science-study-plan": (
+        "Sri Lanka Biological Science Study Plan",
+        "AI study plan for Sri Lanka Biological Science students. Learn biology modules, revision, and exams step by step with Alex AI.",
+    ),
+    "/india-btech-computer-science-study-plan": (
+        "India B.Tech Computer Science Study Plan",
+        "AI study plan for India B.Tech Computer Science students. Learn programming, data structures, algorithms, revision, and exams step by step with Alex AI.",
+    ),
+    "/india-btech-information-technology-study-plan": (
+        "India B.Tech Information Technology Study Plan",
+        "AI study plan for India B.Tech Information Technology students. Learn programming, databases, networking, web development, revision, and exams step by step with Alex AI.",
+    ),
+}
+
+
+def _webpage_json_ld(name: str, description: str, path: str) -> rx.Component:
+    return _json_ld_script(
+        {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": name,
+            "description": description,
+            "url": _canonical_public_url(path),
+            "isPartOf": {
+                "@type": "WebSite",
+                "name": "Alex Studies",
+                "url": "https://alexstudies.com/",
+            },
+        }
+    )
+
+
+def _study_plan_json_ld(path: str) -> rx.Component:
+    name, description = STUDY_PLAN_JSON_LD[path]
+    return _webpage_json_ld(name, description, path)
+
+
 def _workspace_home_link(label: str = "Open Alex AI") -> rx.Component:
     return rx.el.a(
         label,
@@ -21011,8 +21115,9 @@ def _public_footer() -> rx.Component:
     )
 
 
-def _public_page_frame(main_content: rx.Component) -> rx.Component:
+def _public_page_frame(main_content: rx.Component, json_ld: rx.Component | None = None) -> rx.Component:
     return rx.box(
+        *([json_ld] if json_ld is not None else []),
         # ── True Black Background ──
         rx.box(
             position="fixed",
@@ -21622,7 +21727,8 @@ def uk_computer_science_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/uk-computer-science-study-plan"),
     )
 
 
@@ -21742,7 +21848,8 @@ def uk_software_engineering_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/uk-software-engineering-study-plan"),
     )
 
 
@@ -21862,7 +21969,8 @@ def us_computer_science_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/us-computer-science-study-plan"),
     )
 
 
@@ -21982,7 +22090,8 @@ def us_software_engineering_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/us-software-engineering-study-plan"),
     )
 
 
@@ -22102,7 +22211,8 @@ def sri_lanka_software_engineering_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/sri-lanka-software-engineering-study-plan"),
     )
 
 
@@ -22222,7 +22332,8 @@ def sri_lanka_becs_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/sri-lanka-becs-study-plan"),
     )
 
 
@@ -22342,7 +22453,8 @@ def sri_lanka_physical_science_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/sri-lanka-physical-science-study-plan"),
     )
 
 
@@ -22462,7 +22574,8 @@ def sri_lanka_biological_science_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/sri-lanka-biological-science-study-plan"),
     )
 
 
@@ -22582,7 +22695,8 @@ def india_btech_computer_science_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/india-btech-computer-science-study-plan"),
     )
 
 
@@ -22702,7 +22816,8 @@ def india_btech_information_technology_study_plan_page():
             spacing="7",
             width="100%",
             align_items="stretch",
-        )
+        ),
+        _study_plan_json_ld("/india-btech-information-technology-study-plan"),
     )
 
 
@@ -30183,6 +30298,7 @@ def landing_page():
     )
 
     public_landing = rx.box(
+        _landing_json_ld(),
         rx.box(
             position="fixed",
             inset="0",
