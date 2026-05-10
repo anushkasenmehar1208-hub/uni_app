@@ -25,6 +25,7 @@ PUBLIC_SITEMAP_PATHS = (
     "/sri-lanka-physical-science-study-plan",
     "/sri-lanka-biological-science-study-plan",
     "/india-btech-computer-science-study-plan",
+    "/india-btech-information-technology-study-plan",
     "/s/home",
     *(
         f"/s/y{year}s{semester}"
