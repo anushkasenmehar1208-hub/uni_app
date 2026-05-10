@@ -20639,6 +20639,21 @@ def _marketing_button(label: str, href: str, variant: str = "solid") -> rx.Compo
     )
 
 
+def _workspace_home_link(label: str = "Open Alex AI") -> rx.Component:
+    return rx.el.a(
+        label,
+        href="/s/home",
+        custom_attrs={"onclick": "event.preventDefault(); window.location.assign('/s/home');"},
+        style={
+            "color": "rgba(255,255,255,0.72)",
+            "font_weight": "700",
+            "text_decoration": "none",
+            "font_family": "'Plus Jakarta Sans', sans-serif",
+            "cursor": "pointer",
+        },
+    )
+
+
 def _marketing_badge(text: str) -> rx.Component:
     return rx.box(
         rx.text(
