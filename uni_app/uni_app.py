@@ -21499,7 +21499,31 @@ def uk_computer_science_study_plan_page():
                         custom_attrs={"data-anim": "desc"},
                     ),
                     rx.hstack(
-                        _marketing_button("Generate My Study Plan", "/select"),
+                        rx.link(
+                            rx.button(
+                                "Generate My Study Plan",
+                                size="3",
+                                height="48px",
+                                padding="0 22px",
+                                border_radius="9999px",
+                                font_weight="700",
+                                letter_spacing="0.01em",
+                                cursor="pointer",
+                                transition="all 0.2s ease",
+                                background="linear-gradient(135deg,var(--landing-accent) 0%, var(--landing-accent-2) 100%)",
+                                color="white",
+                                border="none",
+                                box_shadow="0 18px 44px rgba(16,185,129,0.24)",
+                                _hover={
+                                    "transform": "translateY(-1px)",
+                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                },
+                                _active={"transform": "translateY(0px)"},
+                            ),
+                            href="/select",
+                            text_decoration="none",
+                            display="inline-flex",
+                        ),
                         rx.link(
                             "Open Alex AI",
                             href="/s/home",
