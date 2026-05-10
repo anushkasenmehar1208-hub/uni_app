@@ -5323,9 +5323,9 @@ def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Compone
             }
             .alex-topbar-fill {
                 height: 100%; width: 40%;
-                background: linear-gradient(90deg, rgba(56,189,248,0) 0%, rgba(56,189,248,0.95) 50%, rgba(167,139,250,0) 100%);
+                background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 50%, rgba(134,239,172,0) 100%);
                 animation: alex-topbar-slide 1.4s cubic-bezier(0.4,0,0.2,1) infinite;
-                box-shadow: 0 0 12px rgba(56,189,248,0.5);
+                box-shadow: 0 0 12px rgba(255,255,255,0.28);
             }
         """),
         # Top progress bar only — no text, just the bar on dark background
@@ -17090,7 +17090,7 @@ AUTO_SCROLL_OBSERVER_JS = """
 # UI FIXES - Replace these functions in your alexai.py
 # ═══════════════════════════════════════════════════════
 
-# FIX 1: subject_button — premium teal glass style
+# FIX 1: subject_button — premium dark glass style
 def subject_button(label: str, on_click=None, is_active=False):
     return rx.button(
         label,
@@ -17101,40 +17101,40 @@ def subject_button(label: str, on_click=None, is_active=False):
         style={
             "border": rx.cond(
                 is_active,
-                "1px solid rgba(56,189,248,0.6)",
-                "1px solid rgba(56,189,248,0.2)",
+                "1px solid rgba(134,239,172,0.36)",
+                "1px solid rgba(255,255,255,0.10)",
             ),
             "background": rx.cond(
                 is_active,
-                "linear-gradient(135deg, rgba(8,47,73,0.95) 0%, rgba(14,80,120,0.9) 100%)",
-                "rgba(56,189,248,0.04)",
+                "linear-gradient(135deg, rgba(25,40,31,0.96) 0%, rgba(12,18,15,0.92) 100%)",
+                "rgba(255,255,255,0.035)",
             ),
             "text_transform": "uppercase",
             "font_weight": "600",
             "font_size": "0.82rem",
             "letter_spacing": "2px",
-            "color": rx.cond(is_active, "#e0f2fe", "rgba(255,255,255,0.88)"),
+            "color": rx.cond(is_active, "rgba(255,255,255,0.96)", "rgba(255,255,255,0.78)"),
             "border_radius": "14px",
             "transition": "all 0.25s cubic-bezier(0.4,0,0.2,1)",
             "box_shadow": rx.cond(
                 is_active,
-                "0 10px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(56,189,248,0.15), inset 0 1px 0 rgba(255,255,255,0.06)",
+                "0 10px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(134,239,172,0.10), inset 0 1px 0 rgba(255,255,255,0.06)",
                 "none",
             ),
             "_hover": {
                 "background": rx.cond(
                     is_active,
-                    "linear-gradient(135deg, rgba(10,55,85,0.98) 0%, rgba(16,90,135,0.96) 100%)",
-                    "rgba(56,189,248,0.1)",
+                    "linear-gradient(135deg, rgba(29,48,37,0.98) 0%, rgba(15,23,19,0.96) 100%)",
+                    "rgba(255,255,255,0.08)",
                 ),
                 "border": rx.cond(
                     is_active,
-                    "1px solid rgba(56,189,248,0.8)",
-                    "1px solid rgba(56,189,248,0.45)",
+                    "1px solid rgba(134,239,172,0.46)",
+                    "1px solid rgba(255,255,255,0.18)",
                 ),
-                "color": rx.cond(is_active, "#f0f9ff", "#38bdf8"),
+                "color": "white",
                 "transform": "translateY(-1px)",
-                "box_shadow": "0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(56,189,248,0.12)",
+                "box_shadow": "0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08)",
             },
         },
     )
@@ -17148,7 +17148,7 @@ def _locked_year_button(label: str, on_click=None):
                 rx.text("Coming Soon", font_size="0.68rem", font_weight="600"),
                 spacing="1",
                 align="center",
-                color="rgba(56,189,248,0.6)",
+                color="rgba(255,255,255,0.46)",
             ),
             width="100%",
             justify_content="space-between",
@@ -17159,8 +17159,8 @@ def _locked_year_button(label: str, on_click=None):
         variant="outline",
         on_click=on_click,
         style={
-            "border": "1px solid rgba(56,189,248,0.1)",
-            "background": "rgba(56,189,248,0.02)",
+            "border": "1px solid rgba(255,255,255,0.08)",
+            "background": "rgba(255,255,255,0.02)",
             "text_transform": "uppercase",
             "font_weight": "600",
             "font_size": "0.82rem",
@@ -17170,8 +17170,8 @@ def _locked_year_button(label: str, on_click=None):
             "transition": "all 0.25s cubic-bezier(0.4,0,0.2,1)",
             "opacity": "0.7",
             "_hover": {
-                "background": "rgba(56,189,248,0.05)",
-                "border": "1px solid rgba(56,189,248,0.2)",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.14)",
                 "color": "rgba(255,255,255,0.55)",
                 "opacity": "0.85",
             },
@@ -17738,8 +17738,8 @@ def tier_status_bar() -> rx.Component:
                 "border": "1px solid rgba(255,255,255,0.075)",
                 "cursor": "pointer",
                 "_hover": {
-                    "background": "rgba(125,211,252,0.08)",
-                    "border": "1px solid rgba(125,211,252,0.16)",
+                    "background": "rgba(255,255,255,0.07)",
+                    "border": "1px solid rgba(255,255,255,0.14)",
                 },
             },
         )
@@ -20363,9 +20363,9 @@ def interactive_canvas_panel() -> rx.Component:
                         color="rgba(236,244,252,0.96)",
                         font_size="0.78rem",
                         font_weight="600",
-                        background="linear-gradient(135deg, rgba(96,165,250,0.24), rgba(34,211,238,0.18))",
-                        border="1px solid rgba(125,211,252,0.16)",
-                        box_shadow="0 0 30px rgba(56,189,248,0.12)",
+                        background="linear-gradient(135deg, rgba(255,255,255,0.10), rgba(134,239,172,0.08))",
+                        border="1px solid rgba(255,255,255,0.12)",
+                        box_shadow="0 0 30px rgba(255,255,255,0.08)",
                     ),
                     app_tooltip(
                         rx.icon_button(
@@ -20408,9 +20408,9 @@ def interactive_canvas_panel() -> rx.Component:
                     overflow="auto",
                     padding=rx.breakpoints(initial="18px", md="24px"),
                     border_radius="24px",
-                    border="1px solid rgba(125,211,252,0.12)",
+                    border="1px solid rgba(255,255,255,0.10)",
                     background=(
-                        "radial-gradient(circle at top, rgba(56,189,248,0.10), transparent 42%), "
+                        "radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 42%), "
                         "linear-gradient(180deg, rgba(4,8,15,0.94), rgba(2,6,12,0.98))"
                     ),
                     box_shadow="inset 0 1px 0 rgba(255,255,255,0.04), 0 24px 60px rgba(2,6,23,0.28)",
@@ -20439,7 +20439,7 @@ def interactive_canvas_panel() -> rx.Component:
             padding=rx.breakpoints(initial="16px", md="18px"),
             background=(
                 "linear-gradient(180deg, rgba(4,8,15,0.96), rgba(2,6,12,0.98)), "
-                "radial-gradient(circle at top right, rgba(56,189,248,0.12), transparent 32%)"
+                "radial-gradient(circle at top right, rgba(255,255,255,0.08), transparent 32%)"
             ),
             overflow="hidden",
         )
@@ -20472,7 +20472,7 @@ def interactive_canvas_panel() -> rx.Component:
             left="12px",
             right="12px",
             bottom="calc(env(safe-area-inset-bottom, 0px) + 12px)",
-            border="1px solid rgba(125,211,252,0.14)",
+            border="1px solid rgba(255,255,255,0.12)",
             border_radius="24px",
             box_shadow="0 32px 90px rgba(0,0,0,0.52)",
             z_index="120",
@@ -20605,12 +20605,12 @@ def _marketing_button(label: str, href: str, variant: str = "solid") -> rx.Compo
         button = rx.button(
             label,
             background="linear-gradient(135deg,var(--landing-accent) 0%, var(--landing-accent-2) 100%)",
-            color="#04111d",
+            color="white",
             border="none",
             box_shadow="0 18px 44px rgba(16,185,129,0.24)",
             _hover={
                 "transform": "translateY(-1px)",
-                "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
             },
             _active={"transform": "translateY(0px)"},
             **base_props,
@@ -20793,8 +20793,8 @@ def _marketing_step_card(step: str, title: str, body: str) -> rx.Component:
                 display="flex",
                 align_items="center",
                 justify_content="center",
-                background="linear-gradient(135deg,rgba(56,189,248,0.24),rgba(16,185,129,0.26))",
-                border="1px solid rgba(125,211,252,0.22)",
+                background="linear-gradient(135deg,rgba(255,255,255,0.10),rgba(16,185,129,0.18))",
+                border="1px solid rgba(255,255,255,0.14)",
                 color="white",
                 font_weight="800",
                 font_family="var(--landing-display-font)",
@@ -21056,6 +21056,13 @@ def _public_page_frame(main_content: rx.Component) -> rx.Component:
             z_index="2",
         ),
         rx.el.style("""
+            :root{
+                --landing-accent:#0f3d2a;
+                --landing-accent-2:#1f7a4d;
+                --landing-border:rgba(255,255,255,0.10);
+                --landing-border-strong:rgba(255,255,255,0.18);
+                --landing-display-font:'Plus Jakarta Sans', sans-serif;
+            }
             [data-anim="nav"]{animation:cNavIn 1s cubic-bezier(.16,1,.3,1) .2s both}
             @keyframes cNavIn{from{opacity:0;transform:translateY(-60px) scale(.97);filter:blur(12px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
             @keyframes cTitle{0%{opacity:0;transform:translateY(60px) scale(.85);filter:blur(20px)}60%{filter:blur(0)}80%{transform:translateY(-3px) scale(1.01)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
@@ -21171,7 +21178,7 @@ def pricing_page():
             inset="0",
             background=(
                 "radial-gradient(circle at 50% 22%, rgba(74,222,128,0.16), transparent 32%), "
-                "radial-gradient(circle at 86% 68%, rgba(125,211,252,0.10), transparent 34%)"
+                "radial-gradient(circle at 86% 68%, rgba(255,255,255,0.08), transparent 34%)"
             ),
             pointer_events="none",
         ),
@@ -21543,7 +21550,7 @@ def uk_computer_science_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -21551,15 +21558,7 @@ def uk_computer_science_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -21671,7 +21670,7 @@ def uk_software_engineering_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -21679,15 +21678,7 @@ def uk_software_engineering_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -21799,7 +21790,7 @@ def us_computer_science_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -21807,15 +21798,7 @@ def us_computer_science_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -21927,7 +21910,7 @@ def us_software_engineering_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -21935,15 +21918,7 @@ def us_software_engineering_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -22055,7 +22030,7 @@ def sri_lanka_software_engineering_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -22063,15 +22038,7 @@ def sri_lanka_software_engineering_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -22183,7 +22150,7 @@ def sri_lanka_becs_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -22191,15 +22158,7 @@ def sri_lanka_becs_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -22311,7 +22270,7 @@ def sri_lanka_physical_science_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -22319,15 +22278,7 @@ def sri_lanka_physical_science_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -22439,7 +22390,7 @@ def sri_lanka_biological_science_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -22447,15 +22398,7 @@ def sri_lanka_biological_science_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -22567,7 +22510,7 @@ def india_btech_computer_science_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -22575,15 +22518,7 @@ def india_btech_computer_science_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -22695,7 +22630,7 @@ def india_btech_information_technology_study_plan_page():
                                 box_shadow="0 18px 44px rgba(16,185,129,0.24)",
                                 _hover={
                                     "transform": "translateY(-1px)",
-                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
                                 },
                                 _active={"transform": "translateY(0px)"},
                             ),
@@ -22703,15 +22638,7 @@ def india_btech_information_technology_study_plan_page():
                             text_decoration="none",
                             display="inline-flex",
                         ),
-                        rx.link(
-                            "Open Alex AI",
-                            href="/s/home",
-                            color="rgba(255,255,255,0.72)",
-                            font_weight="700",
-                            text_decoration="none",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                            _hover={"color": "white"},
-                        ),
+                        _workspace_home_link(),
                         spacing="4",
                         align="center",
                         flex_wrap="wrap",
@@ -23325,24 +23252,24 @@ def onboarding_page():
             border_radius="9px" if compact else "11px",
             border=rx.cond(
                 is_selected,
-                "1px solid rgba(56,189,248,0.72)",
+                "1px solid rgba(134,239,172,0.42)",
                 "1px solid rgba(255,255,255,0.07)",
             ),
             background=rx.cond(
                 is_selected,
-                "linear-gradient(180deg, rgba(8,47,73,0.86) 0%, rgba(9,30,48,0.92) 100%)",
+                "linear-gradient(180deg, rgba(25,40,31,0.9) 0%, rgba(12,18,15,0.94) 100%)",
                 "rgba(255,255,255,0.025)",
             ),
             cursor="pointer",
             transition="all 0.2s ease",
             box_shadow=rx.cond(
                 is_selected,
-                "0 0 0 1px rgba(56,189,248,0.08), inset 0 1px 0 rgba(125,211,252,0.12)",
+                "0 0 0 1px rgba(134,239,172,0.08), inset 0 1px 0 rgba(255,255,255,0.08)",
                 "none",
             ),
             _hover={
-                "background": "rgba(8,47,73,0.38)",
-                "border": "1px solid rgba(56,189,248,0.3)",
+                "background": "rgba(255,255,255,0.07)",
+                "border": "1px solid rgba(255,255,255,0.16)",
             },
         )
 
@@ -23418,10 +23345,10 @@ def onboarding_page():
                 desc_text("Choose your degree program to get started with your personalized study plan."),
                 rx.box(
                     rx.hstack(
-                        rx.icon(tag="globe", size=14, color="rgba(56,189,248,0.7)", flex_shrink="0"),
+                        rx.icon(tag="globe", size=14, color="rgba(255,255,255,0.58)", flex_shrink="0"),
                         rx.text(
                             "University students from UK, US, India and anywhere else — pick your country or use 'My Own'.",
-                            color="rgba(56,189,248,0.7)",
+                            color="rgba(255,255,255,0.58)",
                             font_size="0.78rem",
                             font_weight="500",
                             line_height="1.4",
@@ -23431,8 +23358,8 @@ def onboarding_page():
                     ),
                     padding="10px 14px",
                     border_radius="12px",
-                    border="1px solid rgba(56,189,248,0.12)",
-                    background="rgba(56,189,248,0.04)",
+                    border="1px solid rgba(255,255,255,0.10)",
+                    background="rgba(255,255,255,0.04)",
                     width="100%",
                 ),
                 rx.select(
@@ -23522,15 +23449,15 @@ def onboarding_page():
                 justify="start",
                 padding="9px 12px",
                 border_radius="11px",
-                border=rx.cond(is_sel, "1px solid rgba(56,189,248,0.65)", "1px solid rgba(255,255,255,0.07)"),
+                border=rx.cond(is_sel, "1px solid rgba(134,239,172,0.42)", "1px solid rgba(255,255,255,0.07)"),
                 background=rx.cond(
                     is_sel,
-                    "linear-gradient(180deg, rgba(8,47,73,0.85) 0%, rgba(9,30,48,0.92) 100%)",
+                    "linear-gradient(180deg, rgba(25,40,31,0.9) 0%, rgba(12,18,15,0.94) 100%)",
                     "rgba(255,255,255,0.025)",
                 ),
                 cursor="pointer",
                 transition="all 0.25s cubic-bezier(0.4,0,0.2,1)",
-                _hover={"background": "rgba(8,47,73,0.35)", "border": "1px solid rgba(56,189,248,0.28)"},
+                _hover={"background": "rgba(255,255,255,0.07)", "border": "1px solid rgba(255,255,255,0.16)"},
             )
 
         # Custom-program special button
@@ -23599,17 +23526,17 @@ def onboarding_page():
                         border_radius="12px",
                         border=rx.cond(
                             AppState.onboarding_region == code,
-                            "1px solid rgba(56,189,248,0.6)",
+                            "1px solid rgba(134,239,172,0.38)",
                             "1px solid rgba(255,255,255,0.07)",
                         ),
                         background=rx.cond(
                             AppState.onboarding_region == code,
-                            "rgba(8,47,73,0.85)",
+                            "linear-gradient(180deg, rgba(25,40,31,0.88), rgba(12,18,15,0.94))",
                             "rgba(255,255,255,0.025)",
                         ),
                         cursor="pointer",
                         transition="all 0.2s ease",
-                        _hover={"background": "rgba(56,189,248,0.08)", "border": "1px solid rgba(56,189,248,0.3)"},
+                        _hover={"background": "rgba(255,255,255,0.07)", "border": "1px solid rgba(255,255,255,0.16)"},
                     )
                     for flag, label, code in [
                         ("🇺🇸", "US", "US"),
@@ -24022,7 +23949,7 @@ def sidebar_plan_badge() -> rx.Component:
             "linear-gradient(135deg, rgba(251,191,36,0.98), rgba(245,158,11,0.92))",
             rx.cond(
                 AppState.has_max_access,
-                "linear-gradient(135deg, rgba(125,211,252,0.95), rgba(56,189,248,0.82))",
+                "linear-gradient(135deg, rgba(243,241,235,0.96), rgba(180,190,180,0.86))",
                 rx.cond(
                     AppState.has_premium_access,
                     "linear-gradient(135deg, rgba(134,239,172,0.95), rgba(74,222,128,0.82))",
@@ -24035,7 +23962,7 @@ def sidebar_plan_badge() -> rx.Component:
             "1px solid rgba(251,191,36,0.48)",
             rx.cond(
                 AppState.has_max_access,
-                "1px solid rgba(125,211,252,0.40)",
+                "1px solid rgba(255,255,255,0.34)",
                 rx.cond(
                     AppState.has_premium_access,
                     "1px solid rgba(134,239,172,0.42)",
@@ -24048,7 +23975,7 @@ def sidebar_plan_badge() -> rx.Component:
             "0 0 18px rgba(245,158,11,0.16), inset 0 1px 0 rgba(255,255,255,0.22)",
             rx.cond(
                 AppState.has_max_access,
-                "0 0 18px rgba(56,189,248,0.14), inset 0 1px 0 rgba(255,255,255,0.18)",
+                "0 0 18px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.18)",
                 rx.cond(
                     AppState.has_premium_access,
                     "0 0 18px rgba(74,222,128,0.14), inset 0 1px 0 rgba(255,255,255,0.18)",
@@ -27845,8 +27772,8 @@ def landing_page():
                 "glow": "rgba(74,222,128,0.10)",
             },
             "max": {
-                "border": "rgba(125,211,252,0.32)",
-                "glow": "rgba(125,211,252,0.09)",
+                "border": "rgba(255,255,255,0.24)",
+                "glow": "rgba(255,255,255,0.07)",
             },
             "ultra": {
                 "border": "rgba(231,182,157,0.38)",
@@ -34703,7 +34630,7 @@ def _learn_mobile_view() -> rx.Component:
         active = LearnState.active_tab == tab
         return rx.box(
             width="7px", height="7px", border_radius="50%",
-            background=rx.cond(active, "#38bdf8", "rgba(255,255,255,0.2)"),
+            background=rx.cond(active, "rgba(255,255,255,0.82)", "rgba(255,255,255,0.2)"),
             flex_shrink="0",
             style={"transition": "background 0.22s ease"},
         )
@@ -35991,6 +35918,71 @@ _NETWORK_ERROR_SUPPRESSION_CSS = """
 }
 """
 
+_PREMIUM_UI_ACCENT_CSS = """
+:root,
+[data-is-root-theme] {
+  --accent-1: #070807 !important;
+  --accent-2: #0c0f0d !important;
+  --accent-3: #111812 !important;
+  --accent-4: #172218 !important;
+  --accent-5: #1c2a20 !important;
+  --accent-6: #25352a !important;
+  --accent-7: #314436 !important;
+  --accent-8: #48624f !important;
+  --accent-9: #f3f1eb !important;
+  --accent-10: #ffffff !important;
+  --accent-11: rgba(255,255,255,0.78) !important;
+  --accent-12: #f8faf7 !important;
+  --accent-a1: rgba(255,255,255,0.02) !important;
+  --accent-a2: rgba(255,255,255,0.04) !important;
+  --accent-a3: rgba(255,255,255,0.07) !important;
+  --accent-a4: rgba(255,255,255,0.10) !important;
+  --accent-a5: rgba(255,255,255,0.13) !important;
+  --accent-a6: rgba(255,255,255,0.18) !important;
+  --accent-a7: rgba(255,255,255,0.24) !important;
+  --accent-a8: rgba(255,255,255,0.34) !important;
+  --accent-a9: rgba(243,241,235,0.96) !important;
+  --accent-a10: #ffffff !important;
+  --accent-a11: rgba(255,255,255,0.78) !important;
+  --accent-a12: #ffffff !important;
+  --accent-contrast: #080908 !important;
+  --focus-8: rgba(255,255,255,0.34) !important;
+}
+
+[data-is-root-theme] a {
+  color: inherit;
+}
+
+[data-is-root-theme] a:where(:not([style])) {
+  color: rgba(255,255,255,0.62);
+  text-decoration-color: rgba(255,255,255,0.22);
+}
+
+[data-is-root-theme] a:where(:not([style])):hover {
+  color: rgba(255,255,255,0.92);
+  text-decoration-color: rgba(255,255,255,0.46);
+}
+
+[data-is-root-theme] button,
+[data-is-root-theme] [role="button"],
+[data-is-root-theme] input,
+[data-is-root-theme] textarea,
+[data-is-root-theme] select {
+  accent-color: #86efac;
+}
+
+[data-is-root-theme] button:focus-visible,
+[data-is-root-theme] [role="button"]:focus-visible,
+[data-is-root-theme] a:focus-visible,
+[data-is-root-theme] input:focus-visible,
+[data-is-root-theme] textarea:focus-visible,
+[data-is-root-theme] select:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.34) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.08) !important;
+}
+"""
+
 _NETWORK_ERROR_SUPPRESSION_JS = """
 (function(){
   var blocked = [
@@ -36047,6 +36039,8 @@ app = rx.App(
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        # Keep Reflex/Radix default controls out of the bright blue accent family.
+        rx.el.style(_PREMIUM_UI_ACCENT_CSS),
         # Hide Reflex' raw websocket failure UI; reconnects continue silently.
         rx.el.style(_NETWORK_ERROR_SUPPRESSION_CSS),
         rx.el.script(_NETWORK_ERROR_SUPPRESSION_JS),
@@ -36061,7 +36055,7 @@ app = rx.App(
     '#__uni_sp{position:fixed;inset:0;background:#0a0a0c;z-index:99999;pointer-events:none;transition:opacity .25s ease}'+
     '#__uni_sp.out{opacity:0}'+
     '#__uni_tb{position:fixed;top:0;left:0;right:0;height:3px;z-index:100000;overflow:hidden;pointer-events:none}'+
-    '#__uni_tb div{height:100%;width:40%;background:linear-gradient(90deg,transparent,rgba(56,189,248,.95),transparent);animation:__ubr 1.4s cubic-bezier(.4,0,.2,1) infinite;box-shadow:0 0 12px rgba(56,189,248,.5)}';
+    '#__uni_tb div{height:100%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.92),transparent);animation:__ubr 1.4s cubic-bezier(.4,0,.2,1) infinite;box-shadow:0 0 12px rgba(255,255,255,.32)}';
   function inject(){
     if(document.getElementById('__uni_sp')) return;
     var st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
@@ -36222,9 +36216,9 @@ app = rx.App(
     ],
     style={
         "@keyframes pulse_glow": {
-            "0%": {"box-shadow": "0 0 0px rgba(14,165,233,0)"},
-            "50%": {"box-shadow": "0 0 24px rgba(14,165,233,0.45)", "opacity": "0.85"},
-            "100%": {"box-shadow": "0 0 0px rgba(14,165,233,0)"},
+            "0%": {"box-shadow": "0 0 0px rgba(255,255,255,0)"},
+            "50%": {"box-shadow": "0 0 24px rgba(255,255,255,0.22)", "opacity": "0.88"},
+            "100%": {"box-shadow": "0 0 0px rgba(255,255,255,0)"},
         }
     },
 )
