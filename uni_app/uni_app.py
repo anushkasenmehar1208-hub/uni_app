@@ -3114,6 +3114,7 @@ LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
 ICON_ASSET_VERSION = "20260320b"
+APP_ANALYTICS_VERSION = os.getenv("APP_ANALYTICS_VERSION", ICON_ASSET_VERSION)
 FAVICON_ICO = "/favicon-v2.ico"
 FAVICON_32 = "/favicon-32x32-v2.png"
 FAVICON_16 = "/favicon-16x16-v2.png"
@@ -5059,11 +5060,14 @@ def _replace_route(route: str):
 
 
 _GA_ALLOWED_PARAM_KEYS = {
+    "app_version",
     "auth_method",
     "button_location",
     "currency",
     "degree_key",
+    "page_location",
     "page_path",
+    "page_title",
     "payment_status",
     "plan_name",
     "plan_scope",
