@@ -19,6 +19,7 @@ PUBLIC_SITEMAP_PATHS = (
     "/uk-computer-science-study-plan",
     "/uk-software-engineering-study-plan",
     "/us-computer-science-study-plan",
+    "/us-software-engineering-study-plan",
     "/s/home",
     *(
         f"/s/y{year}s{semester}"
