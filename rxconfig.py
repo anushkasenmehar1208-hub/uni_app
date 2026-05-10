@@ -21,6 +21,7 @@ PUBLIC_SITEMAP_PATHS = (
     "/us-computer-science-study-plan",
     "/us-software-engineering-study-plan",
     "/sri-lanka-software-engineering-study-plan",
+    "/sri-lanka-becs-study-plan",
     "/s/home",
     *(
         f"/s/y{year}s{semester}"
