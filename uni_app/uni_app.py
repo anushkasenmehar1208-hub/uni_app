@@ -23518,6 +23518,27 @@ def onboarding_page():
                     max-height: 0 !important;
                     pointer-events: none;
                 }
+                .ob-region-chip {
+                    height: 50px !important;
+                    min-height: 50px !important;
+                    background: rgba(255,255,255,0.025) !important;
+                    border: 1px solid rgba(255,255,255,0.07) !important;
+                    box-shadow: none !important;
+                    color: rgba(220,230,240,0.72) !important;
+                }
+                .ob-region-chip:hover {
+                    background: rgba(255,255,255,0.07) !important;
+                    border-color: rgba(255,255,255,0.16) !important;
+                }
+                .ob-region-chip-active {
+                    background: linear-gradient(180deg, rgba(25,40,31,0.88), rgba(12,18,15,0.94)) !important;
+                    border-color: rgba(134,239,172,0.38) !important;
+                    color: white !important;
+                }
+                .ob-region-chip span,
+                .ob-region-chip p {
+                    color: inherit !important;
+                }
             """),
 
             # ── Degree label ──
@@ -23536,8 +23557,16 @@ def onboarding_page():
                         ),
                         on_click=AppState.set_onboarding_region(code),
                         type="button",
+                        variant="ghost",
+                        class_name=rx.cond(
+                            AppState.onboarding_region == code,
+                            "ob-region-chip ob-region-chip-active",
+                            "ob-region-chip",
+                        ),
                         flex="1",
-                        padding="10px 4px",
+                        height="50px",
+                        min_height="50px",
+                        padding="8px 4px",
                         border_radius="12px",
                         border=rx.cond(
                             AppState.onboarding_region == code,
@@ -35944,8 +35973,8 @@ _PREMIUM_UI_ACCENT_CSS = """
   --accent-6: #25352a !important;
   --accent-7: #314436 !important;
   --accent-8: #48624f !important;
-  --accent-9: #f3f1eb !important;
-  --accent-10: #ffffff !important;
+  --accent-9: #1f7a4d !important;
+  --accent-10: #278c5a !important;
   --accent-11: rgba(255,255,255,0.78) !important;
   --accent-12: #f8faf7 !important;
   --accent-a1: rgba(255,255,255,0.02) !important;
@@ -35956,11 +35985,11 @@ _PREMIUM_UI_ACCENT_CSS = """
   --accent-a6: rgba(255,255,255,0.18) !important;
   --accent-a7: rgba(255,255,255,0.24) !important;
   --accent-a8: rgba(255,255,255,0.34) !important;
-  --accent-a9: rgba(243,241,235,0.96) !important;
-  --accent-a10: #ffffff !important;
+  --accent-a9: rgba(31,122,77,0.92) !important;
+  --accent-a10: rgba(39,140,90,0.96) !important;
   --accent-a11: rgba(255,255,255,0.78) !important;
   --accent-a12: #ffffff !important;
-  --accent-contrast: #080908 !important;
+  --accent-contrast: #ffffff !important;
   --focus-8: rgba(255,255,255,0.34) !important;
 }
 
