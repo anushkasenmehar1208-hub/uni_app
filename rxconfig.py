@@ -16,6 +16,7 @@ PUBLIC_SITEMAP_PATHS = (
     "/terms",
     "/return-policy",
     "/support",
+    "/uk-computer-science-study-plan",
     "/s/home",
     *(
         f"/s/y{year}s{semester}"
