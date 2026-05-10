@@ -21713,6 +21713,134 @@ def uk_software_engineering_study_plan_page():
     )
 
 
+@rx.page(
+    route="/us-computer-science-study-plan",
+    title="US Computer Science Study Plan | Alex Studies",
+    description="AI study plan for US Computer Science students. Learn programming, algorithms, data structures, projects, revision, and exams step by step with Alex AI.",
+    image=FAVICON_32,
+)
+def us_computer_science_study_plan_page():
+    feature_items = [
+        ("AI tutor", "Ask for simple explanations when computer science topics feel confusing."),
+        ("Computer science modules", "Break your courses into smaller topics you can study step by step."),
+        ("Programming help", "Practice coding, debugging, and problem solving with support."),
+        ("Algorithms", "Build understanding of common algorithm ideas through steady practice."),
+        ("Data structures", "Review arrays, lists, trees, graphs, and other core structures."),
+        ("Revision and exams", "Follow a daily study path and prepare for exams at your own pace."),
+    ]
+
+    return _public_page_frame(
+        rx.vstack(
+            rx.box(
+                rx.vstack(
+                    _marketing_badge("US Computer Science"),
+                    rx.heading(
+                        "Study Computer Science one step at a time",
+                        color="white",
+                        font_size="clamp(2.5rem, 7vw, 5rem)",
+                        line_height="1.02",
+                        letter_spacing="-0.04em",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                        font_weight="850",
+                        max_width="900px",
+                        custom_attrs={"data-anim": "title"},
+                    ),
+                    rx.text(
+                        "Alex Studies helps US Computer Science students organize programming, algorithms, data structures, projects, revision, and exam preparation into a clear daily study path.",
+                        color="rgba(255,255,255,0.62)",
+                        font_size=rx.breakpoints(initial="1.02rem", md="1.18rem"),
+                        line_height="1.75",
+                        max_width="760px",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                        custom_attrs={"data-anim": "desc"},
+                    ),
+                    rx.hstack(
+                        rx.link(
+                            rx.button(
+                                "Generate My Study Plan",
+                                size="3",
+                                height="48px",
+                                padding="0 22px",
+                                border_radius="9999px",
+                                font_weight="700",
+                                letter_spacing="0.01em",
+                                cursor="pointer",
+                                transition="all 0.2s ease",
+                                background="linear-gradient(135deg,var(--landing-accent) 0%, var(--landing-accent-2) 100%)",
+                                color="white",
+                                border="none",
+                                box_shadow="0 18px 44px rgba(16,185,129,0.24)",
+                                _hover={
+                                    "transform": "translateY(-1px)",
+                                    "box_shadow": "0 22px 52px rgba(56,189,248,0.24)",
+                                },
+                                _active={"transform": "translateY(0px)"},
+                            ),
+                            href="/select",
+                            text_decoration="none",
+                            display="inline-flex",
+                        ),
+                        rx.link(
+                            "Open Alex AI",
+                            href="/s/home",
+                            color="rgba(255,255,255,0.72)",
+                            font_weight="700",
+                            text_decoration="none",
+                            font_family="'Plus Jakarta Sans', sans-serif",
+                            _hover={"color": "white"},
+                        ),
+                        spacing="4",
+                        align="center",
+                        flex_wrap="wrap",
+                        padding_top="16px",
+                    ),
+                    spacing="5",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                padding=rx.breakpoints(initial="48px 0 24px", md="86px 0 44px"),
+                width="100%",
+            ),
+            rx.grid(
+                *[
+                    _marketing_card(title, body)
+                    for title, body in feature_items
+                ],
+                columns=rx.breakpoints(initial="1", md="2", lg="3"),
+                spacing="4",
+                width="100%",
+            ),
+            rx.box(
+                rx.vstack(
+                    rx.heading(
+                        "A simple plan for steady CS progress",
+                        size="7",
+                        color="white",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                        font_weight="800",
+                    ),
+                    rx.text(
+                        "Use Alex AI as an academic mentor to turn large computer science topics into smaller study sessions. It can help with programming practice, algorithms, data structures, revision, projects, and exam preparation.",
+                        color="rgba(255,255,255,0.58)",
+                        line_height="1.8",
+                        font_size="1rem",
+                        max_width="820px",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                    ),
+                    spacing="4",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                padding="56px 0 96px",
+                width="100%",
+            ),
+            spacing="7",
+            width="100%",
+            align_items="stretch",
+        )
+    )
+
+
 @rx.page(route="/ax-support-lookup", title="Support ID Lookup")
 @require_app_login
 def support_id_lookup_page():
