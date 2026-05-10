@@ -26384,10 +26384,16 @@ def landing_page():
                     font_weight="650",
                     line_height="1",
                     white_space="nowrap",
+                    display="block",
+                    width="100%",
+                    text_align="center",
+                    transform="translateY(-0.5px)",
                 ),
                 display="inline-flex",
                 align_items="center",
                 justify_content="center",
+                text_align="center",
+                min_width="216px",
                 height="52px",
                 padding="0 24px",
                 border_radius="999px",
@@ -26657,23 +26663,34 @@ def landing_page():
                     else rx.fragment()
                 ),
                 rx.link(
-                    rx.button(
-                        action_label,
+                    rx.box(
+                        rx.text(
+                            action_label,
+                            color=button_color,
+                            font_size="0.92rem",
+                            font_weight="750",
+                            line_height="1",
+                            text_align="center",
+                            width="100%",
+                        ),
                         width="100%",
                         height=rx.breakpoints(initial="52px", md="48px"),
                         border_radius="999px",
                         background=button_background,
                         color=button_color,
                         border=button_border,
-                        font_weight="750",
-                        font_size="0.92rem",
                         box_shadow=(
                             "0 18px 46px rgba(0,0,0,0.44), 0 1px 0 rgba(255,255,255,0.45) inset"
                             if primary
                             else "none"
                         ),
                         cursor="pointer",
+                        display="flex",
+                        align_items="center",
+                        justify_content="center",
+                        text_align="center",
                         style={
+                            "transition": "transform 0.18s ease, background 0.18s ease, border-color 0.18s ease",
                             "_hover": {
                                 "transform": "translateY(-1px)",
                                 "background": "#fffaf0" if primary else "rgba(255,255,255,0.075)",
@@ -28198,7 +28215,7 @@ def landing_page():
                             display="block",
                             width="100%",
                             text_align="center",
-                            transform="translateX(3px) translateY(-1px)",
+                            transform="translateY(-1px)",
                         ),
                         width=rx.breakpoints(initial="120px", md="148px"),
                         height=rx.breakpoints(initial="120px", md="148px"),
@@ -28282,9 +28299,9 @@ def landing_page():
                     text_transform="uppercase",
                     width="fit-content",
                     max_width="100%",
-                    text_align="center",
-                    margin="0 auto",
-                    align_self="center",
+                    text_align="left",
+                    margin="0",
+                    align_self="flex-start",
                     custom_attrs={"data-landing-comparison-heading": "eyebrow"},
                 ),
                 rx.text(
@@ -28293,12 +28310,12 @@ def landing_page():
                     font_size=rx.breakpoints(initial="clamp(1.85rem, 5.4vw, 2.6rem)", md="clamp(2.4rem, 2.9vw, 3.3rem)"),
                     font_weight="600",
                     letter_spacing="-0.05em",
-                    text_align="center",
+                    text_align="left",
                     line_height="1.05",
                     width="fit-content",
                     max_width="100%",
-                    margin="0 auto",
-                    align_self="center",
+                    margin="0",
+                    align_self="flex-start",
                     custom_attrs={"data-landing-comparison-heading": "title"},
                 ),
                 rx.text(
@@ -28306,15 +28323,15 @@ def landing_page():
                     color="rgba(255,255,255,0.54)",
                     font_size="1rem",
                     line_height="1.7",
-                    text_align="center",
+                    text_align="left",
                     max_width="660px",
                     width="100%",
-                    margin="0 auto",
-                    align_self="center",
+                    margin="0",
+                    align_self="flex-start",
                     custom_attrs={"data-landing-comparison-heading": "subtitle"},
                 ),
                 spacing="3",
-                align_items="center",
+                align_items="flex-start",
                 width="100%",
             ),
             rx.box(
@@ -28363,8 +28380,8 @@ def landing_page():
                 max_width="1080px",
                 min_width="0",
                 overflow_x="auto",
-                margin_x="auto",
-                align_self="center",
+                margin_x="0",
+                align_self="flex-start",
                 padding=rx.breakpoints(initial="14px", md="22px"),
                 border="1px solid rgba(255,255,255,0.08)",
                 border_radius="28px",
@@ -28376,13 +28393,14 @@ def landing_page():
                 "Prices for ChatGPT Plus and Claude Pro per their public pricing pages (May 2026). Comparison reflects core consumer plans.",
                 color="rgba(255,255,255,0.36)",
                 font_size="0.74rem",
-                text_align="center",
+                text_align="left",
                 line_height="1.5",
                 max_width="640px",
+                align_self="flex-start",
             ),
             spacing="6",
-            align="center",
-            align_items="center",
+            align="start",
+            align_items="flex-start",
             width="100%",
             max_width="1280px",
             margin="0 auto",
@@ -29094,23 +29112,33 @@ def landing_page():
                 display: flex !important;
                 justify-content: center !important;
             }
-            #landing-founder-section > div,
-            #landing-comparison-section > div {
+            #landing-founder-section > div {
                 margin-left: auto !important;
                 margin-right: auto !important;
                 align-items: center !important;
             }
-            #landing-founder-section > div > div,
-            #landing-comparison-section > div > div:first-child {
+            #landing-founder-section > div > div {
                 margin-left: auto !important;
                 margin-right: auto !important;
                 text-align: center !important;
             }
-            #landing-comparison-section [data-landing-comparison-heading] {
-                display: block !important;
+            #landing-comparison-section > div {
                 margin-left: auto !important;
                 margin-right: auto !important;
-                text-align: center !important;
+                align-items: flex-start !important;
+            }
+            #landing-comparison-section > div > div:first-child {
+                margin-left: 0 !important;
+                margin-right: auto !important;
+                text-align: left !important;
+                align-items: flex-start !important;
+            }
+            #landing-comparison-section [data-landing-comparison-heading] {
+                display: block !important;
+                margin-left: 0 !important;
+                margin-right: auto !important;
+                text-align: left !important;
+                align-self: flex-start !important;
             }
             #landing-comparison-section [data-landing-comparison-heading="title"] {
                 width: fit-content !important;
@@ -29121,7 +29149,7 @@ def landing_page():
                 max-width: 660px !important;
             }
             #landing-comparison-section [data-landing-comparison-table] {
-                margin-left: auto !important;
+                margin-left: 0 !important;
                 margin-right: auto !important;
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch;
