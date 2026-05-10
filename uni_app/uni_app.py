@@ -20678,6 +20678,10 @@ def _landing_json_ld() -> rx.Component:
 
 
 STUDY_PLAN_JSON_LD: dict[str, tuple[str, str]] = {
+    "/ai-study-planner-for-university-students": (
+        "AI Study Planner for University Students",
+        "Alex Studies is an AI study planner for university students. Create degree study plans, follow daily learning paths, revise smarter, and study with Alex AI.",
+    ),
     "/uk-computer-science-study-plan": (
         "UK Computer Science Study Plan",
         "AI study plan for UK Computer Science students. Learn your degree modules step by step with Alex AI, your academic mentor.",
@@ -21085,6 +21089,7 @@ def _public_footer() -> rx.Component:
                     font_size="1rem",
                 ),
                 rx.hstack(
+                    rx.link("AI Study Planner", href="/ai-study-planner-for-university-students", **footer_link_style),
                     rx.link("UK Computer Science", href="/uk-computer-science-study-plan", **footer_link_style),
                     rx.link("UK Software Engineering", href="/uk-software-engineering-study-plan", **footer_link_style),
                     rx.link("US Computer Science", href="/us-computer-science-study-plan", **footer_link_style),
@@ -21608,6 +21613,127 @@ def support_page():
                 "Access and account recovery",
             ),
         ],
+    )
+
+
+@rx.page(
+    route="/ai-study-planner-for-university-students",
+    title="AI Study Planner for University Students | Alex Studies",
+    description="Alex Studies is an AI study planner for university students. Create degree study plans, follow daily learning paths, revise smarter, and study with Alex AI.",
+    image=FAVICON_32,
+)
+def ai_study_planner_for_university_students_page():
+    feature_items = [
+        ("AI study planner", "Turn a busy semester into a clearer study plan you can follow."),
+        ("AI tutor", "Ask Alex AI for simple explanations when a topic feels confusing."),
+        ("Degree study plans", "Organize modules, subjects, and study goals into manageable steps."),
+        ("Daily learning path", "Know what to study next without planning every detail alone."),
+        ("Revision help", "Review important ideas, notes, and weak areas before tests and exams."),
+        ("Programming and science support", "Get help with coding, computer science, mathematics, physics, biology, and related topics."),
+    ]
+
+    return _public_page_frame(
+        rx.vstack(
+            rx.box(
+                rx.vstack(
+                    _marketing_badge("AI Study Planner"),
+                    rx.heading(
+                        "Plan your university studies with Alex AI",
+                        color="white",
+                        font_size="clamp(2.5rem, 7vw, 5rem)",
+                        line_height="1.02",
+                        letter_spacing="-0.04em",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                        font_weight="850",
+                        max_width="900px",
+                        custom_attrs={"data-anim": "title"},
+                    ),
+                    rx.text(
+                        "Alex Studies helps university students plan degree study, follow a daily learning path, revise smarter, and prepare for exams with support from Alex AI.",
+                        color="rgba(255,255,255,0.62)",
+                        font_size=rx.breakpoints(initial="1.02rem", md="1.18rem"),
+                        line_height="1.75",
+                        max_width="760px",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                        custom_attrs={"data-anim": "desc"},
+                    ),
+                    rx.hstack(
+                        rx.link(
+                            rx.button(
+                                "Generate My Study Plan",
+                                size="3",
+                                height="48px",
+                                padding="0 22px",
+                                border_radius="9999px",
+                                font_weight="700",
+                                letter_spacing="0.01em",
+                                cursor="pointer",
+                                transition="all 0.2s ease",
+                                background="linear-gradient(135deg,var(--landing-accent) 0%, var(--landing-accent-2) 100%)",
+                                color="white",
+                                border="none",
+                                box_shadow="0 18px 44px rgba(16,185,129,0.24)",
+                                _hover={
+                                    "transform": "translateY(-1px)",
+                                    "box_shadow": "0 22px 52px rgba(134,239,172,0.16)",
+                                },
+                                _active={"transform": "translateY(0px)"},
+                            ),
+                            href="/select",
+                            text_decoration="none",
+                            display="inline-flex",
+                        ),
+                        _workspace_home_link(),
+                        spacing="4",
+                        align="center",
+                        flex_wrap="wrap",
+                        padding_top="16px",
+                    ),
+                    spacing="5",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                padding=rx.breakpoints(initial="48px 0 24px", md="86px 0 44px"),
+                width="100%",
+            ),
+            rx.grid(
+                *[
+                    _marketing_card(title, body)
+                    for title, body in feature_items
+                ],
+                columns=rx.breakpoints(initial="1", md="2", lg="3"),
+                spacing="4",
+                width="100%",
+            ),
+            rx.box(
+                rx.vstack(
+                    rx.heading(
+                        "A calmer way to handle university work",
+                        size="7",
+                        color="white",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                        font_weight="800",
+                    ),
+                    rx.text(
+                        "Use Alex Studies for semester planning, daily learning, revision help, exam preparation, and support with programming and science topics. Alex AI can help you break large subjects into smaller steps while you stay in control of your own study progress.",
+                        color="rgba(255,255,255,0.58)",
+                        line_height="1.8",
+                        font_size="1rem",
+                        max_width="820px",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                    ),
+                    spacing="4",
+                    align_items="flex-start",
+                    width="100%",
+                ),
+                padding="56px 0 96px",
+                width="100%",
+            ),
+            spacing="7",
+            width="100%",
+            align_items="stretch",
+        ),
+        _study_plan_json_ld("/ai-study-planner-for-university-students"),
     )
 
 
@@ -30223,6 +30349,7 @@ def landing_page():
                     font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
                 ),
                 rx.grid(
+                    nav_link("AI Study Planner", "/ai-study-planner-for-university-students"),
                     nav_link("UK Computer Science", "/uk-computer-science-study-plan"),
                     nav_link("UK Software Engineering", "/uk-software-engineering-study-plan"),
                     nav_link("US Computer Science", "/us-computer-science-study-plan"),

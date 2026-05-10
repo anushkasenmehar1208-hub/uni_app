@@ -16,6 +16,7 @@ PUBLIC_SITEMAP_PATHS = (
     "/terms",
     "/return-policy",
     "/support",
+    "/ai-study-planner-for-university-students",
     "/uk-computer-science-study-plan",
     "/uk-software-engineering-study-plan",
     "/us-computer-science-study-plan",
