@@ -26019,8 +26019,8 @@ def _fullscreen_loading_gate(title: str, subtitle: str) -> rx.Component:
                 100% { box-shadow: 0 0 30px rgba(180,200,210,0.05), 0 0 60px rgba(180,200,210,0.02); }
             }
             @keyframes splashTextIn {
-                0% { opacity: 0; letter-spacing: 0.6em; filter: blur(6px); }
-                100% { opacity: 1; letter-spacing: 0.20em; filter: blur(0); }
+                0% { opacity: 0; letter-spacing: 0; filter: blur(6px); }
+                100% { opacity: 1; letter-spacing: 0; filter: blur(0); }
             }
             @keyframes splashSubIn {
                 0% { opacity: 0; transform: translateY(8px); }
@@ -26344,7 +26344,7 @@ def landing_page():
                 color="rgba(255,255,255,0.52)",
                 font_size="0.95rem",
                 font_weight="500",
-                letter_spacing="-0.02em",
+                letter_spacing="0",
             ),
             href=href,
             text_decoration="none",
@@ -26368,6 +26368,8 @@ def landing_page():
             "text_decoration": "none",
             "display": "inline-flex",
             "width": "fit-content",
+            "align_items": "center",
+            "justify_content": "center",
             "max_width": "100%",
             "color": "#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
             "custom_attrs": {"data-landing-link": "primary" if is_solid else "secondary"},
@@ -26376,45 +26378,44 @@ def landing_page():
             # GA funnel event: landing CTA click, then normal link navigation continues.
             link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
         return rx.link(
-            rx.box(
-                rx.text(
-                    label,
-                    color="#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
-                    font_size="0.98rem",
-                    font_weight="650",
-                    line_height="1",
-                    white_space="nowrap",
-                    display="block",
-                    width="100%",
-                    text_align="center",
-                    transform="translateY(-0.5px)",
-                ),
-                display="inline-flex",
-                align_items="center",
-                justify_content="center",
-                text_align="center",
-                min_width="216px",
-                height="52px",
-                padding="0 24px",
-                border_radius="999px",
-                border=(
-                    "1px solid rgba(255,255,255,0.14)"
-                    if not is_solid
-                    else "1px solid rgba(255,255,255,0.10)"
-                ),
-                background=(
-                    "linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%)"
-                    if is_solid
-                    else "rgba(255,255,255,0.04)"
-                ),
-                box_shadow=(
-                    "0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset"
-                    if is_solid
-                    else "none"
-                ),
+            rx.button(
+                label,
+                type="button",
+                variant="ghost",
+                class_name=f"landing-main-cta landing-main-cta--{variant}",
                 style={
+                    "height": "52px",
+                    "padding": "0 24px",
+                    "border_radius": "999px",
+                    "border": (
+                        "1px solid rgba(255,255,255,0.14)"
+                        if not is_solid
+                        else "1px solid rgba(255,255,255,0.08)"
+                    ),
+                    "background": (
+                        "linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%)"
+                        if is_solid
+                        else "rgba(255,255,255,0.04)"
+                    ),
+                    "color": "#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
+                    "font_size": "0.98rem",
+                    "font_weight": "600",
+                    "letter_spacing": "0",
+                    "line_height": "1",
+                    "white_space": "nowrap",
+                    "text_align": "center",
+                    "display": "inline-flex",
+                    "align_items": "center",
+                    "justify_content": "center",
+                    "min_width": "216px",
+                    "box_sizing": "border-box",
                     "cursor": "pointer",
                     "transition": "transform 0.18s ease, background 0.18s ease, border-color 0.18s ease",
+                    "box_shadow": (
+                        "0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset"
+                        if is_solid
+                        else "none"
+                    ),
                     "_hover": {
                         "transform": "translateY(-1px)",
                         "background": "#ffffff" if is_solid else "rgba(255,255,255,0.09)",
@@ -26431,13 +26432,20 @@ def landing_page():
                 color="rgba(255,255,255,0.82)",
                 font_size="0.84rem",
                 font_weight="600",
-                letter_spacing="-0.02em",
+                letter_spacing="0",
+                line_height="1.2",
+                text_align="center",
             ),
             padding="10px 14px",
             border="1px solid rgba(255,255,255,0.08)",
             border_radius="999px",
             background="rgba(255,255,255,0.04)",
             backdrop_filter="blur(16px)",
+            display="inline-flex",
+            align_items="center",
+            justify_content="center",
+            max_width="100%",
+            text_align="center",
             custom_attrs={"data-landing-animate": animate} if animate else {},
         )
 
@@ -26465,7 +26473,7 @@ def landing_page():
                         color="rgba(255,255,255,0.44)",
                         font_size="0.74rem",
                         font_weight="700",
-                        letter_spacing="0.18em",
+                        letter_spacing="0",
                         text_transform="uppercase",
                     ),
                     rx.text(
@@ -26473,7 +26481,7 @@ def landing_page():
                         color="rgba(255,255,255,0.94)",
                         font_size="1.15rem",
                         font_weight="650",
-                        letter_spacing="-0.03em",
+                        letter_spacing="0",
                     ),
                     rx.text(
                         description,
@@ -26549,7 +26557,7 @@ def landing_page():
                     color="rgba(10,14,11,0.9)",
                     font_size="0.74rem",
                     font_weight="800",
-                    letter_spacing="-0.01em",
+                    letter_spacing="0",
                 ),
                 padding="7px 10px",
                 border_radius="999px",
@@ -26566,7 +26574,7 @@ def landing_page():
                 color="rgba(255,255,255,0.42)",
                 font_size="0.82rem",
                 font_weight="600",
-                letter_spacing="-0.02em",
+                letter_spacing="0",
                 custom_attrs={"data-usd-amount": "3"} if local_price_id else {},
             )
             if local_price
@@ -26576,6 +26584,8 @@ def landing_page():
             "href": href,
             "width": "100%",
             "text_decoration": "none",
+            "display": "flex",
+            "align_items": "center",
         }
         if tracking_event:
             # GA funnel event: pricing card click, then normal link navigation continues.
@@ -26590,7 +26600,7 @@ def landing_page():
                         color="rgba(255,255,255,0.96)",
                         font_size="1.05rem",
                         font_weight="700",
-                        letter_spacing="-0.02em",
+                        letter_spacing="0",
                     ),
                     rx.hstack(
                         rx.text(
@@ -26598,7 +26608,7 @@ def landing_page():
                             color="rgba(255,255,255,0.98)",
                             font_size=rx.breakpoints(initial="2.3rem", md="1.92rem", lg="2.16rem"),
                             font_weight="800",
-                            letter_spacing="-0.055em",
+                            letter_spacing="0",
                             line_height="1",
                         ),
                         rx.text(
@@ -26663,15 +26673,14 @@ def landing_page():
                     else rx.fragment()
                 ),
                 rx.link(
-                    rx.box(
-                        rx.text(
-                            action_label,
-                            color=button_color,
-                            font_size="0.92rem",
-                            font_weight="750",
-                            line_height="1",
-                            text_align="center",
-                            width="100%",
+                    rx.button(
+                        action_label,
+                        type="button",
+                        variant="ghost",
+                        class_name=(
+                            "landing-plan-cta landing-plan-cta--primary"
+                            if primary
+                            else "landing-plan-cta landing-plan-cta--secondary"
                         ),
                         width="100%",
                         height=rx.breakpoints(initial="52px", md="48px"),
@@ -26679,6 +26688,11 @@ def landing_page():
                         background=button_background,
                         color=button_color,
                         border=button_border,
+                        font_weight="750",
+                        font_size="0.92rem",
+                        line_height="1.15",
+                        padding="0 18px",
+                        white_space="normal",
                         box_shadow=(
                             "0 18px 46px rgba(0,0,0,0.44), 0 1px 0 rgba(255,255,255,0.45) inset"
                             if primary
@@ -26689,6 +26703,7 @@ def landing_page():
                         align_items="center",
                         justify_content="center",
                         text_align="center",
+                        box_sizing="border-box",
                         style={
                             "transition": "transform 0.18s ease, background 0.18s ease, border-color 0.18s ease",
                             "_hover": {
@@ -26705,7 +26720,7 @@ def landing_page():
                         color="rgba(255,255,255,0.54)",
                         font_size="0.84rem",
                         font_weight="650",
-                        letter_spacing="-0.02em",
+                        letter_spacing="0",
                         width="100%",
                         text_align="center",
                         margin_top="4px",
@@ -26810,7 +26825,7 @@ def landing_page():
       font-size: 0.95rem;
       line-height: 1;
       color: rgba(255,255,255,0.9);
-      letter-spacing: -0.04em;
+      letter-spacing: 0;
       font-weight: 700;
     }
     #landing-live-chat-demo .landing-live-chat-demo__orbit-path {
@@ -26856,7 +26871,7 @@ def landing_page():
       font-size: 0.68rem;
       font-weight: 750;
       line-height: 1.05;
-      letter-spacing: -0.04em;
+      letter-spacing: 0;
       text-align: center;
     }
     #landing-live-chat-demo .landing-live-chat-demo__orbit-note {
@@ -26889,7 +26904,7 @@ def landing_page():
     }
     #landing-live-chat-demo .landing-live-chat-demo__eyebrow {
       font-size: 0.76rem;
-      letter-spacing: 0.18em;
+      letter-spacing: 0;
       text-transform: uppercase;
       color: rgba(255,255,255,0.42);
       margin-bottom: 2px;
@@ -26898,7 +26913,7 @@ def landing_page():
     #landing-live-chat-demo .landing-live-chat-demo__title {
       font-size: clamp(1.8rem, 3vw, 2.8rem);
       line-height: 1.02;
-      letter-spacing: -0.05em;
+      letter-spacing: 0;
       color: rgba(255,255,255,0.95);
       margin: 0 0 12px 0;
       font-weight: 600;
@@ -27161,12 +27176,33 @@ def landing_page():
             # GA funnel event: header CTA click, then normal link navigation continues.
             link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
         return rx.link(
-            rx.text(
+            rx.button(
                 label,
-                color="rgba(255,255,255,0.68)",
-                font_size="0.95rem",
-                font_weight="600",
-                line_height="1",
+                type="button",
+                variant="ghost",
+                class_name="landing-nav-cta",
+                style={
+                    "height": "44px",
+                    "padding": "0 22px",
+                    "border_radius": "999px",
+                    "background": "rgba(255,255,255,0.08)",
+                    "border": "1px solid rgba(255,255,255,0.12)",
+                    "color": "rgba(255,255,255,0.92)",
+                    "font_size": "0.92rem",
+                    "font_weight": "600",
+                    "letter_spacing": "0",
+                    "line_height": "1",
+                    "white_space": "nowrap",
+                    "display": "inline-flex",
+                    "align_items": "center",
+                    "justify_content": "center",
+                    "box_sizing": "border-box",
+                    "transition": "background 0.18s ease, transform 0.18s ease",
+                    "box_shadow": "0 10px 36px rgba(0,0,0,0.35)",
+                    "_hover": {
+                        "background": "rgba(255,255,255,0.14)",
+                    },
+                },
             ),
             style={
                 "transition": "color 0.16s ease",
@@ -27191,7 +27227,7 @@ def landing_page():
                     font_size="1.04rem",
                     font_weight="700",
                     font_family="'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-                    letter_spacing="-0.04em",
+                    letter_spacing="0",
                 ),
                 spacing="2",
                 align="center",
@@ -27226,7 +27262,7 @@ def landing_page():
                 color="rgba(255,255,255,0.74)",
                 font_size="0.82rem",
                 font_weight="700",
-                letter_spacing="0.18em",
+                letter_spacing="0",
                 text_transform="uppercase",
             ),
             padding="10px 16px",
@@ -27250,12 +27286,12 @@ def landing_page():
                         font_size=rx.breakpoints(initial="clamp(1.92rem, 6.8vw, 3rem)", md="clamp(2.55rem, 4.1vw, 3.6rem)"),
                         font_weight="500",
                         line_height="1.04",
-                        letter_spacing="-0.058em",
-                        word_spacing="0.08em",
+                        letter_spacing="0",
+                        word_spacing="0",
                         font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
-                        white_space="nowrap",
-                        display="inline-block",
-                        overflow="hidden",
+                        white_space="normal",
+                        display="block",
+                        overflow="visible",
                         padding_bottom="0.12em",
                         custom_attrs={"data-landing-type": "line-1"},
                     ),
@@ -27286,12 +27322,12 @@ def landing_page():
                         font_size=rx.breakpoints(initial="clamp(1.92rem, 6.8vw, 3rem)", md="clamp(2.55rem, 4.1vw, 3.6rem)"),
                         font_weight="500",
                         line_height="1.04",
-                        letter_spacing="-0.058em",
-                        word_spacing="0.08em",
+                        letter_spacing="0",
+                        word_spacing="0",
                         font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
-                        white_space="nowrap",
-                        display="inline-block",
-                        overflow="hidden",
+                        white_space="normal",
+                        display="block",
+                        overflow="visible",
                         padding_bottom="0.12em",
                         custom_attrs={"data-landing-type": "line-2"},
                     ),
@@ -27375,7 +27411,7 @@ def landing_page():
                             color="rgba(255,255,255,0.96)",
                             font_size=rx.breakpoints(initial="1.3rem", md="1.55rem"),
                             font_weight="650",
-                            letter_spacing="-0.04em",
+                            letter_spacing="0",
                             text_align="center",
                             width="100%",
                         ),
@@ -27455,12 +27491,12 @@ def landing_page():
                             font_size=rx.breakpoints(initial="clamp(2rem, 5.8vw, 3.1rem)", md="clamp(2.7rem, 4.15vw, 4rem)"),
                             font_weight="500",
                             line_height="1.04",
-                            letter_spacing="-0.06em",
-                            word_spacing="0.06em",
+                            letter_spacing="0",
+                            word_spacing="0",
                             font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
-                            white_space="nowrap",
-                            display="inline-block",
-                            overflow="hidden",
+                            white_space="normal",
+                            display="block",
+                            overflow="visible",
                             padding_bottom="0.12em",
                             custom_attrs={"data-landing-story-type": "line-1"},
                         ),
@@ -27491,12 +27527,12 @@ def landing_page():
                             font_size=rx.breakpoints(initial="clamp(2rem, 5.8vw, 3.1rem)", md="clamp(2.7rem, 4.15vw, 4rem)"),
                             font_weight="500",
                             line_height="1.04",
-                            letter_spacing="-0.06em",
-                            word_spacing="0.06em",
+                            letter_spacing="0",
+                            word_spacing="0",
                             font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
-                            white_space="nowrap",
-                            display="inline-block",
-                            overflow="hidden",
+                            white_space="normal",
+                            display="block",
+                            overflow="visible",
                             padding_bottom="0.12em",
                             custom_attrs={"data-landing-story-type": "line-2"},
                         ),
@@ -27527,11 +27563,11 @@ def landing_page():
                             font_size=rx.breakpoints(initial="clamp(1.12rem, 3.2vw, 1.38rem)", md="clamp(1.18rem, 1.65vw, 1.5rem)"),
                             font_weight="450",
                             line_height="1.5",
-                            letter_spacing="-0.032em",
-                            word_spacing="0.05em",
+                            letter_spacing="0",
+                            word_spacing="0",
                             font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
-                            display="inline-block",
-                            overflow="hidden",
+                            display="block",
+                            overflow="visible",
                             max_width=rx.breakpoints(initial="100%", md="min(1120px, calc(100vw - 56px))"),
                             text_align="center",
                             custom_attrs={"data-landing-story-type": "line-3"},
@@ -27568,7 +27604,7 @@ def landing_page():
                             color="rgba(255,255,255,0.9)",
                             font_size=rx.breakpoints(initial="clamp(1.2rem, 3.4vw, 1.55rem)", md="clamp(1.28rem, 1.9vw, 1.65rem)"),
                             font_weight="500",
-                            letter_spacing="-0.03em",
+                            letter_spacing="0",
                             font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
                             width="100%",
                             text_align="center",
@@ -27594,7 +27630,7 @@ def landing_page():
                             color="rgba(255,255,255,0.9)",
                             font_size=rx.breakpoints(initial="clamp(1.2rem, 3.4vw, 1.55rem)", md="clamp(1.28rem, 1.9vw, 1.65rem)"),
                             font_weight="500",
-                            letter_spacing="-0.03em",
+                            letter_spacing="0",
                             font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
                             width="100%",
                             text_align="center",
@@ -27620,7 +27656,7 @@ def landing_page():
                             color="rgba(255,255,255,0.9)",
                             font_size=rx.breakpoints(initial="clamp(1.2rem, 3.4vw, 1.55rem)", md="clamp(1.28rem, 1.9vw, 1.65rem)"),
                             font_weight="500",
-                            letter_spacing="-0.03em",
+                            letter_spacing="0",
                             font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
                             width="100%",
                             text_align="center",
@@ -27692,7 +27728,7 @@ def landing_page():
                     color="rgba(255,255,255,0.95)",
                     font_size=rx.breakpoints(initial="clamp(1.9rem, 5vw, 2.8rem)", md="clamp(1.8rem, 2.4vw, 2.6rem)"),
                     font_weight="600",
-                    letter_spacing="-0.05em",
+                    letter_spacing="0",
                     line_height="1.08",
                 ),
                 rx.text(
@@ -27854,7 +27890,7 @@ def landing_page():
                     color="rgba(255,255,255,0.64)",
                     font_size="0.88rem",
                     font_weight="700",
-                    letter_spacing="-0.02em",
+                    letter_spacing="0",
                     text_align="center",
                 ),
                 id="landing-teacher-orb-wrap",
@@ -28528,7 +28564,7 @@ def landing_page():
                     color="rgba(255,255,255,0.44)",
                     font_size="0.78rem",
                     font_weight="700",
-                    letter_spacing="0.2em",
+                    letter_spacing="0",
                     text_transform="uppercase",
                 ),
                 rx.text(
@@ -28536,7 +28572,7 @@ def landing_page():
                     color="rgba(255,255,255,0.95)",
                     font_size=rx.breakpoints(initial="clamp(2rem, 5.6vw, 2.8rem)", md="clamp(2.55rem, 3vw, 3.5rem)"),
                     font_weight="600",
-                    letter_spacing="-0.05em",
+                    letter_spacing="0",
                     text_align="center",
                 ),
                 rx.text(
@@ -28754,7 +28790,7 @@ def landing_page():
                     color="rgba(255,255,255,0.62)",
                     font_size=rx.breakpoints(initial="1.1rem", md="1.45rem"),
                     font_weight="500",
-                    letter_spacing="-0.04em",
+                    letter_spacing="0",
                     font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
                 ),
                 width="100%",
@@ -28774,8 +28810,8 @@ def landing_page():
                 font_size=rx.breakpoints(initial="clamp(4.8rem, 24vw, 7.8rem)", md="clamp(8rem, 19vw, 16rem)"),
                 font_weight="500",
                 line_height="0.86",
-                letter_spacing="-0.075em",
-                word_spacing="0.16em",
+                letter_spacing="0",
+                word_spacing="0",
                 font_family="'Plus Jakarta Sans', 'Space Grotesk', sans-serif",
                 width="100%",
                 text_align="center",
@@ -28793,7 +28829,7 @@ def landing_page():
                             color="rgba(255,255,255,0.52)",
                             font_size="0.95rem",
                             font_weight="500",
-                            letter_spacing="-0.02em",
+                            letter_spacing="0",
 	                        ),
 	                        href=SELECTION_ROUTE,
 	                        # GA funnel event: footer CTA click, then normal link navigation continues.
@@ -28967,92 +29003,48 @@ def landing_page():
                 100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
             }
             [data-landing-animate="headline-box"] {
-                transform: translateY(30vh);
-                animation: headlineMoveUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+                opacity: 0;
+                transform: translateY(18px);
+                animation: landingFadeUp 0.72s cubic-bezier(0.16, 1, 0.3, 1) 0.16s forwards;
             }
             [data-landing-animate="nav"] {
                 opacity: 0;
-                animation: landingNavIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+                animation: landingNavIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
             }
             [data-landing-animate="sub"] {
                 opacity: 0;
-                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.9s forwards;
+                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.24s forwards;
             }
             [data-landing-animate="actions"] {
                 opacity: 0;
-                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 2.0s forwards;
+                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.32s forwards;
             }
             [data-landing-animate="proof"] {
                 opacity: 0;
-                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 2.7s forwards;
+                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.42s forwards;
             }
             [data-landing-animate="logo-video"] {
                 opacity: 0;
-                animation: landingFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 2.1s forwards;
+                animation: landingFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.52s forwards;
             }
-            [data-landing-type="line-1"] {
-                width: 0;
-                animation: landingTypeLine1 0.7s steps(30, end) 0.1s forwards;
-            }
-            [data-landing-type="line-2"] {
-                width: 0;
-                animation: landingTypeLine2 0.6s steps(19, end) 0.9s forwards;
-            }
-            [data-landing-cursor="line-1"] {
-                animation:
-                    landingCursorBlink 0.4s step-end 0.1s 2,
-                    landingCursorExit 0.01s linear 0.8s forwards;
-            }
-            [data-landing-cursor="line-2"] {
-                animation:
-                    landingCursorBlink 0.4s step-end 0.9s 2,
-                    landingCursorExit 0.01s linear 1.7s forwards;
-            }
-            [data-landing-story-type="line-1"] {
-                width: 0;
-            }
-            [data-landing-story-type="line-2"] {
-                width: 0;
-            }
+            [data-landing-type="line-1"],
+            [data-landing-type="line-2"],
+            [data-landing-story-type="line-1"],
+            [data-landing-story-type="line-2"],
             [data-landing-story-type="line-3"] {
-                width: 0;
-                white-space: nowrap;
+                width: auto !important;
+                max-width: 100% !important;
+                overflow: visible !important;
+                white-space: normal !important;
+                text-wrap: balance;
+                animation: none !important;
             }
-            #landing-story-section.story-visible [data-landing-story-type="line-1"] {
-                animation: landingStoryLine1 1.35s steps(47, end) 0.15s forwards;
-            }
-            #landing-story-section.story-visible [data-landing-story-type="line-2"] {
-                animation: landingStoryLine2 1.05s steps(31, end) 1.55s forwards;
-            }
-            #landing-story-section.story-visible [data-landing-story-type="line-3"] {
-                animation: landingStoryLine3 1.45s steps(78, end) 2.55s forwards;
-            }
-            [data-landing-story-cursor="line-1"] {
-                animation:
-                    none;
-            }
-            [data-landing-story-cursor="line-2"] {
-                animation:
-                    none;
-            }
+            [data-landing-cursor="line-1"],
+            [data-landing-cursor="line-2"],
+            [data-landing-story-cursor="line-1"],
+            [data-landing-story-cursor="line-2"],
             [data-landing-story-cursor="line-3"] {
-                animation:
-                    none;
-            }
-            #landing-story-section.story-visible [data-landing-story-cursor="line-1"] {
-                animation:
-                    landingCursorBlink 0.75s step-end 0.15s 2,
-                    landingCursorExit 0.01s linear 1.5s forwards;
-            }
-            #landing-story-section.story-visible [data-landing-story-cursor="line-2"] {
-                animation:
-                    landingCursorBlink 0.75s step-end 1.55s 2,
-                    landingCursorExit 0.01s linear 2.7s forwards;
-            }
-            #landing-story-section.story-visible [data-landing-story-cursor="line-3"] {
-                animation:
-                    landingCursorBlink 0.75s step-end 2.55s 2,
-                    landingCursorExit 0.01s linear 4.05s forwards;
+                display: none !important;
             }
             [data-landing-ambient="field"] {
                 animation: landingFieldFloat 16s ease-in-out infinite;
@@ -29196,6 +29188,40 @@ def landing_page():
                 transform: translateY(0);
                 transition-delay: 0.66s;
             }
+            .landing-plan-cta {
+                color: inherit !important;
+                display: inline-flex !important;
+                min-height: 48px !important;
+                box-sizing: border-box !important;
+                text-align: center !important;
+                justify-content: center !important;
+                align-items: center !important;
+                line-height: 1.15 !important;
+                white-space: normal !important;
+                text-wrap: balance !important;
+                padding-inline: 18px !important;
+            }
+            .landing-main-cta,
+            .landing-nav-cta {
+                align-items: center !important;
+                justify-content: center !important;
+                line-height: 1 !important;
+                white-space: nowrap !important;
+                text-align: center !important;
+            }
+            .landing-nav-cta {
+                color: rgba(255,255,255,0.92) !important;
+            }
+            .landing-plan-cta--secondary {
+                background: rgba(255,255,255,0.045) !important;
+                color: rgba(255,255,255,0.88) !important;
+                border: 1px solid rgba(255,255,255,0.10) !important;
+            }
+            .landing-plan-cta--primary {
+                background: linear-gradient(180deg, #f7f4ed 0%, #ebe4d7 100%) !important;
+                color: #1c1915 !important;
+                border: 1px solid rgba(255,255,255,0.10) !important;
+            }
             @media (max-width: 768px) {
                 [data-landing-type="line-1"],
                 [data-landing-type="line-2"] {
@@ -29205,12 +29231,8 @@ def landing_page():
                     text-wrap: balance !important;
                     display: block !important;
                     text-align: center !important;
-                    letter-spacing: -0.05em !important;
-                    word-spacing: 0.08em !important;
-                    animation: landingFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards !important;
-                }
-                [data-landing-type="line-2"] {
-                    animation-delay: 0.28s !important;
+                    letter-spacing: 0 !important;
+                    word-spacing: 0 !important;
                 }
                 [data-landing-cursor="line-1"],
                 [data-landing-cursor="line-2"] {
@@ -29224,7 +29246,6 @@ def landing_page():
                     width: 100% !important;
                     overflow: visible !important;
                     text-wrap: balance !important;
-                    animation: landingFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards !important;
                 }
                 [data-landing-story-type="line-3"] {
                     white-space: normal !important;
@@ -29232,7 +29253,6 @@ def landing_page():
                     overflow: visible !important;
                     font-size: clamp(1.05rem, 3.5vw, 1.25rem) !important;
                     line-height: 1.55 !important;
-                    animation: landingFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.24s forwards !important;
                 }
                 [data-landing-story-cursor="line-1"],
                 [data-landing-story-cursor="line-2"],
@@ -29249,6 +29269,21 @@ def landing_page():
                 }
                 #landing-comparison-section [data-landing-comparison-grid] {
                     min-width: 680px;
+                }
+                .landing-main-cta {
+                    width: min(100%, 280px) !important;
+                    min-height: 54px !important;
+                    padding-inline: 22px !important;
+                }
+                .landing-plan-cta {
+                    min-height: 52px !important;
+                }
+            }
+            @media (max-width: 480px) {
+                .landing-nav-cta {
+                    height: 42px !important;
+                    padding-inline: 16px !important;
+                    font-size: 0.88rem !important;
                 }
             }
         """),
@@ -34717,15 +34752,82 @@ app = rx.App(
 	window.dataLayer = window.dataLayer || [];
 	function gtag(){dataLayer.push(arguments);}
 	gtag('js', new Date());
-	gtag('config', 'G-H5G0QBSY2M');
+	var appVersion = """ + json.dumps(APP_ANALYTICS_VERSION) + """;
+	gtag('config', 'G-H5G0QBSY2M', {
+	  send_page_view: false,
+	  app_version: appVersion
+	});
 	(function(){
 	  var allowed = {
-	    auth_method:1, button_location:1, currency:1, degree_key:1,
-	    page_path:1, payment_status:1, plan_name:1, plan_scope:1,
+	    app_version:1, auth_method:1, button_location:1, currency:1, degree_key:1,
+	    page_location:1, page_path:1, page_title:1, payment_status:1, plan_name:1, plan_scope:1,
 	    price_usd:1, pricing_variant:1, route:1, scope:1, semester:1, year:1,
 	    section_id:1, faq_id:1, scroll_depth:1, time_seconds:1, card_id:1, cta_id:1
 	  };
 	  var isDev = /^(localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0)$/i.test(window.location.hostname || '') || window.__ALEX_GA_DEBUG === true;
+	  var lastPageViewKey = '';
+	  var pageViewTimer = null;
+	  function currentPageParams(){
+	    var path = (window.location.pathname || '/') + (window.location.search || '');
+	    return {
+	      page_title: (document.title || 'Alex AI').slice(0, 300),
+	      page_location: (window.location.href || '').slice(0, 500),
+	      page_path: path.slice(0, 300),
+	      app_version: appVersion
+	    };
+	  }
+	  function setAppVersion(){
+	    try {
+	      if (typeof window.gtag === 'function') {
+	        window.gtag('set', 'user_properties', { alex_app_version: appVersion });
+	      }
+	    } catch (e) {}
+	  }
+	  window.alexTrackPageView = function(force){
+	    try {
+	      var params = currentPageParams();
+	      var key = params.page_location + '|' + params.page_title;
+	      if (!force && key === lastPageViewKey) return;
+	      lastPageViewKey = key;
+	      setAppVersion();
+	      if (isDev && window.console && console.log) console.log('[GA PAGE_VIEW]', params);
+	      if (typeof window.gtag === 'function') window.gtag('event', 'page_view', params);
+	    } catch (e) {}
+	  };
+	  function schedulePageView(force){
+	    try {
+	      if (pageViewTimer) clearTimeout(pageViewTimer);
+	      pageViewTimer = setTimeout(function(){ window.alexTrackPageView(!!force); }, 250);
+	    } catch (e) {}
+	  }
+	  function wrapHistoryMethod(name){
+	    try {
+	      var original = window.history && window.history[name];
+	      if (typeof original !== 'function' || original.__alexGaWrapped) return;
+	      var wrapped = function(){
+	        var result = original.apply(this, arguments);
+	        schedulePageView(false);
+	        return result;
+	      };
+	      wrapped.__alexGaWrapped = true;
+	      window.history[name] = wrapped;
+	    } catch (e) {}
+	  }
+	  wrapHistoryMethod('pushState');
+	  wrapHistoryMethod('replaceState');
+	  window.addEventListener('popstate', function(){ schedulePageView(false); });
+	  window.addEventListener('hashchange', function(){ schedulePageView(false); });
+	  try {
+	    var titleEl = document.querySelector('title');
+	    if (titleEl && window.MutationObserver) {
+	      new MutationObserver(function(){ schedulePageView(false); }).observe(titleEl, { childList: true });
+	    }
+	  } catch (e) {}
+	  if (document.readyState === 'loading') {
+	    document.addEventListener('DOMContentLoaded', function(){ schedulePageView(true); });
+	  } else {
+	    schedulePageView(true);
+	  }
 	  window.alexTrack = function(eventName, params){
 	    try {
 	      if (!eventName || typeof eventName !== 'string') return;
@@ -34735,10 +34837,15 @@ app = rx.App(
 	        if (!allowed[key]) return;
 	        var value = source[key];
 	        if (value === undefined || value === null) return;
-	        if (typeof value === 'string') cleanParams[key] = value.slice(0, 120);
+	        if (typeof value === 'string') cleanParams[key] = value.slice(0, key === 'page_location' ? 500 : 300);
 	        else if (typeof value === 'number' || typeof value === 'boolean') cleanParams[key] = value;
 	      });
-	      if (!cleanParams.page_path) cleanParams.page_path = window.location.pathname || '/';
+	      var pageParams = currentPageParams();
+	      if (!cleanParams.page_path) cleanParams.page_path = pageParams.page_path;
+	      if (!cleanParams.page_title) cleanParams.page_title = pageParams.page_title;
+	      if (!cleanParams.page_location) cleanParams.page_location = pageParams.page_location;
+	      if (!cleanParams.app_version) cleanParams.app_version = appVersion;
+	      setAppVersion();
 	      if (isDev && window.console && console.log) console.log('[GA EVENT]', eventName, cleanParams);
 	      if (typeof window.gtag === 'function') window.gtag('event', eventName, cleanParams);
 	    } catch (e) {}
