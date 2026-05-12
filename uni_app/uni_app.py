@@ -3119,6 +3119,7 @@ LOGIN_MAX_ATTEMPTS = max(10, int(os.getenv("LOGIN_MAX_ATTEMPTS", "10")))
 LOGIN_LOCK_MINUTES = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
 ENFORCE_HTTPS = os.getenv("ENFORCE_HTTPS", "true").lower() == "true"
 ICON_ASSET_VERSION = "20260320b"
+APP_ANALYTICS_VERSION = os.getenv("APP_ANALYTICS_VERSION", ICON_ASSET_VERSION)
 FAVICON_ICO = "/favicon-v2.ico"
 FAVICON_32 = "/favicon-32x32-v2.png"
 FAVICON_16 = "/favicon-16x16-v2.png"
@@ -5064,11 +5065,14 @@ def _replace_route(route: str):
 
 
 _GA_ALLOWED_PARAM_KEYS = {
+    "app_version",
     "auth_method",
     "button_location",
     "currency",
     "degree_key",
+    "page_location",
     "page_path",
+    "page_title",
     "payment_status",
     "plan_name",
     "plan_scope",
@@ -21768,7 +21772,8 @@ def onboarding_page():
                     position="relative",
                 ),
                 width="100%",
-                height="100%",
+                height="100dvh",
+                min_height="100vh",
                 padding="20px",
                 z_index="5",
                 position="relative",
@@ -21779,11 +21784,8 @@ def onboarding_page():
                 @media (max-width: 640px) {
                     /* Kill heavy components */
                     [data-ob-beam] { display: none !important; }
-                    [data-ob-beam="1"],[data-ob-beam="2"],[data-ob-beam="3"] { display: none !important; }
-                }
-====
-
-                    [data-ob-blob3],[data-ob-blob4] { display: none !important; }
+                    [data-ob-beam="1"], [data-ob-beam="2"], [data-ob-beam="3"] { display: none !important; }
+                    [data-ob-blob3], [data-ob-blob4] { display: none !important; }
 
                     /* Card: simple fade-up */
                     [data-ob-card] {
@@ -21794,10 +21796,11 @@ def onboarding_page():
                         -webkit-backdrop-filter: blur(16px) !important;
                         animation: obCardInMob 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
                     }
-                    @keyframes obCardInMob {
-                        from { opacity: 0; transform: translateY(30px); }
-                        to { opacity: 1; transform: translateY(0); }
-                    }
+                }
+
+                @keyframes obCardInMob {
+                    from { opacity: 0; transform: translateY(30px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
             """),
             # ── Particle system ──
@@ -21881,7 +21884,8 @@ def onboarding_page():
                 })();
             " style="display:none">'''),
             width="100vw",
-            height="100vh",
+            height="100dvh",
+            min_height="100vh",
             position="relative",
             overflow="hidden",
         )
@@ -26850,12 +26854,13 @@ def landing_page():
 
     def header_action(
         label: str,
+        href: str = SELECTION_ROUTE,
         margin_left: str = "0",
         tracking_event: str = "",
         tracking_params: dict[str, Any] | None = None,
     ) -> rx.Component:
         link_props: dict[str, Any] = {
-            "href": SELECTION_ROUTE,
+            "href": href,
             "text_decoration": "none",
             "display": "inline-flex",
             "flex_shrink": "0",
@@ -26923,12 +26928,13 @@ def landing_page():
             custom_attrs={"data-landing-animate": "nav"},
         ),
         rx.hstack(
-            header_action("Home"),
+            header_action("Home", SELECTION_ROUTE),
             header_action(
-                "See Alex",
+                "Login",
+                auth_routes.LOGIN_ROUTE,
                 "0",
-                "see_alex_click",
-                {"button_location": "nav"},
+                "login_click",
+                {"button_location": "nav_landing"},
             ),
             spacing="4",
             align="center",
@@ -27058,7 +27064,7 @@ def landing_page():
         ),
         rx.hstack(
             hero_button(
-                "Start My Study Plan",
+                "Generate My Study Plan",
                 SELECTION_ROUTE,
                 "solid",
                 "start_study_plan_click",
@@ -27816,15 +27822,15 @@ def landing_page():
                     nav_link("Terms", "/terms"),
                     rx.link(
                         rx.text(
-                            "See Alex",
+                            "Login",
                             color="rgba(255,255,255,0.52)",
                             font_size="0.95rem",
                             font_weight="500",
                             letter_spacing="0",
 	                        ),
-	                        href=SELECTION_ROUTE,
+	                        href=auth_routes.LOGIN_ROUTE,
 	                        # GA funnel event: footer CTA click, then normal link navigation continues.
-	                        on_click=track_ga_event("see_alex_click", {"button_location": "footer"}),
+	                        on_click=track_ga_event("login_click", {"button_location": "footer"}),
 	                        text_decoration="none",
 	                        style={
                             "_hover": {
