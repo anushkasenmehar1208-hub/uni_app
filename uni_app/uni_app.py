@@ -5981,8 +5981,9 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def is_support_admin(self) -> bool:
-        # Strict check for internal support admin email only
-        return getattr(self.authenticated_user, "username", "") == self.support_admin_email
+        # Strict check for the internal support admin email only.
+        username = _normalize_email(getattr(self.authenticated_user, "username", ""))
+        return username == self.support_admin_email
 
     # ----------------------------------------------------------------
     # is_empty_chat — True only when there are zero messages to show.
@@ -7114,9 +7115,13 @@ class AppState(reflex_local_auth.LocalAuthState):
             auth_routes.REGISTER_ROUTE,
             "/reset-password",
         ):
-            return rx.redirect(self.post_login_redirect or APP_DASHBOARD_ROUTE)
+            if self.is_support_admin:
+                return rx.redirect(self._authenticated_landing_route())
+            return rx.redirect(self.post_login_redirect or self._authenticated_landing_route())
 
     def _authenticated_landing_route(self) -> str:
+        if self.is_support_admin:
+            return "/free"
         if self.is_started:
             if _degree_is_custom(self.degree):
                 return "/free"
@@ -24865,7 +24870,11 @@ def nav_rail() -> rx.Component:
         _nav_rail_btn("notebook", AppState.toggle_notes_panel, "Notes"),
         _nav_rail_btn("list_checks", [AppState.close_semester_sidebar, rx.redirect("/tracker")], "Tracker"),
         _nav_rail_btn("youtube", [AppState.close_semester_sidebar, rx.redirect("/learn")], "Learn from video"),
-        _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
+        rx.cond(
+            AppState.is_support_admin,
+            _nav_rail_btn("video", [AppState.close_semester_sidebar, rx.redirect("/video")], "Generate teaching videos"),
+            _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
+        ),
         rx.spacer(),
         # ── Bottom group ──
         _nav_rail_btn("settings", [AppState.close_semester_sidebar, rx.redirect("/settings")], "Settings"),
@@ -32849,7 +32858,7 @@ def _video_style_chip(value: str, label: str, emoji: str) -> rx.Component:
     )
 
 
-def video_page_content() -> rx.Component:
+def _video_page_content_locked() -> rx.Component:
     # ── LOCKED — feature paused while we rebuild ──
     return rx.box(
         rx.vstack(
@@ -33264,6 +33273,14 @@ def _video_page_content_legacy_DISABLED() -> rx.Component:
         background="#191919",
         flex="1",
         min_width="0",
+    )
+
+
+def video_page_content() -> rx.Component:
+    return rx.cond(
+        AppState.is_support_admin,
+        _video_page_content_legacy_DISABLED(),
+        _video_page_content_locked(),
     )
 
 
@@ -36550,7 +36567,11 @@ def free_sidebar_content() -> rx.Component:
         _nav_row("notebook", "Notes", AppState.toggle_notes_panel),
         _nav_row("list_checks", "Tracker", [AppState.close_semester_sidebar, rx.redirect("/tracker")]),
         _nav_row("youtube", "Learn from video", [AppState.close_semester_sidebar, rx.redirect("/learn")]),
-        _locked_nav_row("video", "Generate teaching videos", AppState.show_video_generator_coming_soon),
+        rx.cond(
+            AppState.is_support_admin,
+            _nav_row("video", "Generate teaching videos", [AppState.close_semester_sidebar, rx.redirect("/video")]),
+            _locked_nav_row("video", "Generate teaching videos", AppState.show_video_generator_coming_soon),
+        ),
 
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.07)", margin_y="4px"),
 
@@ -36733,7 +36754,11 @@ def free_page():
                                 _nav_rail_btn("notebook", AppState.toggle_notes_panel, "Notes"),
                                 _nav_rail_btn("list_checks", rx.redirect("/tracker"), "Tracker"),
                                 _nav_rail_btn("youtube", rx.redirect("/learn"), "Learn from video"),
-                                _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
+                                rx.cond(
+                                    AppState.is_support_admin,
+                                    _nav_rail_btn("video", rx.redirect("/video"), "Generate teaching videos"),
+                                    _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
+                                ),
                                 spacing="1",
                                 align_items="center",
                             ),
