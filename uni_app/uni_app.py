@@ -5979,8 +5979,23 @@ class AppState(reflex_local_auth.LocalAuthState):
     @rx.var
     def is_support_admin(self) -> bool:
         # Strict check for the internal support admin email only.
+        support_email = _normalize_email(self.support_admin_email)
         username = _normalize_email(getattr(self.authenticated_user, "username", ""))
-        return username == self.support_admin_email
+        if username == support_email:
+            return True
+
+        uid = self._uid()
+        if uid < 0:
+            return False
+        try:
+            with rx.session() as session:
+                profile_email = session.exec(
+                    select(UserProfile.email).where(UserProfile.user_id == uid)
+                ).one_or_none()
+            return _normalize_email(str(profile_email or "")) == support_email
+        except Exception as e:
+            print(f"ERROR support admin check: {e}")
+            return False
 
     # ----------------------------------------------------------------
     # is_empty_chat — True only when there are zero messages to show.
