@@ -5981,13 +5981,73 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def support_admin_email(self) -> str:
-        return "support.alexstudies@gmail.com"
+        return _normalize_email(os.getenv("SUPPORT_ADMIN_EMAIL", SUPPORT_EMAIL))
 
     @rx.var
     def is_support_admin(self) -> bool:
-        # Strict check for the internal support admin email only.
+        # Support admin is resolved by either auth username (email logins)
+        # or profile email (Google OAuth logins use google_<sub> usernames).
+        admin_email = self.support_admin_email
+        if not admin_email:
+            return False
         username = _normalize_email(getattr(self.authenticated_user, "username", ""))
-        return username == self.support_admin_email
+        if username == admin_email:
+            return True
+        uid = self._uid()
+        if uid < 0:
+            return False
+        try:
+            with rx.session() as session:
+                profile = session.exec(
+                    select(UserProfile).where(UserProfile.user_id == uid)
+                ).one_or_none()
+                profile_email = _normalize_email(getattr(profile, "email", "") if profile else "")
+                return profile_email == admin_email
+        except Exception as e:
+            print(f"ERROR is_support_admin check: {e}")
+            return False
+
+    def _enforce_support_admin_custom_access(self, uid: int) -> None:
+        """Ensure support admin account always opens in custom-plan workspace."""
+        if uid < 0 or not self.is_support_admin:
+            return
+        must_update_memory = False
+        if not _degree_is_custom(self.degree):
+            self.degree = CUSTOM_DEGREE
+            must_update_memory = True
+        if not self.is_started:
+            self.is_started = True
+            must_update_memory = True
+        if self.onboarding_region != "custom":
+            self.onboarding_region = "custom"
+        if self.selected_year or self.selected_semester:
+            self.selected_year = ""
+            self.selected_semester = ""
+            must_update_memory = True
+        if not must_update_memory:
+            return
+        try:
+            with rx.session() as session:
+                memory = session.exec(
+                    select(UserMemory).where(UserMemory.user_id == uid)
+                ).one_or_none()
+                if memory is None:
+                    memory = UserMemory(  # type: ignore
+                        user_id=uid,
+                        degree=CUSTOM_DEGREE,
+                        is_started=True,
+                        selected_year="",
+                        selected_semester="",
+                    )
+                else:
+                    memory.degree = CUSTOM_DEGREE
+                    memory.is_started = True
+                    memory.selected_year = ""
+                    memory.selected_semester = ""
+                session.add(memory)
+                session.commit()
+        except Exception as e:
+            print(f"ERROR enforce support admin custom access: {e}")
 
     # ----------------------------------------------------------------
     # is_empty_chat — True only when there are zero messages to show.
@@ -7181,6 +7241,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.pathway = canonical_pathway_label(self.degree, self.pathway)
 
         self._sync_pathway_options()
+        self._enforce_support_admin_custom_access(uid)
 
         target_route = self._authenticated_landing_route()
         if target_route == scope_to_route("home"):
@@ -12721,6 +12782,7 @@ Quality rules:
         try:
             if real_uid >= 0:
                 self._load_profile(real_uid)
+                self._enforce_support_admin_custom_access(real_uid)
             else:
                 self._load_guest_memory(uid)
         except Exception as e:
