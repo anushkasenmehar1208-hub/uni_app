@@ -36433,73 +36433,72 @@ app = rx.App(
       setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
     function watch(){
-      // Dual-gate reveal: body is shown only when BOTH conditions are met:
-      //   (a) ALL <link rel="stylesheet"> elements have fired their load/error event
-      //       → guarantees the 687KB __reflex_global_styles.css is parsed & applied
-      //   (b) Emotion has injected a fresh <style data-emotion> into <head>
-      //       → confirms React hydration has committed CSS-in-JS rules
-      // If (b) hasn't fired within 400ms of (a), we reveal anyway (fallback).
-      // Absolute failsafe at 4s in case of network failure.
-      var cssReady=false;
-      var emotionReady=false;
+      // ROOT CAUSE OF FOUC:
+      // Pre-rendered HTML has <style data-emotion> tags INLINE inside <body>.
+      // The Radix CSS in __reflex_global_styles.css (link in HEAD) gives buttons
+      // background-color:var(--accent-9) (green). The body-inline emotion rules
+      // override to white, but only because they come AFTER the link in document
+      // order. During React hydration, components re-render and emotion may
+      // briefly remove + re-inject styles from BODY into HEAD. While re-injecting,
+      // there is a window where the body-inline styles are gone and the HEAD-only
+      // Radix rules win → green button + uncentered card.
+      //
+      // SOLUTION: keep body hidden until window.load (all JS+CSS done) PLUS the
+      // emotion injection stream goes quiet for 350ms. After that, all hydration
+      // re-injections have settled and revealing body shows the final state.
       var triggered=false;
-      var emotionTimer=null;
-      var headOb=null;
+      var loadFired=false;
+      var lastEmotion=0;
+      var ob=null;
+      var pollTimer=null;
       function doReveal(){
         if(triggered) return;
-        if(!cssReady) return; // not ready yet; will be called again when CSS loads
         triggered=true;
-        if(headOb) try{headOb.disconnect();}catch(e){}
-        clearTimeout(emotionTimer);
+        if(ob) try{ob.disconnect();}catch(e){}
+        clearTimeout(pollTimer);
         requestAnimationFrame(function(){requestAnimationFrame(remove);});
       }
-      function onCSSReady(){
-        if(cssReady) return;
-        cssReady=true;
-        if(emotionReady){
-          doReveal();
-        } else {
-          // CSS loaded but hydration emotion not seen yet — wait up to 400ms
-          emotionTimer=setTimeout(function(){emotionReady=true;doReveal();},400);
-        }
-      }
-      // Gate 1: all external stylesheets loaded
-      var links=Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
-      if(!links.length){
-        onCSSReady();
-      } else {
-        var cnt=links.length;
-        function onLink(){cnt--;if(cnt<=0)onCSSReady();}
-        links.forEach(function(link){
-          if(link.sheet){onLink();}
-          else{
-            link.addEventListener('load',onLink,{once:true});
-            link.addEventListener('error',onLink,{once:true});
-          }
-        });
-      }
-      // Gate 2: emotion hydration — new <style data-emotion> injected into <head>
-      if(document.head){
-        headOb=new MutationObserver(function(mutations){
-          if(triggered) return;
-          var hasNew=mutations.some(function(m){
-            return Array.from(m.addedNodes).some(function(n){
-              return n.nodeType===1&&n.getAttribute&&n.getAttribute('data-emotion');
-            });
+      // Track every <style data-emotion> mutation anywhere in the document.
+      // Each emotion injection (or removal/replacement) bumps lastEmotion.
+      ob=new MutationObserver(function(mutations){
+        var hit=mutations.some(function(m){
+          var nodes=Array.from(m.addedNodes).concat(Array.from(m.removedNodes));
+          return nodes.some(function(n){
+            return n.nodeType===1&&n.getAttribute&&n.getAttribute('data-emotion');
           });
-          if(!hasNew) return;
-          emotionReady=true;
-          clearTimeout(emotionTimer);
-          doReveal(); // no-op if cssReady is still false
         });
-        headOb.observe(document.head,{childList:true});
+        if(hit) lastEmotion=Date.now();
+      });
+      ob.observe(document.documentElement,{childList:true,subtree:true});
+      function startPoll(){
+        // After window.load fires, poll for emotion stability.
+        // Reveal when no emotion churn for 350ms, capped at 2000ms after load.
+        var loadAt=Date.now();
+        function tick(){
+          if(triggered) return;
+          var now=Date.now();
+          var quietMs=now-(lastEmotion||loadAt);
+          if(quietMs>=350 || now-loadAt>=2000){
+            doReveal();
+          } else {
+            pollTimer=setTimeout(tick,80);
+          }
+        }
+        // Two rAFs after load lets the browser commit any pending paint cycles
+        // from late-arriving stylesheets before we start the stability check.
+        requestAnimationFrame(function(){requestAnimationFrame(function(){
+          pollTimer=setTimeout(tick,120);
+        });});
       }
-      // Absolute failsafe: 4s
-      setTimeout(function(){
-        cssReady=true;emotionReady=true;
-        doReveal();
-        try{if(headOb)headOb.disconnect();}catch(e){}
-      },4000);
+      function onLoad(){
+        if(loadFired) return;
+        loadFired=true;
+        startPoll();
+      }
+      if(document.readyState==='complete') onLoad();
+      else window.addEventListener('load',onLoad,{once:true});
+      // Absolute failsafe in case window.load never fires (e.g. broken image)
+      setTimeout(doReveal,6000);
     }
     if(document.body) watch(); else document.addEventListener('DOMContentLoaded',watch,{once:true});
   }
