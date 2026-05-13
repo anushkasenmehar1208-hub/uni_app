@@ -6031,6 +6031,9 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def effective_plan_tier(self) -> str:
+        # Support admin email gets Ultra unconditionally.
+        if getattr(self.authenticated_user, "username", "") == "support.alexstudies@gmail.com":
+            return PLAN_ULTRA
         explicit_plan = _normalize_plan_tier(self.plan_tier)
         if explicit_plan != PLAN_FREE:
             return explicit_plan
@@ -6042,6 +6045,9 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def has_premium_access(self) -> bool:
+        # Support admin email bypasses the 30-day activation window.
+        if getattr(self.authenticated_user, "username", "") == "support.alexstudies@gmail.com":
+            return True
         if self.effective_plan_tier == PLAN_FREE:
             return False
         if not self.premium_activated_at:
@@ -23905,9 +23911,9 @@ def onboarding_page():
                 rx.fragment(),
             ),
 
-            # ── Custom card (only for LK — UK/US/IN use Others chip for custom) ──
+            # ── Custom card (LK by default; support admin sees it for every region) ──
             rx.cond(
-                (AppState.onboarding_region == "LK") & ~custom_selected,
+                ((AppState.onboarding_region == "LK") | AppState.is_support_admin) & ~custom_selected,
                 rx.button(
                     rx.hstack(
                         rx.box(
@@ -23944,9 +23950,9 @@ def onboarding_page():
                     transition="all 0.25s ease",
                     _hover={"background": "rgba(167,139,250,0.10)", "border": "1px solid rgba(167,139,250,0.35)"},
                 ),
-                # Custom selected in LK — show full custom card
+                # Custom selected in LK (or for support admin in any region) — show full custom card
                 rx.cond(
-                    custom_selected & (AppState.onboarding_region == "LK"),
+                    custom_selected & ((AppState.onboarding_region == "LK") | AppState.is_support_admin),
                     rx.box(
                     rx.vstack(
                         rx.hstack(
@@ -26427,7 +26433,11 @@ def nav_rail() -> rx.Component:
         _nav_rail_btn("notebook", AppState.toggle_notes_panel, "Notes"),
         _nav_rail_btn("list_checks", [AppState.close_semester_sidebar, rx.redirect("/tracker")], "Tracker"),
         _nav_rail_btn("youtube", [AppState.close_semester_sidebar, rx.redirect("/learn")], "Learn from video"),
-        _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
+        rx.cond(
+            AppState.is_support_admin,
+            _nav_rail_btn("video", [AppState.close_semester_sidebar, rx.redirect("/video")], "Generate teaching videos"),
+            _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
+        ),
         rx.spacer(),
         # ── Bottom group ──
         _nav_rail_btn("settings", [AppState.close_semester_sidebar, rx.redirect("/settings")], "Settings"),
@@ -39329,7 +39339,11 @@ def free_sidebar_content() -> rx.Component:
         _nav_row("notebook", "Notes", AppState.toggle_notes_panel),
         _nav_row("list_checks", "Tracker", [AppState.close_semester_sidebar, rx.redirect("/tracker")]),
         _nav_row("youtube", "Learn from video", [AppState.close_semester_sidebar, rx.redirect("/learn")]),
-        _locked_nav_row("video", "Generate teaching videos", AppState.show_video_generator_coming_soon),
+        rx.cond(
+            AppState.is_support_admin,
+            _nav_row("video", "Generate teaching videos", [AppState.close_semester_sidebar, rx.redirect("/video")]),
+            _locked_nav_row("video", "Generate teaching videos", AppState.show_video_generator_coming_soon),
+        ),
 
         rx.box(height="1px", width="100%", background="rgba(255,255,255,0.07)", margin_y="4px"),
 
@@ -39512,7 +39526,11 @@ def free_page():
                                 _nav_rail_btn("notebook", AppState.toggle_notes_panel, "Notes"),
                                 _nav_rail_btn("list_checks", rx.redirect("/tracker"), "Tracker"),
                                 _nav_rail_btn("youtube", rx.redirect("/learn"), "Learn from video"),
-                                _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
+                                rx.cond(
+                                    AppState.is_support_admin,
+                                    _nav_rail_btn("video", rx.redirect("/video"), "Generate teaching videos"),
+                                    _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
+                                ),
                                 spacing="1",
                                 align_items="center",
                             ),
