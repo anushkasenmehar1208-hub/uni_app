@@ -23260,6 +23260,12 @@ def onboarding_page():
                             spacing="4",
                             align_items="stretch",
                             width="100%",
+                            # `data-ob-card-body` — matched by critical CSS in
+                            # <head> so width:100% applies on first paint even
+                            # before emotion injects rx.vstack's flex styles.
+                            # Without this, the cascade collapses and the
+                            # region-chip row inside renders content-width.
+                            custom_attrs={"data-ob-card-body": ""},
                         ),
                         width="min(88vw, 420px)",
                         padding=rx.breakpoints(initial="1.15rem", sm="1.35rem", md="1.55rem"),
@@ -23793,6 +23799,11 @@ def onboarding_page():
             desc_text("Choose your degree program"),
 
             # ── Region chips (always visible) ──
+            # `data-ob-region-row` is matched by critical CSS in <head> so that
+            # display:flex + width:100% + equal-width children apply from the
+            # first paint, even before emotion has injected `flex="1"` for each
+            # chip. Without this, cold loads in Safari Private render the row
+            # as content-width with content-width chips squeezed together.
             rx.hstack(
                 *[
                     rx.button(
@@ -23840,6 +23851,7 @@ def onboarding_page():
                 ],
                 spacing="2",
                 width="100%",
+                custom_attrs={"data-ob-region-row": ""},
             ),
 
             # ── Sri Lanka degrees ──
@@ -24114,10 +24126,17 @@ def onboarding_page():
                     max_width="360px",
                     margin="0 auto",
                     padding="0 2px",
+                    # `data-ob-form-shell` — matched by critical CSS so the
+                    # form's max-width:360px container always holds its width
+                    # on first paint, before emotion injects width:100%.
+                    # This is what allows the region-chip row inside to be
+                    # full-width (and chips to be equal-width flex children).
+                    custom_attrs={"data-ob-form-shell": ""},
                 ),
                 spacing="3",
                 align_items="stretch",
                 width="100%",
+                custom_attrs={"data-ob-form-body": ""},
             ),
             step_label="Welcome",
         ),
@@ -36424,7 +36443,39 @@ app = rx.App(
             # if the flex parent above somehow fails (e.g. an ancestor with
             # display:contents stripping the flex container).
             "[data-ob-card]{margin-left:auto!important;"
-            "margin-right:auto!important;}"
+            "margin-right:auto!important;width:min(88vw,420px);"
+            "padding:1.15rem;box-sizing:border-box;}"
+            # Match rx.breakpoints(initial='1.15rem', sm='1.35rem', md='1.55rem')
+            # as static media queries — these are pure CSS (no emotion needed),
+            # so the desktop padding lands on the first paint. Reflex's sm/md
+            # thresholds: sm=48em(768px), md=62em(992px).
+            "@media (min-width:768px){[data-ob-card]{padding:1.35rem;}}"
+            "@media (min-width:992px){[data-ob-card]{padding:1.55rem;}}"
+            # Card → form cascade: the region-chip row's width:100% only
+            # works if every ancestor up to the card also has width:100%.
+            # Each Reflex `width="100%"` lives in an emotion class that may
+            # not be applied on first paint, so we anchor the chain here.
+            "[data-ob-card-body]{display:flex!important;"
+            "flex-direction:column!important;width:100%!important;"
+            "align-items:stretch!important;box-sizing:border-box;}"
+            "[data-ob-form-body]{display:flex!important;"
+            "flex-direction:column!important;width:100%!important;"
+            "align-items:stretch!important;box-sizing:border-box;}"
+            "[data-ob-form-shell]{width:100%!important;max-width:360px!important;"
+            "margin-left:auto!important;margin-right:auto!important;"
+            "padding:0 2px!important;box-sizing:border-box;}"
+            # Region chip row: 5 equal-width chips in a horizontal flex row.
+            # Replicates the rx.hstack(spacing='2', width='100%') + each
+            # button's `flex='1'`, all of which would otherwise depend on
+            # emotion. Without this, the row collapses to content-width and
+            # the chips squeeze together. The `> button` selector is scoped
+            # to direct children so we don't accidentally style anything
+            # inside a chip.
+            "[data-ob-region-row]{display:flex!important;"
+            "flex-direction:row!important;width:100%!important;"
+            "gap:8px!important;box-sizing:border-box;}"
+            "[data-ob-region-row]>button{flex:1 1 0!important;"
+            "min-width:0!important;}"
         ),
         # NOTE: We deliberately do NOT load Radix CSS from cdn.jsdelivr.net here.
         # Safari ITP treats third-party stylesheets unpredictably (sometimes
