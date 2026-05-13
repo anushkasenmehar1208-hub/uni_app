@@ -36432,24 +36432,30 @@ app = rx.App(
       sp.classList.add('out');
       setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
-    var stableTimer=null;
     function watch(){
-      var ob=new MutationObserver(function(){
+      // ONE-SHOT trigger: fire the moment .radix-themes has children, then stop.
+      // Reflex sends continuous WebSocket state updates that reset a "stability"
+      // timer indefinitely — a one-shot avoids that trap entirely.
+      // Emotion (useInsertionEffect) runs synchronously during React's commit
+      // phase, so CSS is already injected by the time the MutationObserver fires.
+      var triggered=false;
+      function tryReveal(){
+        if(triggered) return;
         var el=document.querySelector('.radix-themes');
         if(!el||el.children.length===0) return;
-        clearTimeout(stableTimer);
-        stableTimer=setTimeout(function(){
-          ob.disconnect();
-          // Extra paint frames so emotion's per-component <style> tags have
-          // been inserted and the browser has had a chance to apply them.
+        triggered=true;
+        ob.disconnect();
+        // 3 animation frames: enough for the browser to parse + apply the
+        // emotion <style> rules that were injected during the commit phase.
+        requestAnimationFrame(function(){
           requestAnimationFrame(function(){
-            requestAnimationFrame(function(){
-              setTimeout(remove,80);
-            });
+            requestAnimationFrame(remove);
           });
-        },200);
-      });
+        });
+      }
+      var ob=new MutationObserver(tryReveal);
       ob.observe(document.body,{childList:true,subtree:true});
+      tryReveal(); // handle pre-rendered content already in DOM
       // Failsafe: never leave body hidden forever
       setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},5000);
     }
