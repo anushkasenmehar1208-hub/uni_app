@@ -36405,27 +36405,26 @@ app = rx.App(
       sp.classList.add('out');
       setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
-    function radixReady(){
+    function sheetsReady(){
       try{
-        var t=document.querySelector('.radix-themes');
-        if(!t) return false;
-        var s=getComputedStyle(t);
-        return !!(s.getPropertyValue('--space-1').trim()||s.getPropertyValue('--color-background').trim());
+        var links=document.querySelectorAll('link[rel="stylesheet"]');
+        for(var i=0;i<links.length;i++){if(!links[i].sheet)return false;}
+        return links.length>0;
       }catch(e){return false;}
     }
-    function waitForCSS(){
-      if(radixReady()){remove();return;}
-      var n=0;
-      var iv=setInterval(function(){
-        n++;
-        if(radixReady()||n>=40){clearInterval(iv);remove();}
-      },50);
+    function reveal(){
+      requestAnimationFrame(function(){requestAnimationFrame(remove);});
     }
     var ob=new MutationObserver(function(){
       var el=document.querySelector('.radix-themes');
       if(el&&el.children.length>0){
         ob.disconnect();
-        waitForCSS();
+        if(sheetsReady()){reveal();return;}
+        var n=0;
+        var iv=setInterval(function(){
+          n++;
+          if(sheetsReady()||n>=100){clearInterval(iv);reveal();}
+        },50);
       }
     });
     ob.observe(document.body,{childList:true,subtree:true});
