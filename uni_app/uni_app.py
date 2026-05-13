@@ -36433,28 +36433,52 @@ app = rx.App(
       setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
     function watch(){
-      // The pre-rendered HTML already has .radix-themes children (static SSR),
-      // so we CANNOT use an initial-state check or a body-mutation trigger —
-      // those would fire before React hydration injects the full emotion CSS set.
-      //
-      // Instead we watch <head> for NEW <style data-emotion> nodes.  Emotion
-      // uses useInsertionEffect to inject per-component CSS rules synchronously
-      // during React's hydration commit.  The moment we see a fresh emotion
-      // style land in <head>, hydration is actively running and CSS is live.
-      // We then wait 100ms + 2 rAF for any remaining rules to flush, then reveal.
+      // Dual-gate reveal: body is shown only when BOTH conditions are met:
+      //   (a) ALL <link rel="stylesheet"> elements have fired their load/error event
+      //       → guarantees the 687KB __reflex_global_styles.css is parsed & applied
+      //   (b) Emotion has injected a fresh <style data-emotion> into <head>
+      //       → confirms React hydration has committed CSS-in-JS rules
+      // If (b) hasn't fired within 400ms of (a), we reveal anyway (fallback).
+      // Absolute failsafe at 4s in case of network failure.
+      var cssReady=false;
+      var emotionReady=false;
       var triggered=false;
-      function scheduleReveal(){
+      var emotionTimer=null;
+      var headOb=null;
+      function doReveal(){
         if(triggered) return;
+        if(!cssReady) return; // not ready yet; will be called again when CSS loads
         triggered=true;
         if(headOb) try{headOb.disconnect();}catch(e){}
-        setTimeout(function(){
-          requestAnimationFrame(function(){
-            requestAnimationFrame(remove);
-          });
-        },100);
+        clearTimeout(emotionTimer);
+        requestAnimationFrame(function(){requestAnimationFrame(remove);});
       }
-      // Primary signal: new emotion <style> injected into <head> during hydration
-      var headOb=null;
+      function onCSSReady(){
+        if(cssReady) return;
+        cssReady=true;
+        if(emotionReady){
+          doReveal();
+        } else {
+          // CSS loaded but hydration emotion not seen yet — wait up to 400ms
+          emotionTimer=setTimeout(function(){emotionReady=true;doReveal();},400);
+        }
+      }
+      // Gate 1: all external stylesheets loaded
+      var links=Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+      if(!links.length){
+        onCSSReady();
+      } else {
+        var cnt=links.length;
+        function onLink(){cnt--;if(cnt<=0)onCSSReady();}
+        links.forEach(function(link){
+          if(link.sheet){onLink();}
+          else{
+            link.addEventListener('load',onLink,{once:true});
+            link.addEventListener('error',onLink,{once:true});
+          }
+        });
+      }
+      // Gate 2: emotion hydration — new <style data-emotion> injected into <head>
       if(document.head){
         headOb=new MutationObserver(function(mutations){
           if(triggered) return;
@@ -36463,12 +36487,19 @@ app = rx.App(
               return n.nodeType===1&&n.getAttribute&&n.getAttribute('data-emotion');
             });
           });
-          if(hasNew) scheduleReveal();
+          if(!hasNew) return;
+          emotionReady=true;
+          clearTimeout(emotionTimer);
+          doReveal(); // no-op if cssReady is still false
         });
         headOb.observe(document.head,{childList:true});
       }
-      // Failsafe: never leave body hidden forever (covers no-new-emotion-style cases)
-      setTimeout(function(){remove();try{if(headOb)headOb.disconnect();}catch(e){}},5000);
+      // Absolute failsafe: 4s
+      setTimeout(function(){
+        cssReady=true;emotionReady=true;
+        doReveal();
+        try{if(headOb)headOb.disconnect();}catch(e){}
+      },4000);
     }
     if(document.body) watch(); else document.addEventListener('DOMContentLoaded',watch,{once:true});
   }
