@@ -27978,6 +27978,7 @@ def landing_page():
                 rx.box(
                     rx.image(
                         src=image_src,
+                        alt=f"{title} — Alex AI {eyebrow.lower()} preview",
                         width="100%",
                         height="100%",
                         object_fit="cover",
@@ -28739,6 +28740,7 @@ def landing_page():
             rx.hstack(
                 rx.image(
                     src="/a_logo.png",
+                    alt="Alex AI logo",
                     width="22px",
                     height="22px",
                     object_fit="contain",
@@ -28803,8 +28805,26 @@ def landing_page():
         rx.vstack(
             rx.hstack(
                 rx.hstack(
+                    rx.heading(
+                        "AI that teaches your full university semester day by day",
+                        as_="h1",
+                        # Visually hidden but readable by screen readers and SEO crawlers.
+                        # The animated lines below remain the visual headline.
+                        style={
+                            "position": "absolute",
+                            "width": "1px",
+                            "height": "1px",
+                            "padding": "0",
+                            "margin": "-1px",
+                            "overflow": "hidden",
+                            "clip": "rect(0 0 0 0)",
+                            "white_space": "nowrap",
+                            "border": "0",
+                        },
+                    ),
                     rx.text(
                         "AI that teaches your full",
+                        aria_hidden="true",
                         color="rgba(255,255,255,0.96)",
                         font_size=rx.breakpoints(initial="clamp(1.92rem, 6.8vw, 3rem)", md="clamp(2.55rem, 4.1vw, 3.6rem)"),
                         font_weight="500",
@@ -30384,6 +30404,7 @@ def landing_page():
                     nav_link("Contact", "/support"),
                     nav_link("Privacy", "/privacy-policy"),
                     nav_link("Terms", "/terms"),
+                    nav_link("Refund Policy", "/return-policy"),
                     rx.link(
                         rx.text(
                             "See Alex",
