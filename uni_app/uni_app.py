@@ -36625,19 +36625,36 @@ app = rx.App(
       setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
     function watch(){
-      // ROOT CAUSE OF FOUC:
-      // Pre-rendered HTML has <style data-emotion> tags INLINE inside <body>.
-      // The Radix CSS in __reflex_global_styles.css (link in HEAD) gives buttons
-      // background-color:var(--accent-9) (green). The body-inline emotion rules
-      // override to white, but only because they come AFTER the link in document
-      // order. During React hydration, components re-render and emotion may
-      // briefly remove + re-inject styles from BODY into HEAD. While re-injecting,
-      // there is a window where the body-inline styles are gone and the HEAD-only
-      // Radix rules win → green button + uncentered card.
+      // ROOT CAUSE OF FOUC (global, across every page):
+      // Reflex compiles every Python prop (width="100%", display="flex",
+      // background="#FFF", position="absolute", etc.) into emotion CSS-in-JS
+      // classes attached via <style data-emotion> nodes. Emotion REMOVES the
+      // SSR body-inline styles and RE-INJECTS them in <head> during React
+      // hydration — and the WebSocket-driven `is_hydrated` re-render causes
+      // a SECOND wave of injections. While styles are momentarily absent,
+      // components fall back to browser/Radix defaults (block flow, green
+      // --accent-9, default Radix wrapper sizes, normal-flow absolutes).
       //
-      // SOLUTION: keep body hidden until window.load (all JS+CSS done) PLUS the
-      // emotion injection stream goes quiet for 350ms. After that, all hydration
-      // re-injections have settled and revealing body shows the final state.
+      // The previous solution gated body reveal on "emotion quiet for 350ms
+      // OR 2000ms cap after window.load". On Safari Private cold loads with
+      // no cache, the cap fires while hydration is still in flight, so the
+      // reveal lands mid-injection → user sees one frame of broken layout
+      // (left-aligned card, green buttons, content-width chips, etc.).
+      //
+      // FIX: be much more patient.
+      //   - Require at least ONE emotion event (proof emotion is running)
+      //     before trusting "quiet" — prevents revealing during the
+      //     pre-emotion gap on slow networks.
+      //   - Quiet threshold 350ms → 1500ms — bridges the 100-400ms lulls
+      //     between React hydration batches.
+      //   - Cap 2000ms → 6000ms after window.load — gives slow cold loads
+      //     enough room to finish before we force-reveal.
+      //   - Failsafe 6000ms → 10000ms — matching upward shift.
+      // The user sees the splash for slightly longer on the very first
+      // visit, but never a flash of unstyled layout.
+      var QUIET_MS = 1500;
+      var CAP_AFTER_LOAD_MS = 6000;
+      var FAILSAFE_MS = 10000;
       var triggered=false;
       var loadFired=false;
       var lastEmotion=0;
@@ -36664,13 +36681,24 @@ app = rx.App(
       ob.observe(document.documentElement,{childList:true,subtree:true});
       function startPoll(){
         // After window.load fires, poll for emotion stability.
-        // Reveal when no emotion churn for 350ms, capped at 2000ms after load.
         var loadAt=Date.now();
         function tick(){
           if(triggered) return;
           var now=Date.now();
-          var quietMs=now-(lastEmotion||loadAt);
-          if(quietMs>=350 || now-loadAt>=2000){
+          // Hard cap after window.load — never wait longer than this.
+          if(now-loadAt >= CAP_AFTER_LOAD_MS){
+            doReveal();
+            return;
+          }
+          // Require at least one emotion event before trusting "quiet" —
+          // otherwise pages that hydrate slowly might be revealed in the
+          // pre-emotion window where styles haven't been applied yet.
+          if(lastEmotion === 0){
+            pollTimer=setTimeout(tick,80);
+            return;
+          }
+          var quietMs = now - lastEmotion;
+          if(quietMs >= QUIET_MS){
             doReveal();
           } else {
             pollTimer=setTimeout(tick,80);
@@ -36690,7 +36718,7 @@ app = rx.App(
       if(document.readyState==='complete') onLoad();
       else window.addEventListener('load',onLoad,{once:true});
       // Absolute failsafe in case window.load never fires (e.g. broken image)
-      setTimeout(doReveal,6000);
+      setTimeout(doReveal,FAILSAFE_MS);
     }
     if(document.body) watch(); else document.addEventListener('DOMContentLoaded',watch,{once:true});
   }
