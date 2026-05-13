@@ -36375,11 +36375,8 @@ app = rx.App(
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
         # Preload Radix Themes CSS from CDN to avoid the @import waterfall in
-        # __reflex_global_styles.css. Without this, the main stylesheet loads
-        # first, then triggers a SECOND fetch for Radix via @import — leaving a
-        # window where React has rendered but the layout CSS hasn't arrived.
-        # Loading Radix in parallel as a direct render-blocking <link> means the
-        # browser has the layout rules ready before first paint.
+        # __reflex_global_styles.css. Loads in parallel with the main stylesheet
+        # so layout CSS is available before React mounts.
         rx.el.link(
             rel="preload",
             href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.2.1/styles.css",
@@ -36389,6 +36386,15 @@ app = rx.App(
             rel="stylesheet",
             href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.2.1/styles.css",
         ),
+        # Keep <body> hidden until our splash script flips html.__app_ready=true.
+        # Reflex/emotion injects per-component styles AS each component renders,
+        # so the very first paint can show buttons/layout without their inline
+        # styles applied (e.g. white→green button, uncentered card). Targeting
+        # <html> instead of body means React can't overwrite the gating attribute.
+        rx.el.style(
+            "html:not(.__app_ready) body{visibility:hidden!important}"
+            "html.__app_ready body{visibility:visible!important}"
+        ),
         # Keep Reflex/Radix default controls out of the bright blue accent family.
         rx.el.style(_PREMIUM_UI_ACCENT_CSS),
         # Hide Reflex' raw websocket failure UI; reconnects continue silently.
@@ -36397,30 +36403,34 @@ app = rx.App(
         # Landing-page "Try Alex" demo widget — needs head-level so it executes pre-hydration.
         rx.el.script(ALEX_DEMO_WIDGET_JS),
         # Native loading splash — runs before React.
-        # Since Radix CSS is now preloaded as a render-blocking <link> above,
-        # the browser will already have layout CSS applied by the time React
-        # mounts. The splash just covers the brief gap between body parse and
-        # React's first render, then fades on first content render.
+        # Splash is mounted on <html> (NOT body) so it stays visible while the
+        # body-hiding rule above gates content. We wait for the DOM to stabilise
+        # (200ms with no mutations) AND then add an extra paint-frame delay so
+        # emotion CSS has finished injecting per-component styles, then flip the
+        # __app_ready class so the body fades into view.
         rx.el.script("""
 (function(){
   var CSS='@keyframes __ubr{0%{transform:translateX(-100%)}50%{transform:translateX(0)}100%{transform:translateX(100%)}}'+
-    '#__uni_sp{position:fixed;inset:0;background:#0a0a0c;z-index:99999;pointer-events:none;transition:opacity .25s ease}'+
+    '#__uni_sp{position:fixed;inset:0;background:#0a0a0c;z-index:2147483647;pointer-events:none;transition:opacity .3s ease}'+
     '#__uni_sp.out{opacity:0}'+
-    '#__uni_tb{position:fixed;top:0;left:0;right:0;height:3px;z-index:100000;overflow:hidden;pointer-events:none}'+
+    '#__uni_tb{position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;overflow:hidden;pointer-events:none}'+
     '#__uni_tb div{height:100%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.92),transparent);animation:__ubr 1.4s cubic-bezier(.4,0,.2,1) infinite;box-shadow:0 0 12px rgba(255,255,255,.32)}';
   function inject(){
     if(document.getElementById('__uni_sp')) return;
-    var target=document.body||document.documentElement;
     var st=document.createElement('style');st.textContent=CSS;
     (document.head||document.documentElement).appendChild(st);
     var sp=document.createElement('div');sp.id='__uni_sp';
     var tb=document.createElement('div');tb.id='__uni_tb';tb.innerHTML='<div></div>';
-    target.appendChild(sp);target.appendChild(tb);
+    // Mount on <html>, not body — body is hidden by the gating CSS above.
+    document.documentElement.appendChild(sp);
+    document.documentElement.appendChild(tb);
     var done=false;
     function remove(){
       if(done) return; done=true;
+      // Reveal body first so the cross-fade looks clean.
+      document.documentElement.classList.add('__app_ready');
       sp.classList.add('out');
-      setTimeout(function(){sp.remove();tb.remove();st.remove();},300);
+      setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
     var stableTimer=null;
     function watch(){
@@ -36430,10 +36440,17 @@ app = rx.App(
         clearTimeout(stableTimer);
         stableTimer=setTimeout(function(){
           ob.disconnect();
-          requestAnimationFrame(function(){requestAnimationFrame(remove);});
-        },150);
+          // Extra paint frames so emotion's per-component <style> tags have
+          // been inserted and the browser has had a chance to apply them.
+          requestAnimationFrame(function(){
+            requestAnimationFrame(function(){
+              setTimeout(remove,80);
+            });
+          });
+        },200);
       });
       ob.observe(document.body,{childList:true,subtree:true});
+      // Failsafe: never leave body hidden forever
       setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},5000);
     }
     if(document.body) watch(); else document.addEventListener('DOMContentLoaded',watch,{once:true});
