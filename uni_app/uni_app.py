@@ -26901,10 +26901,18 @@ AUTH_CARD_WIDTH = "min(90vw, 380px)"
 
 
 def _csrf_field() -> rx.Component:
+    # rx.input compiles to a Radix `<TextField.Root>` which wraps the native
+    # input in a styled <div>. `display="none"` is emotion-injected and may
+    # be missing during the cold-load FOUC window, so the wrapper div briefly
+    # shows up with its default size — opening a ~64px gap between the
+    # password row and the Sign In button on the login page.
+    # `auth-csrf-hidden` is matched by critical CSS in <head> so the wrapper
+    # is statically hidden from first paint.
     return rx.input(
         name="csrf_token",
         type="hidden",
         value=AppState.auth_csrf_token,
+        class_name="auth-csrf-hidden",
         display="none",
         width="0",
         height="0",
@@ -36546,6 +36554,13 @@ app = rx.App(
             "align-items:center!important;background:transparent!important;"
             "background-color:transparent!important;border:none!important;"
             "padding:0!important;color:rgba(255,255,255,0.35)!important;}"
+            # CSRF hidden field — rx.input wraps the native input in a
+            # Radix TextField.Root <div> that's visible at default size on
+            # cold load before emotion applies `display:none`. Force it
+            # hidden from first paint.
+            ".auth-csrf-hidden{display:none!important;width:0!important;"
+            "height:0!important;padding:0!important;margin:0!important;"
+            "border:0!important;opacity:0!important;visibility:hidden!important;}"
         ),
         # NOTE: We deliberately do NOT load Radix CSS from cdn.jsdelivr.net here.
         # Safari ITP treats third-party stylesheets unpredictably (sometimes
