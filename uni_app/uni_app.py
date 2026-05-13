@@ -36383,9 +36383,10 @@ app = rx.App(
         rx.el.script(ALEX_DEMO_WIDGET_JS),
         # Native loading splash — runs before React.
         # Creates a dark overlay + animated top bar as soon as the DOM is ready.
-        # The splash stays on-screen until BOTH React renders content AND the
-        # Radix theme CSS stylesheet has been fully loaded & applied, preventing
-        # the FOUC where unstyled content flashes before Radix CSS kicks in.
+        # The splash waits for the DOM to STABILISE (no mutations for 200ms)
+        # so React Router lazy-loaded routes and emotion CSS have all resolved,
+        # then checks stylesheets (including @import chains), and only then
+        # reveals the page with a double-rAF paint guarantee.
         rx.el.script("""
 (function(){
   var CSS='@keyframes __ubr{0%{transform:translateX(-100%)}50%{transform:translateX(0)}100%{transform:translateX(100%)}}'+
@@ -36408,24 +36409,40 @@ app = rx.App(
     function sheetsReady(){
       try{
         var links=document.querySelectorAll('link[rel="stylesheet"]');
-        for(var i=0;i<links.length;i++){if(!links[i].sheet)return false;}
-        return links.length>0;
+        if(!links.length) return false;
+        for(var i=0;i<links.length;i++){
+          var s=links[i].sheet;
+          if(!s) return false;
+          try{var r=s.cssRules;if(r){for(var j=0;j<r.length;j++){
+            if(r[j].type===3&&!r[j].styleSheet) return false;
+          }}}catch(e){}
+        }
+        return true;
       }catch(e){return false;}
     }
-    function reveal(){
-      requestAnimationFrame(function(){requestAnimationFrame(remove);});
+    function finalReveal(){
+      if(sheetsReady()){
+        requestAnimationFrame(function(){requestAnimationFrame(remove);});
+        return;
+      }
+      var n=0;
+      var iv=setInterval(function(){
+        n++;
+        if(sheetsReady()||n>=60){
+          clearInterval(iv);
+          requestAnimationFrame(function(){requestAnimationFrame(remove);});
+        }
+      },50);
     }
+    var stableTimer=null;
     var ob=new MutationObserver(function(){
       var el=document.querySelector('.radix-themes');
-      if(el&&el.children.length>0){
+      if(!el||el.children.length===0) return;
+      clearTimeout(stableTimer);
+      stableTimer=setTimeout(function(){
         ob.disconnect();
-        if(sheetsReady()){reveal();return;}
-        var n=0;
-        var iv=setInterval(function(){
-          n++;
-          if(sheetsReady()||n>=100){clearInterval(iv);reveal();}
-        },50);
-      }
+        finalReveal();
+      },200);
     });
     ob.observe(document.body,{childList:true,subtree:true});
     setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},6000);
