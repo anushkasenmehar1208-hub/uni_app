@@ -30756,12 +30756,32 @@ def landing_page():
                 white-space: nowrap !important;
                 text-align: center !important;
             }
-            /* Force the gradient backgrounds on the hero CTAs.
-               The buttons are rendered with Radix's variant="ghost", whose
-               .rt-Button.rt-variant-ghost rule sets background:transparent
-               and beats the inline emotion style by specificity once the
-               Radix theme stylesheet finishes loading. That caused the
-               primary CTA to "appear, then disappear" on refresh. */
+            /* Lock the hero CTA visual state from the very first paint.
+               The buttons render with Radix's variant="ghost", and Radix's
+               .rt-Button.rt-variant-ghost rule overrides emotion's inline
+               background by specificity once the theme stylesheet loads,
+               which caused the "Start My Study Plan" button to flash big
+               then disappear / resize on refresh. We pin every visual
+               property here with !important so nothing can shift. */
+            .landing-main-cta {
+                height: 52px !important;
+                min-width: 216px !important;
+                padding: 0 24px !important;
+                border-radius: 999px !important;
+                font-size: 0.98rem !important;
+                font-weight: 600 !important;
+                letter-spacing: 0 !important;
+                line-height: 1 !important;
+                white-space: nowrap !important;
+                text-align: center !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-sizing: border-box !important;
+                cursor: pointer !important;
+                transition: transform 0.18s ease, background 0.18s ease,
+                    border-color 0.18s ease !important;
+            }
             .landing-main-cta--solid {
                 background: linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%) !important;
                 color: #0a0a0b !important;
@@ -30771,14 +30791,17 @@ def landing_page():
             }
             .landing-main-cta--solid:hover {
                 background: #ffffff !important;
+                transform: translateY(-1px) !important;
             }
             .landing-main-cta--ghost {
                 background: rgba(255,255,255,0.04) !important;
                 color: rgba(255,255,255,0.88) !important;
                 border: 1px solid rgba(255,255,255,0.14) !important;
+                box-shadow: none !important;
             }
             .landing-main-cta--ghost:hover {
                 background: rgba(255,255,255,0.09) !important;
+                transform: translateY(-1px) !important;
             }
             .landing-nav-cta {
                 color: rgba(255,255,255,0.92) !important;
