@@ -27306,6 +27306,12 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
             opacity="0.4",
         ),
         # ── Main Layout ──
+        # `data-auth-content` (outer column) and `data-auth-center` (card row)
+        # are matched by critical CSS in <head> so the auth card is centered
+        # on first paint even before emotion injects the flex props below.
+        # Without this, login/register pages briefly render the card stuck
+        # top-left in Safari Private cold loads (the rx.center / outer flex
+        # rely on emotion-injected styles).
         rx.box(
             rx.center(
                 rx.card(
@@ -27323,6 +27329,7 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                 width="100%",
                 padding_top="8vh",
                 pointer_events="auto",
+                custom_attrs={"data-auth-center": ""},
             ),
             _auth_legal_footer(),
             display="flex",
@@ -27399,6 +27406,7 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
         width="100vw", min_height="100vh", position="relative",
         overflow="hidden",
         on_mount=AppState.init_auth_forms,
+        custom_attrs={"data-auth-page": ""},
     )
 
 
@@ -36476,6 +36484,26 @@ app = rx.App(
             "gap:8px!important;box-sizing:border-box;}"
             "[data-ob-region-row]>button{flex:1 1 0!important;"
             "min-width:0!important;}"
+            # ── Auth pages (login / register / reset password) ──
+            # Same emotion-timing problem: the outer column flex
+            # (data-auth-content) and the card-row centerer
+            # (data-auth-center) depend on emotion-injected styles, so
+            # cold loads in Safari Private briefly paint the card stuck
+            # top-left. Static CSS here anchors the layout from first paint.
+            "[data-auth-page]{position:relative;width:100vw;width:100%;"
+            "min-height:100vh;min-height:100dvh;overflow:hidden;"
+            "box-sizing:border-box;}"
+            "[data-auth-content]{display:flex!important;"
+            "flex-direction:column!important;align-items:center!important;"
+            "justify-content:center!important;width:100%!important;"
+            "min-height:100vh;min-height:100dvh;"
+            "padding:20px 16px;box-sizing:border-box;position:relative;"
+            "z-index:3;}"
+            "[data-auth-center]{display:flex!important;"
+            "align-items:center!important;justify-content:center!important;"
+            "width:100%!important;box-sizing:border-box;}"
+            "[data-auth-card]{margin-left:auto!important;"
+            "margin-right:auto!important;box-sizing:border-box;}"
         ),
         # NOTE: We deliberately do NOT load Radix CSS from cdn.jsdelivr.net here.
         # Safari ITP treats third-party stylesheets unpredictably (sometimes
