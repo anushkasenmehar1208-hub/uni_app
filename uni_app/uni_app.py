@@ -28805,17 +28805,8 @@ def landing_page():
         rx.vstack(
             rx.hstack(
                 rx.hstack(
-                    rx.heading(
-                        "AI that teaches your full university semester day by day",
-                        as_="h1",
-                        # Visually hidden but readable by screen readers and SEO crawlers.
-                        # Class is defined in the inline <style> below so it applies on
-                        # first paint (no flash before hydration).
-                        class_name="landing-sr-only",
-                    ),
                     rx.text(
                         "AI that teaches your full",
-                        aria_hidden="true",
                         color="rgba(255,255,255,0.96)",
                         font_size=rx.breakpoints(initial="clamp(1.92rem, 6.8vw, 3rem)", md="clamp(2.55rem, 4.1vw, 3.6rem)"),
                         font_weight="500",
@@ -30519,17 +30510,6 @@ def landing_page():
             z_index="4",
         ),
         rx.el.style("""
-            .landing-sr-only {
-                position: absolute !important;
-                width: 1px !important;
-                height: 1px !important;
-                padding: 0 !important;
-                margin: -1px !important;
-                overflow: hidden !important;
-                clip: rect(0 0 0 0) !important;
-                white-space: nowrap !important;
-                border: 0 !important;
-            }
             @keyframes landingNavIn {
                 0% { opacity: 0; transform: translateY(-16px); }
                 100% { opacity: 1; transform: translateY(0); }
