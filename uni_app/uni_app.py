@@ -36374,26 +36374,26 @@ app = rx.App(
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
-        # Preload Radix Themes CSS from CDN to avoid the @import waterfall in
-        # __reflex_global_styles.css. Loads in parallel with the main stylesheet
-        # so layout CSS is available before React mounts.
-        rx.el.link(
-            rel="preload",
-            href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.2.1/styles.css",
-            **{"as": "style"},
-        ),
-        rx.el.link(
-            rel="stylesheet",
-            href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.2.1/styles.css",
-        ),
+        # NOTE: We deliberately do NOT load Radix CSS from cdn.jsdelivr.net here.
+        # Safari ITP treats third-party stylesheets unpredictably (sometimes
+        # blocking them, sometimes loading them late) and the resulting race with
+        # the same-origin bundled __reflex_global_styles.css (which already
+        # contains Radix Themes) caused the persistent FOUC where the welcome
+        # card rendered top-left with green buttons. The bundled stylesheet alone
+        # is sufficient.
         # Keep <body> hidden until our splash script flips html.__app_ready=true.
         # Reflex/emotion injects per-component styles AS each component renders,
         # so the very first paint can show buttons/layout without their inline
-        # styles applied (e.g. white→green button, uncentered card). Targeting
-        # <html> instead of body means React can't overwrite the gating attribute.
+        # styles applied (e.g. white→green button, uncentered card).
         rx.el.style(
             "html:not(.__app_ready) body{visibility:hidden!important}"
             "html.__app_ready body{visibility:visible!important}"
+            # Splash overlay & loading bar are siblings INSIDE body (not on <html>)
+            # because hydrateRoot(document) treats unexpected children of <html>
+            # as a hydration mismatch and re-renders the entire tree from scratch
+            # — losing the inline emotion styles in the process.
+            "html:not(.__app_ready) body>#__uni_sp,"
+            "html:not(.__app_ready) body>#__uni_tb{visibility:visible!important}"
         ),
         # Keep Reflex/Radix default controls out of the bright blue accent family.
         rx.el.style(_PREMIUM_UI_ACCENT_CSS),
@@ -36417,13 +36417,17 @@ app = rx.App(
     '#__uni_tb div{height:100%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.92),transparent);animation:__ubr 1.4s cubic-bezier(.4,0,.2,1) infinite;box-shadow:0 0 12px rgba(255,255,255,.32)}';
   function inject(){
     if(document.getElementById('__uni_sp')) return;
+    if(!document.body) return; // body must exist; we are called from DOMContentLoaded
     var st=document.createElement('style');st.textContent=CSS;
-    (document.head||document.documentElement).appendChild(st);
+    document.head.appendChild(st);
     var sp=document.createElement('div');sp.id='__uni_sp';
     var tb=document.createElement('div');tb.id='__uni_tb';tb.innerHTML='<div></div>';
-    // Mount on <html>, not body — body is hidden by the gating CSS above.
-    document.documentElement.appendChild(sp);
-    document.documentElement.appendChild(tb);
+    // Mount INSIDE <body>, not on <html>. React's hydrateRoot(document) expects
+    // <html>'s children to be exactly <head> and <body>; extra children there
+    // cause a hydration mismatch and full client re-render that wipes the inline
+    // emotion styles. Inside body these are just extra siblings React tolerates.
+    document.body.appendChild(sp);
+    document.body.appendChild(tb);
     var done=false;
     function remove(){
       if(done) return; done=true;
@@ -36502,11 +36506,10 @@ app = rx.App(
     }
     if(document.body) watch(); else document.addEventListener('DOMContentLoaded',watch,{once:true});
   }
-  function tryInject(){
-    if(document.documentElement){inject();}
-    else{setTimeout(tryInject,0);}
-  }
-  tryInject();
+  // Splash needs <body> to exist (we mount inside it to avoid hydration
+  // mismatches with hydrateRoot(document)). Defer until DOMContentLoaded.
+  if(document.body) inject();
+  else document.addEventListener('DOMContentLoaded',inject,{once:true});
 })();
 """),
         rx.el.script(src="https://www.googletagmanager.com/gtag/js?id=G-H5G0QBSY2M"),
