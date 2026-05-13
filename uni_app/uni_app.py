@@ -33669,6 +33669,50 @@ _NETWORK_ERROR_SUPPRESSION_CSS = """
 }
 """
 
+_FIRST_PAINT_LAYOUT_CSS = """
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #0a0a0c !important;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    min-height: 100vh;
+}
+
+@supports (min-height: 100dvh) {
+    body {
+        min-height: 100dvh;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+.radix-themes[data-is-root-theme='true'] {
+    width: 100%;
+    min-height: 100vh;
+    background: #0a0a0c;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+@supports (min-height: 100dvh) {
+    .radix-themes[data-is-root-theme='true'] {
+        min-height: 100dvh;
+    }
+}
+"""
+
 _NETWORK_ERROR_SUPPRESSION_JS = """
 (function(){
   var blocked = [
@@ -33859,8 +33903,8 @@ _NOTES_LIB_AUGMENT_JS = """
 app = rx.App(
     toaster=_APP_TOASTER,
     head_components=[
-        # Body background set before React mounts (prevents any white/default flash).
-        rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        # First-paint layout foundation before React, Radix, and linked CSS finish loading.
+        rx.el.style(_FIRST_PAINT_LAYOUT_CSS),
         rx.el.style(_NOTES_LIB_AUGMENT_CSS),
         rx.el.script(_NOTES_LIB_AUGMENT_JS),
         # Hide Reflex' raw websocket failure UI; reconnects continue silently.
