@@ -23228,6 +23228,12 @@ def onboarding_page():
                 z_index="4", pointer_events="none",
             ),
             # ── Card + floating pathway panel ──
+            # `data-ob-center` is matched by critical CSS in <head> so that
+            # display:flex + center alignment apply from first paint, even
+            # before emotion (Reflex's CSS-in-JS) finishes injecting the
+            # rx.center's add_style() rules. Without this, Safari Private cold
+            # loads briefly paint the card as a block element (left-aligned)
+            # before emotion catches up.
             rx.center(
                 rx.box(
                     rx.box(
@@ -23279,6 +23285,7 @@ def onboarding_page():
                 padding="20px",
                 z_index="5",
                 position="relative",
+                custom_attrs={"data-ob-center": ""},
             ),
             # ── CSS animations ──
             rx.el.style("""
@@ -24090,6 +24097,11 @@ def onboarding_page():
         )
 
     # This is the FINAL and ONLY return for the onboarding_page function
+    # `data-ob-page` is matched by critical CSS in <head> to guarantee a
+    # full-viewport, positioned shell on first paint — independent of
+    # emotion/Radix CSS being fully applied. This is the parent of
+    # `data-ob-center`, and together they prevent the Safari Private
+    # cold-load FOUC where the card briefly rendered left-aligned.
     return rx.box(
         onboarding_shell(
             "Setup Your Success",
@@ -24109,7 +24121,11 @@ def onboarding_page():
             ),
             step_label="Welcome",
         ),
+        width="100%",
+        min_height="100vh",
         height="100vh",
+        position="relative",
+        custom_attrs={"data-ob-page": ""},
     )
 
 
@@ -36374,6 +36390,42 @@ app = rx.App(
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        # ── Critical layout CSS ──
+        # Loaded in <head> as a static inline stylesheet so it applies on the
+        # very first paint, *before* any emotion (Reflex's CSS-in-JS) styles
+        # have been injected for the page components. This guards against the
+        # Safari Private cold-load FOUC where pages like /select briefly
+        # painted with the card stuck to the left because rx.center's
+        # `display:flex; align-items:center; justify-content:center` (added
+        # via emotion's add_style()) had not been applied yet during the
+        # is_hydrated→true state swap.
+        #
+        # The selectors target data-attributes we control on the page
+        # wrappers, so this CSS is independent of Radix/emotion class names
+        # and survives hydration re-injections.
+        rx.el.style(
+            # Stable base for the document — full-height, no margins, dark bg.
+            # (Scoped to html/body only; we deliberately do NOT change the
+            # global `*` box-sizing here to avoid touching unrelated styles.)
+            "html,body{width:100%;min-height:100%;margin:0;padding:0;"
+            "background:#0a0a0c;}"
+            # Outer page shell: full viewport, positioned for absolute
+            # background overlays inside the shell.
+            "[data-ob-page]{position:relative;width:100%;min-height:100vh;"
+            "min-height:100dvh;box-sizing:border-box;}"
+            # Centering layer: replicates rx.center's add_style() output as
+            # static CSS so first paint always flex-centers the card,
+            # regardless of emotion timing.
+            "[data-ob-center]{display:flex!important;"
+            "align-items:center!important;justify-content:center!important;"
+            "width:100%!important;min-height:100vh;min-height:100dvh;"
+            "box-sizing:border-box;}"
+            # Card itself: ensure a sane horizontal centering fallback even
+            # if the flex parent above somehow fails (e.g. an ancestor with
+            # display:contents stripping the flex container).
+            "[data-ob-card]{margin-left:auto!important;"
+            "margin-right:auto!important;}"
+        ),
         # NOTE: We deliberately do NOT load Radix CSS from cdn.jsdelivr.net here.
         # Safari ITP treats third-party stylesheets unpredictably (sometimes
         # blocking them, sometimes loading them late) and the resulting race with
