@@ -28809,9 +28809,20 @@ def landing_page():
                         "AI that teaches your full university semester day by day",
                         as_="h1",
                         # Visually hidden but readable by screen readers and SEO crawlers.
-                        # Class is defined in the inline <style> below so it applies on
-                        # first paint (no flash before hydration).
+                        # The .landing-sr-only stylesheet rule appears further down the
+                        # document, so we ALSO apply the same rules as a raw inline
+                        # `style="..."` HTML attribute (via custom_attrs) — that way the
+                        # element is hidden the moment the parser sees it, with zero flash.
                         class_name="landing-sr-only",
+                        custom_attrs={
+                            "style": (
+                                "position:absolute!important;width:1px!important;"
+                                "height:1px!important;padding:0!important;"
+                                "margin:-1px!important;overflow:hidden!important;"
+                                "clip:rect(0 0 0 0)!important;white-space:nowrap!important;"
+                                "border:0!important;"
+                            ),
+                        },
                     ),
                     rx.text(
                         "AI that teaches your full",
