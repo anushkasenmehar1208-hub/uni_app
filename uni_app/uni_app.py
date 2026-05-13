@@ -36627,98 +36627,163 @@ app = rx.App(
     function watch(){
       // ROOT CAUSE OF FOUC (global, across every page):
       // Reflex compiles every Python prop (width="100%", display="flex",
-      // background="#FFF", position="absolute", etc.) into emotion CSS-in-JS
-      // classes attached via <style data-emotion> nodes. Emotion REMOVES the
-      // SSR body-inline styles and RE-INJECTS them in <head> during React
-      // hydration — and the WebSocket-driven `is_hydrated` re-render causes
-      // a SECOND wave of injections. While styles are momentarily absent,
-      // components fall back to browser/Radix defaults (block flow, green
-      // --accent-9, default Radix wrapper sizes, normal-flow absolutes).
+      // background="#FFF", etc.) into emotion CSS-in-JS classes. In
+      // PRODUCTION, emotion injects rules via CSSStyleSheet.insertRule()
+      // on an existing <style> element — this is NOT a DOM mutation, so
+      // MutationObserver does NOT fire when emotion adds styles. Earlier
+      // versions of this gate watched MutationObserver for
+      // <style data-emotion> additions and saw zero events in prod;
+      // body was effectively revealed by the cap timer alone, often mid-
+      // hydration → flash of unstyled layout (card left-aligned, green
+      // buttons, content-width chips, etc.). After one refresh, the
+      // bytecode/CSS is in memory cache so hydration completes before
+      // the cap fires and the user sees only the stable state.
       //
-      // The previous solution gated body reveal on "emotion quiet for 350ms
-      // OR 2000ms cap after window.load". On Safari Private cold loads with
-      // no cache, the cap fires while hydration is still in flight, so the
-      // reveal lands mid-injection → user sees one frame of broken layout
-      // (left-aligned card, green buttons, content-width chips, etc.).
-      //
-      // FIX: be much more patient.
-      //   - Require at least ONE emotion event (proof emotion is running)
-      //     before trusting "quiet" — prevents revealing during the
-      //     pre-emotion gap on slow networks.
-      //   - Quiet threshold 350ms → 1500ms — bridges the 100-400ms lulls
-      //     between React hydration batches.
-      //   - Cap 2000ms → 6000ms after window.load — gives slow cold loads
-      //     enough room to finish before we force-reveal.
-      //   - Failsafe 6000ms → 10000ms — matching upward shift.
-      // The user sees the splash for slightly longer on the very first
-      // visit, but never a flash of unstyled layout.
-      var QUIET_MS = 1500;
-      var CAP_AFTER_LOAD_MS = 6000;
-      var FAILSAFE_MS = 10000;
+      // FIX: monkey-patch CSSStyleSheet.prototype.insertRule (and
+      // deleteRule) and document.fonts.ready so we observe every actual
+      // CSS activity. Reveal when:
+      //   (1) window.load has fired (all CSS link/script tags done), AND
+      //   (2) at least one insertRule has been observed (emotion is
+      //       definitely running), AND
+      //   (3) insertRule has been quiet for QUIET_MS, AND
+      //   (4) document.fonts.ready has resolved (no late font reflow).
+      // Hard cap at CAP_AFTER_LOAD_MS protects against pathological
+      // cases; absolute failsafe at FAILSAFE_MS protects if load never
+      // fires.
+      var QUIET_MS = 600;
+      var CAP_AFTER_LOAD_MS = 8000;
+      var FAILSAFE_MS = 12000;
+      var IDLE_AFTER_LOAD_MS = 600;  // browser must be idle this long after window.load
       var triggered=false;
       var loadFired=false;
-      var lastEmotion=0;
-      var ob=null;
+      var lastCssActivity=0;
+      var cssActivityCount=0;
+      var fontsReady=false;
+      var idleSeenAt=0;
       var pollTimer=null;
       function doReveal(){
         if(triggered) return;
         triggered=true;
-        if(ob) try{ob.disconnect();}catch(e){}
         clearTimeout(pollTimer);
         requestAnimationFrame(function(){requestAnimationFrame(remove);});
       }
-      // Track every <style data-emotion> mutation anywhere in the document.
-      // Each emotion injection (or removal/replacement) bumps lastEmotion.
-      ob=new MutationObserver(function(mutations){
-        var hit=mutations.some(function(m){
-          var nodes=Array.from(m.addedNodes).concat(Array.from(m.removedNodes));
-          return nodes.some(function(n){
-            return n.nodeType===1&&n.getAttribute&&n.getAttribute('data-emotion');
-          });
+      // Hook every CSS-rule API emotion (and Radix) might use. Each call
+      // bumps lastCssActivity. Hooks run on the prototype so they catch
+      // every stylesheet — including emotion's hidden <style> elements.
+      try{
+        var SS = CSSStyleSheet.prototype;
+        ['insertRule','deleteRule','addRule','removeRule'].forEach(function(name){
+          var orig = SS[name];
+          if(typeof orig !== 'function') return;
+          SS[name] = function(){
+            cssActivityCount++;
+            lastCssActivity = Date.now();
+            return orig.apply(this, arguments);
+          };
         });
-        if(hit) lastEmotion=Date.now();
-      });
-      ob.observe(document.documentElement,{childList:true,subtree:true});
+      }catch(e){/* CSSStyleSheet patch failed; fall through to cap */}
+      // Track <style data-emotion> mutations too — covers emotion's
+      // development mode and any fallback paths that DO touch the DOM.
+      try{
+        new MutationObserver(function(mutations){
+          var hit = mutations.some(function(m){
+            var nodes = Array.from(m.addedNodes).concat(Array.from(m.removedNodes));
+            return nodes.some(function(n){
+              return n.nodeType===1 && n.getAttribute &&
+                (n.tagName==='STYLE' || n.getAttribute('data-emotion'));
+            });
+          });
+          if(hit){ cssActivityCount++; lastCssActivity = Date.now(); }
+        }).observe(document.documentElement, {childList:true, subtree:true});
+      }catch(e){/* observer failed; fall through to cap */}
+      // document.fonts.ready resolves when all @font-face declarations
+      // have been loaded (or have failed). Google Fonts is rel=stylesheet,
+      // so a late font load can trigger a reflow AFTER our cap — wait for
+      // it.
+      try{
+        if(document.fonts && document.fonts.ready){
+          document.fonts.ready.then(function(){ fontsReady = true; });
+        } else { fontsReady = true; }
+      }catch(e){ fontsReady = true; }
       function startPoll(){
-        // After window.load fires, poll for emotion stability.
-        var loadAt=Date.now();
-        function tick(){
+        var loadAt = Date.now();
+        // requestIdleCallback fires only when the browser has no pending
+        // work — React hydration, layout, paint. In production Reflex
+        // pre-renders all emotion <style> tags into the SSR HTML, so we
+        // can't observe CSS injections at runtime; the only reliable
+        // signal that hydration is complete is "browser is idle for a
+        // sustained period". Each idle callback bumps idleSeenAt; the
+        // tick loop confirms idleSeenAt is recent enough before
+        // revealing.
+        function pingIdle(){
           if(triggered) return;
-          var now=Date.now();
-          // Hard cap after window.load — never wait longer than this.
-          if(now-loadAt >= CAP_AFTER_LOAD_MS){
-            doReveal();
-            return;
-          }
-          // Require at least one emotion event before trusting "quiet" —
-          // otherwise pages that hydrate slowly might be revealed in the
-          // pre-emotion window where styles haven't been applied yet.
-          if(lastEmotion === 0){
-            pollTimer=setTimeout(tick,80);
-            return;
-          }
-          var quietMs = now - lastEmotion;
-          if(quietMs >= QUIET_MS){
-            doReveal();
+          if(typeof requestIdleCallback === 'function'){
+            requestIdleCallback(function(){
+              idleSeenAt = Date.now();
+              if(!triggered) requestIdleCallback(pingIdle, {timeout: 500});
+            }, {timeout: 500});
           } else {
-            pollTimer=setTimeout(tick,80);
+            // Safari fallback: just keep marking idle every ~100ms
+            idleSeenAt = Date.now();
+            setTimeout(pingIdle, 100);
           }
         }
-        // Two rAFs after load lets the browser commit any pending paint cycles
-        // from late-arriving stylesheets before we start the stability check.
+        pingIdle();
+        function tick(){
+          if(triggered) return;
+          var now = Date.now();
+          // Hard cap — never wait longer than this regardless of state.
+          if(now - loadAt >= CAP_AFTER_LOAD_MS){
+            doReveal();
+            return;
+          }
+          // Wait for fonts before revealing — late font load shifts
+          // layout (Plus Jakarta Sans / Space Grotesk via Google Fonts).
+          if(!fontsReady){
+            pollTimer = setTimeout(tick, 80);
+            return;
+          }
+          // Wait for browser idle to have been recent (React + emotion
+          // are done with their work).
+          if(idleSeenAt === 0 || now - idleSeenAt > 200){
+            pollTimer = setTimeout(tick, 80);
+            return;
+          }
+          // Require some elapsed time since window.load so even fast
+          // hydration finishes its work before we reveal.
+          if(now - loadAt < IDLE_AFTER_LOAD_MS){
+            pollTimer = setTimeout(tick, 80);
+            return;
+          }
+          // If we DID see CSS activity (dev mode, or if anything ever
+          // injects), require quiet. Otherwise, idle + load-elapsed is
+          // enough (production case: SSR pre-rendered all emotion CSS,
+          // no runtime injections).
+          if(cssActivityCount > 0){
+            var quietMs = now - lastCssActivity;
+            if(quietMs < QUIET_MS){
+              pollTimer = setTimeout(tick, 80);
+              return;
+            }
+          }
+          doReveal();
+        }
+        // Two rAFs after load lets the browser commit any pending paint
+        // cycles from late-arriving stylesheets before we start the
+        // stability check.
         requestAnimationFrame(function(){requestAnimationFrame(function(){
-          pollTimer=setTimeout(tick,120);
+          pollTimer = setTimeout(tick, 120);
         });});
       }
       function onLoad(){
         if(loadFired) return;
-        loadFired=true;
+        loadFired = true;
         startPoll();
       }
-      if(document.readyState==='complete') onLoad();
-      else window.addEventListener('load',onLoad,{once:true});
-      // Absolute failsafe in case window.load never fires (e.g. broken image)
-      setTimeout(doReveal,FAILSAFE_MS);
+      if(document.readyState === 'complete') onLoad();
+      else window.addEventListener('load', onLoad, {once:true});
+      // Absolute failsafe in case window.load never fires
+      setTimeout(doReveal, FAILSAFE_MS);
     }
     if(document.body) watch(); else document.addEventListener('DOMContentLoaded',watch,{once:true});
   }
