@@ -36374,13 +36374,6 @@ app = rx.App(
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
-        # Hide Radix-themed content until its CSS has been fully loaded (FOUC fix).
-        # The splash overlay covers the page visually; this rule prevents the
-        # unstyled flash that appears between React render and Radix CSS load.
-        rx.el.style(
-            ".radix-themes:not([data-css-ready]){opacity:0!important}"
-            ".radix-themes[data-css-ready]{opacity:1!important;transition:opacity .18s ease!important}"
-        ),
         # Keep Reflex/Radix default controls out of the bright blue accent family.
         rx.el.style(_PREMIUM_UI_ACCENT_CSS),
         # Hide Reflex' raw websocket failure UI; reconnects continue silently.
@@ -36389,10 +36382,10 @@ app = rx.App(
         # Landing-page "Try Alex" demo widget — needs head-level so it executes pre-hydration.
         rx.el.script(ALEX_DEMO_WIDGET_JS),
         # Native loading splash — runs before React.
-        # Creates a dark overlay + animated top bar as soon as the DOM is ready,
-        # then watches for BOTH React content AND Radix theme CSS to be loaded
-        # before revealing the page. This prevents the FOUC where unstyled content
-        # is briefly visible between React render and Radix CSS application.
+        # Creates a dark overlay + animated top bar as soon as the DOM is ready.
+        # The splash stays on-screen until BOTH React renders content AND the
+        # Radix theme CSS stylesheet has been fully loaded & applied, preventing
+        # the FOUC where unstyled content flashes before Radix CSS kicks in.
         rx.el.script("""
 (function(){
   var CSS='@keyframes __ubr{0%{transform:translateX(-100%)}50%{transform:translateX(0)}100%{transform:translateX(100%)}}'+
@@ -36409,34 +36402,34 @@ app = rx.App(
     var done=false;
     function remove(){
       if(done) return; done=true;
-      var t=document.querySelector('.radix-themes');
-      if(t) t.setAttribute('data-css-ready','');
       sp.classList.add('out');
       setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
-    function radixLoaded(){
-      var t=document.querySelector('.radix-themes');
-      if(!t) return false;
-      var v=getComputedStyle(t).getPropertyValue('--space-1');
-      return v&&v.trim().length>0;
+    function radixReady(){
+      try{
+        var t=document.querySelector('.radix-themes');
+        if(!t) return false;
+        var s=getComputedStyle(t);
+        return !!(s.getPropertyValue('--space-1').trim()||s.getPropertyValue('--color-background').trim());
+      }catch(e){return false;}
     }
-    function waitThenReveal(){
-      if(radixLoaded()){remove();return;}
+    function waitForCSS(){
+      if(radixReady()){remove();return;}
       var n=0;
       var iv=setInterval(function(){
         n++;
-        if(radixLoaded()||n>=160){clearInterval(iv);remove();}
+        if(radixReady()||n>=40){clearInterval(iv);remove();}
       },50);
     }
     var ob=new MutationObserver(function(){
       var el=document.querySelector('.radix-themes');
       if(el&&el.children.length>0){
         ob.disconnect();
-        waitThenReveal();
+        waitForCSS();
       }
     });
     ob.observe(document.body,{childList:true,subtree:true});
-    setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},8000);
+    setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},6000);
   }
   if(document.body){inject();}else{document.addEventListener('DOMContentLoaded',inject);}
 })();
