@@ -36374,6 +36374,13 @@ app = rx.App(
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        # Hide Radix-themed content until its CSS has been fully loaded (FOUC fix).
+        # The splash overlay covers the page visually; this rule prevents the
+        # unstyled flash that appears between React render and Radix CSS load.
+        rx.el.style(
+            ".radix-themes:not([data-css-ready]){opacity:0!important}"
+            ".radix-themes[data-css-ready]{opacity:1!important;transition:opacity .18s ease!important}"
+        ),
         # Keep Reflex/Radix default controls out of the bright blue accent family.
         rx.el.style(_PREMIUM_UI_ACCENT_CSS),
         # Hide Reflex' raw websocket failure UI; reconnects continue silently.
@@ -36383,11 +36390,13 @@ app = rx.App(
         rx.el.script(ALEX_DEMO_WIDGET_JS),
         # Native loading splash — runs before React.
         # Creates a dark overlay + animated top bar as soon as the DOM is ready,
-        # then watches for React to render content and fades itself out.
+        # then watches for BOTH React content AND Radix theme CSS to be loaded
+        # before revealing the page. This prevents the FOUC where unstyled content
+        # is briefly visible between React render and Radix CSS application.
         rx.el.script("""
 (function(){
   var CSS='@keyframes __ubr{0%{transform:translateX(-100%)}50%{transform:translateX(0)}100%{transform:translateX(100%)}}'+
-    '#__uni_sp{position:fixed;inset:0;background:#0a0a0c;z-index:99999;pointer-events:none;transition:opacity .25s ease}'+
+    '#__uni_sp{position:fixed;inset:0;background:#0a0a0c;z-index:99999;pointer-events:none;transition:opacity .3s ease}'+
     '#__uni_sp.out{opacity:0}'+
     '#__uni_tb{position:fixed;top:0;left:0;right:0;height:3px;z-index:100000;overflow:hidden;pointer-events:none}'+
     '#__uni_tb div{height:100%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.92),transparent);animation:__ubr 1.4s cubic-bezier(.4,0,.2,1) infinite;box-shadow:0 0 12px rgba(255,255,255,.32)}';
@@ -36400,17 +36409,34 @@ app = rx.App(
     var done=false;
     function remove(){
       if(done) return; done=true;
+      var t=document.querySelector('.radix-themes');
+      if(t) t.setAttribute('data-css-ready','');
       sp.classList.add('out');
-      setTimeout(function(){sp.remove();tb.remove();st.remove();},300);
+      setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
-    // Remove when React has rendered page content
+    function radixLoaded(){
+      var t=document.querySelector('.radix-themes');
+      if(!t) return false;
+      var v=getComputedStyle(t).getPropertyValue('--space-1');
+      return v&&v.trim().length>0;
+    }
+    function waitThenReveal(){
+      if(radixLoaded()){remove();return;}
+      var n=0;
+      var iv=setInterval(function(){
+        n++;
+        if(radixLoaded()||n>=160){clearInterval(iv);remove();}
+      },50);
+    }
     var ob=new MutationObserver(function(){
-      var el=document.querySelector('[data-is-root-theme]');
-      if(el&&el.children.length>0){remove();ob.disconnect();}
+      var el=document.querySelector('.radix-themes');
+      if(el&&el.children.length>0){
+        ob.disconnect();
+        waitThenReveal();
+      }
     });
     ob.observe(document.body,{childList:true,subtree:true});
-    // Failsafe: always remove after 6s
-    setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},6000);
+    setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},8000);
   }
   if(document.body){inject();}else{document.addEventListener('DOMContentLoaded',inject);}
 })();
