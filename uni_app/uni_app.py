@@ -36433,31 +36433,42 @@ app = rx.App(
       setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
     }
     function watch(){
-      // ONE-SHOT trigger: fire the moment .radix-themes has children, then stop.
-      // Reflex sends continuous WebSocket state updates that reset a "stability"
-      // timer indefinitely — a one-shot avoids that trap entirely.
-      // Emotion (useInsertionEffect) runs synchronously during React's commit
-      // phase, so CSS is already injected by the time the MutationObserver fires.
+      // The pre-rendered HTML already has .radix-themes children (static SSR),
+      // so we CANNOT use an initial-state check or a body-mutation trigger —
+      // those would fire before React hydration injects the full emotion CSS set.
+      //
+      // Instead we watch <head> for NEW <style data-emotion> nodes.  Emotion
+      // uses useInsertionEffect to inject per-component CSS rules synchronously
+      // during React's hydration commit.  The moment we see a fresh emotion
+      // style land in <head>, hydration is actively running and CSS is live.
+      // We then wait 100ms + 2 rAF for any remaining rules to flush, then reveal.
       var triggered=false;
-      function tryReveal(){
+      function scheduleReveal(){
         if(triggered) return;
-        var el=document.querySelector('.radix-themes');
-        if(!el||el.children.length===0) return;
         triggered=true;
-        ob.disconnect();
-        // 3 animation frames: enough for the browser to parse + apply the
-        // emotion <style> rules that were injected during the commit phase.
-        requestAnimationFrame(function(){
+        if(headOb) try{headOb.disconnect();}catch(e){}
+        setTimeout(function(){
           requestAnimationFrame(function(){
             requestAnimationFrame(remove);
           });
-        });
+        },100);
       }
-      var ob=new MutationObserver(tryReveal);
-      ob.observe(document.body,{childList:true,subtree:true});
-      tryReveal(); // handle pre-rendered content already in DOM
-      // Failsafe: never leave body hidden forever
-      setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},5000);
+      // Primary signal: new emotion <style> injected into <head> during hydration
+      var headOb=null;
+      if(document.head){
+        headOb=new MutationObserver(function(mutations){
+          if(triggered) return;
+          var hasNew=mutations.some(function(m){
+            return Array.from(m.addedNodes).some(function(n){
+              return n.nodeType===1&&n.getAttribute&&n.getAttribute('data-emotion');
+            });
+          });
+          if(hasNew) scheduleReveal();
+        });
+        headOb.observe(document.head,{childList:true});
+      }
+      // Failsafe: never leave body hidden forever (covers no-new-emotion-style cases)
+      setTimeout(function(){remove();try{if(headOb)headOb.disconnect();}catch(e){}},5000);
     }
     if(document.body) watch(); else document.addEventListener('DOMContentLoaded',watch,{once:true});
   }
