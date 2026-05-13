@@ -30756,6 +30756,30 @@ def landing_page():
                 white-space: nowrap !important;
                 text-align: center !important;
             }
+            /* Force the gradient backgrounds on the hero CTAs.
+               The buttons are rendered with Radix's variant="ghost", whose
+               .rt-Button.rt-variant-ghost rule sets background:transparent
+               and beats the inline emotion style by specificity once the
+               Radix theme stylesheet finishes loading. That caused the
+               primary CTA to "appear, then disappear" on refresh. */
+            .landing-main-cta--solid {
+                background: linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%) !important;
+                color: #0a0a0b !important;
+                border: 1px solid rgba(255,255,255,0.08) !important;
+                box-shadow: 0 12px 40px rgba(0,0,0,0.45),
+                    0 0 0 1px rgba(255,255,255,0.06) inset !important;
+            }
+            .landing-main-cta--solid:hover {
+                background: #ffffff !important;
+            }
+            .landing-main-cta--ghost {
+                background: rgba(255,255,255,0.04) !important;
+                color: rgba(255,255,255,0.88) !important;
+                border: 1px solid rgba(255,255,255,0.14) !important;
+            }
+            .landing-main-cta--ghost:hover {
+                background: rgba(255,255,255,0.09) !important;
+            }
             .landing-nav-cta {
                 color: rgba(255,255,255,0.92) !important;
             }
