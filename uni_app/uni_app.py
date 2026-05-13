@@ -26929,6 +26929,12 @@ def _google_inline_button() -> rx.Component:
                 width="100%",
             ),
             on_click=AppState.start_google_oauth,
+            # `auth-btn-light` is matched by critical CSS in <head> so the
+            # white background, full width, and shape apply on first paint,
+            # even before emotion injects these Reflex props. Without this,
+            # cold loads paint the button green (Radix --accent-9) and
+            # content-width.
+            class_name="auth-btn-light",
             width="100%",
             type="button",
             height="46px",
@@ -27004,6 +27010,10 @@ def _pw_input(field_id: str, show_var, toggle_handler, input_style: dict) -> rx.
             ),
             on_click=toggle_handler,
             type="button",
+            # `auth-pw-eye` — critical CSS forces transparent background so
+            # this overlay button doesn't render as a green Radix accent
+            # block on first paint inside the password field.
+            class_name="auth-pw-eye",
             position="absolute",
             right="10px",
             top="50%",
@@ -27062,6 +27072,7 @@ def secure_login_form() -> rx.Component:
                 rx.button(
                     "Sign In",
                     type="submit",
+                    class_name="auth-btn-light",
                     width="100%",
                     height="46px",
                     background="#FFFFFF",
@@ -27138,6 +27149,7 @@ def secure_register_form() -> rx.Component:
                 rx.button(
                     "Sign Up",
                     type="submit",
+                    class_name="auth-btn-light",
                     width="100%",
                     height="46px",
                     background="#FFFFFF",
@@ -27211,6 +27223,7 @@ def secure_reset_form() -> rx.Component:
             rx.button(
                 "Update Password",
                 type="submit",
+                class_name="auth-btn-light",
                 width="100%",
                 height="46px",
                 background="#FFFFFF",
@@ -36504,6 +36517,22 @@ app = rx.App(
             "width:100%!important;box-sizing:border-box;}"
             "[data-auth-card]{margin-left:auto!important;"
             "margin-right:auto!important;box-sizing:border-box;}"
+            # Auth primary buttons (Continue with Google, Sign In, Sign Up,
+            # Update Password). Without this static rule, Reflex props for
+            # background:#FFFFFF / width:100% are emotion-injected and the
+            # button falls back to Radix's --accent-9 (green, per the app's
+            # _PREMIUM_UI_ACCENT_CSS override) and content-width. The
+            # critical CSS replicates the final appearance from first paint.
+            ".auth-btn-light{width:100%!important;height:46px!important;"
+            "background:#FFFFFF!important;color:#000000!important;"
+            "border-radius:10px!important;font-weight:700!important;"
+            "border:1px solid rgba(255,255,255,0.1)!important;"
+            "box-sizing:border-box;}"
+            # Eye toggle inside password fields: transparent overlay button
+            # — otherwise it briefly renders as a green Radix accent block.
+            ".auth-pw-eye{background:transparent!important;"
+            "background-color:transparent!important;border:none!important;"
+            "padding:0!important;color:rgba(255,255,255,0.35)!important;}"
         ),
         # NOTE: We deliberately do NOT load Radix CSS from cdn.jsdelivr.net here.
         # Safari ITP treats third-party stylesheets unpredictably (sometimes
