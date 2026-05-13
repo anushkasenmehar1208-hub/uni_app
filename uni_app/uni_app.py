@@ -30559,30 +30559,20 @@ def landing_page():
                 0% { opacity: 0; transform: translateX(-50%) translateY(70px) scale(0.985); }
                 100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
             }
-            [data-landing-animate="headline-box"] {
-                opacity: 0;
-                transform: translateY(18px);
-                animation: landingFadeUp 0.72s cubic-bezier(0.16, 1, 0.3, 1) 0.16s forwards;
-            }
-            [data-landing-animate="nav"] {
-                opacity: 0;
-                animation: landingNavIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
-            }
-            [data-landing-animate="sub"] {
-                opacity: 0;
-                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.24s forwards;
-            }
-            [data-landing-animate="actions"] {
-                opacity: 0;
-                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.32s forwards;
-            }
-            [data-landing-animate="proof"] {
-                opacity: 0;
-                animation: landingFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.42s forwards;
-            }
+            /* Hero entrance animations were leaving elements stuck at opacity:0
+               on some paints (the CSS rule lives mid-document, so the keyframe
+               fade-in could fail to settle). Drop the entrance animations so
+               the hero CTA, headline, and proof pill are always immediately
+               visible. */
+            [data-landing-animate="headline-box"],
+            [data-landing-animate="nav"],
+            [data-landing-animate="sub"],
+            [data-landing-animate="actions"],
+            [data-landing-animate="proof"],
             [data-landing-animate="logo-video"] {
-                opacity: 0;
-                animation: landingFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.52s forwards;
+                opacity: 1 !important;
+                transform: none !important;
+                animation: none !important;
             }
             [data-landing-type="line-1"],
             [data-landing-type="line-2"],
