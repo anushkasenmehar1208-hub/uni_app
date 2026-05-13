@@ -27010,9 +27010,11 @@ def _pw_input(field_id: str, show_var, toggle_handler, input_style: dict) -> rx.
             ),
             on_click=toggle_handler,
             type="button",
-            # `auth-pw-eye` — critical CSS forces transparent background so
-            # this overlay button doesn't render as a green Radix accent
-            # block on first paint inside the password field.
+            # `auth-pw-eye` — critical CSS in <head> forces position:absolute
+            # + right:10px + top:50% + transparent background so this overlay
+            # sits inside the password field from first paint. Without it,
+            # cold loads briefly painted the eye as a normal-flow green
+            # button below the password field, opening a vertical gap.
             class_name="auth-pw-eye",
             position="absolute",
             right="10px",
@@ -27029,6 +27031,10 @@ def _pw_input(field_id: str, show_var, toggle_handler, input_style: dict) -> rx.
         ),
         position="relative",
         width="100%",
+        # `data-auth-pw-wrap` — establishes the positioning context so the
+        # absolute-positioned eye lands inside the password field even
+        # before emotion injects `position: relative` on this box.
+        custom_attrs={"data-auth-pw-wrap": ""},
     )
 
 
@@ -36528,9 +36534,16 @@ app = rx.App(
             "border-radius:10px!important;font-weight:700!important;"
             "border:1px solid rgba(255,255,255,0.1)!important;"
             "box-sizing:border-box;}"
-            # Eye toggle inside password fields: transparent overlay button
-            # — otherwise it briefly renders as a green Radix accent block.
-            ".auth-pw-eye{background:transparent!important;"
+            # Eye toggle inside password fields: transparent overlay
+            # button positioned absolutely on the right of the input.
+            # Replicates the full prop set so it doesn't briefly render as a
+            # green Radix accent block in normal flow below the input.
+            "[data-auth-pw-wrap]{position:relative!important;"
+            "width:100%!important;}"
+            ".auth-pw-eye{position:absolute!important;right:10px!important;"
+            "top:50%!important;transform:translateY(-50%)!important;"
+            "height:20px!important;display:flex!important;"
+            "align-items:center!important;background:transparent!important;"
             "background-color:transparent!important;border:none!important;"
             "padding:0!important;color:rgba(255,255,255,0.35)!important;}"
         ),
