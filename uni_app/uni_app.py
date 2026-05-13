@@ -28686,7 +28686,15 @@ def landing_page():
         tracking_event: str = "",
         tracking_params: dict[str, Any] | None = None,
     ) -> rx.Component:
-        href = "/" if label == "Home" else "#landing-feature-showcase"
+        # Header CTAs:
+        #   Home  → /select  (degree-picker page — main entry into the app)
+        #   Login → /login   (sign-in page for returning users)
+        if label == "Home":
+            href = SELECTION_ROUTE
+        elif label == "Login":
+            href = "/login"
+        else:
+            href = "#landing-feature-showcase"
         link_props: dict[str, Any] = {
             "href": href,
             "text_decoration": "none",
@@ -28765,9 +28773,9 @@ def landing_page():
         rx.hstack(
             header_action("Home"),
             header_action(
-                "See Alex",
+                "Login",
                 "0",
-                "see_alex_click",
+                "login_click",
                 {"button_location": "nav"},
             ),
             spacing="4",
