@@ -36374,6 +36374,21 @@ app = rx.App(
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        # Preload Radix Themes CSS from CDN to avoid the @import waterfall in
+        # __reflex_global_styles.css. Without this, the main stylesheet loads
+        # first, then triggers a SECOND fetch for Radix via @import — leaving a
+        # window where React has rendered but the layout CSS hasn't arrived.
+        # Loading Radix in parallel as a direct render-blocking <link> means the
+        # browser has the layout rules ready before first paint.
+        rx.el.link(
+            rel="preload",
+            href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.2.1/styles.css",
+            **{"as": "style"},
+        ),
+        rx.el.link(
+            rel="stylesheet",
+            href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@3.2.1/styles.css",
+        ),
         # Keep Reflex/Radix default controls out of the bright blue accent family.
         rx.el.style(_PREMIUM_UI_ACCENT_CSS),
         # Hide Reflex' raw websocket failure UI; reconnects continue silently.
@@ -36382,72 +36397,52 @@ app = rx.App(
         # Landing-page "Try Alex" demo widget — needs head-level so it executes pre-hydration.
         rx.el.script(ALEX_DEMO_WIDGET_JS),
         # Native loading splash — runs before React.
-        # Creates a dark overlay + animated top bar as soon as the DOM is ready.
-        # The splash waits for the DOM to STABILISE (no mutations for 200ms)
-        # so React Router lazy-loaded routes and emotion CSS have all resolved,
-        # then checks stylesheets (including @import chains), and only then
-        # reveals the page with a double-rAF paint guarantee.
+        # Since Radix CSS is now preloaded as a render-blocking <link> above,
+        # the browser will already have layout CSS applied by the time React
+        # mounts. The splash just covers the brief gap between body parse and
+        # React's first render, then fades on first content render.
         rx.el.script("""
 (function(){
   var CSS='@keyframes __ubr{0%{transform:translateX(-100%)}50%{transform:translateX(0)}100%{transform:translateX(100%)}}'+
-    '#__uni_sp{position:fixed;inset:0;background:#0a0a0c;z-index:99999;pointer-events:none;transition:opacity .3s ease}'+
+    '#__uni_sp{position:fixed;inset:0;background:#0a0a0c;z-index:99999;pointer-events:none;transition:opacity .25s ease}'+
     '#__uni_sp.out{opacity:0}'+
     '#__uni_tb{position:fixed;top:0;left:0;right:0;height:3px;z-index:100000;overflow:hidden;pointer-events:none}'+
     '#__uni_tb div{height:100%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.92),transparent);animation:__ubr 1.4s cubic-bezier(.4,0,.2,1) infinite;box-shadow:0 0 12px rgba(255,255,255,.32)}';
   function inject(){
     if(document.getElementById('__uni_sp')) return;
-    var st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
+    var target=document.body||document.documentElement;
+    var st=document.createElement('style');st.textContent=CSS;
+    (document.head||document.documentElement).appendChild(st);
     var sp=document.createElement('div');sp.id='__uni_sp';
     var tb=document.createElement('div');tb.id='__uni_tb';tb.innerHTML='<div></div>';
-    document.body.appendChild(sp);document.body.appendChild(tb);
+    target.appendChild(sp);target.appendChild(tb);
     var done=false;
     function remove(){
       if(done) return; done=true;
       sp.classList.add('out');
-      setTimeout(function(){sp.remove();tb.remove();st.remove();},350);
-    }
-    function sheetsReady(){
-      try{
-        var links=document.querySelectorAll('link[rel="stylesheet"]');
-        if(!links.length) return false;
-        for(var i=0;i<links.length;i++){
-          var s=links[i].sheet;
-          if(!s) return false;
-          try{var r=s.cssRules;if(r){for(var j=0;j<r.length;j++){
-            if(r[j].type===3&&!r[j].styleSheet) return false;
-          }}}catch(e){}
-        }
-        return true;
-      }catch(e){return false;}
-    }
-    function finalReveal(){
-      if(sheetsReady()){
-        requestAnimationFrame(function(){requestAnimationFrame(remove);});
-        return;
-      }
-      var n=0;
-      var iv=setInterval(function(){
-        n++;
-        if(sheetsReady()||n>=60){
-          clearInterval(iv);
-          requestAnimationFrame(function(){requestAnimationFrame(remove);});
-        }
-      },50);
+      setTimeout(function(){sp.remove();tb.remove();st.remove();},300);
     }
     var stableTimer=null;
-    var ob=new MutationObserver(function(){
-      var el=document.querySelector('.radix-themes');
-      if(!el||el.children.length===0) return;
-      clearTimeout(stableTimer);
-      stableTimer=setTimeout(function(){
-        ob.disconnect();
-        finalReveal();
-      },200);
-    });
-    ob.observe(document.body,{childList:true,subtree:true});
-    setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},6000);
+    function watch(){
+      var ob=new MutationObserver(function(){
+        var el=document.querySelector('.radix-themes');
+        if(!el||el.children.length===0) return;
+        clearTimeout(stableTimer);
+        stableTimer=setTimeout(function(){
+          ob.disconnect();
+          requestAnimationFrame(function(){requestAnimationFrame(remove);});
+        },150);
+      });
+      ob.observe(document.body,{childList:true,subtree:true});
+      setTimeout(function(){remove();try{ob.disconnect();}catch(e){}},5000);
+    }
+    if(document.body) watch(); else document.addEventListener('DOMContentLoaded',watch,{once:true});
   }
-  if(document.body){inject();}else{document.addEventListener('DOMContentLoaded',inject);}
+  function tryInject(){
+    if(document.documentElement){inject();}
+    else{setTimeout(tryInject,0);}
+  }
+  tryInject();
 })();
 """),
         rx.el.script(src="https://www.googletagmanager.com/gtag/js?id=G-H5G0QBSY2M"),
