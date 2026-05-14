@@ -29,7 +29,7 @@ export default function LoginPage() {
         try {
           localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
         } catch {}
-        window.location.href = "https://uniapp-production-01d0.up.railway.app/app/";
+        window.location.href = "/app";
       } else {
         setError(data.error || "Invalid username or password.");
       }
