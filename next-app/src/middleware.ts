@@ -3,36 +3,34 @@ import { NextRequest, NextResponse } from "next/server";
 const REFLEX_BACKEND_URL =
   process.env.REFLEX_BACKEND_URL || "https://backend.alexstudies.com";
 
-const REFLEX_PATHS = [
-  "/app",
-  "/auth",
-  "/stripe",
-  "/_event",
-  "/_upload",
-  "/api/payment",
-  "/api/profile",
+// Paths owned by Next.js — everything else proxies to Reflex.
+const NEXT_PATHS = [
+  "/",
+  "/login",
+  "/register",
+  "/onboarding",
 ];
 
-function isReflexPath(pathname: string): boolean {
-  return REFLEX_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`)
-  );
+const NEXT_PREFIXES = [
+  "/api/auth/",
+  "/_next/",
+];
+
+function isNextPath(pathname: string): boolean {
+  if (NEXT_PATHS.includes(pathname)) return true;
+  return NEXT_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
-  if (!isReflexPath(pathname)) {
+  if (isNextPath(pathname)) {
     return NextResponse.next();
   }
 
-  // Reflex always expects /app/ (trailing slash). Map bare /app to /app/
-  // before forwarding so we never hit Reflex's HTTPS-downgrading 307.
-  let upstreamPath = pathname;
-  if (pathname === "/app") {
-    upstreamPath = "/app/";
-  }
-
+  // Reflex always expects /app/ (trailing slash) — mapping bare /app
+  // here avoids Reflex's HTTPS-downgrading 307.
+  const upstreamPath = pathname === "/app" ? "/app/" : pathname;
   const upstream = `${REFLEX_BACKEND_URL}${upstreamPath}${search}`;
 
   const headers = new Headers(req.headers);
@@ -62,14 +60,9 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
+  // Run on all paths except Next.js static asset internals. The
+  // middleware itself decides whether to proxy or pass through.
   matcher: [
-    "/app",
-    "/app/:path*",
-    "/auth/:path*",
-    "/stripe/:path*",
-    "/_event/:path*",
-    "/_upload/:path*",
-    "/api/payment/:path*",
-    "/api/profile/:path*",
+    "/((?!_next/static|_next/image|favicon\\.ico).*)",
   ],
 };
