@@ -78,8 +78,8 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
                 "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)",
             }}
           >
-            <div className="flex items-center gap-3 mb-7">
-              <Link href="/">
+            <div className="flex flex-col items-center gap-2 mb-7">
+              <Link href="/" className="flex items-center gap-3">
                 <div
                   className="flex items-center justify-center flex-shrink-0"
                   style={{
@@ -94,29 +94,29 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
                     A
                   </span>
                 </div>
+                <div>
+                  <div
+                    style={{
+                      color: "#ffffff",
+                      fontSize: "1.05rem",
+                      fontWeight: 700,
+                      fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    Alex AI
+                  </div>
+                  <div
+                    style={{
+                      color: "rgba(255,255,255,0.48)",
+                      fontSize: "0.875rem",
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {title}
+                  </div>
+                </div>
               </Link>
-              <div>
-                <div
-                  style={{
-                    color: "#ffffff",
-                    fontSize: "1.05rem",
-                    fontWeight: 700,
-                    fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-                    lineHeight: 1.25,
-                  }}
-                >
-                  Alex AI
-                </div>
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.48)",
-                    fontSize: "0.875rem",
-                    lineHeight: 1.25,
-                  }}
-                >
-                  {title}
-                </div>
-              </div>
             </div>
 
             {children}
