@@ -36313,6 +36313,27 @@ _APP_TOASTER = rx.fragment(
     ),
 )
 
+_DARK_THEME_CRITICAL_CSS = """
+:root,[data-is-root-theme]{
+  color-scheme:dark;
+  --color-background:#0a0a0c;
+  --color-panel-solid:#131316;
+  --color-panel-translucent:rgba(19,19,22,0.8);
+  --color-surface:rgba(255,255,255,0.04);
+  --color-overlay:rgba(0,0,0,0.8);
+  --gray-1:#0e0e0f;--gray-2:#1a1a1c;--gray-3:#232326;
+  --gray-4:#2c2c30;--gray-5:#363639;--gray-6:#424245;
+  --gray-7:#545459;--gray-8:#72727a;--gray-9:#606068;
+  --gray-10:#6e6e76;--gray-11:#b0b0b8;--gray-12:#ededef;
+  --gray-a1:rgba(255,255,255,0.02);--gray-a2:rgba(255,255,255,0.07);
+  --gray-a3:rgba(255,255,255,0.10);--gray-a4:rgba(255,255,255,0.14);
+  --gray-a5:rgba(255,255,255,0.18);--gray-a6:rgba(255,255,255,0.22);
+  --gray-a7:rgba(255,255,255,0.30);--gray-a8:rgba(255,255,255,0.47);
+  --gray-a9:rgba(255,255,255,0.38);--gray-a10:rgba(255,255,255,0.45);
+  --gray-a11:rgba(255,255,255,0.72);--gray-a12:rgba(255,255,255,0.93);
+}
+"""
+
 _NETWORK_ERROR_SUPPRESSION_CSS = """
 [data-sonner-toast][data-id="websocket-error"],
 [data-sonner-toast]:has([data-title*="Cannot connect to server"]),
@@ -36443,6 +36464,9 @@ _NETWORK_ERROR_SUPPRESSION_JS = """
 app = rx.App(
     toaster=_APP_TOASTER,
     head_components=[
+        # Dark Radix theme variables — injected before any Radix CDN CSS loads.
+        # Prevents the white/light card flash on cold first load (FOUC).
+        rx.el.style(_DARK_THEME_CRITICAL_CSS),
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
         # Hero centering — keeps hero text centered at first paint even if WebSocket/emotion fails.
