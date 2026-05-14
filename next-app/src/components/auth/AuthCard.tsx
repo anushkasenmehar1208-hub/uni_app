@@ -73,9 +73,9 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
               padding: "48px 36px",
               borderRadius: 24,
               background: "#020202",
-              border: "1px solid rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.075)",
               boxShadow:
-                "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.02)",
+                "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.035)",
             }}
           >
             <Link
@@ -149,18 +149,18 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
 
 function AuthLegalFooter() {
   const linkStyle: React.CSSProperties = {
-    color: "rgba(255,255,255,0.35)",
+    color: "rgba(255,255,255,0.4)",
     fontSize: "0.72rem",
     textDecoration: "none",
     whiteSpace: "nowrap",
   };
   const sep = (
-    <span style={{ color: "rgba(255,255,255,0.15)", fontSize: "0.72rem" }}>
+    <span style={{ color: "rgba(255,255,255,0.18)", fontSize: "0.72rem" }}>
       ·
     </span>
   );
   return (
-    <div className="text-center px-4" style={{ padding: "40px 0 20px" }}>
+    <div className="text-center px-4" style={{ padding: "44px 0 20px" }}>
       <div className="flex items-center justify-center flex-wrap gap-3">
         <Link
           href="/return-policy"
@@ -196,7 +196,7 @@ function AuthLegalFooter() {
       </div>
       <p
         style={{
-          color: "rgba(255,255,255,0.25)",
+          color: "rgba(255,255,255,0.3)",
           fontSize: "0.7rem",
           marginTop: 10,
           letterSpacing: "0.02em",
