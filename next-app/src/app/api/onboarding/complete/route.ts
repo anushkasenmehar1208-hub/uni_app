@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
   try {
     const sessionId = req.cookies.get(AUTH_TOKEN_LOCAL_STORAGE_KEY)?.value;
     if (!sessionId) {
+      console.log("[onboarding/complete] no session cookie");
       return NextResponse.json(
         { error: "Not authenticated." },
         { status: 401 }
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
 
     const userId = await getSessionUserId(sessionId);
     if (!userId) {
+      console.log("[onboarding/complete] session not found in DB");
       return NextResponse.json(
         { error: "Session expired." },
         { status: 401 }
@@ -100,6 +102,9 @@ export async function POST(req: NextRequest) {
       WHERE user_id = ${userId}
     `;
 
+    console.log(
+      `[onboarding/complete] saved user_id=${userId} degree=${reflexDegree} year=${year} semester=${semester}`
+    );
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[onboarding/complete] error:", err);
