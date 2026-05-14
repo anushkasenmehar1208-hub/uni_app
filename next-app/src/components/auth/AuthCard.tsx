@@ -70,7 +70,7 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
           <div
             className="relative"
             style={{
-              padding: "28px 28px 24px",
+              padding: "32px 28px 28px",
               borderRadius: 20,
               background: "#111111",
               border: "1px solid rgba(255,255,255,0.1)",
@@ -78,46 +78,48 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
                 "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)",
             }}
           >
-            <div className="flex flex-col items-center gap-2 mb-7">
-              <Link href="/" className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="flex items-center justify-center gap-3 mb-7"
+              style={{ textDecoration: "none" }}
+            >
+              <div
+                className="flex items-center justify-center flex-shrink-0"
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 12,
+                  background: "#ffffff",
+                  boxShadow: "0 4px 16px rgba(255,255,255,0.1)",
+                }}
+              >
+                <span style={{ color: "#000", fontWeight: 800, fontSize: 22 }}>
+                  A
+                </span>
+              </div>
+              <div>
                 <div
-                  className="flex items-center justify-center flex-shrink-0"
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    background: "#ffffff",
-                    boxShadow: "0 4px 16px rgba(255,255,255,0.1)",
+                    color: "#ffffff",
+                    fontSize: "1.1rem",
+                    fontWeight: 700,
+                    fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+                    lineHeight: 1.25,
                   }}
                 >
-                  <span style={{ color: "#000", fontWeight: 800, fontSize: 20 }}>
-                    A
-                  </span>
+                  Alex AI
                 </div>
-                <div>
-                  <div
-                    style={{
-                      color: "#ffffff",
-                      fontSize: "1.05rem",
-                      fontWeight: 700,
-                      fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-                      lineHeight: 1.25,
-                    }}
-                  >
-                    Alex AI
-                  </div>
-                  <div
-                    style={{
-                      color: "rgba(255,255,255,0.48)",
-                      fontSize: "0.875rem",
-                      lineHeight: 1.25,
-                    }}
-                  >
-                    {title}
-                  </div>
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.48)",
+                    fontSize: "0.875rem",
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {title}
                 </div>
-              </Link>
-            </div>
+              </div>
+            </Link>
 
             {children}
 
