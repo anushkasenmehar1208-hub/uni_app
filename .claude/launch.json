@@ -26,5 +26,12 @@
       "runtimeArgs": ["-m", "http.server", "8092"],
       "port": 8092
     }
+    ,{
+      "name": "next-landing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3001"],
+      "port": 3001,
+      "cwd": "next-app"
+    }
   ]
 }

@@ -200,3 +200,14 @@ s
 .claude/worktrees/interesting-booth/
 .claude/worktrees/quirky-goldstine/
 .claude/worktrees/suspicious-grothendieck/
+
+# Next.js
+next-app/node_modules/
+next-app/.next/
+next-app/.turbo/
+next-app/out/
+next-app/build/
+next-app/next-env.d.ts
+next-app/.env.local
+next-app/.env.production.local
+next-app/.env.development.local
