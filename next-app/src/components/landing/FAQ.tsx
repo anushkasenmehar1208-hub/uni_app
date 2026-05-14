@@ -1,104 +1,113 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-import { useState } from "react";
-
-const faqs = [
+const FAQS = [
   {
-    question: "Is this just ChatGPT in a different wrapper?",
-    answer:
-      "No. Alex AI is built specifically around your university semester. ChatGPT doesn't know what you're studying next week, what your exam covers, or how your degree is structured. Alex builds a day-by-day plan around your real semester, tracks what you've learned, and adapts as you go.",
+    q: "Is this just ChatGPT in a wrapper?",
+    a: "No. Alex routes between 5 different AI models depending on the question, and pairs that with curriculum-aware planning, voice mentoring, notes, and quizzes. ChatGPT is one general model with no idea what semester you're in. Alex builds a real day-by-day study plan around your actual courses.",
   },
   {
-    question: "Which universities and degrees are supported?",
-    answer:
-      "We currently support Computer Science, Software Engineering, and BECS programs in the UK, US, India, and Sri Lanka — with more degrees being added every week. If your degree isn't listed yet, you can request it during signup.",
+    q: "Will my professor know I used AI?",
+    a: "Alex is built for learning, not cheating. The default mode teaches you the topic step-by-step and quizzes you — it doesn't write your assignment for you. If you ask Alex to explain a concept and then write your own answer, you've used it the same way you'd use a tutor. We don't recommend submitting raw AI output as your work, and most universities have clear policies on what's allowed.",
   },
   {
-    question: "Can I cancel anytime?",
-    answer:
-      "Yes. Cancel anytime from your account settings. You'll keep access until the end of your billing period, and you'll never be charged again. We also offer a 30-day money-back guarantee — no questions asked.",
+    q: "What if my exact course or university isn't listed?",
+    a: "Pick the 'Custom' degree option during signup and Alex lets you define your own subjects. Built-in curricula currently cover Sri Lanka, UK, US, and India — but Alex teaches any subject you give it.",
   },
   {
-    question: "Will Alex actually help me get better grades?",
-    answer:
-      "Alex isn't a magic shortcut — it's a tool. If you use it daily for 10-15 minutes, you'll be ahead of most of your classmates because you'll have a structured plan, instant explanations when you're stuck, and quizzes to make sure things stick.",
+    q: "Can I cancel anytime?",
+    a: "Yes. One click in your account, no email required, no questions asked. You also get a 7-day money-back guarantee on Pro — if you don't find it useful in the first week, email us for a full refund.",
   },
   {
-    question: "What about exam time?",
-    answer:
-      "Exam mode generates practice problems, flashcards, and concise summaries for whatever exam is coming up. Built-in spaced repetition means you'll actually remember things during the exam — not just the night before.",
+    q: "How is the price so low compared to ChatGPT Plus?",
+    a: "Three reasons. First, Alex is built specifically for studying — we route to cheaper models for routine questions and only use expensive ones when reasoning is genuinely needed. Second, we're an independent team, not a venture-funded company. Third, students should be able to afford this — that's the whole point.",
   },
   {
-    question: "Is my data private?",
-    answer:
-      "Yes. Your study data is yours. We don't sell it, train AI models on it, or share it with anyone. You can export or delete everything anytime.",
+    q: "Do I need a credit card to start?",
+    a: "No. The first 3 days are fully free, no card required. After that, the free plan gives you 10 messages a day forever. You only enter payment details if you decide to upgrade to Pro.",
+  },
+  {
+    q: "What happens to my chats and data?",
+    a: "Your chats are private to your account. We don't sell student data and we don't train AI models on your conversations. Full details are in our Privacy Policy.",
+  },
+  {
+    q: "Can I share an account with my classmate?",
+    a: "Each account is meant for one student because Alex builds a personalised study plan around your specific degree, week, and progress. Sharing breaks the planner. If you want to study together, both of you should sign up.",
   },
 ];
 
 export function FAQ() {
-  const [open, setOpen] = useState<number | null>(0);
-
   return (
-    <section id="faq" className="relative py-24 md:py-32">
-      <div className="max-w-3xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] mb-6">
-            <span className="text-[0.72rem] font-bold tracking-[0.16em] text-white/64 uppercase">
-              FAQ
-            </span>
-          </div>
-          <h2 className="text-[clamp(2rem,4vw,3rem)] font-medium tracking-tight gradient-text leading-[1.1]">
-            Questions, answered
-          </h2>
-        </motion.div>
+    <section
+      id="landing-faq-section"
+      className="relative w-full"
+      style={{ padding: "120px 16px 0", zIndex: 4 }}
+    >
+      <style>{`
+        #landing-faq-section details[open] .alex-faq-icon { transform: rotate(45deg); }
+        #landing-faq-section .alex-faq-icon {
+          transition: transform 0.18s ease;
+          display: inline-block;
+        }
+        #landing-faq-section summary::-webkit-details-marker { display: none; }
+        #landing-faq-section summary { list-style: none; cursor: pointer; }
+      `}</style>
 
-        <div className="space-y-3">
-          {faqs.map((faq, i) => (
-            <motion.div
-              key={faq.question}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.05 }}
-              className="rounded-2xl border border-white/[0.06] bg-white/[0.015] overflow-hidden"
+      <div
+        className="mx-auto flex flex-col items-start gap-3 mb-10"
+        style={{ maxWidth: 780 }}
+      >
+        <span className="landing-eyebrow">FAQ</span>
+        <h2
+          className="landing-heading"
+          style={{ fontSize: "clamp(2.4rem, 2.9vw, 3.3rem)", textAlign: "left" }}
+        >
+          Honest answers to what students actually ask
+        </h2>
+      </div>
+
+      <div className="mx-auto flex flex-col gap-2.5" style={{ maxWidth: 780 }}>
+        {FAQS.map((item, i) => (
+          <details
+            key={i}
+            style={{
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 16,
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%)",
+            }}
+          >
+            <summary
+              className="flex items-center justify-between gap-4"
+              style={{
+                padding: "20px 22px",
+                color: "rgba(255,255,255,0.94)",
+                fontSize: "1.05rem",
+                fontWeight: 650,
+                letterSpacing: "-0.02em",
+              }}
             >
-              <button
-                onClick={() => setOpen(open === i ? null : i)}
-                className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-white/[0.02] transition-colors"
+              <span>{item.q}</span>
+              <span
+                className="alex-faq-icon"
+                style={{
+                  color: "rgba(255,255,255,0.62)",
+                  fontSize: "1.4rem",
+                  lineHeight: 1,
+                }}
               >
-                <span className="text-white font-medium text-[1.02rem] leading-snug">
-                  {faq.question}
-                </span>
-                <Plus
-                  className={`w-5 h-5 text-white/60 flex-shrink-0 transition-transform ${
-                    open === i ? "rotate-45" : ""
-                  }`}
-                />
-              </button>
-              <div
-                className={`grid transition-all duration-300 ${
-                  open === i
-                    ? "grid-rows-[1fr] opacity-100"
-                    : "grid-rows-[0fr] opacity-0"
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="px-5 pb-5 text-white/56 text-[0.96rem] leading-relaxed">
-                    {faq.answer}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                +
+              </span>
+            </summary>
+            <div
+              style={{
+                padding: "0 22px 22px 22px",
+                color: "rgba(255,255,255,0.66)",
+                fontSize: "0.98rem",
+                lineHeight: 1.7,
+              }}
+            >
+              {item.a}
+            </div>
+          </details>
+        ))}
       </div>
     </section>
   );

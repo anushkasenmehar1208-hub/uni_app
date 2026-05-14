@@ -2,7 +2,7 @@
 
 :root {
   color-scheme: dark;
-  --background: #0a0a0c;
+  --background: #000000;
   --foreground: #ffffff;
   --muted: rgba(255, 255, 255, 0.48);
   --subtle: rgba(255, 255, 255, 0.74);
@@ -24,7 +24,7 @@
 
 html,
 body {
-  background: #0a0a0c;
+  background: #000000;
   color: #ffffff;
   margin: 0;
   padding: 0;
@@ -43,24 +43,10 @@ body {
   color: #ffffff;
 }
 
-/* Subtle scroll behavior */
 html {
   scroll-behavior: smooth;
 }
 
-/* Premium gradient text utility */
-.gradient-text {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(255, 255, 255, 0.74) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Subtle glow on focus */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible {
@@ -68,47 +54,114 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
-/* Hide focus outline for mouse clicks */
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
   outline: none;
 }
 
-/* Smooth animations */
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* === Landing page global keyframes === */
+@keyframes landingFieldFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-12px, -8px); }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+@keyframes alexDemoBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+@keyframes landingModelOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.animate-fade-up {
-  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes journeyItemIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.landing-nav-cta {
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease;
+  text-decoration: none;
+}
+.landing-nav-cta:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.landing-main-cta--solid {
+  height: 52px;
+  min-width: 216px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%);
+  color: #0a0a0b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  font-weight: 600;
+  font-size: 0.98rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.18s ease, background 0.18s ease;
+  text-decoration: none;
+}
+.landing-main-cta--solid:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.proof-chip {
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.84rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.landing-eyebrow {
+  color: rgba(255, 255, 255, 0.44);
+  letter-spacing: 0.2em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.landing-heading {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+}
+
+.landing-sub {
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 480px) {
+  .landing-nav-cta {
+    height: 42px;
+    padding: 0 16px;
+    font-size: 0.88rem;
+  }
 }

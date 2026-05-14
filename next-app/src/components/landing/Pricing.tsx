@@ -1,159 +1,262 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Check, Shield } from "lucide-react";
 
-const plans = [
-  {
-    name: "Pro",
-    price: "3",
-    period: "/month",
-    description: "Everything you need to study a full semester.",
-    features: [
-      "Full semester plan for your degree",
-      "Daily AI lessons with voice teaching",
-      "Quiz any YouTube video instantly",
-      "Notes, tasks, and exam tracker",
-      "Unlimited chats with Alex",
-    ],
-    cta: "Start with Pro",
-    highlight: false,
-  },
-  {
-    name: "Max",
-    price: "25",
-    period: "/month",
-    description: "For students who want the best AI models.",
-    features: [
-      "Everything in Pro",
-      "Claude Opus 4 + GPT-5 access",
-      "Priority response speed",
-      "Advanced exam mode with custom drills",
-      "Concept video generation",
-    ],
-    cta: "Get Max",
-    highlight: true,
-    badge: "Most popular",
-  },
-  {
-    name: "Ultra",
-    price: "100",
-    period: "/month",
-    description: "For power users who need everything.",
-    features: [
-      "Everything in Max",
-      "Unlimited concept video generation",
-      "Priority support from the team",
-      "Early access to new features",
-      "API access for custom integrations",
-    ],
-    cta: "Go Ultra",
-    highlight: false,
-  },
-];
+interface Plan {
+  badge?: string;
+  title: string;
+  price: string;
+  period: string;
+  description: string;
+  features: string[];
+  guarantee?: string;
+  ctaLabel: string;
+  ctaHref: string;
+  accent: "default" | "pro";
+}
+
+const FREE: Plan = {
+  title: "Free",
+  price: "USD 0",
+  period: "starter",
+  description:
+    "Start with Alex AI, build your study workspace, and test the academic mentor before upgrading.",
+  features: [
+    "3-day trial for new users",
+    "10 free messages/day after trial",
+    "Auto model routing",
+    "Basic workspace access",
+  ],
+  ctaLabel: "Start Free",
+  ctaHref: "/register",
+  accent: "default",
+};
+
+const PRO: Plan = {
+  badge: "Best for daily studying",
+  title: "Pro",
+  price: "USD 3",
+  period: "/ month",
+  description:
+    "The full everyday student workspace for guided study, planner tools, and voice-supported learning.",
+  features: [
+    "Unlimited daily messages",
+    "Full semester planner access",
+    "Auto model routing for every chat",
+    "45 min/day voice mentor limit",
+    "Notes, tasks, YouTube learning with quizzes, and more",
+  ],
+  guarantee: "7-day money-back guarantee",
+  ctaLabel: "Upgrade to Pro",
+  ctaHref: "/pricing",
+  accent: "pro",
+};
 
 export function Pricing() {
   return (
-    <section id="pricing" className="relative py-24 md:py-32">
-      <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-14 max-w-3xl mx-auto"
+    <section
+      id="landing-pricing-section"
+      className="relative w-full"
+      style={{ padding: "104px 16px 0", zIndex: 4 }}
+    >
+      <div
+        className="mx-auto flex flex-col items-center text-center gap-4 mb-12"
+        style={{ maxWidth: 1280 }}
+      >
+        <span
+          style={{
+            color: "rgba(255,255,255,0.44)",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+          }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] mb-6">
-            <span className="text-[0.72rem] font-bold tracking-[0.16em] text-white/64 uppercase">
-              Simple Pricing
-            </span>
-          </div>
-          <h2 className="text-[clamp(2rem,4vw,3rem)] font-medium tracking-tight gradient-text mb-4 leading-[1.1]">
-            Start at $3/month.
-            <br />
-            Cancel anytime.
-          </h2>
-          <p className="text-white/48 text-[1.05rem] leading-relaxed">
-            Less than a coffee. More useful than your textbook.
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-3 gap-5 max-w-6xl mx-auto">
-          {plans.map((plan, i) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, delay: i * 0.1 }}
-              className={`relative p-7 rounded-2xl border ${
-                plan.highlight
-                  ? "border-white/[0.18] bg-gradient-to-b from-white/[0.06] to-white/[0.015]"
-                  : "border-white/[0.06] bg-gradient-to-b from-white/[0.025] to-white/[0.005]"
-              }`}
-            >
-              {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-white text-black text-[0.68rem] font-bold tracking-wider uppercase">
-                  {plan.badge}
-                </div>
-              )}
-
-              <div className="mb-4">
-                <h3 className="text-[1.2rem] font-semibold text-white mb-2">
-                  {plan.name}
-                </h3>
-                <p className="text-white/52 text-[0.92rem] leading-relaxed">
-                  {plan.description}
-                </p>
-              </div>
-
-              <div className="mb-6 flex items-baseline">
-                <span className="text-white text-[2.6rem] font-medium tracking-tight">
-                  ${plan.price}
-                </span>
-                <span className="text-white/48 text-[1rem] ml-1">
-                  {plan.period}
-                </span>
-              </div>
-
-              <Link
-                href="/register"
-                className={`block text-center text-[14px] font-semibold py-3 rounded-full mb-7 transition-all ${
-                  plan.highlight
-                    ? "bg-white text-black hover:bg-white/90 hover:scale-[1.02]"
-                    : "bg-white/[0.06] text-white border border-white/[0.08] hover:bg-white/[0.1]"
-                }`}
-              >
-                {plan.cta}
-              </Link>
-
-              <ul className="space-y-3">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2.5 text-[0.92rem] text-white/70"
-                  >
-                    <Check className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="mt-10 flex items-center justify-center gap-2 text-white/52 text-[0.92rem]"
+          PRICING
+        </span>
+        <h2
+          className="landing-heading"
+          style={{ fontSize: "clamp(2.55rem, 3vw, 3.5rem)" }}
         >
-          <Shield className="w-4 h-4" />
-          <span>30-day money-back guarantee. No questions asked.</span>
-        </motion.div>
+          Start free. Upgrade when Alex becomes your daily study tool.
+        </h2>
+        <p
+          className="landing-sub"
+          style={{ maxWidth: 700, lineHeight: 1.75 }}
+        >
+          Built for university students who want a smarter way to plan and
+          study.
+        </p>
+      </div>
+
+      <div
+        className="mx-auto flex flex-wrap justify-center gap-5"
+        style={{ maxWidth: 1080 }}
+      >
+        <PricingCard plan={FREE} />
+        <PricingCard plan={PRO} />
       </div>
     </section>
+  );
+}
+
+function PricingCard({ plan }: { plan: Plan }) {
+  const isPro = plan.accent === "pro";
+  return (
+    <article
+      className="relative flex flex-col w-full sm:w-[calc(50%-10px)]"
+      style={{
+        minHeight: 500,
+        padding: 24,
+        border: `1px solid ${isPro ? "rgba(94,211,132,0.36)" : "rgba(255,255,255,0.08)"}`,
+        borderRadius: 24,
+        background: isPro
+          ? "radial-gradient(circle at 50% 0%, rgba(74,222,128,0.10) 0%, transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.025) 100%)"
+          : "radial-gradient(circle at 50% 0%, rgba(255,255,255,0.04) 0%, transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.025) 100%)",
+        boxShadow: "0 24px 70px rgba(0,0,0,0.36)",
+      }}
+    >
+      {plan.badge && (
+        <div
+          className="absolute"
+          style={{
+            top: -12,
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "6px 14px",
+            borderRadius: 999,
+            background: "linear-gradient(180deg, #bbf7d0 0%, #86efac 100%)",
+            color: "rgba(10,14,11,0.9)",
+            fontSize: "0.74rem",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {plan.badge}
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2 mt-2">
+        <h3
+          style={{
+            color: "rgba(255,255,255,0.95)",
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            margin: 0,
+          }}
+        >
+          {plan.title}
+        </h3>
+        <div className="flex items-baseline gap-1.5">
+          <span
+            style={{
+              color: "rgba(255,255,255,0.98)",
+              fontSize: "2.4rem",
+              fontWeight: 700,
+              lineHeight: 1,
+            }}
+          >
+            {plan.price}
+          </span>
+          <span
+            style={{
+              color: "rgba(255,255,255,0.5)",
+              fontSize: "0.96rem",
+              fontWeight: 500,
+            }}
+          >
+            {plan.period}
+          </span>
+        </div>
+        <p
+          style={{
+            color: "rgba(255,255,255,0.56)",
+            fontSize: "0.95rem",
+            lineHeight: 1.65,
+            margin: "8px 0 0",
+          }}
+        >
+          {plan.description}
+        </p>
+      </div>
+
+      <ul className="flex flex-col gap-2.5 mt-6 mb-6 flex-1">
+        {plan.features.map((feature) => (
+          <li
+            key={feature}
+            className="flex items-start gap-2.5"
+            style={{
+              color: "rgba(255,255,255,0.86)",
+              fontSize: "0.95rem",
+              lineHeight: 1.55,
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                color: "rgba(231,182,157,0.8)",
+                fontWeight: 700,
+                lineHeight: 1.55,
+              }}
+            >
+              •
+            </span>
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      {plan.guarantee && (
+        <div
+          className="flex items-center gap-2"
+          style={{
+            color: "rgba(255,255,255,0.82)",
+            fontSize: "0.9rem",
+            fontWeight: 600,
+            marginBottom: 14,
+          }}
+        >
+          <span style={{ color: "rgba(134,239,172,0.92)" }}>✓</span>
+          {plan.guarantee}
+        </div>
+      )}
+
+      <Link
+        href={plan.ctaHref}
+        className="w-full text-center"
+        style={{
+          padding: "14px 22px",
+          borderRadius: 999,
+          background: isPro
+            ? "linear-gradient(180deg, #f7f4ed 0%, #ebe4d7 100%)"
+            : "rgba(255,255,255,0.045)",
+          color: isPro ? "#1c1915" : "rgba(255,255,255,0.88)",
+          fontWeight: isPro ? 750 : 650,
+          fontSize: "0.96rem",
+          textDecoration: "none",
+          boxShadow: isPro
+            ? "0 18px 46px rgba(0,0,0,0.44), 0 1px 0 rgba(255,255,255,0.45) inset"
+            : "0 10px 30px rgba(0,0,0,0.25)",
+          border: isPro
+            ? "1px solid rgba(255,255,255,0.16)"
+            : "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        {plan.ctaLabel}
+      </Link>
+
+      {isPro && (
+        <p
+          className="text-center mt-3"
+          style={{
+            color: "rgba(255,255,255,0.54)",
+            fontSize: "0.84rem",
+            fontWeight: 650,
+            margin: "12px 0 0",
+          }}
+        >
+          Cancel anytime
+        </p>
+      )}
+    </article>
   );
 }
