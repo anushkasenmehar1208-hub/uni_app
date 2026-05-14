@@ -13,6 +13,7 @@ const NEXT_PATHS = [
 
 const NEXT_PREFIXES = [
   "/api/auth/",
+  "/api/onboarding/",
   "/_next/",
 ];
 
