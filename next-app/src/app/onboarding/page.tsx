@@ -389,9 +389,9 @@ export default function OnboardingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ country, degree, pathway: pathway || null, semester }),
       });
-      window.location.href = "https://uniapp-production-01d0.up.railway.app/app";
+      window.location.href = "/app/";
     } catch {
-      window.location.href = "https://uniapp-production-01d0.up.railway.app/app";
+      window.location.href = "/app/";
     }
   }
 
