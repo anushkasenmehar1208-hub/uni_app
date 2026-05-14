@@ -4982,6 +4982,12 @@ SEMESTER_NAVIGATION = {
 SIDEBAR_SEMESTER_SELECT_OPTIONS: list[str] = [
     sem for _yr, _sems in SEMESTER_NAVIGATION.items() for sem in _sems
 ]
+ONBOARDING_SEMESTER_SELECT_OPTIONS: list[str] = [
+    "Semester 1",
+    "Semester 2",
+    "Semester 3",
+    "Semester 4",
+]
 
 
 def _year_for_semester_label(semester: str) -> str:
@@ -5964,14 +5970,31 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.var
     def onboarding_semester_choices(self) -> list[dict[str, str]]:
-        """Button-ready semester options with the year kept visible in the label."""
+        """Compact onboarding semester options with the year kept visible in the label."""
+        available = set(self._available_semesters_for_degree(self.degree))
         return [
             {
                 "value": sem,
-                "label": f"{_year_for_semester_label(sem)} {sem}".strip(),
+                "label": f"{_year_for_semester_label(sem)}, {sem}".strip(", "),
             }
-            for sem in self._available_semesters_for_degree(self.degree)
+            for sem in ONBOARDING_SEMESTER_SELECT_OPTIONS
+            if sem in available
         ]
+
+    @rx.var
+    def onboarding_semester_select_label(self) -> str:
+        if not self.selected_semester:
+            return ""
+        inferred_year = _year_for_semester_label(self.selected_semester)
+        return f"{inferred_year}, {self.selected_semester}".strip(", ")
+
+    @rx.var
+    def onboarding_semester_ready(self) -> bool:
+        available = {
+            sem for sem in ONBOARDING_SEMESTER_SELECT_OPTIONS
+            if sem in self._available_semesters_for_degree(self.degree)
+        }
+        return bool(self.selected_semester and self.selected_semester in available)
 
     @rx.var
     def sidebar_semester_options(self) -> list[str]:
@@ -13635,7 +13658,10 @@ Quality rules:
     def choose_onboarding_semester(self, semester: str):
         uid = self._active_data_uid()
         try:
-            available_semesters = self._available_semesters_for_degree(self.degree)
+            available_semesters = [
+                sem for sem in ONBOARDING_SEMESTER_SELECT_OPTIONS
+                if sem in self._available_semesters_for_degree(self.degree)
+            ]
             if semester not in available_semesters:
                 self.selected_year = ""
                 self.selected_semester = ""
@@ -13684,7 +13710,10 @@ Quality rules:
         """Lightweight semester setter for the single-page onboarding form."""
         uid = self._active_data_uid()
         try:
-            available_semesters = self._available_semesters_for_degree(self.degree)
+            available_semesters = [
+                sem for sem in ONBOARDING_SEMESTER_SELECT_OPTIONS
+                if sem in self._available_semesters_for_degree(self.degree)
+            ]
             inferred_year = _year_for_semester_label(semester)
             if not inferred_year or semester not in available_semesters:
                 self.selected_year = ""
@@ -13775,7 +13804,10 @@ Quality rules:
             if not self.selected_semester:
                 self.onboarding_message = "Please choose your current semester to continue. Once that is set, Alex can open the correct workspace and build your study plan."
                 return
-            available_semesters = self._available_semesters_for_degree(self.degree)
+            available_semesters = [
+                sem for sem in ONBOARDING_SEMESTER_SELECT_OPTIONS
+                if sem in self._available_semesters_for_degree(self.degree)
+            ]
             if self.selected_semester not in available_semesters:
                 self.onboarding_message = "Please choose a valid semester for your selected degree."
                 return
@@ -23312,11 +23344,11 @@ def onboarding_page():
                                 color="white",
                                 line_height="1.1",
                                 font_family="'Plus Jakarta Sans', sans-serif",
-                                letter_spacing="-0.035em",
+                                letter_spacing="0",
                                 font_weight="800",
                             ),
                             body,
-                            spacing="4",
+                            spacing="3",
                             align_items="stretch",
                             width="100%",
                             # `data-ob-card-body` — matched by critical CSS in
@@ -23326,8 +23358,8 @@ def onboarding_page():
                             # region-chip row inside renders content-width.
                             custom_attrs={"data-ob-card-body": ""},
                         ),
-                        width="min(88vw, 420px)",
-                        padding=rx.breakpoints(initial="1.15rem", sm="1.35rem", md="1.55rem"),
+                        width="min(88vw, 400px)",
+                        padding=rx.breakpoints(initial="1rem", sm="1.2rem", md="1.35rem"),
                         border_radius="24px",
                         background="#020202",
                         border="1px solid rgba(255,255,255,0.04)",
@@ -23367,21 +23399,34 @@ def onboarding_page():
                 .ob-reveal { animation: obReveal 0.28s cubic-bezier(0.16,1,0.3,1) both; }
                 .ob-choice-grid { display: grid; gap: 8px; width: 100%; }
                 .ob-choice-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-                .ob-semester-grid {
-                    max-height: 104px;
-                    overflow-y: auto;
-                    padding-right: 2px;
-                    scrollbar-width: thin;
-                    scrollbar-color: rgba(255,255,255,0.18) transparent;
-                }
                 .ob-section + .ob-section {
                     border-top: 1px solid rgba(255,255,255,0.06);
-                    padding-top: 14px;
+                    padding-top: 12px;
                     margin-top: 4px;
                 }
                 .ob-choice:focus-visible {
                     outline: 2px solid rgba(255,255,255,0.55) !important;
                     outline-offset: 2px !important;
+                }
+                .ob-semester-menu {
+                    background: rgba(5,5,5,0.98) !important;
+                    border: 1px solid rgba(255,255,255,0.09) !important;
+                    border-radius: 12px !important;
+                    padding: 4px !important;
+                    min-width: var(--radix-dropdown-menu-trigger-width) !important;
+                    box-shadow: 0 22px 50px rgba(0,0,0,0.5) !important;
+                    z-index: 9999 !important;
+                }
+                .ob-semester-item {
+                    min-height: 36px !important;
+                    border-radius: 9px !important;
+                    padding: 0 10px !important;
+                    color: rgba(220,230,240,0.76) !important;
+                    cursor: pointer !important;
+                }
+                .ob-semester-item[data-highlighted] {
+                    background: rgba(255,255,255,0.07) !important;
+                    color: white !important;
                 }
                 /* ── Mobile: lightweight for performance ── */
                 @media (max-width: 640px) {
@@ -23789,7 +23834,7 @@ def onboarding_page():
                     rx.text(
                         display,
                         color=rx.cond(is_sel, "white", "rgba(220,230,240,0.82)"),
-                        font_weight=rx.cond(is_sel, "700", "400"),
+                        font_weight=rx.cond(is_sel, "700", "500"),
                         font_size="0.83rem",
                         text_align="left",
                     ),
@@ -23807,10 +23852,10 @@ def onboarding_page():
                 justify="start",
                 padding="9px 12px",
                 border_radius="11px",
-                border=rx.cond(is_sel, "1px solid rgba(134,239,172,0.42)", "1px solid rgba(255,255,255,0.07)"),
+                border=rx.cond(is_sel, "1px solid rgba(255,255,255,0.38)", "1px solid rgba(255,255,255,0.07)"),
                 background=rx.cond(
                     is_sel,
-                    "linear-gradient(180deg, rgba(25,40,31,0.9) 0%, rgba(12,18,15,0.94) 100%)",
+                    "linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.04) 100%)",
                     "rgba(255,255,255,0.025)",
                 ),
                 cursor="pointer",
@@ -23818,62 +23863,51 @@ def onboarding_page():
                 _hover={"background": "rgba(255,255,255,0.07)", "border": "1px solid rgba(255,255,255,0.16)"},
             )
 
-        def semester_btn(choice: dict[str, str]) -> rx.Component:
-            value = choice["value"]
-            is_sel = AppState.selected_semester == value
-            return rx.button(
-                rx.hstack(
-                    rx.cond(
-                        is_sel,
-                        rx.box(
-                            rx.icon(tag="check", size=14, color="black"),
-                            width="16px", height="16px",
-                            border_radius="999px",
-                            background="rgba(255,255,255,0.92)",
-                            display="flex",
-                            align_items="center",
-                            justify_content="center",
-                            flex_shrink="0",
-                        ),
-                        rx.box(
-                            width="16px", height="16px",
-                            border_radius="999px",
-                            border="1.5px solid rgba(255,255,255,0.2)",
-                            flex_shrink="0",
+        def semester_select_item(choice: dict[str, str]) -> rx.Component:
+            return rx.select.item(
+                choice["label"],
+                value=choice["value"],
+                class_name="ob-semester-item",
+            )
+
+        def semester_dropdown() -> rx.Component:
+            return rx.select.root(
+                rx.select.trigger(
+                    placeholder="Select semester",
+                    class_name="ob-semester-trigger",
+                    custom_attrs={"aria-label": "Select semester"},
+                    style={
+                        "width": "100%",
+                        "height": "44px",
+                        "padding": "0 12px",
+                        "border_radius": "12px",
+                        "border": "1px solid rgba(255,255,255,0.08)",
+                        "background": "rgba(255,255,255,0.035)",
+                        "color": "rgba(226,232,240,0.5)",
+                        "font_size": "0.86rem",
+                        "font_weight": "500",
+                        "box_shadow": "none",
+                        "cursor": "pointer",
+                        "transition": "all 0.2s ease",
+                        "_hover": {
+                            "background": "rgba(255,255,255,0.055)",
+                            "border": "1px solid rgba(255,255,255,0.2)",
+                        },
+                    },
+                ),
+                rx.select.content(
+                    rx.select.group(
+                        rx.foreach(
+                            AppState.onboarding_semester_choices,
+                            lambda choice: semester_select_item(choice),
                         ),
                     ),
-                    rx.text(
-                        choice["label"],
-                        color=rx.cond(is_sel, "white", "rgba(220,230,240,0.82)"),
-                        font_weight=rx.cond(is_sel, "700", "500"),
-                        font_size="0.8rem",
-                        line_height="1.25",
-                        text_align="left",
-                    ),
-                    spacing="2",
-                    align="center",
-                    width="100%",
+                    class_name="ob-semester-menu",
+                    position="popper",
                 ),
-                on_click=AppState.choose_onboarding_semester(value),
-                type="button",
-                class_name="ob-choice",
-                custom_attrs={"aria-pressed": rx.cond(is_sel, "true", "false")},
-                width="100%",
-                height="auto",
-                min_height="42px",
-                justify="start",
-                padding="9px 10px",
-                border_radius="11px",
-                border=rx.cond(is_sel, "1px solid rgba(134,239,172,0.42)", "1px solid rgba(255,255,255,0.07)"),
-                background=rx.cond(
-                    is_sel,
-                    "linear-gradient(180deg, rgba(25,40,31,0.9) 0%, rgba(12,18,15,0.94) 100%)",
-                    "rgba(255,255,255,0.025)",
-                ),
-                cursor="pointer",
-                white_space="normal",
-                transition="all 0.25s cubic-bezier(0.4,0,0.2,1)",
-                _hover={"background": "rgba(255,255,255,0.07)", "border": "1px solid rgba(255,255,255,0.16)"},
+                value=AppState.selected_semester,
+                on_change=AppState.choose_onboarding_semester,
+                size="2",
             )
 
         # Custom-program special button
@@ -23920,8 +23954,8 @@ def onboarding_page():
                     pointer-events: none;
                 }
                 .ob-region-chip {
-                    height: 58px !important;
-                    min-height: 58px !important;
+                    height: 42px !important;
+                    min-height: 42px !important;
                     background: rgba(255,255,255,0.025) !important;
                     border: 1px solid rgba(255,255,255,0.07) !important;
                     box-shadow: none !important;
@@ -23932,8 +23966,8 @@ def onboarding_page():
                     border-color: rgba(255,255,255,0.16) !important;
                 }
                 .ob-region-chip-active {
-                    background: linear-gradient(180deg, rgba(25,40,31,0.88), rgba(12,18,15,0.94)) !important;
-                    border-color: rgba(134,239,172,0.38) !important;
+                    background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.04)) !important;
+                    border-color: rgba(255,255,255,0.38) !important;
                     color: white !important;
                 }
                 .ob-region-chip span,
@@ -23950,18 +23984,11 @@ def onboarding_page():
                         color="white",
                         font_size="1rem",
                         font_weight="800",
-                        letter_spacing="-0.02em",
+                        letter_spacing="0",
                         line_height="1.2",
                         font_family="'Plus Jakarta Sans', sans-serif",
                     ),
-                    rx.text(
-                        "Alex will match the setup to your curriculum.",
-                        color="rgba(203,213,225,0.62)",
-                        font_size="0.78rem",
-                        line_height="1.4",
-                        font_family="'Plus Jakarta Sans', sans-serif",
-                    ),
-                    spacing="1",
+                    spacing="0",
                     align_items="stretch",
                     width="100%",
                 ),
@@ -23977,12 +24004,30 @@ def onboarding_page():
             rx.box(
                 *[
                     rx.button(
-                        rx.vstack(
-                            rx.text(flag, font_size="1.1rem", line_height="1"),
-                            rx.text(label, font_size="0.68rem", font_weight="600", text_align="center",
+                        rx.hstack(
+                            rx.cond(
+                                AppState.onboarding_region == code,
+                                rx.box(
+                                    rx.icon(tag="check", size=14, color="black"),
+                                    width="16px", height="16px",
+                                    border_radius="999px",
+                                    background="rgba(255,255,255,0.92)",
+                                    display="flex",
+                                    align_items="center",
+                                    justify_content="center",
+                                    flex_shrink="0",
+                                ),
+                                rx.box(
+                                    width="16px", height="16px",
+                                    border_radius="999px",
+                                    border="1.5px solid rgba(255,255,255,0.2)",
+                                    flex_shrink="0",
+                                ),
+                            ),
+                            rx.text(label, font_size="0.8rem", font_weight="600", text_align="left",
                                 color=rx.cond(AppState.onboarding_region == code, "white", "rgba(220,230,240,0.65)"),
                             ),
-                            spacing="1", align="center",
+                            spacing="2", align="center", width="100%",
                         ),
                         on_click=AppState.set_onboarding_region(code),
                         type="button",
@@ -23993,29 +24038,29 @@ def onboarding_page():
                             "ob-region-chip ob-choice",
                         ),
                         custom_attrs={"aria-pressed": rx.cond(AppState.onboarding_region == code, "true", "false")},
-                        height="58px",
-                        min_height="58px",
-                        padding="8px 4px",
+                        height="42px",
+                        min_height="42px",
+                        padding="9px 10px",
                         border_radius="12px",
                         border=rx.cond(
                             AppState.onboarding_region == code,
-                            "1px solid rgba(134,239,172,0.38)",
+                            "1px solid rgba(255,255,255,0.38)",
                             "1px solid rgba(255,255,255,0.07)",
                         ),
                         background=rx.cond(
                             AppState.onboarding_region == code,
-                            "linear-gradient(180deg, rgba(25,40,31,0.88), rgba(12,18,15,0.94))",
+                            "linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.04))",
                             "rgba(255,255,255,0.025)",
                         ),
                         cursor="pointer",
                         transition="all 0.2s ease",
                         _hover={"background": "rgba(255,255,255,0.07)", "border": "1px solid rgba(255,255,255,0.16)"},
                     )
-                    for flag, label, code in [
-                        ("🇬🇧", "United Kingdom", "UK"),
-                        ("🇺🇸", "United States", "US"),
-                        ("🇮🇳", "India", "IN"),
-                        ("🇱🇰", "Sri Lanka", "LK"),
+                    for label, code in [
+                        ("United Kingdom", "UK"),
+                        ("United States", "US"),
+                        ("India", "IN"),
+                        ("Sri Lanka", "LK"),
                     ]
                 ],
                 class_name="ob-choice-grid two",
@@ -24031,18 +24076,11 @@ def onboarding_page():
                             color="white",
                             font_size="1rem",
                             font_weight="800",
-                            letter_spacing="-0.02em",
+                            letter_spacing="0",
                             line_height="1.2",
                             font_family="'Plus Jakarta Sans', sans-serif",
                         ),
-                        rx.text(
-                            "Choose the degree Alex should build around.",
-                            color="rgba(203,213,225,0.62)",
-                            font_size="0.78rem",
-                            line_height="1.4",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                        ),
-                        spacing="1",
+                        spacing="0",
                         align_items="stretch",
                         width="100%",
                     ),
@@ -24247,7 +24285,7 @@ def onboarding_page():
                             color="white",
                             font_size="1rem",
                             font_weight="800",
-                            letter_spacing="-0.02em",
+                            letter_spacing="0",
                             line_height="1.2",
                             font_family="'Plus Jakarta Sans', sans-serif",
                         ),
@@ -24280,25 +24318,11 @@ def onboarding_page():
                                 color="white",
                                 font_size="1rem",
                                 font_weight="800",
-                                letter_spacing="-0.02em",
+                                letter_spacing="0",
                                 line_height="1.2",
                                 font_family="'Plus Jakarta Sans', sans-serif",
                             ),
-                            rx.text(
-                                "Alex will open the workspace that matches your current semester.",
-                                color="rgba(203,213,225,0.62)",
-                                font_size="0.78rem",
-                                line_height="1.4",
-                                font_family="'Plus Jakarta Sans', sans-serif",
-                            ),
-                            rx.box(
-                                rx.foreach(
-                                    AppState.onboarding_semester_choices,
-                                    lambda choice: semester_btn(choice),
-                                ),
-                                class_name="ob-choice-grid two ob-semester-grid",
-                                width="100%",
-                            ),
+                            semester_dropdown(),
                             spacing="2",
                             align_items="stretch",
                             width="100%",
@@ -24312,25 +24336,11 @@ def onboarding_page():
                             color="white",
                             font_size="1rem",
                             font_weight="800",
-                            letter_spacing="-0.02em",
+                            letter_spacing="0",
                             line_height="1.2",
                             font_family="'Plus Jakarta Sans', sans-serif",
                         ),
-                        rx.text(
-                            "Alex will open the workspace that matches your current semester.",
-                            color="rgba(203,213,225,0.62)",
-                            font_size="0.78rem",
-                            line_height="1.4",
-                            font_family="'Plus Jakarta Sans', sans-serif",
-                        ),
-                        rx.box(
-                            rx.foreach(
-                                AppState.onboarding_semester_choices,
-                                lambda choice: semester_btn(choice),
-                            ),
-                            class_name="ob-choice-grid two ob-semester-grid",
-                            width="100%",
-                        ),
+                        semester_dropdown(),
                         spacing="2",
                         align_items="stretch",
                         width="100%",
@@ -24350,7 +24360,7 @@ def onboarding_page():
                         custom_selected,
                         _onboarding_cta_button("See Alex →", AppState.submit_onboarding),
                         rx.cond(
-                            (AppState.degree != "") & (AppState.selected_semester != ""),
+                            (AppState.degree != "") & AppState.onboarding_semester_ready,
                             rx.cond(
                                 AppState.needs_pathway_selection,
                                 rx.cond(
