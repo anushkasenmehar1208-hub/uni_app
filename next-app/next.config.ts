@@ -1,58 +1,10 @@
 import type { NextConfig } from "next";
 
-const REFLEX_BACKEND_URL =
-  process.env.REFLEX_BACKEND_URL || "https://alexstudies.com";
-
-const nextConfig: NextConfig = {
-  // Proxy all paths the existing Reflex app owns so Next.js can sit
-  // in front of the same domain without breaking the app, auth, or
-  // payment flows. Next.js keeps: /, /login, /register, /onboarding,
-  // /api/auth/* (new). Reflex keeps everything else.
-  async rewrites() {
-    return [
-      // Next.js strips trailing slashes (trailingSlash: false default), so
-      // /app/ becomes /app. The Reflex backend, however, expects /app/ — hitting
-      // /app there returns a 307 to http://.../app/ (HTTPS downgrade). Always
-      // proxy bare /app to Reflex's /app/ directly to avoid the bad redirect.
-      {
-        source: "/app",
-        destination: `${REFLEX_BACKEND_URL}/app/`,
-      },
-      {
-        source: "/app/:path*",
-        destination: `${REFLEX_BACKEND_URL}/app/:path*`,
-      },
-      // Google OAuth lives on Reflex
-      {
-        source: "/auth/:path*",
-        destination: `${REFLEX_BACKEND_URL}/auth/:path*`,
-      },
-      // Stripe webhooks live on Reflex
-      {
-        source: "/stripe/:path*",
-        destination: `${REFLEX_BACKEND_URL}/stripe/:path*`,
-      },
-      // Reflex WebSocket for state hydration
-      {
-        source: "/_event/:path*",
-        destination: `${REFLEX_BACKEND_URL}/_event/:path*`,
-      },
-      // Reflex serves user-uploaded media
-      {
-        source: "/_upload/:path*",
-        destination: `${REFLEX_BACKEND_URL}/_upload/:path*`,
-      },
-      // Reflex API endpoints (NOT /api/auth/* — those are Next.js)
-      {
-        source: "/api/payment/:path*",
-        destination: `${REFLEX_BACKEND_URL}/api/payment/:path*`,
-      },
-      {
-        source: "/api/profile/:path*",
-        destination: `${REFLEX_BACKEND_URL}/api/profile/:path*`,
-      },
-    ];
-  },
-};
+// Reflex backend paths (/app, /auth, /stripe, /_event, /_upload,
+// /api/payment, /api/profile) are proxied by src/middleware.ts which
+// does explicit fetch + stream rather than Next.js rewrites. Rewrites
+// to external URLs with trailing slashes were producing a 308 loop in
+// Next.js 16, hence the middleware approach.
+const nextConfig: NextConfig = {};
 
 export default nextConfig;
