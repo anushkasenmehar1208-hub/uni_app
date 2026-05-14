@@ -39,13 +39,18 @@ const degrees: Degree[] = [
     countries: ["uk", "us", "lk"],
   },
   {
-    code: "becs",
-    name: "Business + Computer Science",
+    code: "elcs",
+    name: "Electronics & Computer Science",
     countries: ["lk"],
   },
   {
     code: "ps",
     name: "Physical Science",
+    countries: ["lk"],
+  },
+  {
+    code: "bs",
+    name: "Biological Science",
     countries: ["lk"],
   },
   {
@@ -59,6 +64,37 @@ const degrees: Degree[] = [
     countries: ["in"],
   },
 ];
+
+type Pathway = { code: string; label: string };
+
+const PS_PATHWAYS: Pathway[] = [
+  { code: "Applied Mathematics / Physics / Pure Mathematics", label: "Applied Mathematics / Physics / Pure Mathematics" },
+  { code: "Computer Science / Physics / Pure Mathematics", label: "Computer Science / Physics / Pure Mathematics" },
+  { code: "Electronics / Physics / Pure Mathematics", label: "Electronics / Physics / Pure Mathematics" },
+  { code: "Applied Mathematics / Computer Science / Pure Mathematics", label: "Applied Mathematics / Computer Science / Pure Mathematics" },
+  { code: "Computer Science / Pure Mathematics / Statistics", label: "Computer Science / Pure Mathematics / Statistics" },
+  { code: "Chemistry / Computer Science / Pure Mathematics", label: "Chemistry / Computer Science / Pure Mathematics" },
+  { code: "Applied Mathematics / Chemistry / Pure Mathematics", label: "Applied Mathematics / Chemistry / Pure Mathematics" },
+  { code: "Computer Studies / Electronics / Physics", label: "Computer Studies / Electronics / Physics" },
+  { code: "Applied Mathematics / Pure Mathematics / Statistics", label: "Applied Mathematics / Pure Mathematics / Statistics" },
+  { code: "Chemistry / Computer Studies / Pure Mathematics", label: "Chemistry / Computer Studies / Pure Mathematics" },
+];
+
+const BS_PATHWAYS: Pathway[] = [
+  { code: "Plant Biology-Chemistry-Zoology", label: "Plant Biology-Chemistry-Zoology" },
+  { code: "Computer Studies-Chemistry-Plant Biology", label: "Computer Studies-Chemistry-Plant Biology" },
+  { code: "Computer Studies-Chemistry-Zoology", label: "Computer Studies-Chemistry-Zoology" },
+  { code: "Microbiology-Chemistry-Plant Biology", label: "Microbiology-Chemistry-Plant Biology" },
+  { code: "Microbiology-Chemistry-Zoology", label: "Microbiology-Chemistry-Zoology" },
+  { code: "Biochemistry-Chemistry-Microbiology", label: "Biochemistry-Chemistry-Microbiology" },
+  { code: "Biochemistry-Plant Biology-Chemistry", label: "Biochemistry-Plant Biology-Chemistry" },
+  { code: "Biochemistry-Zoology-Chemistry", label: "Biochemistry-Zoology-Chemistry" },
+];
+
+const PATHWAYS_BY_DEGREE: Record<string, Pathway[]> = {
+  ps: PS_PATHWAYS,
+  bs: BS_PATHWAYS,
+};
 
 const semesters: Semester[] = [
   { code: "y1s1", name: "Year 1, Semester 1" },
@@ -224,6 +260,7 @@ function SemesterDropdown({
 export default function OnboardingPage() {
   const [country, setCountry] = useState("");
   const [degree, setDegree] = useState("");
+  const [pathway, setPathway] = useState("");
   const [semester, setSemester] = useState("");
   const [semesterOpen, setSemesterOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -232,17 +269,28 @@ export default function OnboardingPage() {
     () => degrees.filter((item) => item.countries.includes(country)),
     [country],
   );
-  const canFinish = Boolean(country && degree && semester && !loading);
+  const pathwayOptions = PATHWAYS_BY_DEGREE[degree];
+  const needsPathway = Boolean(pathwayOptions);
+  const pathwayReady = !needsPathway || Boolean(pathway);
+  const canFinish = Boolean(country && degree && pathwayReady && semester && !loading);
 
   function chooseCountry(nextCountry: string) {
     setCountry(nextCountry);
     setDegree("");
+    setPathway("");
     setSemester("");
     setSemesterOpen(false);
   }
 
   function chooseDegree(nextDegree: string) {
     setDegree(nextDegree);
+    setPathway("");
+    setSemester("");
+    setSemesterOpen(false);
+  }
+
+  function choosePathway(nextPathway: string) {
+    setPathway(nextPathway);
     setSemester("");
     setSemesterOpen(false);
   }
@@ -254,7 +302,7 @@ export default function OnboardingPage() {
       await fetch("/api/onboarding/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country, degree, semester }),
+        body: JSON.stringify({ country, degree, pathway: pathway || null, semester }),
       });
       window.location.href = "/app";
     } catch {
@@ -365,7 +413,25 @@ export default function OnboardingPage() {
                 </Section>
               )}
 
-              {degree && (
+              {degree && needsPathway && (
+                <Section
+                  key="pathway"
+                  title="Choose your pathway"
+                >
+                  <div className="grid gap-2">
+                    {pathwayOptions!.map((item) => (
+                      <OptionCard
+                        key={item.code}
+                        title={item.label}
+                        selected={pathway === item.code}
+                        onClick={() => choosePathway(item.code)}
+                      />
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {degree && pathwayReady && (
                 <Section
                   key="semester"
                   title="Which semester are you in?"
