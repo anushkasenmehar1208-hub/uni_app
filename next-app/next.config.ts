@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
     return [
       // Reflex serves the actual app
       {
+        source: "/app",
+        destination: `${REFLEX_BACKEND_URL}/app`,
+      },
+      {
         source: "/app/:path*",
         destination: `${REFLEX_BACKEND_URL}/app/:path*`,
       },
