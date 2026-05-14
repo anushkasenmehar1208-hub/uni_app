@@ -4,9 +4,6 @@ const REFLEX_BACKEND_URL =
   process.env.REFLEX_BACKEND_URL || "https://alexstudies.com";
 
 const nextConfig: NextConfig = {
-  // Use standalone output for a much smaller Docker image on Railway.
-  output: "standalone",
-
   // Proxy all paths the existing Reflex app owns so Next.js can sit
   // in front of the same domain without breaking the app, auth, or
   // payment flows. Next.js keeps: /, /login, /register, /onboarding,
