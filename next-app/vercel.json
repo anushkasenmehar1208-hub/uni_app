@@ -3,7 +3,7 @@
     "web": {
       "routePrefix": "/",
       "framework": "nextjs",
-      "buildCommand": "npm ci && npm run build"
+      "buildCommand": "npm ci --include=dev && npm run build"
     }
   }
 }
