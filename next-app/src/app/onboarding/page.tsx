@@ -257,10 +257,93 @@ function SemesterDropdown({
   );
 }
 
+function PathwayDropdown({
+  options,
+  selected,
+  open,
+  onOpenChange,
+  onSelect,
+}: {
+  options: Pathway[];
+  selected: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelect: (pathway: string) => void;
+}) {
+  const selectedLabel = options.find((item) => item.code === selected)?.label;
+
+  return (
+    <div
+      className="relative"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          onOpenChange(false);
+        }
+      }}
+    >
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => onOpenChange(!open)}
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-[12px] border border-white/[0.08] bg-white/[0.035] px-3 text-left transition-all hover:border-white/20 hover:bg-white/[0.055] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/55"
+      >
+        <span
+          className="truncate text-[0.84rem] font-medium"
+          style={{ color: selectedLabel ? "white" : "rgba(226,232,240,0.5)" }}
+        >
+          {selectedLabel ?? "Select pathway"}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-white/48 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            {...reveal}
+            role="listbox"
+            className="mt-2 max-h-[260px] overflow-y-auto overflow-x-hidden rounded-[12px] border border-white/[0.09] bg-[#050505] p-1 shadow-[0_22px_50px_rgba(0,0,0,0.5)]"
+            style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.18) transparent" }}
+          >
+            {options.map((item) => {
+              const isSelected = selected === item.code;
+              return (
+                <button
+                  key={item.code}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    onSelect(item.code);
+                    onOpenChange(false);
+                  }}
+                  className="flex min-h-9 w-full items-center justify-between gap-2 rounded-[9px] px-3 py-1.5 text-left text-[0.8rem] transition-colors hover:bg-white/[0.07] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/45"
+                  style={{
+                    color: isSelected ? "white" : "rgba(220,230,240,0.78)",
+                    background: isSelected ? "rgba(255,255,255,0.075)" : "transparent",
+                    fontWeight: isSelected ? 700 : 500,
+                  }}
+                >
+                  <span className="leading-tight">{item.label}</span>
+                  {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-white/85" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function OnboardingPage() {
   const [country, setCountry] = useState("");
   const [degree, setDegree] = useState("");
   const [pathway, setPathway] = useState("");
+  const [pathwayOpen, setPathwayOpen] = useState(false);
   const [semester, setSemester] = useState("");
   const [semesterOpen, setSemesterOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -280,6 +363,7 @@ export default function OnboardingPage() {
     setPathway("");
     setSemester("");
     setSemesterOpen(false);
+    setPathwayOpen(false);
   }
 
   function chooseDegree(nextDegree: string) {
@@ -287,6 +371,7 @@ export default function OnboardingPage() {
     setPathway("");
     setSemester("");
     setSemesterOpen(false);
+    setPathwayOpen(false);
   }
 
   function choosePathway(nextPathway: string) {
@@ -418,16 +503,13 @@ export default function OnboardingPage() {
                   key="pathway"
                   title="Choose your pathway"
                 >
-                  <div className="grid gap-2">
-                    {pathwayOptions!.map((item) => (
-                      <OptionCard
-                        key={item.code}
-                        title={item.label}
-                        selected={pathway === item.code}
-                        onClick={() => choosePathway(item.code)}
-                      />
-                    ))}
-                  </div>
+                  <PathwayDropdown
+                    options={pathwayOptions!}
+                    selected={pathway}
+                    open={pathwayOpen}
+                    onOpenChange={setPathwayOpen}
+                    onSelect={choosePathway}
+                  />
                 </Section>
               )}
 
