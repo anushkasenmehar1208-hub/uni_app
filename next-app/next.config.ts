@@ -8,17 +8,16 @@ const nextConfig: NextConfig = {
   // in front of the same domain without breaking the app, auth, or
   // payment flows. Next.js keeps: /, /login, /register, /onboarding,
   // /api/auth/* (new). Reflex keeps everything else.
-  async redirects() {
-    return [
-      // Reflex's /app returns a 307 to http://.../app/ which browsers
-      // either block (HSTS) or hang on. Force /app -> /app/ ourselves
-      // so we always hit the trailing-slash route that proxies cleanly.
-      { source: "/app", destination: "/app/", permanent: false },
-    ];
-  },
   async rewrites() {
     return [
-      // Reflex serves the actual app (path* matches /app/ with empty tail)
+      // Next.js strips trailing slashes (trailingSlash: false default), so
+      // /app/ becomes /app. The Reflex backend, however, expects /app/ — hitting
+      // /app there returns a 307 to http://.../app/ (HTTPS downgrade). Always
+      // proxy bare /app to Reflex's /app/ directly to avoid the bad redirect.
+      {
+        source: "/app",
+        destination: `${REFLEX_BACKEND_URL}/app/`,
+      },
       {
         source: "/app/:path*",
         destination: `${REFLEX_BACKEND_URL}/app/:path*`,
