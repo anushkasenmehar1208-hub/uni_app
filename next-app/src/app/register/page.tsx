@@ -53,8 +53,7 @@ export default function RegisterPage() {
 
   return (
     <AuthCard
-      title="Join Alex AI"
-      subtitle="Free to start. No card needed."
+      title="Create your account"
       footer={
         <>
           Already have an account?{" "}

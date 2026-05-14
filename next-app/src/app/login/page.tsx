@@ -43,7 +43,6 @@ export default function LoginPage() {
   return (
     <AuthCard
       title="Welcome Back"
-      subtitle="Continue your study plan with Alex"
       footer={
         <>
           Don&apos;t have an account?{" "}
@@ -51,7 +50,7 @@ export default function LoginPage() {
             href="/register"
             className="text-white hover:text-white/80 font-medium underline-offset-4 hover:underline"
           >
-            Sign up
+            Register
           </Link>
         </>
       }

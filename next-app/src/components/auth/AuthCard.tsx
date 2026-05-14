@@ -11,7 +11,7 @@ interface AuthCardProps {
   footer?: ReactNode;
 }
 
-export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
+export function AuthCard({ title, children, footer }: AuthCardProps) {
   return (
     <div
       className="relative min-h-screen w-full overflow-hidden"
@@ -67,89 +67,72 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
           className="w-full"
           style={{ maxWidth: 420 }}
         >
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 justify-center mb-7"
-          >
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                background:
-                  "linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.7) 100%)",
-                boxShadow: "0 8px 30px rgba(255,255,255,0.15)",
-              }}
-            >
-              <span style={{ color: "#000", fontWeight: 800, fontSize: 18 }}>
-                A
-              </span>
-            </div>
-            <span
-              style={{
-                color: "rgba(255,255,255,0.94)",
-                fontSize: "1.04rem",
-                fontWeight: 700,
-                fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-              }}
-            >
-              Alex AI
-            </span>
-          </Link>
-
           <div
             className="relative"
             style={{
-              padding: "32px 28px",
-              borderRadius: 24,
-              background: "#020202",
-              border: "1px solid rgba(255,255,255,0.04)",
+              padding: "28px 28px 24px",
+              borderRadius: 20,
+              background: "#111111",
+              border: "1px solid rgba(255,255,255,0.1)",
               boxShadow:
-                "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.02)",
+                "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)",
             }}
           >
-            <div className="mb-6 text-center">
-              <h1
-                style={{
-                  color: "#ffffff",
-                  fontSize: "1.55rem",
-                  fontWeight: 800,
-                  letterSpacing: "-0.035em",
-                  margin: 0,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  lineHeight: 1.1,
-                }}
-              >
-                {title}
-              </h1>
-              {subtitle && (
-                <p
+            <div className="flex items-center gap-3 mb-7">
+              <Link href="/">
+                <div
+                  className="flex items-center justify-center flex-shrink-0"
                   style={{
-                    color: "rgba(255,255,255,0.48)",
-                    fontSize: "0.92rem",
-                    marginTop: 8,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    background: "#ffffff",
+                    boxShadow: "0 4px 16px rgba(255,255,255,0.1)",
                   }}
                 >
-                  {subtitle}
-                </p>
-              )}
+                  <span style={{ color: "#000", fontWeight: 800, fontSize: 20 }}>
+                    A
+                  </span>
+                </div>
+              </Link>
+              <div>
+                <div
+                  style={{
+                    color: "#ffffff",
+                    fontSize: "1.05rem",
+                    fontWeight: 700,
+                    fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
+                    lineHeight: 1.25,
+                  }}
+                >
+                  Alex AI
+                </div>
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.48)",
+                    fontSize: "0.875rem",
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {title}
+                </div>
+              </div>
             </div>
 
             {children}
-          </div>
 
-          {footer && (
-            <div
-              className="mt-5 text-center"
-              style={{
-                color: "rgba(255,255,255,0.4)",
-                fontSize: "0.86rem",
-              }}
-            >
-              {footer}
-            </div>
-          )}
+            {footer && (
+              <div
+                className="mt-5 text-center"
+                style={{
+                  color: "rgba(255,255,255,0.4)",
+                  fontSize: "0.86rem",
+                }}
+              >
+                {footer}
+              </div>
+            )}
+          </div>
         </motion.div>
 
         <AuthLegalFooter />
@@ -171,7 +154,7 @@ function AuthLegalFooter() {
     </span>
   );
   return (
-    <div className="mt-10 text-center px-4">
+    <div className="mt-8 text-center px-4">
       <div className="flex items-center justify-center flex-wrap gap-3">
         <Link
           href="/return-policy"
