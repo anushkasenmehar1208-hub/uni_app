@@ -29002,6 +29002,7 @@ def landing_page():
         margin="0 auto",
         position="relative",
         z_index="4",
+        id="landing-hero-content",
     )
 
     logo_video = rx.center(
@@ -36444,6 +36445,8 @@ app = rx.App(
     head_components=[
         # Body background set before React mounts (prevents any white/default flash).
         rx.el.style("html,body{background:#0a0a0c!important;margin:0;padding:0;}"),
+        # Hero centering — keeps hero text centered at first paint even if WebSocket/emotion fails.
+        rx.el.style("#landing-hero-content{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;margin:0 auto!important;width:100%!important;}#landing-hero-content [data-landing-animate='sub']{text-align:center!important;margin:0 auto!important;}#landing-hero-content [data-landing-animate='actions']{justify-content:center!important;}"),
         # ── Critical layout CSS ──
         # Loaded in <head> as a static inline stylesheet so it applies on the
         # very first paint, *before* any emotion (Reflex's CSS-in-JS) styles
