@@ -23,10 +23,14 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.token) {
+        // Sync Reflex auth: it reads this localStorage key on app load.
+        try {
+          localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
+        } catch {}
         window.location.href = "/app";
       } else {
-        const data = await res.json().catch(() => ({}));
         setError(data.error || "Invalid username or password.");
       }
     } catch {

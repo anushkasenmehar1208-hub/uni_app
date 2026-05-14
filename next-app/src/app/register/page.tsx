@@ -35,10 +35,13 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.token) {
+        try {
+          localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
+        } catch {}
         window.location.href = "/onboarding";
       } else {
-        const data = await res.json().catch(() => ({}));
         setError(data.error || "Couldn't create your account. Try again.");
       }
     } catch {

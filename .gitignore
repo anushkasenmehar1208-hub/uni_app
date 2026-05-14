@@ -211,3 +211,8 @@ next-app/next-env.d.ts
 next-app/.env.local
 next-app/.env.production.local
 next-app/.env.development.local
+
+# The Python "lib/" rule earlier also matches next-app/src/lib/.
+# Re-include it so Next.js helper modules are tracked.
+!next-app/src/lib/
+!next-app/src/lib/**
