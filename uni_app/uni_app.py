@@ -5064,6 +5064,7 @@ _GA_ALLOWED_PARAM_KEYS = {
     "auth_method",
     "button_location",
     "currency",
+    "country",
     "degree_key",
     "page_location",
     "page_path",
@@ -5121,12 +5122,15 @@ def _ga_degree_key(degree: str) -> str:
 
 def _ga_study_params(
     *,
+    country: str = "",
     degree: str = "",
     year: str = "",
     semester: str = "",
     plan_scope: str = "",
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
+    if country:
+        params["country"] = country
     degree_key = _ga_degree_key(degree)
     if degree_key:
         params["degree_key"] = degree_key
@@ -5957,6 +5961,17 @@ class AppState(reflex_local_auth.LocalAuthState):
     def onboarding_semester_options(self) -> list[str]:
         """Semester list for the onboarding dropdown — matches the degree's actual year count."""
         return self._available_semesters_for_degree(self.degree)
+
+    @rx.var
+    def onboarding_semester_choices(self) -> list[dict[str, str]]:
+        """Button-ready semester options with the year kept visible in the label."""
+        return [
+            {
+                "value": sem,
+                "label": f"{_year_for_semester_label(sem)} {sem}".strip(),
+            }
+            for sem in self._available_semesters_for_degree(self.degree)
+        ]
 
     @rx.var
     def sidebar_semester_options(self) -> list[str]:
@@ -12578,15 +12593,28 @@ Quality rules:
         self.other_degree_text = preset
 
     def set_onboarding_region(self, region: str):
-        """Select a region chip — clears degree so user picks fresh."""
-        self.onboarding_region = region
+        """Select a region chip and clear downstream choices that may no longer be valid."""
+        normalized_region = region if region in REGION_DEGREE_OPTIONS else ""
+        self.onboarding_region = normalized_region
         self.degree = ""
         self.other_degree_text = ""
-        region_degrees = REGION_DEGREE_OPTIONS.get(region, [])
+        self.selected_year = ""
+        self.selected_semester = ""
+        self.pathway = ""
+        self.active_subject = ""
+        self.show_pathway_panel = False
+        self.subject_scope_preferences_json = ""
+        region_degrees = REGION_DEGREE_OPTIONS.get(normalized_region, [])
         self.options = region_degrees + [CUSTOM_DEGREE] if region_degrees else DEGREE_OPTIONS
-        if region == "custom":
+        if normalized_region == "custom":
             self.degree = CUSTOM_DEGREE
             self.options = DEGREE_OPTIONS
+        self._sync_pathway_options()
+        self.onboarding_message = ""
+        uid = self._active_data_uid()
+        self._save_memory(uid)
+        if normalized_region:
+            return track_ga_event("country_selected", {"country": normalized_region})
 
     def _build_alex_voice_boot_script(self, *, auto_start_voice: bool) -> str:
         """Build JS that configures voice APIs and loads alex_voice.js (optionally starts the call)."""
@@ -13419,8 +13447,17 @@ Quality rules:
     def set_degree(self, value: str):
         uid = self._active_data_uid()
         try:
+            previous_degree = self.degree
             self.degree = value if value in self.options else ""
-            # Reset pathway when degree changes
+            degree_changed = previous_degree != self.degree
+            if degree_changed:
+                self.selected_year = ""
+                self.selected_semester = ""
+                self.pathway = ""
+                self.active_subject = ""
+                self.show_pathway_panel = False
+                self.subject_scope_preferences_json = ""
+            # Reset pathway when degree changes or no pathway is needed.
             if self.degree not in MULTI_SUBJECT_DEGREES:
                 self.pathway = ""
                 self.active_subject = ""
@@ -13428,6 +13465,11 @@ Quality rules:
             self._sync_pathway_options()
             self.onboarding_message = ""
             self._save_memory(uid)
+            if self.degree:
+                return track_ga_event(
+                    "degree_selected",
+                    _ga_study_params(country=self.onboarding_region, degree=self.degree),
+                )
         except Exception as e:
             print(f"ERROR set_degree: {e}")
 
@@ -13593,15 +13635,15 @@ Quality rules:
     def choose_onboarding_semester(self, semester: str):
         uid = self._active_data_uid()
         try:
-        # Build full semester→year mapping from SEMESTER_NAVIGATION
-            semester_to_year = {
-                sem: yr
-                for yr, sems in SEMESTER_NAVIGATION.items()
-                for sem in sems
-            }
+            available_semesters = self._available_semesters_for_degree(self.degree)
+            if semester not in available_semesters:
+                self.selected_year = ""
+                self.selected_semester = ""
+                self.onboarding_message = "Please select a valid semester for your degree."
+                self._save_memory(uid)
+                return
 
-        # Automatically set the year based on the semester picked
-            inferred_year = semester_to_year.get(semester)
+            inferred_year = _year_for_semester_label(semester)
             if not inferred_year:
                 self.onboarding_message = "Please select a valid semester."
                 return
@@ -13611,6 +13653,15 @@ Quality rules:
             self.onboarding_message = ""
             self.step = 6
             self._save_memory(uid)
+            return track_ga_event(
+                "semester_selected",
+                _ga_study_params(
+                    country=self.onboarding_region,
+                    degree=self.degree,
+                    year=inferred_year,
+                    semester=semester,
+                ),
+            )
         except Exception as e:
             print(f"ERROR choose_onboarding_semester: {e}")
     @rx.event
@@ -13633,17 +13684,28 @@ Quality rules:
         """Lightweight semester setter for the single-page onboarding form."""
         uid = self._active_data_uid()
         try:
-            semester_to_year = {
-                "Semester 1": "Year 1", "Semester 2": "Year 1",
-                "Semester 3": "Year 2", "Semester 4": "Year 2",
-            }
-            inferred_year = semester_to_year.get(semester, "")
-            if inferred_year:
-                self.selected_year = inferred_year
-                self.selected_semester = semester
-                self.onboarding_message = ""
+            available_semesters = self._available_semesters_for_degree(self.degree)
+            inferred_year = _year_for_semester_label(semester)
+            if not inferred_year or semester not in available_semesters:
+                self.selected_year = ""
+                self.selected_semester = ""
+                self.onboarding_message = "Please select a valid semester for your degree."
                 self._save_memory(uid)
-                print(f"[ONBOARD] semester={semester}, year={inferred_year}", flush=True)
+                return
+            self.selected_year = inferred_year
+            self.selected_semester = semester
+            self.onboarding_message = ""
+            self._save_memory(uid)
+            print(f"[ONBOARD] semester={semester}, year={inferred_year}", flush=True)
+            return track_ga_event(
+                "semester_selected",
+                _ga_study_params(
+                    country=self.onboarding_region,
+                    degree=self.degree,
+                    year=inferred_year,
+                    semester=semester,
+                ),
+            )
         except Exception as e:
             print(f"ERROR set_onboarding_semester: {e}")
 
@@ -13691,11 +13753,9 @@ Quality rules:
                 uid = self._active_data_uid()
                 if uid >= 0:
                     self._save_memory(uid)
-                # GA funnel event: onboarding saved a custom degree path; no custom text is sent.
-                yield track_ga_event(
-                    "degree_selected",
-                    _ga_study_params(degree=self.degree),
-                )
+                params = _ga_study_params(country=self.onboarding_region, degree=self.degree)
+                yield track_ga_event("see_alex_click", params)
+                yield track_ga_event("onboarding_completed", params)
                 yield _hard_navigate("/free")
                 return
 
@@ -13715,11 +13775,11 @@ Quality rules:
             if not self.selected_semester:
                 self.onboarding_message = "Please choose your current semester to continue. Once that is set, Alex can open the correct workspace and build your study plan."
                 return
-            semester_to_year = {
-                "Semester 1": "Year 1", "Semester 2": "Year 1",
-                "Semester 3": "Year 2", "Semester 4": "Year 2",
-            }
-            year = semester_to_year.get(self.selected_semester)
+            available_semesters = self._available_semesters_for_degree(self.degree)
+            if self.selected_semester not in available_semesters:
+                self.onboarding_message = "Please choose a valid semester for your selected degree."
+                return
+            year = _year_for_semester_label(self.selected_semester)
             if not year:
                 self.onboarding_message = "Invalid semester selected."
                 return
@@ -13732,15 +13792,14 @@ Quality rules:
                 self._set_default_semester_workspace(uid, year, self.selected_semester)
                 self._save_memory(uid)
             scope = self._scope_key(year, self.selected_semester)
-            # GA funnel event: onboarding saved degree/year/semester; no name or free text is sent.
-            yield track_ga_event(
-                "degree_selected",
-                _ga_study_params(
-                    degree=self.degree,
-                    year=year,
-                    semester=self.selected_semester,
-                ),
+            params = _ga_study_params(
+                country=self.onboarding_region,
+                degree=self.degree,
+                year=year,
+                semester=self.selected_semester,
             )
+            yield track_ga_event("see_alex_click", params)
+            yield track_ga_event("onboarding_completed", params)
             yield _hard_navigate(scope_to_route(scope))
         except Exception as e:
             import traceback
@@ -23272,6 +23331,10 @@ def onboarding_page():
                         border_radius="24px",
                         background="#020202",
                         border="1px solid rgba(255,255,255,0.04)",
+                        max_height="calc(100dvh - 40px)",
+                        overflow_y="auto",
+                        overflow_x="hidden",
+                        overscroll_behavior="contain",
                         style={
                             "backdrop_filter": "blur(32px) saturate(1.25)",
                             "-webkit-backdrop-filter": "blur(32px) saturate(1.25)",
@@ -23279,6 +23342,8 @@ def onboarding_page():
                                 "0 40px 100px rgba(0,0,0,0.8), "
                                 "inset 0 1px 0 rgba(255,255,255,0.02)"
                             ),
+                            "scrollbar_width": "thin",
+                            "scrollbar_color": "rgba(255,255,255,0.18) transparent",
                         },
                         animation="obCardIn 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s both",
                         custom_attrs={"data-ob-card": ""},
@@ -23295,25 +23360,47 @@ def onboarding_page():
             ),
             # ── CSS animations ──
             rx.el.style("""
+                @keyframes obReveal {
+                    from { opacity: 0; transform: translateY(8px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .ob-reveal { animation: obReveal 0.28s cubic-bezier(0.16,1,0.3,1) both; }
+                .ob-choice-grid { display: grid; gap: 8px; width: 100%; }
+                .ob-choice-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                .ob-semester-grid {
+                    max-height: 104px;
+                    overflow-y: auto;
+                    padding-right: 2px;
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(255,255,255,0.18) transparent;
+                }
+                .ob-section + .ob-section {
+                    border-top: 1px solid rgba(255,255,255,0.06);
+                    padding-top: 14px;
+                    margin-top: 4px;
+                }
+                .ob-choice:focus-visible {
+                    outline: 2px solid rgba(255,255,255,0.55) !important;
+                    outline-offset: 2px !important;
+                }
                 /* ── Mobile: lightweight for performance ── */
                 @media (max-width: 640px) {
                     /* Kill heavy components */
                     [data-ob-beam] { display: none !important; }
                     [data-ob-beam="1"],[data-ob-beam="2"],[data-ob-beam="3"] { display: none !important; }
                 }
-====
-
+                @media (max-width: 640px) {
                     [data-ob-blob3],[data-ob-blob4] { display: none !important; }
-
-                    /* Card: simple fade-up */
                     [data-ob-card] {
                         padding: 1rem !important;
                         border-radius: 18px !important;
                         width: min(94vw, 400px) !important;
+                        max-height: calc(100dvh - 24px) !important;
                         backdrop-filter: blur(16px) !important;
                         -webkit-backdrop-filter: blur(16px) !important;
                         animation: obCardInMob 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both !important;
                     }
+                    .ob-choice-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
                     @keyframes obCardInMob {
                         from { opacity: 0; transform: translateY(30px); }
                         to { opacity: 1; transform: translateY(0); }
@@ -23712,6 +23799,8 @@ def onboarding_page():
                 ),
                 on_click=AppState.set_degree(label),
                 type="button",
+                class_name="ob-choice",
+                custom_attrs={"aria-pressed": rx.cond(is_sel, "true", "false")},
                 width="100%",
                 height="auto",
                 min_height="42px",
@@ -23725,6 +23814,64 @@ def onboarding_page():
                     "rgba(255,255,255,0.025)",
                 ),
                 cursor="pointer",
+                transition="all 0.25s cubic-bezier(0.4,0,0.2,1)",
+                _hover={"background": "rgba(255,255,255,0.07)", "border": "1px solid rgba(255,255,255,0.16)"},
+            )
+
+        def semester_btn(choice: dict[str, str]) -> rx.Component:
+            value = choice["value"]
+            is_sel = AppState.selected_semester == value
+            return rx.button(
+                rx.hstack(
+                    rx.cond(
+                        is_sel,
+                        rx.box(
+                            rx.icon(tag="check", size=14, color="black"),
+                            width="16px", height="16px",
+                            border_radius="999px",
+                            background="rgba(255,255,255,0.92)",
+                            display="flex",
+                            align_items="center",
+                            justify_content="center",
+                            flex_shrink="0",
+                        ),
+                        rx.box(
+                            width="16px", height="16px",
+                            border_radius="999px",
+                            border="1.5px solid rgba(255,255,255,0.2)",
+                            flex_shrink="0",
+                        ),
+                    ),
+                    rx.text(
+                        choice["label"],
+                        color=rx.cond(is_sel, "white", "rgba(220,230,240,0.82)"),
+                        font_weight=rx.cond(is_sel, "700", "500"),
+                        font_size="0.8rem",
+                        line_height="1.25",
+                        text_align="left",
+                    ),
+                    spacing="2",
+                    align="center",
+                    width="100%",
+                ),
+                on_click=AppState.choose_onboarding_semester(value),
+                type="button",
+                class_name="ob-choice",
+                custom_attrs={"aria-pressed": rx.cond(is_sel, "true", "false")},
+                width="100%",
+                height="auto",
+                min_height="42px",
+                justify="start",
+                padding="9px 10px",
+                border_radius="11px",
+                border=rx.cond(is_sel, "1px solid rgba(134,239,172,0.42)", "1px solid rgba(255,255,255,0.07)"),
+                background=rx.cond(
+                    is_sel,
+                    "linear-gradient(180deg, rgba(25,40,31,0.9) 0%, rgba(12,18,15,0.94) 100%)",
+                    "rgba(255,255,255,0.025)",
+                ),
+                cursor="pointer",
+                white_space="normal",
                 transition="all 0.25s cubic-bezier(0.4,0,0.2,1)",
                 _hover={"background": "rgba(255,255,255,0.07)", "border": "1px solid rgba(255,255,255,0.16)"},
             )
@@ -23773,8 +23920,8 @@ def onboarding_page():
                     pointer-events: none;
                 }
                 .ob-region-chip {
-                    height: 50px !important;
-                    min-height: 50px !important;
+                    height: 58px !important;
+                    min-height: 58px !important;
                     background: rgba(255,255,255,0.025) !important;
                     border: 1px solid rgba(255,255,255,0.07) !important;
                     box-shadow: none !important;
@@ -23795,8 +23942,31 @@ def onboarding_page():
                 }
             """),
 
-            # ── Degree label ──
-            desc_text("Choose your degree program"),
+            # ── Country section ──
+            rx.box(
+                rx.vstack(
+                    rx.text(
+                        "Where do you study?",
+                        color="white",
+                        font_size="1rem",
+                        font_weight="800",
+                        letter_spacing="-0.02em",
+                        line_height="1.2",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                    ),
+                    rx.text(
+                        "Alex will match the setup to your curriculum.",
+                        color="rgba(203,213,225,0.62)",
+                        font_size="0.78rem",
+                        line_height="1.4",
+                        font_family="'Plus Jakarta Sans', sans-serif",
+                    ),
+                    spacing="1",
+                    align_items="stretch",
+                    width="100%",
+                ),
+                class_name="ob-section",
+            ),
 
             # ── Region chips (always visible) ──
             # `data-ob-region-row` is matched by critical CSS in <head> so that
@@ -23804,7 +23974,7 @@ def onboarding_page():
             # first paint, even before emotion has injected `flex="1"` for each
             # chip. Without this, cold loads in Safari Private render the row
             # as content-width with content-width chips squeezed together.
-            rx.hstack(
+            rx.box(
                 *[
                     rx.button(
                         rx.vstack(
@@ -23819,12 +23989,12 @@ def onboarding_page():
                         variant="ghost",
                         class_name=rx.cond(
                             AppState.onboarding_region == code,
-                            "ob-region-chip ob-region-chip-active",
-                            "ob-region-chip",
+                            "ob-region-chip ob-region-chip-active ob-choice",
+                            "ob-region-chip ob-choice",
                         ),
-                        flex="1",
-                        height="50px",
-                        min_height="50px",
+                        custom_attrs={"aria-pressed": rx.cond(AppState.onboarding_region == code, "true", "false")},
+                        height="58px",
+                        min_height="58px",
                         padding="8px 4px",
                         border_radius="12px",
                         border=rx.cond(
@@ -23842,16 +24012,43 @@ def onboarding_page():
                         _hover={"background": "rgba(255,255,255,0.07)", "border": "1px solid rgba(255,255,255,0.16)"},
                     )
                     for flag, label, code in [
-                        ("🇺🇸", "US", "US"),
-                        ("🇬🇧", "UK", "UK"),
+                        ("🇬🇧", "United Kingdom", "UK"),
+                        ("🇺🇸", "United States", "US"),
                         ("🇮🇳", "India", "IN"),
                         ("🇱🇰", "Sri Lanka", "LK"),
-                        ("✏️", "Others", "custom"),
                     ]
                 ],
-                spacing="2",
+                class_name="ob-choice-grid two",
                 width="100%",
-                custom_attrs={"data-ob-region-row": ""},
+            ),
+
+            rx.cond(
+                AppState.onboarding_region != "",
+                rx.box(
+                    rx.vstack(
+                        rx.text(
+                            "What are you studying?",
+                            color="white",
+                            font_size="1rem",
+                            font_weight="800",
+                            letter_spacing="-0.02em",
+                            line_height="1.2",
+                            font_family="'Plus Jakarta Sans', sans-serif",
+                        ),
+                        rx.text(
+                            "Choose the degree Alex should build around.",
+                            color="rgba(203,213,225,0.62)",
+                            font_size="0.78rem",
+                            line_height="1.4",
+                            font_family="'Plus Jakarta Sans', sans-serif",
+                        ),
+                        spacing="1",
+                        align_items="stretch",
+                        width="100%",
+                    ),
+                    class_name="ob-section ob-reveal",
+                ),
+                rx.fragment(),
             ),
 
             # ── Sri Lanka degrees ──
@@ -23867,7 +24064,7 @@ def onboarding_page():
                             "Biological Science",
                         ]
                     ],
-                    spacing="2", width="100%",
+                    spacing="2", width="100%", class_name="ob-reveal",
                 ),
                 rx.fragment(),
             ),
@@ -23878,7 +24075,7 @@ def onboarding_page():
                 rx.vstack(
                     degree_btn("Computer Science (UK)", "Computer Science"),
                     degree_btn("Software Engineering (UK)", "Software Engineering"),
-                    spacing="2", width="100%",
+                    spacing="2", width="100%", class_name="ob-reveal",
                 ),
                 rx.fragment(),
             ),
@@ -23889,7 +24086,7 @@ def onboarding_page():
                 rx.vstack(
                     degree_btn("Computer Science (US)", "Computer Science"),
                     degree_btn("Software Engineering (US)", "Software Engineering"),
-                    spacing="2", width="100%",
+                    spacing="2", width="100%", class_name="ob-reveal",
                 ),
                 rx.fragment(),
             ),
@@ -23900,7 +24097,7 @@ def onboarding_page():
                 rx.vstack(
                     degree_btn("B.Tech Computer Science", "B.Tech Computer Science"),
                     degree_btn("B.Tech Information Technology", "B.Tech IT"),
-                    spacing="2", width="100%",
+                    spacing="2", width="100%", class_name="ob-reveal",
                 ),
                 rx.fragment(),
             ),
@@ -24046,6 +24243,15 @@ def onboarding_page():
                     AppState.needs_pathway_selection,
                     rx.vstack(
                         rx.text(
+                            "Which pathway are you taking?",
+                            color="white",
+                            font_size="1rem",
+                            font_weight="800",
+                            letter_spacing="-0.02em",
+                            line_height="1.2",
+                            font_family="'Plus Jakarta Sans', sans-serif",
+                        ),
+                        rx.text(
                             AppState.pathway_combined_step_label,
                             color="rgba(203,213,225,0.72)",
                             font_size="0.84rem",
@@ -24054,6 +24260,7 @@ def onboarding_page():
                         ),
                         pathway_selector_field(),
                         spacing="2",
+                        class_name="ob-section ob-reveal",
                     ),
                     rx.fragment(),
                 ),
@@ -24063,21 +24270,72 @@ def onboarding_page():
             # ── Semester (only when region + degree selected, NOT custom path) ──
             rx.cond(
                 ~custom_selected & (AppState.degree != "") & (AppState.onboarding_region != ""),
-                rx.vstack(
-                    rx.box(height="1"),
-                    desc_text("Select your semester"),
-                    rx.select(
-                        AppState.onboarding_semester_options,
-                        placeholder="Which semester are you starting from?",
-                        default_value=AppState.selected_semester,
-                        on_change=AppState.choose_onboarding_semester,
-                        width="100%",
-                        size="2",
-                        style={"border_radius": "12px"},
+                rx.cond(
+                    AppState.needs_pathway_selection,
+                    rx.cond(
+                        AppState.pathway != "",
+                        rx.vstack(
+                            rx.text(
+                                "Which semester are you in?",
+                                color="white",
+                                font_size="1rem",
+                                font_weight="800",
+                                letter_spacing="-0.02em",
+                                line_height="1.2",
+                                font_family="'Plus Jakarta Sans', sans-serif",
+                            ),
+                            rx.text(
+                                "Alex will open the workspace that matches your current semester.",
+                                color="rgba(203,213,225,0.62)",
+                                font_size="0.78rem",
+                                line_height="1.4",
+                                font_family="'Plus Jakarta Sans', sans-serif",
+                            ),
+                            rx.box(
+                                rx.foreach(
+                                    AppState.onboarding_semester_choices,
+                                    lambda choice: semester_btn(choice),
+                                ),
+                                class_name="ob-choice-grid two ob-semester-grid",
+                                width="100%",
+                            ),
+                            spacing="2",
+                            align_items="stretch",
+                            width="100%",
+                            class_name="ob-section ob-reveal",
+                        ),
+                        rx.fragment(),
                     ),
-                    spacing="2",
-                    align_items="stretch",
-                    width="100%",
+                    rx.vstack(
+                        rx.text(
+                            "Which semester are you in?",
+                            color="white",
+                            font_size="1rem",
+                            font_weight="800",
+                            letter_spacing="-0.02em",
+                            line_height="1.2",
+                            font_family="'Plus Jakarta Sans', sans-serif",
+                        ),
+                        rx.text(
+                            "Alex will open the workspace that matches your current semester.",
+                            color="rgba(203,213,225,0.62)",
+                            font_size="0.78rem",
+                            line_height="1.4",
+                            font_family="'Plus Jakarta Sans', sans-serif",
+                        ),
+                        rx.box(
+                            rx.foreach(
+                                AppState.onboarding_semester_choices,
+                                lambda choice: semester_btn(choice),
+                            ),
+                            class_name="ob-choice-grid two ob-semester-grid",
+                            width="100%",
+                        ),
+                        spacing="2",
+                        align_items="stretch",
+                        width="100%",
+                        class_name="ob-section ob-reveal",
+                    ),
                 ),
                 rx.fragment(),
             ),
@@ -24088,16 +24346,25 @@ def onboarding_page():
             rx.cond(
                 AppState.onboarding_region != "",
                 rx.vstack(
-                    rx.box(height="2"),
                     rx.cond(
                         custom_selected,
-                        _onboarding_cta_button("See Alex ➜", AppState.submit_onboarding),
+                        _onboarding_cta_button("See Alex →", AppState.submit_onboarding),
                         rx.cond(
                             (AppState.degree != "") & (AppState.selected_semester != ""),
-                            _onboarding_cta_button("Let Alex Build My Plan ➜", AppState.submit_onboarding),
+                            rx.cond(
+                                AppState.needs_pathway_selection,
+                                rx.cond(
+                                    AppState.pathway != "",
+                                    _onboarding_cta_button("See Alex →", AppState.submit_onboarding),
+                                    rx.fragment(),
+                                ),
+                                _onboarding_cta_button("See Alex →", AppState.submit_onboarding),
+                            ),
                             rx.fragment(),
                         ),
                     ),
+                    class_name="ob-section ob-reveal",
+                    width="100%",
                 ),
                 rx.fragment(),
             ),
@@ -24116,10 +24383,8 @@ def onboarding_page():
     # cold-load FOUC where the card briefly rendered left-aligned.
     return rx.box(
         onboarding_shell(
-            "Setup Your Success",
+            "Set Up Alex",
             rx.vstack(
-                step_dots(),
-                rx.divider(margin="0", border_color="rgba(255,255,255,0.06)"),
                 rx.box(
                     combined_form(),
                     width="100%",
