@@ -27268,14 +27268,14 @@ def secure_reset_form() -> rx.Component:
 def _auth_legal_footer() -> rx.Component:
     """Professional legal footer shown on all auth pages (login / register / reset)."""
     link_style = {
-        "color": "rgba(255,255,255,0.35)",
+        "color": "rgba(255,255,255,0.4)",
         "font_size": "0.72rem",
         "text_decoration": "none",
         "_hover": {"color": "#FFFFFF", "text_decoration": "none"},
         "transition": "color 0.15s ease",
         "white_space": "nowrap",
     }
-    divider = rx.text("·", color="rgba(255,255,255,0.15)", font_size="0.72rem")
+    divider = rx.text("·", color="rgba(255,255,255,0.18)", font_size="0.72rem")
     return rx.box(
         rx.hstack(
             rx.link("Refund & Cancellation",  href="/return-policy",  **link_style),
@@ -27293,7 +27293,7 @@ def _auth_legal_footer() -> rx.Component:
         ),
         rx.text(
             f"© {CURRENT_COPYRIGHT_YEAR} Alex AI. All rights reserved.",
-            color="rgba(255,255,255,0.25)",
+            color="rgba(255,255,255,0.3)",
             font_size="0.7rem",
             text_align="center",
             margin_top="10px",
@@ -27301,7 +27301,7 @@ def _auth_legal_footer() -> rx.Component:
         ),
         width="100%",
         text_align="center",
-        padding="40px 0 20px",
+        padding="44px 0 20px",
         z_index="2",
     )
 
@@ -27345,10 +27345,10 @@ def _auth_page_shell(content: rx.Component) -> rx.Component:
                     content,
                     width=AUTH_CARD_WIDTH,
                     padding=rx.breakpoints(initial="24px 20px", sm="48px 36px"),
-                    border="1px solid rgba(255,255,255,0.04)",
+                    border="1px solid rgba(255,255,255,0.075)",
                     border_radius="24px",
                     background="#020202",
-                    box_shadow="0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.02)",
+                    box_shadow="0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.035)",
                     animation="authCardIn 0.8s cubic-bezier(0.16,1,0.3,1) both",
                     custom_attrs={"data-auth-card": ""},
                     pointer_events="auto",
