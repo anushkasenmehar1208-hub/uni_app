@@ -42,7 +42,7 @@ export default function LoginPage() {
 
   return (
     <AuthCard
-      title="Welcome back"
+      title="Welcome Back"
       subtitle="Continue your study plan with Alex"
       footer={
         <>

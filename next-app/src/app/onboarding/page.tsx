@@ -65,31 +65,77 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 py-12 bg-[#0a0a0c] overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute top-1/4 right-0 w-[50vw] h-[80vh] blur-[100px] opacity-40"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, rgba(255,255,255,0.12) 0%, transparent 70%)",
-          }}
-        />
-      </div>
+    <div
+      className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden"
+      style={{ background: "#000000" }}
+    >
+      <div
+        aria-hidden
+        className="fixed pointer-events-none"
+        style={{
+          top: 0,
+          right: "-20vw",
+          width: "55vw",
+          height: "100vh",
+          background:
+            "radial-gradient(ellipse at center, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 45%, transparent 75%)",
+          filter: "blur(60px)",
+          zIndex: 0,
+        }}
+      />
+      <div
+        aria-hidden
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.055) 0.75px, transparent 0.95px) 0 0 / 18px 18px",
+          opacity: 0.22,
+          zIndex: 1,
+        }}
+      />
+      <div
+        aria-hidden
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1.8px) 0 0 / 22px 22px",
+          opacity: 0.55,
+          WebkitMaskImage:
+            "radial-gradient(circle at 84% 52%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.55) 38%, transparent 70%)",
+          maskImage:
+            "radial-gradient(circle at 84% 52%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.55) 38%, transparent 70%)",
+          zIndex: 2,
+        }}
+      />
 
-      <div className="relative w-full max-w-2xl">
-        {/* Progress indicator */}
-        <div className="flex items-center justify-center gap-2 mb-10">
+      <div
+        className="relative w-full"
+        style={{ maxWidth: 480, zIndex: 4 }}
+      >
+        <div
+          style={{
+            padding: "28px 24px",
+            borderRadius: 24,
+            background: "#020202",
+            border: "1px solid rgba(255,255,255,0.04)",
+            boxShadow:
+              "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.02)",
+          }}
+        >
+        <div className="flex items-center justify-center gap-1.5 mb-7">
           {Array.from({ length: totalSteps }).map((_, i) => (
             <div
               key={i}
-              className={`h-1 rounded-full transition-all duration-500 ${
-                i < step
-                  ? "w-8 bg-white"
-                  : i === step
-                  ? "w-12 bg-white"
-                  : "w-8 bg-white/10"
-              }`}
+              className="h-1.5 rounded-full transition-all duration-500"
+              style={{
+                width: i === step ? 28 : 8,
+                background:
+                  i === step
+                    ? "rgba(255,255,255,0.92)"
+                    : i < step
+                    ? "rgba(255,255,255,0.45)"
+                    : "rgba(255,255,255,0.12)",
+              }}
             />
           ))}
         </div>
@@ -104,13 +150,26 @@ export default function OnboardingPage() {
               transition={{ duration: 0.4 }}
               className="text-center"
             >
-              <div className="inline-flex w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] items-center justify-center mb-6">
+              <div className="inline-flex w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] items-center justify-center mb-4">
                 <MapPin className="w-6 h-6 text-white/80" />
               </div>
-              <h1 className="text-[2rem] font-medium text-white mb-2 tracking-tight">
+              <h1
+                className="mb-2"
+                style={{
+                  fontSize: "1.55rem",
+                  fontWeight: 800,
+                  color: "#fff",
+                  letterSpacing: "-0.035em",
+                  lineHeight: 1.1,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              >
                 Where do you study?
               </h1>
-              <p className="text-white/52 mb-10">
+              <p
+                className="mb-6"
+                style={{ color: "rgba(255,255,255,0.52)", fontSize: "0.92rem" }}
+              >
                 We&apos;ll match your courses to your university&apos;s curriculum.
               </p>
 
@@ -149,13 +208,26 @@ export default function OnboardingPage() {
               transition={{ duration: 0.4 }}
               className="text-center"
             >
-              <div className="inline-flex w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] items-center justify-center mb-6">
+              <div className="inline-flex w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] items-center justify-center mb-4">
                 <GraduationCap className="w-6 h-6 text-white/80" />
               </div>
-              <h1 className="text-[2rem] font-medium text-white mb-2 tracking-tight">
+              <h1
+                className="mb-2"
+                style={{
+                  fontSize: "1.55rem",
+                  fontWeight: 800,
+                  color: "#fff",
+                  letterSpacing: "-0.035em",
+                  lineHeight: 1.1,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              >
                 What are you studying?
               </h1>
-              <p className="text-white/52 mb-10">
+              <p
+                className="mb-6"
+                style={{ color: "rgba(255,255,255,0.52)", fontSize: "0.92rem" }}
+              >
                 Alex will build your day-by-day semester plan for this degree.
               </p>
 
@@ -196,13 +268,26 @@ export default function OnboardingPage() {
               transition={{ duration: 0.4 }}
               className="text-center"
             >
-              <div className="inline-flex w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] items-center justify-center mb-6">
+              <div className="inline-flex w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] items-center justify-center mb-4">
                 <GraduationCap className="w-6 h-6 text-white/80" />
               </div>
-              <h1 className="text-[2rem] font-medium text-white mb-2 tracking-tight">
+              <h1
+                className="mb-2"
+                style={{
+                  fontSize: "1.55rem",
+                  fontWeight: 800,
+                  color: "#fff",
+                  letterSpacing: "-0.035em",
+                  lineHeight: 1.1,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              >
                 Which semester are you in?
               </h1>
-              <p className="text-white/52 mb-10">
+              <p
+                className="mb-6"
+                style={{ color: "rgba(255,255,255,0.52)", fontSize: "0.92rem" }}
+              >
                 We&apos;ll start your plan from the exact topic you&apos;re on.
               </p>
 
@@ -235,12 +320,11 @@ export default function OnboardingPage() {
           )}
         </AnimatePresence>
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between mt-10 max-w-xl mx-auto">
+        <div className="flex items-center justify-between mt-7">
           <button
             onClick={() => setStep(Math.max(0, step - 1))}
             disabled={step === 0}
-            className="text-white/52 hover:text-white text-[14.5px] font-medium px-4 py-2.5 disabled:opacity-30 disabled:hover:text-white/52 transition-colors"
+            className="text-white/52 hover:text-white text-[14px] font-medium px-3 py-2 disabled:opacity-30 disabled:hover:text-white/52 transition-colors"
           >
             ← Back
           </button>
@@ -251,7 +335,7 @@ export default function OnboardingPage() {
               disabled={
                 (step === 0 && !country) || (step === 1 && !degree)
               }
-              className="inline-flex items-center gap-2 bg-white hover:bg-white/95 text-black font-semibold text-[14.5px] px-6 py-3 rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="inline-flex items-center gap-2 bg-white hover:bg-white/95 text-black font-semibold text-[14px] px-5 py-2.5 rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               Continue
               <ArrowRight className="w-4 h-4" />
@@ -260,12 +344,13 @@ export default function OnboardingPage() {
             <button
               onClick={handleFinish}
               disabled={!semester || loading}
-              className="inline-flex items-center gap-2 bg-white hover:bg-white/95 text-black font-semibold text-[14.5px] px-6 py-3 rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="inline-flex items-center gap-2 bg-white hover:bg-white/95 text-black font-semibold text-[14px] px-5 py-2.5 rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? "Building your plan..." : "Start studying"}
               <ArrowRight className="w-4 h-4" />
             </button>
           )}
+        </div>
         </div>
       </div>
     </div>

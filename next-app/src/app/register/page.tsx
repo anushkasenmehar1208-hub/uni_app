@@ -53,7 +53,7 @@ export default function RegisterPage() {
 
   return (
     <AuthCard
-      title="Start studying with Alex"
+      title="Join Alex AI"
       subtitle="Free to start. No card needed."
       footer={
         <>
