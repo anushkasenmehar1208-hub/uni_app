@@ -59,6 +59,13 @@ a:focus:not(:focus-visible) {
   outline: none;
 }
 
+@media (max-width: 640px) {
+  .auth-card-panel {
+    width: 92vw !important;
+    padding: 24px 18px !important;
+  }
+}
+
 /* === Landing page global keyframes === */
 @keyframes landingFieldFloat {
   0%, 100% { transform: translate(0, 0); }

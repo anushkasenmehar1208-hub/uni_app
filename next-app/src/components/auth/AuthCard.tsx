@@ -58,39 +58,40 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
 
       <div
         className="relative flex flex-col items-center justify-center min-h-screen px-4 py-8"
-        style={{ zIndex: 3 }}
+        style={{ zIndex: 3, transform: "translateY(clamp(0px, 4vh, 44px))" }}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="w-full"
-          style={{ maxWidth: 400 }}
+          style={{ maxWidth: "min(90vw, 380px)" }}
         >
           <div
-            className="relative"
+            className="auth-card-panel relative"
             style={{
-              padding: "36px 32px 32px",
+              padding: "48px 36px",
               borderRadius: 24,
-              background: "#111111",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: "#020202",
+              border: "1px solid rgba(255,255,255,0.04)",
               boxShadow:
-                "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)",
+                "0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.02)",
             }}
           >
             <Link
               href="/"
-              className="flex items-center justify-center mb-7"
-              style={{ textDecoration: "none", gap: 12 }}
+              className="flex items-center justify-center"
+              style={{ textDecoration: "none", gap: 12, marginBottom: 44 }}
             >
               <div
                 className="flex items-center justify-center flex-shrink-0"
                 style={{
                   width: 48,
                   height: 48,
-                  borderRadius: 12,
+                  borderRadius: 14,
                   background: "#ffffff",
-                  boxShadow: "0 4px 16px rgba(255,255,255,0.1)",
+                  boxShadow:
+                    "inset 0 2px 4px rgba(0,0,0,0.1), 0 4px 12px rgba(255,255,255,0.15)",
                 }}
               >
                 <span style={{ color: "#000", fontWeight: 800, fontSize: 22 }}>
@@ -101,10 +102,11 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
                 <div
                   style={{
                     color: "#ffffff",
-                    fontSize: "1.125rem",
+                    fontSize: "1.5rem",
                     fontWeight: 700,
                     fontFamily: "'Space Grotesk', 'Plus Jakarta Sans', sans-serif",
-                    lineHeight: 1.2,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.08,
                   }}
                 >
                   Alex AI
@@ -112,9 +114,9 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
                 <div
                   style={{
                     color: "rgba(255,255,255,0.5)",
-                    fontSize: "0.875rem",
-                    lineHeight: 1.3,
-                    marginTop: 1,
+                    fontSize: "0.85rem",
+                    lineHeight: 1.2,
+                    marginTop: -4,
                   }}
                 >
                   {title}
@@ -128,9 +130,9 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
               <div
                 className="text-center"
                 style={{
-                  marginTop: 20,
+                  marginTop: 4,
                   color: "rgba(255,255,255,0.4)",
-                  fontSize: "0.875rem",
+                  fontSize: "0.82rem",
                 }}
               >
                 {footer}
@@ -158,7 +160,7 @@ function AuthLegalFooter() {
     </span>
   );
   return (
-    <div className="text-center px-4" style={{ marginTop: 40 }}>
+    <div className="text-center px-4" style={{ padding: "40px 0 20px" }}>
       <div className="flex items-center justify-center flex-wrap gap-3">
         <Link
           href="/return-policy"

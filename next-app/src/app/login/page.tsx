@@ -55,18 +55,18 @@ export default function LoginPage() {
         </>
       }
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         <GoogleButton />
 
-        <div className="flex items-center gap-3 text-white/40 text-[0.82rem]">
-          <div className="h-px flex-1 bg-white/[0.06]" />
-          <span>or</span>
-          <div className="h-px flex-1 bg-white/[0.06]" />
+        <div className="flex items-center py-2 text-white/40 text-[0.8rem] font-medium">
+          <div className="h-px flex-1 bg-white/[0.08]" />
+          <span className="px-3">or</span>
+          <div className="h-px flex-1 bg-white/[0.08]" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-white/64 text-[0.85rem] mb-1.5 font-medium">
+            <label className="block text-white/[0.45] text-[0.78rem] mb-0.5 font-medium">
               Username
             </label>
             <input
@@ -76,12 +76,12 @@ export default function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="alex.doe"
-              className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-white/[0.2] rounded-xl px-4 py-3 text-white placeholder:text-white/30 text-[0.95rem] outline-none transition-colors"
+              className="h-[38px] w-full rounded-[10px] border border-white/[0.08] bg-white/[0.04] px-3.5 text-[0.88rem] text-white placeholder:text-white/30 outline-none transition-colors focus:border-white/[0.2]"
             />
           </div>
 
           <div>
-            <label className="block text-white/64 text-[0.85rem] mb-1.5 font-medium">
+            <label className="block text-white/[0.45] text-[0.78rem] mb-0.5 font-medium">
               Password
             </label>
             <div className="relative">
@@ -92,17 +92,17 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-white/[0.2] rounded-xl px-4 py-3 pr-11 text-white placeholder:text-white/30 text-[0.95rem] outline-none transition-colors"
+                className="h-[38px] w-full rounded-[10px] border border-white/[0.08] bg-white/[0.04] px-3.5 pr-10 text-[0.88rem] text-white placeholder:text-white/30 outline-none transition-colors focus:border-white/[0.2]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80 transition-colors p-1"
+                className="absolute right-[10px] top-1/2 flex h-5 -translate-y-1/2 items-center border-none bg-transparent p-0 text-white/[0.35] transition-colors hover:text-white/70"
               >
                 {showPassword ? (
-                  <EyeOff className="w-4.5 h-4.5" />
+                  <EyeOff size={15} />
                 ) : (
-                  <Eye className="w-4.5 h-4.5" />
+                  <Eye size={15} />
                 )}
               </button>
             </div>
@@ -117,7 +117,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white hover:bg-white/95 text-black font-semibold text-[14.5px] py-3 rounded-full transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="h-[46px] w-full rounded-[10px] bg-white text-[14px] font-bold text-black transition-colors hover:bg-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ marginTop: 18 }}
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
@@ -125,7 +126,7 @@ export default function LoginPage() {
           <div className="text-center">
             <Link
               href="/forgot-password"
-              className="text-white/52 hover:text-white/80 text-[0.88rem] transition-colors"
+              className="text-white/40 hover:text-white/80 text-[0.82rem] transition-colors"
             >
               Forgot password?
             </Link>

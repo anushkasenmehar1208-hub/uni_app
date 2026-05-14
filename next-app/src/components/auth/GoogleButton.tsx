@@ -22,7 +22,7 @@ export function GoogleButton({
     <button
       type="button"
       onClick={handleClick}
-      className="w-full flex items-center justify-center gap-3 bg-white hover:bg-white/95 text-black font-semibold text-[14.5px] py-3 rounded-full transition-all hover:scale-[1.01] active:scale-[0.99] shadow-[0_4px_16px_rgba(255,255,255,0.08)]"
+      className="w-full h-[46px] flex items-center justify-center gap-3 bg-white hover:bg-[#f5f5f5] text-black font-semibold text-[14px] rounded-[10px] border border-white/[0.1] transition-all hover:-translate-y-px active:translate-y-0 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
     >
       <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
         <path
