@@ -3465,10 +3465,14 @@ GUEST_USER_ID_BASE = 1_500_000_000
 GUEST_USER_ID_SPAN = 450_000_000
 BUSINESS_NAME = "Alex AI"
 SUPPORT_EMAIL = "support.alexstudies@gmail.com"
-# Landing hero: four preview thumbnails in a row. Optional env override:
-# LANDING_HERO_STRIP_IMAGES="/a.png,/b.png,/c.png,/d.png" (comma-separated, first four used).
-def _landing_hero_strip_sources() -> tuple[str, ...]:
-    raw = (os.getenv("LANDING_HERO_STRIP_IMAGES") or "").strip()
+# Landing lower preview strip. Optional env override:
+# LANDING_PREVIEW_STRIP_IMAGES="/a.png,/b.png,/c.png,/d.png" (comma-separated, first four used).
+def _landing_preview_strip_sources() -> tuple[str, ...]:
+    raw = (
+        os.getenv("LANDING_PREVIEW_STRIP_IMAGES")
+        or os.getenv("LANDING_HERO_STRIP_IMAGES")
+        or ""
+    ).strip()
     if raw:
         parts = [p.strip() for p in raw.split(",") if p.strip()]
         if len(parts) >= 4:
@@ -3479,14 +3483,14 @@ def _landing_hero_strip_sources() -> tuple[str, ...]:
                 padded.append(padded[-1])
             return tuple(padded[:4])
     return (
-        "/landing-hero-1.png",
-        "/landing-hero-2.png",
-        "/landing-hero-3.png",
-        "/landing-hero-4.png",
+        "/landing-chat-demo.png",
+        "/landing-semester-demo.png",
+        "/landing-voice-demo.png",
+        "/landing-models-demo.png",
     )
 
 
-LANDING_HERO_STRIP_IMAGES: tuple[str, ...] = _landing_hero_strip_sources()
+LANDING_PREVIEW_STRIP_IMAGES: tuple[str, ...] = _landing_preview_strip_sources()
 SUPPORT_PHONE = "+94 767104776"
 SUPPORT_PHONE_LINK = "tel:+94767104776"
 BUSINESS_LOCATION = "Colombo, Sri Lanka"
@@ -27147,39 +27151,8 @@ def landing_page():
             custom_attrs={"data-landing-animate": "sub"},
         ),
         rx.hstack(
-            *[
-                rx.box(
-                    rx.image(
-                        src=src,
-                        alt="Alex AI preview",
-                        width="100%",
-                        height="100%",
-                        object_fit="cover",
-                    ),
-                    flex="1",
-                    min_width="0",
-                    width=rx.breakpoints(initial="calc(50% - 6px)", md="calc(25% - 9px)"),
-                    max_width=rx.breakpoints(initial="calc(50% - 6px)", md="calc(25% - 9px)"),
-                    height=rx.breakpoints(initial="104px", md="132px"),
-                    border_radius="16px",
-                    overflow="hidden",
-                    border="1px solid rgba(255,255,255,0.1)",
-                    background="rgba(255,255,255,0.03)",
-                    box_shadow="0 14px 40px rgba(0,0,0,0.28)",
-                )
-                for src in LANDING_HERO_STRIP_IMAGES
-            ],
-            spacing="3",
-            justify="center",
-            align="center",
-            width="100%",
-            max_width="920px",
-            flex_wrap="wrap",
-            custom_attrs={"data-landing-animate": "strip"},
-        ),
-        rx.hstack(
             hero_button(
-                "Generate My Study Plan",
+                "Start My Study Plan",
                 SELECTION_ROUTE,
                 "solid",
                 "start_study_plan_click",
@@ -27192,7 +27165,7 @@ def landing_page():
             custom_attrs={"data-landing-animate": "actions"},
         ),
         rx.hstack(
-            proof_chip("100+ students started studying with Alex AI", "proof"),
+            proof_chip("Now in early access — be one of our first 500 students", "proof"),
             justify="center",
             width="100%",
             custom_attrs={"data-landing-animate": "proof"},
@@ -27205,6 +27178,38 @@ def landing_page():
         margin="0 auto",
         position="relative",
         z_index="4",
+    )
+
+    preview_strip = rx.hstack(
+        *[
+            rx.box(
+                rx.image(
+                    src=src,
+                    alt="Alex AI preview",
+                    width="100%",
+                    height="100%",
+                    object_fit="cover",
+                ),
+                flex="1",
+                min_width="0",
+                width=rx.breakpoints(initial="calc(50% - 6px)", md="calc(25% - 9px)"),
+                max_width=rx.breakpoints(initial="calc(50% - 6px)", md="calc(25% - 9px)"),
+                height=rx.breakpoints(initial="104px", md="132px"),
+                border_radius="16px",
+                overflow="hidden",
+                border="1px solid rgba(255,255,255,0.1)",
+                background="rgba(255,255,255,0.03)",
+                box_shadow="0 14px 40px rgba(0,0,0,0.28)",
+            )
+            for src in LANDING_PREVIEW_STRIP_IMAGES
+        ],
+        spacing="3",
+        justify="center",
+        align="center",
+        width="100%",
+        max_width="920px",
+        flex_wrap="wrap",
+        custom_attrs={"data-landing-animate": "strip"},
     )
 
     logo_video = rx.center(
@@ -27276,6 +27281,7 @@ def landing_page():
                 box_shadow="0 32px 90px rgba(0,0,0,0.36)",
                 margin="0 auto",
             ),
+            preview_strip,
             spacing="5",
             align_items="center",
             width="100%",
