@@ -65,12 +65,12 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="w-full"
-          style={{ maxWidth: 430 }}
+          style={{ maxWidth: 400 }}
         >
           <div
             className="relative"
             style={{
-              padding: "32px 28px 28px",
+              padding: "36px 32px 32px",
               borderRadius: 24,
               background: "#111111",
               border: "1px solid rgba(255,255,255,0.1)",
