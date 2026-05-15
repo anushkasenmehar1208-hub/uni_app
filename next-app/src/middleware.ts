@@ -54,15 +54,17 @@ export async function middleware(req: NextRequest) {
   resHeaders.delete("transfer-encoding");
 
   // Reflex generates Location headers using the request Host, which is
-  // backend.alexstudies.com under our proxy. Rewrite to a same-origin
-  // relative path so redirects stay on alexstudies.com.
+  // backend.alexstudies.com under our proxy. Rewrite to the original
+  // request origin so redirects stay on alexstudies.com. Edge runtime
+  // rejects relative Locations, so we keep the URL absolute.
   const loc = resHeaders.get("location");
   if (loc) {
+    const requestOrigin = req.nextUrl.origin;
     const rewritten = loc.replace(
       /^https?:\/\/backend\.alexstudies\.com/i,
-      ""
+      requestOrigin
     );
-    if (rewritten !== loc) resHeaders.set("location", rewritten || "/");
+    if (rewritten !== loc) resHeaders.set("location", rewritten);
   }
 
   return new NextResponse(upstreamRes.body, {
