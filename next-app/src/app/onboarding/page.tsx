@@ -421,7 +421,7 @@ export default function OnboardingPage() {
         "Content-Type": "application/json",
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
-      const res = await fetch("/api/onboarding/complete", {
+      await fetch("/api/onboarding/complete", {
         method: "POST",
         headers,
         body: JSON.stringify({ country, degree, pathway: pathway || null, semester }),

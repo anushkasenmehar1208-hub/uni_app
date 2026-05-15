@@ -21,13 +21,21 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username,
+          password,
+          guestToken:
+            typeof window !== "undefined"
+              ? window.localStorage.getItem("alex_guest_token") ?? ""
+              : "",
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.token) {
         // Sync Reflex auth: it reads this localStorage key on app load.
         try {
           localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
+          localStorage.removeItem("alex_guest_token");
         } catch {}
         // Reflex's /app handles onboarding (selecting degree/semester)
         // for new users and routes already-onboarded users to their

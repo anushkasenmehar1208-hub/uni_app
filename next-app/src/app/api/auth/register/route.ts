@@ -6,6 +6,7 @@ import {
   createSession,
   createUser,
   findUserByUsername,
+  migrateGuestMemoryToUser,
   storeUserProfileEmail,
 } from "@/lib/auth";
 
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
     const username = String(body?.username ?? "").trim();
     const email = String(body?.email ?? "").trim();
     const password = String(body?.password ?? "");
+    const guestToken = String(body?.guestToken ?? "").trim();
 
     if (!username || !email || !password) {
       return NextResponse.json(
@@ -52,6 +54,7 @@ export async function POST(req: NextRequest) {
 
     const user = await createUser(username, password);
     await storeUserProfileEmail(user.id, email);
+    await migrateGuestMemoryToUser(guestToken, user.id);
     const sessionId = await createSession(user.id);
 
     const res = NextResponse.json({

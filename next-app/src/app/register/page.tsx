@@ -33,12 +33,21 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          guestToken:
+            typeof window !== "undefined"
+              ? window.localStorage.getItem("alex_guest_token") ?? ""
+              : "",
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.token) {
         try {
           localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
+          localStorage.removeItem("alex_guest_token");
         } catch {}
         // Skip Next.js /onboarding — Reflex's /app handles the
         // country/degree/semester picker and binds it to the chat.

@@ -5,6 +5,7 @@ import {
   AUTH_TOKEN_LOCAL_STORAGE_KEY,
   createSession,
   findUserByUsername,
+  migrateGuestMemoryToUser,
   verifyPassword,
 } from "@/lib/auth";
 
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const username = String(body?.username ?? "").trim();
     const password = String(body?.password ?? "");
+    const guestToken = String(body?.guestToken ?? "").trim();
 
     if (!username || !password) {
       return NextResponse.json(
@@ -38,6 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionId = await createSession(user.id);
+    await migrateGuestMemoryToUser(guestToken, user.id);
 
     const res = NextResponse.json({
       ok: true,
