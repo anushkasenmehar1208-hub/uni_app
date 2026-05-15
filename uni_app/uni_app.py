@@ -14592,6 +14592,19 @@ Course units to cover:\n{courses_text}"""
             return
         if uid < 0 or (not has_typed_message and not has_image_attached and not has_document_attached):
             return
+        # If the profile didn't get hydrated into state (e.g. user
+        # arrived via the Next.js onboarding flow before on_load_scope_page
+        # finished loading the degree), load it now so the system prompt
+        # has the right degree/year/semester context.
+        if not (self.degree or "").strip():
+            real_uid = self._uid()
+            try:
+                if real_uid >= 0:
+                    self._load_profile(real_uid)
+                else:
+                    self._load_guest_memory(uid)
+            except Exception as e:
+                print(f"[send_message] profile reload error: {e}")
         self.is_processing = True
 
         # Scope safety: ensure current session belongs to active scope.
