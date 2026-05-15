@@ -384,9 +384,21 @@ export default function OnboardingPage() {
     if (!canFinish) return;
     setLoading(true);
     try {
+      // Google OAuth users only have the token in localStorage (no
+      // cookie), so forward it explicitly. Reflex stores the token
+      // as a JSON-quoted string, so strip the quotes if present.
+      const rawToken =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("_auth_token") ?? ""
+          : "";
+      const token = rawToken.replace(/^"|"$/g, "");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       await fetch("/api/onboarding/complete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ country, degree, pathway: pathway || null, semester }),
       });
       window.location.href = "/app";

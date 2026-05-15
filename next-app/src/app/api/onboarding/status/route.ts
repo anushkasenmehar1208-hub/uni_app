@@ -6,10 +6,21 @@ import { sql } from "@/lib/db";
 
 // Debug endpoint: returns the current user's UserProfile/UserMemory
 // state so we can verify whether onboarding writes are landing.
+function readToken(req: NextRequest): string | null {
+  const fromCookie = req.cookies.get(AUTH_TOKEN_LOCAL_STORAGE_KEY)?.value;
+  if (fromCookie) return fromCookie;
+  const auth = req.headers.get("authorization") ?? "";
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : null;
+}
+
 export async function GET(req: NextRequest) {
-  const sessionId = req.cookies.get(AUTH_TOKEN_LOCAL_STORAGE_KEY)?.value;
+  const sessionId = readToken(req);
   if (!sessionId) {
-    return NextResponse.json({ error: "no session cookie" }, { status: 401 });
+    return NextResponse.json(
+      { error: "no token in cookie or header" },
+      { status: 401 }
+    );
   }
   const userId = await getSessionUserId(sessionId);
   if (!userId) {

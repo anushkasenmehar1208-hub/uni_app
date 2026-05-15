@@ -43,11 +43,22 @@ function semesterToYear(semester: string): string {
   return "Year 4";
 }
 
+function readToken(req: NextRequest): string | null {
+  // Cookie set by the Next.js login route.
+  const fromCookie = req.cookies.get(AUTH_TOKEN_LOCAL_STORAGE_KEY)?.value;
+  if (fromCookie) return fromCookie;
+  // Fallback: client passes the localStorage token (set by Reflex/Google
+  // OAuth) via Authorization: Bearer <token>.
+  const auth = req.headers.get("authorization") ?? "";
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : null;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const sessionId = req.cookies.get(AUTH_TOKEN_LOCAL_STORAGE_KEY)?.value;
+    const sessionId = readToken(req);
     if (!sessionId) {
-      console.log("[onboarding/complete] no session cookie");
+      console.log("[onboarding/complete] no token in cookie or header");
       return NextResponse.json(
         { error: "Not authenticated." },
         { status: 401 }
