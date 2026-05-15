@@ -37393,7 +37393,12 @@ async def google_callback(request: Request):
                 LocalAuthSession(
                     user_id=int(user.id),
                     session_id=auth_token,
-                    expiration=datetime.now(timezone.utc) + timedelta(seconds=GOOGLE_COMPLETE_TOKEN_MAX_AGE_SECONDS),
+                    # Long-lived session (90 days) — this token IS the auth
+                    # token the browser keeps in localStorage. Originally
+                    # short-lived because handle_google_complete used to
+                    # exchange it for a long-lived one, but our simpler
+                    # post-login bridge skips that step.
+                    expiration=datetime.now(timezone.utc) + timedelta(seconds=AUTH_SESSION_MAX_AGE_SECONDS),
                 )
             )
             session.commit()
