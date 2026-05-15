@@ -7390,7 +7390,14 @@ class AppState(reflex_local_auth.LocalAuthState):
         state = unquote(str(self.router.page.params.get("state", "") or "")).strip()
         origin_b64 = str(self.router.page.params.get("origin_b64", "") or "").strip()
         state_payload = _google_parse_state(state)
-        expected_nonce = str((self.router.cookies or {}).get(GOOGLE_STATE_COOKIE_NAME, "") or "").strip()
+        # RouterData.cookies was removed in Reflex 0.8.x. Fall back to the
+        # in-memory nonce; the real OAuth state validation lives in the
+        # FastAPI google_callback handler (which has access to the request
+        # cookies), so this SPA path is just a safety net.
+        try:
+            expected_nonce = str((self.router.cookies or {}).get(GOOGLE_STATE_COOKIE_NAME, "") or "").strip()
+        except AttributeError:
+            expected_nonce = ""
         if not expected_nonce:
             expected_nonce = (self.google_oauth_nonce or "").strip()
 

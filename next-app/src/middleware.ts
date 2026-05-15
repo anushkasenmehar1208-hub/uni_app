@@ -86,7 +86,14 @@ export async function middleware(req: NextRequest) {
     pathname === "/ping" ||
     pathname === "/_health" ||
     pathname === "/_all_routes" ||
-    pathname === "/auth-codespace";
+    pathname === "/auth-codespace" ||
+    // FastAPI OAuth endpoints — /auth/google/start and /auth/google/callback
+    // are registered as both FastAPI routes AND SPA pages, but the FastAPI
+    // handler is the one that does the real work (302 to Google / consume
+    // the code). Adding a trailing slash makes Reflex serve the SPA page
+    // instead, which crashes on self.router.cookies (deprecated in 0.8.x).
+    pathname === "/auth/google/start" ||
+    pathname === "/auth/google/callback";
   const upstreamPath =
     !hasExtension && !isApiRoute && !pathname.endsWith("/")
       ? `${pathname}/`
