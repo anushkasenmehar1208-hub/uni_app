@@ -421,12 +421,20 @@ export default function OnboardingPage() {
         "Content-Type": "application/json",
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
-      await fetch("/api/onboarding/complete", {
+      const res = await fetch("/api/onboarding/complete", {
         method: "POST",
         headers,
         body: JSON.stringify({ country, degree, pathway: pathway || null, semester }),
       });
-      window.location.href = "/app";
+      // Reflex's /app shows its own onboarding form briefly while it
+      // waits for state to hydrate from UserMemory — landing the user
+      // on the scope route directly skips that flash entirely. The
+      // semester state is already in y{N}s{M} form.
+      if (res.ok) {
+        window.location.href = `/s/${semester}`;
+      } else {
+        window.location.href = "/app";
+      }
     } catch {
       window.location.href = "/app";
     }
