@@ -7490,7 +7490,9 @@ class AppState(reflex_local_auth.LocalAuthState):
             f"""
         (function() {{
             try {{
-                localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
+                // JSON.stringify so rx.LocalStorage (which JSON.parses on read)
+                // sees the same encoding the Next.js login route produces.
+                localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, JSON.stringify({json.dumps(new_token)}));
                 localStorage.removeItem({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)});
             }} catch(e) {{}}
             setTimeout(function() {{ window.location.replace('/'); }}, 60);
@@ -7563,7 +7565,8 @@ class AppState(reflex_local_auth.LocalAuthState):
         yield rx.call_script(f"""
     (function() {{
         try {{
-            localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
+            // JSON.stringify so rx.LocalStorage decodes cleanly on read.
+            localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, JSON.stringify({json.dumps(new_token)}));
             localStorage.removeItem({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)});
         }} catch(e) {{}}
         setTimeout(function() {{ window.location.replace('/'); }}, 150);
@@ -37410,7 +37413,11 @@ async def google_callback(request: Request):
 	    <script>
 	      (function() {{
 	        try {{
-	          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
+	          // JSON.stringify wraps the token in quotes so rx.LocalStorage
+	          // (and other JSON.parse readers) decode it cleanly. Storing
+	          // the raw token without quotes makes Reflex's auth check see
+	          // an empty string, treating the user as a guest.
+	          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, JSON.stringify({json.dumps(auth_token)}));
 	          localStorage.setItem('alex_ga_auth_method', 'google');
 	        }} catch (e) {{}}
 	        window.location.replace("/auth/post-login");
