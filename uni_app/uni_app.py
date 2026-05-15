@@ -7255,6 +7255,11 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def on_load_post_login_bridge(self):
+        # Without this guard rx.LocalStorage hasn't yet propagated the
+        # auth token onto the WS state, so _uid() returns -1 and the
+        # user gets bounced to /login moments after Google OAuth.
+        if not self.is_hydrated:
+            return
         uid = self._uid()
         self._cached_uid = uid
         if uid < 0:
