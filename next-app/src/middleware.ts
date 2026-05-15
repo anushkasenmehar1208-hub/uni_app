@@ -53,6 +53,18 @@ export async function middleware(req: NextRequest) {
   resHeaders.delete("content-length");
   resHeaders.delete("transfer-encoding");
 
+  // Reflex generates Location headers using the request Host, which is
+  // backend.alexstudies.com under our proxy. Rewrite to a same-origin
+  // relative path so redirects stay on alexstudies.com.
+  const loc = resHeaders.get("location");
+  if (loc) {
+    const rewritten = loc.replace(
+      /^https?:\/\/backend\.alexstudies\.com/i,
+      ""
+    );
+    if (rewritten !== loc) resHeaders.set("location", rewritten || "/");
+  }
+
   return new NextResponse(upstreamRes.body, {
     status: upstreamRes.status,
     statusText: upstreamRes.statusText,
