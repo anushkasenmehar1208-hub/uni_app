@@ -5772,7 +5772,6 @@ class AppState(reflex_local_auth.LocalAuthState):
     show_pathway_panel: bool = False
     show_subject_switcher: bool = False
     is_started: bool = False
-    app_dashboard_loaded: bool = False
 
     streak: int = 1
     selected_year: str = ""
@@ -12899,7 +12898,6 @@ Quality rules:
 
     @rx.event
     async def on_load(self):
-        self.app_dashboard_loaded = False
         if not self.is_hydrated:
             return
         uid = self._uid()
@@ -12955,7 +12953,6 @@ Quality rules:
             self.step = 4
         elif self.step >= 5 and not self.selected_semester:
             self.step = 5
-        self.app_dashboard_loaded = True
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
     @rx.event
@@ -31403,11 +31400,7 @@ def landing_page():
 def app_dashboard_page():
     # on_load redirects started users to /app/home or /app/y1s1 etc.
     # This page only renders for users still in onboarding.
-    return rx.cond(
-        AppState.app_dashboard_loaded,
-        onboarding_page(),
-        _app_shell_loading_gate(),
-    )
+    return onboarding_page()
 
 
 @rx.page(
