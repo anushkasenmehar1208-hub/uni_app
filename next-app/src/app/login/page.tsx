@@ -29,10 +29,11 @@ export default function LoginPage() {
         try {
           localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
         } catch {}
-        // Send users through the Next.js onboarding flow. That page
-        // itself checks status and skips to /app for already-onboarded
-        // users — so returning users never see the form again.
-        window.location.href = "/onboarding";
+        // Reflex's /app handles onboarding (selecting degree/semester)
+        // for new users and routes already-onboarded users to their
+        // semester. Skipping the Next.js /onboarding avoids the
+        // dropped-context bug where the chat didn't know the degree.
+        window.location.href = "/app";
       } else {
         setError(data.error || "Invalid username or password.");
       }
