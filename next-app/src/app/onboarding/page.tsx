@@ -426,12 +426,13 @@ export default function OnboardingPage() {
         headers,
         body: JSON.stringify({ country, degree, pathway: pathway || null, semester }),
       });
-      // The ?onboarded=1 flag tells the middleware to resolve the
-      // user's scope server-side and 302 directly to /s/y1s1 etc.,
-      // skipping Reflex's hydration race condition (which otherwise
-      // either lands the user on /select or shows the onboarding
-      // form on /app).
-      window.location.href = "/app?onboarded=1";
+      // The ?onboarded=1&scope=y1s1 flag tells the middleware to 302
+      // directly to /s/y{N}s{M}, skipping Reflex's hydration race
+      // (which otherwise lands the user on /select or shows the
+      // onboarding form on /app). We include the scope in the URL
+      // because Safari Private doesn't reliably set our auth cookie,
+      // so the middleware can't look it up via the status endpoint.
+      window.location.href = `/app?onboarded=1&scope=${encodeURIComponent(semester)}`;
     } catch {
       window.location.href = "/app";
     }

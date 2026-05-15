@@ -25,12 +25,16 @@ function isNextPath(pathname: string): boolean {
 export async function middleware(req: NextRequest) {
   const { pathname, search, origin } = req.nextUrl;
 
-  // After Next.js /onboarding redirects here with ?onboarded=1, look up
-  // the user's saved scope via our status endpoint and redirect to the
-  // workspace route server-side. This bypasses Reflex's race condition
-  // where rx.LocalStorage hasn't synced when on_load fires — by the time
-  // we redirect, the URL is final and the auth token loads cleanly.
+  // After Next.js /onboarding redirects here with ?onboarded=1, send
+  // the user straight to their workspace route. The scope is passed
+  // in the URL (?scope=y1s1) because Safari Private doesn't reliably
+  // persist the auth cookie, so we can't always look it up server-side.
+  // Cookie lookup is the fallback for clients that do send it.
   if (pathname === "/app" && req.nextUrl.searchParams.has("onboarded")) {
+    const scopeParam = req.nextUrl.searchParams.get("scope") ?? "";
+    if (/^y\d+s\d+$/.test(scopeParam)) {
+      return NextResponse.redirect(new URL(`/s/${scopeParam}`, origin));
+    }
     const cookie = req.cookies.get("_auth_token")?.value;
     if (cookie) {
       try {
