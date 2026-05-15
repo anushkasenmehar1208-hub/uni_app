@@ -426,11 +426,12 @@ export default function OnboardingPage() {
         headers,
         body: JSON.stringify({ country, degree, pathway: pathway || null, semester }),
       });
-      // Reflex's /app on_load waits for is_hydrated (so localStorage
-      // is synced before the auth check), then redirects auth'd users
-      // with is_started=true straight to their scope. /s/* routes
-      // don't wait for hydration and race into guest-mode redirects.
-      window.location.href = "/app";
+      // The ?onboarded=1 flag tells the middleware to resolve the
+      // user's scope server-side and 302 directly to /s/y1s1 etc.,
+      // skipping Reflex's hydration race condition (which otherwise
+      // either lands the user on /select or shows the onboarding
+      // form on /app).
+      window.location.href = "/app?onboarded=1";
     } catch {
       window.location.href = "/app";
     }

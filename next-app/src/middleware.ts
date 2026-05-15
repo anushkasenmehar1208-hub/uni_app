@@ -23,7 +23,44 @@ function isNextPath(pathname: string): boolean {
 }
 
 export async function middleware(req: NextRequest) {
-  const { pathname, search } = req.nextUrl;
+  const { pathname, search, origin } = req.nextUrl;
+
+  // After Next.js /onboarding redirects here with ?onboarded=1, look up
+  // the user's saved scope via our status endpoint and redirect to the
+  // workspace route server-side. This bypasses Reflex's race condition
+  // where rx.LocalStorage hasn't synced when on_load fires — by the time
+  // we redirect, the URL is final and the auth token loads cleanly.
+  if (pathname === "/app" && req.nextUrl.searchParams.has("onboarded")) {
+    const cookie = req.cookies.get("_auth_token")?.value;
+    if (cookie) {
+      try {
+        const statusRes = await fetch(`${origin}/api/onboarding/status`, {
+          headers: { Authorization: `Bearer ${cookie}` },
+        });
+        if (statusRes.ok) {
+          const data = (await statusRes.json()) as {
+            memory?: {
+              is_started?: boolean;
+              selected_year?: string;
+              selected_semester?: string;
+            };
+          };
+          const m = data.memory;
+          if (m?.is_started && m.selected_year && m.selected_semester) {
+            const y = m.selected_year.match(/\d+/)?.[0];
+            const s = m.selected_semester.match(/\d+/)?.[0];
+            if (y && s) {
+              return NextResponse.redirect(
+                new URL(`/s/y${y}s${s}`, origin)
+              );
+            }
+          }
+        }
+      } catch {
+        // Fall through to normal proxy if the lookup fails.
+      }
+    }
+  }
 
   if (isNextPath(pathname)) {
     return NextResponse.next();
