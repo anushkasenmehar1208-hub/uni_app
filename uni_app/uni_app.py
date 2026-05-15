@@ -12874,24 +12874,6 @@ Quality rules:
 
     @rx.event
     async def on_load(self):
-        # Fast path: short-circuit the rx.LocalStorage sync race entirely
-        # by letting client-side JS check /api/onboarding/status and
-        # navigate. Reflex's own state hydration races meant onboarded
-        # users sometimes saw the onboarding form on /app and never
-        # got redirected.
-        yield rx.call_script(
-            "(async function(){try{var raw=localStorage.getItem('_auth_token');if(!raw){return;}"
-            "var token;try{token=JSON.parse(raw);}catch(e){token=raw;}"
-            "if(!token){return;}"
-            "var res=await fetch('/api/onboarding/status',{headers:{'Authorization':'Bearer '+token}});"
-            "if(!res.ok){return;}"
-            "var data=await res.json();var m=data&&data.memory;"
-            "if(m&&m.is_started&&m.selected_year&&m.selected_semester){"
-            "var y=(m.selected_year.match(/\\\\d+/)||[])[0];"
-            "var s=(m.selected_semester.match(/\\\\d+/)||[])[0];"
-            "if(y&&s){window.location.replace('/s/y'+y+'s'+s);}"
-            "}}catch(e){}})();"
-        )
         if not self.is_hydrated:
             return
         uid = self._uid()
