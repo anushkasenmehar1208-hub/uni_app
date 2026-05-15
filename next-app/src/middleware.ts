@@ -70,13 +70,27 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Reflex page routes all want a trailing slash; without one the
-  // backend 307s to add it, which combined with Next.js's default
-  // trailingSlash:false strip becomes an infinite loop. Static assets
-  // (anything with a file extension) keep their literal path.
+  // Reflex SPA page routes want a trailing slash (without one the
+  // backend 307s to add it, infinite-looping with Next.js's default
+  // strip). FastAPI routes (/oauth/*, /api/*, /_event/*, /_upload/*,
+  // /stripe/*, /ping, /_health, /_all_routes, /auth-codespace) are
+  // matched literally without slash. Static assets (file extension)
+  // are also kept as-is.
   const hasExtension = /\.[a-zA-Z0-9]+$/.test(pathname);
+  const isApiRoute =
+    pathname.startsWith("/oauth/") ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/_event") ||
+    pathname.startsWith("/_upload") ||
+    pathname.startsWith("/stripe/") ||
+    pathname === "/ping" ||
+    pathname === "/_health" ||
+    pathname === "/_all_routes" ||
+    pathname === "/auth-codespace";
   const upstreamPath =
-    !hasExtension && !pathname.endsWith("/") ? `${pathname}/` : pathname;
+    !hasExtension && !isApiRoute && !pathname.endsWith("/")
+      ? `${pathname}/`
+      : pathname;
   const upstream = `${REFLEX_BACKEND_URL}${upstreamPath}${search}`;
 
   const headers = new Headers(req.headers);
