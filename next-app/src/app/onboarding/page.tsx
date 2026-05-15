@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
 
@@ -347,6 +347,31 @@ export default function OnboardingPage() {
   const [semester, setSemester] = useState("");
   const [semesterOpen, setSemesterOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  // True until the status check confirms the user still needs to
+  // onboard — keeps the form hidden so already-onboarded users don't
+  // see a flash before the /app redirect kicks in.
+  const [checkingStatus, setCheckingStatus] = useState(true);
+
+  useEffect(() => {
+    const rawToken =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("_auth_token") ?? ""
+        : "";
+    const token = rawToken.replace(/^"|"$/g, "");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch("/api/onboarding/status", { headers })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const m = data?.memory;
+        if (m && m.is_started && m.degree && m.selected_year && m.selected_semester) {
+          window.location.href = "/app";
+          return;
+        }
+        setCheckingStatus(false);
+      })
+      .catch(() => setCheckingStatus(false));
+  }, []);
 
   const visibleDegrees = useMemo(
     () => degrees.filter((item) => item.countries.includes(country)),
@@ -405,6 +430,15 @@ export default function OnboardingPage() {
     } catch {
       window.location.href = "/app";
     }
+  }
+
+  if (checkingStatus) {
+    return (
+      <div
+        className="relative flex h-dvh min-h-screen items-center justify-center"
+        style={{ background: "#000000" }}
+      />
+    );
   }
 
   return (

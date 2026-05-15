@@ -29,7 +29,10 @@ export default function LoginPage() {
         try {
           localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
         } catch {}
-        window.location.href = "/app";
+        // Send users through the Next.js onboarding flow. That page
+        // itself checks status and skips to /app for already-onboarded
+        // users — so returning users never see the form again.
+        window.location.href = "/onboarding";
       } else {
         setError(data.error || "Invalid username or password.");
       }
