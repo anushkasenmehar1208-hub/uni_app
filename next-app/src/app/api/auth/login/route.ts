@@ -7,7 +7,6 @@ import {
   findUserByUsername,
   verifyPassword,
 } from "@/lib/auth";
-import { getOnboardingState } from "@/lib/onboarding";
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,13 +38,11 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionId = await createSession(user.id);
-    const onboarding = await getOnboardingState(user.id);
 
     const res = NextResponse.json({
       ok: true,
       token: sessionId,
       tokenKey: AUTH_TOKEN_LOCAL_STORAGE_KEY,
-      redirectTo: onboarding.redirectTo ?? "/app",
     });
 
     // Also set as a cookie for any server-side Next.js auth checks.

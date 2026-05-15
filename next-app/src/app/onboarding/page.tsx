@@ -363,8 +363,9 @@ export default function OnboardingPage() {
     fetch("/api/onboarding/status", { headers })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (typeof data?.redirectTo === "string" && data.redirectTo.startsWith("/")) {
-          window.location.href = data.redirectTo;
+        const m = data?.memory;
+        if (m && m.is_started && m.degree && m.selected_year && m.selected_semester) {
+          window.location.href = "/app";
           return;
         }
         setCheckingStatus(false);
@@ -420,7 +421,7 @@ export default function OnboardingPage() {
         "Content-Type": "application/json",
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
-      await fetch("/api/onboarding/complete", {
+      const res = await fetch("/api/onboarding/complete", {
         method: "POST",
         headers,
         body: JSON.stringify({ country, degree, pathway: pathway || null, semester }),

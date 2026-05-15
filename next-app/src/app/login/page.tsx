@@ -29,11 +29,11 @@ export default function LoginPage() {
         try {
           localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
         } catch {}
-        const redirectTo =
-          typeof data.redirectTo === "string" && data.redirectTo.startsWith("/")
-            ? data.redirectTo
-            : "/app";
-        window.location.href = redirectTo;
+        // Reflex's /app handles onboarding (selecting degree/semester)
+        // for new users and routes already-onboarded users to their
+        // semester. Skipping the Next.js /onboarding avoids the
+        // dropped-context bug where the chat didn't know the degree.
+        window.location.href = "/app";
       } else {
         setError(data.error || "Invalid username or password.");
       }

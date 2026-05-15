@@ -7257,11 +7257,24 @@ class AppState(reflex_local_auth.LocalAuthState):
     async def on_load_post_login_bridge(self):
         # localStorage is populated by the FastAPI Google callback BEFORE
         # navigating here, but rx.LocalStorage takes a moment to sync into
-        # self.auth_token over the WebSocket. Read the token directly and ask
-        # Next for the saved onboarding destination before falling back to /app.
+        # self.auth_token over the WebSocket. Read the token directly from
+        # localStorage via JS and navigate — this avoids the sync race
+        # entirely. The /app or /s/* destination then resolves auth via
+        # its own _uid() check after hydration is fully complete.
+        yield rx.call_script(
+            "(function(){var t=null;try{t=localStorage.getItem('_auth_token');}catch(e){}window.location.replace(t?'/app':'/login');})();"
+        )
+        return
+
+        try:
+            target_route = self._preload_root_workspace_target(uid)
+        except Exception as e:
+            print(f"[AUTH BRIDGE] redirect load error: {e}")
+            target_route = APP_DASHBOARD_ROUTE
+        # GA funnel event: OAuth signup/login completed. Method is stored by the callback bootstrap, never PII.
         yield rx.call_script(
             """
-            (async function(){
+            (function(){
               try {
                 var method = localStorage.getItem('alex_ga_auth_method');
                 if (method && window.alexTrack) {
@@ -7269,40 +7282,10 @@ class AppState(reflex_local_auth.LocalAuthState):
                 }
                 if (method) localStorage.removeItem('alex_ga_auth_method');
               } catch (e) {}
-
-              var raw = null;
-              try { raw = localStorage.getItem('_auth_token'); } catch (e) {}
-              if (!raw) {
-                window.location.replace('/login');
-                return;
-              }
-
-              var token = raw;
-              try { token = JSON.parse(raw); } catch (e) {}
-              if (!token) {
-                window.location.replace('/login');
-                return;
-              }
-
-              try {
-                var res = await fetch('/api/onboarding/status', {
-                  headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (res.ok) {
-                  var data = await res.json();
-                  var target = data && typeof data.redirectTo === 'string' ? data.redirectTo : '';
-                  if (target && target.charAt(0) === '/') {
-                    window.location.replace(target);
-                    return;
-                  }
-                }
-              } catch (e) {}
-
-              window.location.replace('/app');
             })();
             """
         )
-        return
+        yield rx.redirect(target_route)
 
     @rx.event
     async def on_load_selection(self):
