@@ -22,6 +22,33 @@ function isNextPath(pathname: string): boolean {
   return NEXT_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
+function safeAppRedirectTarget(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  if (value === "/free" || value === "/s/home" || /^\/s\/y\d+s\d+$/.test(value)) {
+    return value;
+  }
+  return null;
+}
+
+async function onboardingRedirectFromCookie(
+  req: NextRequest,
+  origin: string
+): Promise<string | null> {
+  const cookie = req.cookies.get("_auth_token")?.value;
+  if (!cookie) return null;
+
+  try {
+    const statusRes = await fetch(`${origin}/api/onboarding/status`, {
+      headers: { Authorization: `Bearer ${cookie}` },
+    });
+    if (!statusRes.ok) return null;
+    const data = (await statusRes.json()) as { redirectTo?: unknown };
+    return safeAppRedirectTarget(data.redirectTo);
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname, search, origin } = req.nextUrl;
 
@@ -35,34 +62,19 @@ export async function middleware(req: NextRequest) {
     if (/^y\d+s\d+$/.test(scopeParam)) {
       return NextResponse.redirect(new URL(`/s/${scopeParam}`, origin));
     }
-    const cookie = req.cookies.get("_auth_token")?.value;
-    if (cookie) {
-      try {
-        const statusRes = await fetch(`${origin}/api/onboarding/status`, {
-          headers: { Authorization: `Bearer ${cookie}` },
-        });
-        if (statusRes.ok) {
-          const data = (await statusRes.json()) as {
-            memory?: {
-              is_started?: boolean;
-              selected_year?: string;
-              selected_semester?: string;
-            };
-          };
-          const m = data.memory;
-          if (m?.is_started && m.selected_year && m.selected_semester) {
-            const y = m.selected_year.match(/\d+/)?.[0];
-            const s = m.selected_semester.match(/\d+/)?.[0];
-            if (y && s) {
-              return NextResponse.redirect(
-                new URL(`/s/y${y}s${s}`, origin)
-              );
-            }
-          }
-        }
-      } catch {
-        // Fall through to normal proxy if the lookup fails.
-      }
+    const redirectTo = await onboardingRedirectFromCookie(req, origin);
+    if (redirectTo) {
+      return NextResponse.redirect(new URL(redirectTo, origin));
+    }
+  }
+
+  // Existing accounts should not have to render Reflex's /app onboarding
+  // gate after login. When the auth cookie is available, send them to the
+  // saved workspace before proxying /app to Reflex.
+  if (pathname === "/app") {
+    const redirectTo = await onboardingRedirectFromCookie(req, origin);
+    if (redirectTo) {
+      return NextResponse.redirect(new URL(redirectTo, origin));
     }
   }
 

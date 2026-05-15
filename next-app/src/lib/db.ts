@@ -1,7 +1,6 @@
 import postgres from "postgres";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __sqlClient: ReturnType<typeof postgres> | undefined;
 }
 
@@ -33,6 +32,8 @@ export const sql = new Proxy(fnTarget, {
   get(_target, prop) {
     const client = getClient() as unknown as Record<string | symbol, unknown>;
     const value = client[prop];
-    return typeof value === "function" ? (value as Function).bind(client) : value;
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(client)
+      : value;
   },
 }) as ReturnType<typeof postgres>;
