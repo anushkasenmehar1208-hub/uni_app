@@ -16,6 +16,7 @@ import ipaddress
 import re
 import secrets
 import socket
+from http.cookies import SimpleCookie
 from io import BytesIO
 from urllib.parse import parse_qsl, quote, unquote, urlencode, urlparse
 from fastapi import Request
@@ -5771,6 +5772,7 @@ class AppState(reflex_local_auth.LocalAuthState):
     show_pathway_panel: bool = False
     show_subject_switcher: bool = False
     is_started: bool = False
+    app_dashboard_loaded: bool = False
 
     streak: int = 1
     selected_year: str = ""
@@ -7902,8 +7904,31 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.pathway = canonical_pathway_label(self.degree, self.pathway)
         self._sync_pathway_options()
 
-    def _migrate_guest_data_to_user(self, uid: int) -> None:
-        guest_uid = self._guest_uid(create=False)
+    def _guest_token_from_cookie(self) -> str:
+        try:
+            raw_cookie = str(getattr(self.router.headers, "cookie", "") or "")
+        except Exception:
+            raw_cookie = ""
+        if not raw_cookie:
+            return ""
+        try:
+            cookie = SimpleCookie()
+            cookie.load(raw_cookie)
+            token = str(cookie.get(GUEST_TOKEN_LOCAL_STORAGE_KEY).value if cookie.get(GUEST_TOKEN_LOCAL_STORAGE_KEY) else "").strip()
+        except Exception:
+            token = ""
+        if not token:
+            return ""
+        try:
+            parsed = json.loads(token)
+            if isinstance(parsed, str):
+                token = parsed.strip()
+        except Exception:
+            pass
+        return token
+
+    def _migrate_guest_data_to_user(self, uid: int, guest_token: str = "") -> None:
+        guest_uid = self._guest_uid_from_token(guest_token) if guest_token else self._guest_uid(create=False)
         if uid < 0 or guest_uid < 0 or guest_uid == uid:
             return
 
@@ -12874,6 +12899,7 @@ Quality rules:
 
     @rx.event
     async def on_load(self):
+        self.app_dashboard_loaded = False
         if not self.is_hydrated:
             return
         uid = self._uid()
@@ -12882,6 +12908,8 @@ Quality rules:
             yield AppState.auth_redir()  # type: ignore
             return
         
+        self._load_profile(uid)
+        self._migrate_guest_data_to_user(uid, self._guest_token_from_cookie())
         self._load_profile(uid)
         self.adaptive_profile = self._get_adaptive_profile(uid)
         self._migrate_legacy_messages_once(uid)
@@ -12927,6 +12955,7 @@ Quality rules:
             self.step = 4
         elif self.step >= 5 and not self.selected_semester:
             self.step = 5
+        self.app_dashboard_loaded = True
         yield rx.call_script(SCROLL_TO_BOTTOM_JS)
 
     @rx.event
@@ -31374,7 +31403,11 @@ def landing_page():
 def app_dashboard_page():
     # on_load redirects started users to /app/home or /app/y1s1 etc.
     # This page only renders for users still in onboarding.
-    return onboarding_page()
+    return rx.cond(
+        AppState.app_dashboard_loaded,
+        onboarding_page(),
+        _app_shell_loading_gate(),
+    )
 
 
 @rx.page(

@@ -21,6 +21,19 @@ export default function RegisterPage() {
   ];
   const passwordValid = passwordChecks.every((c) => c.valid);
 
+  function readGuestToken() {
+    const raw =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("alex_guest_token") ?? ""
+        : "";
+    try {
+      const parsed = JSON.parse(raw);
+      return typeof parsed === "string" ? parsed : raw;
+    } catch {
+      return raw;
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!passwordValid) {
@@ -37,17 +50,13 @@ export default function RegisterPage() {
           username,
           email,
           password,
-          guestToken:
-            typeof window !== "undefined"
-              ? window.localStorage.getItem("alex_guest_token") ?? ""
-              : "",
+          guestToken: readGuestToken(),
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.token) {
         try {
           localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
-          localStorage.removeItem("alex_guest_token");
         } catch {}
         // Skip Next.js /onboarding — Reflex's /app handles the
         // country/degree/semester picker and binds it to the chat.

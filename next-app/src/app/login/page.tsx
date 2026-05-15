@@ -13,6 +13,19 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  function readGuestToken() {
+    const raw =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("alex_guest_token") ?? ""
+        : "";
+    try {
+      const parsed = JSON.parse(raw);
+      return typeof parsed === "string" ? parsed : raw;
+    } catch {
+      return raw;
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -24,10 +37,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           username,
           password,
-          guestToken:
-            typeof window !== "undefined"
-              ? window.localStorage.getItem("alex_guest_token") ?? ""
-              : "",
+          guestToken: readGuestToken(),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -35,7 +45,6 @@ export default function LoginPage() {
         // Sync Reflex auth: it reads this localStorage key on app load.
         try {
           localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
-          localStorage.removeItem("alex_guest_token");
         } catch {}
         // Reflex's /app handles onboarding (selecting degree/semester)
         // for new users and routes already-onboarded users to their

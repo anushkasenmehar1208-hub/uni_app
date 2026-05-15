@@ -5,6 +5,7 @@ import {
   AUTH_TOKEN_LOCAL_STORAGE_KEY,
   createSession,
   findUserByUsername,
+  GUEST_TOKEN_LOCAL_STORAGE_KEY,
   migrateGuestMemoryToUser,
   verifyPassword,
 } from "@/lib/auth";
@@ -56,6 +57,15 @@ export async function POST(req: NextRequest) {
       maxAge: 7 * 24 * 60 * 60,
       path: "/",
     });
+    if (guestToken) {
+      res.cookies.set(GUEST_TOKEN_LOCAL_STORAGE_KEY, guestToken, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 10 * 60,
+        path: "/",
+      });
+    }
 
     return res;
   } catch (err) {
