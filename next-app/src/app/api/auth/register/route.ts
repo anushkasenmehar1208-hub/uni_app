@@ -13,13 +13,29 @@ import {
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_.-]{3,32}$/;
 
+function normalizeGuestToken(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  let token = raw;
+  try {
+    token = decodeURIComponent(token).trim();
+  } catch {}
+  try {
+    const parsed = JSON.parse(token) as unknown;
+    if (typeof parsed === "string") token = parsed.trim();
+  } catch {}
+  return token;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
     const username = String(body?.username ?? "").trim();
     const email = String(body?.email ?? "").trim();
     const password = String(body?.password ?? "");
-    const guestToken = String(body?.guestToken ?? "").trim();
+    const guestToken =
+      normalizeGuestToken(body?.guestToken) ||
+      normalizeGuestToken(req.cookies.get(GUEST_TOKEN_LOCAL_STORAGE_KEY)?.value);
 
     if (!username || !email || !password) {
       return NextResponse.json(

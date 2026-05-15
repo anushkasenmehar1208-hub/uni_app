@@ -5351,6 +5351,7 @@ def _app_shell_loading_gate(message: str = "Loading workspace...") -> rx.Compone
 def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallable:
     def protected_page():
         return rx.fragment(
+            _client_storage_cookie_bridge_script(),
             _ga_user_id_script(),
             rx.cond(
                 AppState.is_hydrated,
@@ -5361,6 +5362,41 @@ def require_app_login(page: rx.app.ComponentCallable) -> rx.app.ComponentCallabl
 
     protected_page.__name__ = page.__name__
     return protected_page
+
+
+CLIENT_STORAGE_COOKIE_BRIDGE_JS = f"""
+(function() {{
+  function readStorage(key) {{
+    try {{
+      var raw = localStorage.getItem(key) || "";
+      if (!raw) return "";
+      try {{
+        var parsed = JSON.parse(raw);
+        if (typeof parsed === "string") raw = parsed;
+      }} catch (e) {{}}
+      return String(raw || "").trim();
+    }} catch (e) {{
+      return "";
+    }}
+  }}
+  function remember(name, value, maxAge) {{
+    if (!value) return;
+    try {{
+      document.cookie =
+        name + "=" + encodeURIComponent(value) +
+        "; Max-Age=" + maxAge +
+        "; Path=/; SameSite=Lax" +
+        (window.location && window.location.protocol === "https:" ? "; Secure" : "");
+    }} catch (e) {{}}
+  }}
+  remember({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, readStorage({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}), {AUTH_SESSION_MAX_AGE_SECONDS});
+  remember({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)}, readStorage({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)}), {60 * 60 * 24 * 30});
+}})();
+"""
+
+
+def _client_storage_cookie_bridge_script() -> rx.Component:
+    return rx.script(CLIENT_STORAGE_COOKIE_BRIDGE_JS)
 
 
 def _ga_user_id_script() -> rx.Component:
@@ -6916,7 +6952,13 @@ class AppState(reflex_local_auth.LocalAuthState):
         _delete_chat_media_for_user(uid)
         self.app_auth_token = ""
         self._cached_uid = -1
-        return [reflex_local_auth.LocalAuthState.do_logout, rx.redirect(auth_routes.LOGIN_ROUTE)]
+        return [
+            reflex_local_auth.LocalAuthState.do_logout,
+            rx.call_script(
+                f"try {{ localStorage.removeItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}); document.cookie = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)} + '=; Max-Age=0; Path=/; SameSite=Lax'; document.cookie = {json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)} + '=; Max-Age=0; Path=/; SameSite=Lax'; }} catch(e) {{}}"
+            ),
+            rx.redirect(auth_routes.LOGIN_ROUTE),
+        ]
 
     def navigate_back_from_settings(self):
         return rx.redirect(self._authenticated_landing_route())
@@ -7263,7 +7305,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         # entirely. The /app or /s/* destination then resolves auth via
         # its own _uid() check after hydration is fully complete.
         yield rx.call_script(
-            "(function(){var t=null;try{t=localStorage.getItem('_auth_token');}catch(e){}window.location.replace(t?'/app':'/login');})();"
+            "(function(){var t=null;var c=false;try{t=localStorage.getItem('_auth_token');}catch(e){}try{c=document.cookie.indexOf('_auth_token=')!==-1;}catch(e){}window.location.replace((t||c)?'/app':'/login');})();"
         )
         return
 
@@ -7494,7 +7536,7 @@ class AppState(reflex_local_auth.LocalAuthState):
                 // JSON.stringify so rx.LocalStorage (which JSON.parses on read)
                 // sees the same encoding the Next.js login route produces.
                 localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, JSON.stringify({json.dumps(new_token)}));
-                localStorage.removeItem({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)});
+                document.cookie = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)} + "=" + encodeURIComponent({json.dumps(new_token)}) + "; Max-Age={AUTH_SESSION_MAX_AGE_SECONDS}; Path=/; SameSite=Lax" + (window.location.protocol === "https:" ? "; Secure" : "");
             }} catch(e) {{}}
             setTimeout(function() {{ window.location.replace('/'); }}, 60);
         }})();
@@ -7568,7 +7610,7 @@ class AppState(reflex_local_auth.LocalAuthState):
         try {{
             // JSON.stringify so rx.LocalStorage decodes cleanly on read.
             localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, JSON.stringify({json.dumps(new_token)}));
-            localStorage.removeItem({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)});
+            document.cookie = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)} + "=" + encodeURIComponent({json.dumps(new_token)}) + "; Max-Age={AUTH_SESSION_MAX_AGE_SECONDS}; Path=/; SameSite=Lax" + (window.location.protocol === "https:" ? "; Secure" : "");
         }} catch(e) {{}}
         setTimeout(function() {{ window.location.replace('/'); }}, 150);
     }})();
@@ -7825,7 +7867,7 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     def _uid(self) -> int:
         tokens: list[str] = []
-        for raw in (self.auth_token, self.app_auth_token):
+        for raw in (self.auth_token, self.app_auth_token, self._auth_token_from_cookie()):
             token = (raw or "").strip()
             if token and token not in tokens:
                 tokens.append(token)
@@ -7903,7 +7945,7 @@ class AppState(reflex_local_auth.LocalAuthState):
             self.pathway = canonical_pathway_label(self.degree, self.pathway)
         self._sync_pathway_options()
 
-    def _guest_token_from_cookie(self) -> str:
+    def _cookie_value(self, name: str) -> str:
         try:
             raw_cookie = str(getattr(self.router.headers, "cookie", "") or "")
         except Exception:
@@ -7913,11 +7955,16 @@ class AppState(reflex_local_auth.LocalAuthState):
         try:
             cookie = SimpleCookie()
             cookie.load(raw_cookie)
-            token = str(cookie.get(GUEST_TOKEN_LOCAL_STORAGE_KEY).value if cookie.get(GUEST_TOKEN_LOCAL_STORAGE_KEY) else "").strip()
+            morsel = cookie.get(name)
+            token = str(morsel.value if morsel else "").strip()
         except Exception:
             token = ""
         if not token:
             return ""
+        try:
+            token = unquote(token).strip()
+        except Exception:
+            pass
         try:
             parsed = json.loads(token)
             if isinstance(parsed, str):
@@ -7925,6 +7972,12 @@ class AppState(reflex_local_auth.LocalAuthState):
         except Exception:
             pass
         return token
+
+    def _auth_token_from_cookie(self) -> str:
+        return self._cookie_value(AUTH_TOKEN_LOCAL_STORAGE_KEY)
+
+    def _guest_token_from_cookie(self) -> str:
+        return self._cookie_value(GUEST_TOKEN_LOCAL_STORAGE_KEY)
 
     def _migrate_guest_data_to_user(self, uid: int, guest_token: str = "") -> None:
         guest_uid = self._guest_uid_from_token(guest_token) if guest_token else self._guest_uid(create=False)
@@ -16444,7 +16497,7 @@ Behavior rules:
         return [
             reflex_local_auth.LocalAuthState.do_logout,
             rx.call_script(
-                f"try {{ localStorage.removeItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}); }} catch(e) {{}}"
+                f"try {{ localStorage.removeItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}); document.cookie = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)} + '=; Max-Age=0; Path=/; SameSite=Lax'; document.cookie = {json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)} + '=; Max-Age=0; Path=/; SameSite=Lax'; }} catch(e) {{}}"
             ),
             rx.call_script("try { delete window.__ga4_user_id_last; } catch(e) {}"),
             rx.redirect(reflex_local_auth.routes.LOGIN_ROUTE),
@@ -24452,6 +24505,7 @@ def onboarding_page():
     # `data-ob-center`, and together they prevent the Safari Private
     # cold-load FOUC where the card briefly rendered left-aligned.
     return rx.box(
+        _client_storage_cookie_bridge_script(),
         onboarding_shell(
             "Set Up Alex",
             rx.vstack(
@@ -37468,6 +37522,15 @@ async def google_callback(request: Request):
         )
         response.delete_cookie(GOOGLE_STATE_COOKIE_NAME)
         response.delete_cookie(GOOGLE_COMPLETE_COOKIE_NAME)
+        response.set_cookie(
+            AUTH_TOKEN_LOCAL_STORAGE_KEY,
+            auth_token,
+            max_age=AUTH_SESSION_MAX_AGE_SECONDS,
+            httponly=False,
+            secure=_request_is_https(request),
+            samesite="lax",
+            path="/",
+        )
         return response
 
     except Exception as e:
