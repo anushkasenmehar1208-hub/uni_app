@@ -31392,27 +31392,7 @@ def landing_page():
 def app_dashboard_page():
     # on_load redirects started users to /app/home or /app/y1s1 etc.
     # This page only renders for users still in onboarding.
-    # Inline script ensures the redirect runs on every load regardless
-    # of Reflex's WS hydration timing — onboarded users land on their
-    # semester directly instead of seeing the onboarding form.
-    return rx.fragment(
-        rx.script(
-            "(async function(){try{"
-            "var raw=localStorage.getItem('_auth_token');"
-            "if(!raw){return;}"
-            "var token;try{token=JSON.parse(raw);}catch(e){token=raw;}"
-            "if(!token){return;}"
-            "var res=await fetch('/api/onboarding/status',{headers:{'Authorization':'Bearer '+token}});"
-            "if(!res.ok){return;}"
-            "var data=await res.json();var m=data&&data.memory;"
-            "if(m&&m.is_started&&m.selected_year&&m.selected_semester){"
-            "var y=(m.selected_year.match(/\\d+/)||[])[0];"
-            "var s=(m.selected_semester.match(/\\d+/)||[])[0];"
-            "if(y&&s){window.location.replace('/s/y'+y+'s'+s);}"
-            "}}catch(e){console.error('[app-redirect]',e);}})();"
-        ),
-        onboarding_page(),
-    )
+    return onboarding_page()
 
 
 @rx.page(
