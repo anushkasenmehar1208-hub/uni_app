@@ -7255,16 +7255,16 @@ class AppState(reflex_local_auth.LocalAuthState):
 
     @rx.event
     async def on_load_post_login_bridge(self):
-        # Without this guard rx.LocalStorage hasn't yet propagated the
-        # auth token onto the WS state, so _uid() returns -1 and the
-        # user gets bounced to /login moments after Google OAuth.
-        if not self.is_hydrated:
-            return
-        uid = self._uid()
-        self._cached_uid = uid
-        if uid < 0:
-            yield rx.redirect(auth_routes.LOGIN_ROUTE)
-            return
+        # localStorage is populated by the FastAPI Google callback BEFORE
+        # navigating here, but rx.LocalStorage takes a moment to sync into
+        # self.auth_token over the WebSocket. Read the token directly from
+        # localStorage via JS and navigate — this avoids the sync race
+        # entirely. The /app or /s/* destination then resolves auth via
+        # its own _uid() check after hydration is fully complete.
+        yield rx.call_script(
+            "(function(){var t=null;try{t=localStorage.getItem('_auth_token');}catch(e){}window.location.replace(t?'/app':'/login');})();"
+        )
+        return
 
         try:
             target_route = self._preload_root_workspace_target(uid)
