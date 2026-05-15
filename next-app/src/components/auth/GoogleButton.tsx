@@ -14,7 +14,7 @@ export function GoogleButton({
       onClick();
     } else {
       // Redirect to the existing Reflex Google OAuth endpoint
-      window.location.href = "/auth/google/login";
+      window.location.href = "/auth/google/start";
     }
   };
 
