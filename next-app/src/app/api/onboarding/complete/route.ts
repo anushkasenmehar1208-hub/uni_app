@@ -33,14 +33,19 @@ function resolveDegreeName(country: string, degree: string): string {
   return DEGREE_CODE_TO_REFLEX_NAME[compound] ?? "Custom";
 }
 
-function semesterToYear(semester: string): string {
-  const match = semester.match(/(\d+)/);
-  if (!match) return "Year 1";
-  const n = parseInt(match[1], 10);
-  if (n <= 2) return "Year 1";
-  if (n <= 4) return "Year 2";
-  if (n <= 6) return "Year 3";
-  return "Year 4";
+// The Next.js form sends scope-codes like "y1s1" / "y2s4" — Reflex
+// stores selected_year as "Year N" and selected_semester as "Semester N"
+// (its scope_key helper rebuilds y1s1 from those). Decompose the code.
+function parseSemesterCode(code: string): { year: string; semester: string } {
+  const match = code.trim().toLowerCase().match(/^y(\d+)s(\d+)$/);
+  if (match) {
+    return { year: `Year ${match[1]}`, semester: `Semester ${match[2]}` };
+  }
+  // Fallback for already-canonical values like "Semester 1".
+  const semMatch = code.match(/semester\s*(\d+)/i);
+  const n = semMatch ? parseInt(semMatch[1], 10) : 1;
+  const year = n <= 2 ? 1 : n <= 4 ? 2 : n <= 6 ? 3 : 4;
+  return { year: `Year ${year}`, semester: `Semester ${n}` };
 }
 
 function readToken(req: NextRequest): string | null {
@@ -88,7 +93,7 @@ export async function POST(req: NextRequest) {
     }
 
     const reflexDegree = resolveDegreeName(country, degree);
-    const year = semesterToYear(semester);
+    const { year, semester: reflexSemester } = parseSemesterCode(semester);
 
     await sql`
       INSERT INTO usermemory
@@ -96,7 +101,7 @@ export async function POST(req: NextRequest) {
          selected_year, selected_semester, summary, other_degree_text)
       VALUES
         (${userId}, ${ONBOARDING_FINAL_STEP}, '', ${reflexDegree}, ${pathway}, true,
-         ${year}, ${semester}, '', '')
+         ${year}, ${reflexSemester}, '', '')
       ON CONFLICT (user_id) DO UPDATE SET
         step = EXCLUDED.step,
         degree = EXCLUDED.degree,
@@ -114,7 +119,7 @@ export async function POST(req: NextRequest) {
     `;
 
     console.log(
-      `[onboarding/complete] saved user_id=${userId} degree=${reflexDegree} year=${year} semester=${semester}`
+      `[onboarding/complete] saved user_id=${userId} degree=${reflexDegree} year=${year} semester=${reflexSemester}`
     );
     return NextResponse.json({ ok: true });
   } catch (err) {
