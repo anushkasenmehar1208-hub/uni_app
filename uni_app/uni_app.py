@@ -12920,6 +12920,12 @@ Quality rules:
         Minimum work for first paint: auth check, profile (1 DB call), scope routing.
         All scope hydration is deferred to post_render_hydrate_scope (background).
         """
+        # Without this guard rx.LocalStorage hasn't yet synced auth_token
+        # on a fresh page load, so _uid() returns -1 and the guest-mode
+        # branch below redirects authed users to /select — exactly the
+        # bug post-onboarding navigation kept hitting.
+        if not self.is_hydrated:
+            return
         real_uid = self._uid()
         self._cached_uid = real_uid
         uid = real_uid if real_uid >= 0 else self._active_data_uid()
