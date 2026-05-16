@@ -5379,6 +5379,15 @@ CLIENT_STORAGE_COOKIE_BRIDGE_JS = f"""
       return "";
     }}
   }}
+  function hasCookie(name) {{
+    try {{
+      return document.cookie.split(";").some(function(part) {{
+        return part.trim().indexOf(name + "=") === 0;
+      }});
+    }} catch (e) {{
+      return false;
+    }}
+  }}
   function remember(name, value, maxAge) {{
     if (!value) return;
     try {{
@@ -5389,8 +5398,24 @@ CLIENT_STORAGE_COOKIE_BRIDGE_JS = f"""
         (window.location && window.location.protocol === "https:" ? "; Secure" : "");
     }} catch (e) {{}}
   }}
-  remember({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, readStorage({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}), {AUTH_SESSION_MAX_AGE_SECONDS});
+  var authName = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)};
+  var authValue = readStorage(authName);
+  var hadAuthCookie = hasCookie(authName);
+  remember(authName, authValue, {AUTH_SESSION_MAX_AGE_SECONDS});
   remember({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)}, readStorage({json.dumps(GUEST_TOKEN_LOCAL_STORAGE_KEY)}), {60 * 60 * 24 * 30});
+  try {{
+    var params = new URLSearchParams(window.location.search || "");
+    if (
+      authValue &&
+      !hadAuthCookie &&
+      window.location &&
+      window.location.pathname === {json.dumps(APP_DASHBOARD_ROUTE)} &&
+      !params.has("auth_sync")
+    ) {{
+      params.set("auth_sync", "1");
+      window.location.replace(window.location.pathname + "?" + params.toString());
+    }}
+  }} catch (e) {{}}
 }})();
 """
 
@@ -12951,9 +12976,9 @@ Quality rules:
 
     @rx.event
     async def on_load(self):
-        if not self.is_hydrated:
-            return
         uid = self._uid()
+        if uid < 0 and not self.is_hydrated:
+            return
         self._cached_uid = uid
         if uid < 0:
             yield AppState.auth_redir()  # type: ignore
@@ -13018,9 +13043,9 @@ Quality rules:
         # on a fresh page load, so _uid() returns -1 and the guest-mode
         # branch below redirects authed users to /select — exactly the
         # bug post-onboarding navigation kept hitting.
-        if not self.is_hydrated:
-            return
         real_uid = self._uid()
+        if real_uid < 0 and not self.is_hydrated:
+            return
         self._cached_uid = real_uid
         uid = real_uid if real_uid >= 0 else self._active_data_uid()
 
