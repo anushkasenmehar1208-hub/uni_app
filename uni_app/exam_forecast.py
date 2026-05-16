@@ -342,7 +342,7 @@ def parse_past_paper_questions(
 # ─── Stage 3: long-context corpus review ────────────────────────────────────
 
 
-_CORPUS_SYSTEM = """You are an examiner-style pattern auditor reviewing a corpus of past papers (plus any syllabus and marking schemes) for one university module.
+_CORPUS_SYSTEM = """You are an examiner-style pattern auditor reviewing a corpus of past papers (plus any syllabus, marking schemes, and optional student-provided exam context) for one university module.
 
 Output ONLY one JSON object, schema:
 
@@ -385,16 +385,26 @@ def analyze_corpus_patterns(
     structured_papers: list[dict[str, Any]],
     syllabus_text: str = "",
     marking_texts: Optional[list[str]] = None,
+    exam_details: str = "",
 ) -> dict[str, Any]:
-    """Run the long-context corpus review pass."""
+    """Run the long-context corpus review pass.
+
+    ``exam_details`` is optional free-text context supplied by the student
+    (university, module name, professor, exam type, topics emphasized, etc.).
+    It's treated as additional grounding — empty strings are fine and the
+    rest of the pipeline behaves identically.
+    """
     marking_texts = marking_texts or []
     corpus_payload = {
         "structured_past_papers": structured_papers,
         "syllabus_text_excerpt": _trim(syllabus_text, 18000),
         "marking_schemes_text_excerpt": [_trim(t, 6000) for t in marking_texts],
+        "student_provided_exam_context": _trim(exam_details, 4000),
     }
     user_msg = (
-        "Review this corpus and produce the JSON analysis described in the system message.\n\n"
+        "Review this corpus and produce the JSON analysis described in the system message.\n"
+        "If `student_provided_exam_context` is present, use it to disambiguate the course, "
+        "professor style, or emphasized topics — but never invent facts that aren't in the papers.\n\n"
         f"{json.dumps(corpus_payload, ensure_ascii=False)}"
     )
     return _complete_json(
@@ -477,11 +487,13 @@ def _build_prediction_payload(
     structured_papers: list[dict[str, Any]],
     corpus_analysis: dict[str, Any],
     syllabus_text: str,
+    exam_details: str = "",
 ) -> str:
     payload = {
         "structured_past_papers": structured_papers,
         "corpus_analysis": corpus_analysis,
         "syllabus_text_excerpt": _trim(syllabus_text, 12000),
+        "student_provided_exam_context": _trim(exam_details, 4000),
     }
     return json.dumps(payload, ensure_ascii=False)
 
@@ -495,6 +507,7 @@ def _generate_prediction(
     structured_papers: list[dict[str, Any]],
     corpus_analysis: dict[str, Any],
     syllabus_text: str,
+    exam_details: str = "",
 ) -> dict[str, Any]:
     return _complete_json(
         openrouter_complete=openrouter_complete,
@@ -505,9 +518,11 @@ def _generate_prediction(
             {
                 "role": "user",
                 "content": (
-                    "Produce the predicted-paper JSON now.\n\n"
+                    "Produce the predicted-paper JSON now. If `student_provided_exam_context` "
+                    "is non-empty, use it to ground your prediction (course, professor style, "
+                    "topics emphasized) but never invent facts not in the papers.\n\n"
                     + _build_prediction_payload(
-                        structured_papers, corpus_analysis, syllabus_text
+                        structured_papers, corpus_analysis, syllabus_text, exam_details
                     )
                 ),
             },
@@ -926,6 +941,7 @@ def run_pipeline(
     past_papers: list[tuple[str, bytes]],
     syllabus: Optional[tuple[str, bytes]] = None,
     marking_schemes: Optional[list[tuple[str, bytes]]] = None,
+    exam_details: str = "",
     run_backtest: bool = True,
     progress_cb: Optional[Callable[[str], None]] = None,
 ) -> dict[str, Any]:
@@ -944,6 +960,10 @@ def run_pipeline(
         List of (filename, bytes) tuples. 3-5 required; UI enforces.
     syllabus, marking_schemes
         Optional inputs.
+    exam_details
+        Optional free-text context from the student — university, module name,
+        professor, exam type, emphasized topics, notes. Empty string is fine.
+        Threaded into corpus review + both prediction passes + backtest.
     run_backtest
         If True and >=4 past papers, runs a leave-one-out backtest first.
     progress_cb
@@ -1022,6 +1042,7 @@ def run_pipeline(
                 structured_papers=structured_papers,
                 syllabus_text=syllabus_text,
                 marking_texts=marking_texts,
+                exam_details=exam_details,
             )
         except ExamForecastError as exc:
             # Backtest failure must not kill the main forecast — note and continue.
@@ -1040,6 +1061,7 @@ def run_pipeline(
         structured_papers=structured_papers,
         syllabus_text=syllabus_text,
         marking_texts=marking_texts,
+        exam_details=exam_details,
     )
 
     # ── Stages 4 & 5: independent predictions ──────────────────────────
@@ -1052,6 +1074,7 @@ def run_pipeline(
         structured_papers=structured_papers,
         corpus_analysis=corpus_analysis,
         syllabus_text=syllabus_text,
+        exam_details=exam_details,
     )
 
     _progress("Generating rival prediction (GPT-tier)…")
@@ -1063,6 +1086,7 @@ def run_pipeline(
         structured_papers=structured_papers,
         corpus_analysis=corpus_analysis,
         syllabus_text=syllabus_text,
+        exam_details=exam_details,
     )
 
     # ── Stage 6: consensus merge ───────────────────────────────────────
@@ -1112,6 +1136,7 @@ def _run_backtest_inner(
     structured_papers: list[dict[str, Any]],
     syllabus_text: str,
     marking_texts: list[str],
+    exam_details: str = "",
 ) -> dict[str, Any]:
     """Leave-one-out: use all-but-last to predict the last, then score."""
     held_out = structured_papers[-1]
@@ -1126,6 +1151,7 @@ def _run_backtest_inner(
         structured_papers=held_in,
         syllabus_text=syllabus_text,
         marking_texts=marking_texts,
+        exam_details=exam_details,
     )
     held_in_prediction = _generate_prediction(
         openrouter_complete=openrouter_complete,
@@ -1135,6 +1161,7 @@ def _run_backtest_inner(
         structured_papers=held_in,
         corpus_analysis=held_in_corpus,
         syllabus_text=syllabus_text,
+        exam_details=exam_details,
     )
     predicted_questions = held_in_prediction.get("predicted_paper") or []
     actual_questions = held_out.get("questions") or []

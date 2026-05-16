@@ -36709,6 +36709,12 @@ class ExamForecastState(AppState):
     ef_syllabus_name: str = ""
     ef_marking_scheme_names: list[str] = []
 
+    # ── Optional free-text exam context (primary input alongside past papers) ──
+    # University, module name, professor, exam type, emphasized topics, notes.
+    # Threaded into corpus review + both prediction passes + backtest. Empty
+    # string is fine — the pipeline behaves identically.
+    ef_exam_details: str = ""
+
     # ── Backend-only bytes (underscore prefix = never sent to frontend) ──
     _ef_past_papers_data: list[tuple[str, bytes]] = []
     _ef_syllabus_data: Optional[tuple[str, bytes]] = None
@@ -36974,6 +36980,7 @@ class ExamForecastState(AppState):
         self.ef_syllabus_name = ""
         self._ef_marking_schemes_data = []
         self.ef_marking_scheme_names = []
+        self.ef_exam_details = ""
         self.ef_status = "idle"
         self.ef_progress = ""
         self.ef_error = ""
@@ -37015,6 +37022,7 @@ class ExamForecastState(AppState):
             papers_snap = list(self._ef_past_papers_data)
             syllabus_snap = self._ef_syllabus_data
             marking_snap = list(self._ef_marking_schemes_data)
+            exam_details_snap = (self.ef_exam_details or "").strip()
             run_backtest_snap = bool(self.ef_run_backtest)
 
         # Progress channel: the worker thread appends to a list; we poll
@@ -37033,6 +37041,7 @@ class ExamForecastState(AppState):
                 past_papers=papers_snap,
                 syllabus=syllabus_snap,
                 marking_schemes=marking_snap,
+                exam_details=exam_details_snap,
                 run_backtest=run_backtest_snap,
                 progress_cb=_progress,
             )
@@ -37214,22 +37223,42 @@ def _ef_upload_dropzone(
 ) -> rx.Component:
     """Compact, dark, PDF-only dropzone styled to match the app."""
     return rx.upload(
-        rx.vstack(
-            rx.icon(tag="upload_cloud", size=22, color="rgba(200,210,220,0.55)"),
-            rx.text(
-                label,
-                color="rgba(236,240,244,0.88)",
-                font_size="0.9rem",
-                font_weight="600",
+        rx.hstack(
+            rx.box(
+                rx.icon(tag="upload_cloud", size=16, color="rgba(200,210,220,0.7)"),
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                width="32px",
+                height="32px",
+                border_radius="8px",
+                background="rgba(255,255,255,0.05)",
+                border="1px solid rgba(255,255,255,0.08)",
+                flex_shrink="0",
             ),
-            rx.text(
-                sub_label,
-                color="rgba(200,210,220,0.5)",
-                font_size="0.78rem",
+            rx.vstack(
+                rx.text(
+                    label,
+                    color="rgba(236,240,244,0.9)",
+                    font_size="0.86rem",
+                    font_weight="600",
+                    line_height="1.3",
+                ),
+                rx.text(
+                    sub_label,
+                    color="rgba(200,210,220,0.55)",
+                    font_size="0.74rem",
+                    line_height="1.3",
+                ),
+                spacing="0",
+                align="start",
+                flex="1",
+                min_width="0",
             ),
-            spacing="2",
+            spacing="3",
             align="center",
-            padding="22px 18px",
+            padding="14px 16px",
+            width="100%",
         ),
         id=upload_id,
         accept={"application/pdf": [".pdf"]},
@@ -37240,15 +37269,15 @@ def _ef_upload_dropzone(
             on_drop,
             rx.clear_selected_files(upload_id),
         ],
-        border="1px dashed rgba(255,255,255,0.16)",
-        border_radius="14px",
+        border="1px dashed rgba(255,255,255,0.14)",
+        border_radius="12px",
         background="rgba(255,255,255,0.02)",
         width="100%",
         style={
             "transition": "border-color 0.18s ease, background 0.18s ease",
             "_hover": {
-                "border_color": "rgba(255,255,255,0.30)",
-                "background": "rgba(255,255,255,0.04)",
+                "border_color": "rgba(134,239,172,0.28)",
+                "background": "rgba(34,197,94,0.03)",
             },
         },
     )
@@ -37404,26 +37433,40 @@ def _ef_score_row(item) -> rx.Component:
 
 
 def _ef_upload_section() -> rx.Component:
-    """The full upload card visible while status is idle."""
+    """Past papers upload — required, primary input. Compact + premium."""
     return _ef_card(
         rx.vstack(
-            # ── Past papers ──
             rx.hstack(
-                _ef_section_label("Past papers (required)"),
+                _ef_section_label("Past papers"),
+                rx.box(
+                    rx.text(
+                        "Required",
+                        font_size="0.65rem",
+                        font_weight="700",
+                        letter_spacing="0.08em",
+                        color="rgba(134,239,172,0.92)",
+                    ),
+                    padding="2px 8px",
+                    border_radius="999px",
+                    background="rgba(34,197,94,0.10)",
+                    border="1px solid rgba(34,197,94,0.22)",
+                    margin_left="8px",
+                ),
                 rx.spacer(),
                 rx.text(
                     ExamForecastState.ef_past_papers_count_label,
                     color="rgba(200,210,220,0.5)",
                     font_size="0.78rem",
                 ),
-                spacing="2",
+                spacing="0",
                 align="center",
                 width="100%",
+                margin_bottom="2px",
             ),
             _ef_upload_dropzone(
                 upload_id="ef_past_papers_zone",
-                label="Drop 3–5 past paper PDFs here, or click to browse",
-                sub_label="PDF only, up to 10 MB each",
+                label="Drop 3–5 past paper PDFs, or click to browse",
+                sub_label="PDF only · up to 10 MB each",
                 multiple=True,
                 max_files=EXAM_FORECAST_MAX_PAST_PAPERS,
                 on_drop=ExamForecastState.handle_past_papers_upload,
@@ -37455,77 +37498,17 @@ def _ef_upload_section() -> rx.Component:
                 ),
                 rx.box(),
             ),
-
-            rx.box(height="18px"),
-
-            # ── Syllabus (optional) ──
-            _ef_section_label("Syllabus (optional)"),
-            _ef_upload_dropzone(
-                upload_id="ef_syllabus_zone",
-                label="Drop a syllabus PDF for better topic coverage",
-                sub_label="Optional · PDF only",
-                multiple=False,
-                max_files=1,
-                on_drop=ExamForecastState.handle_syllabus_upload,
-                disabled=ExamForecastState.ef_is_analyzing,
-            ),
-            rx.cond(
-                ExamForecastState.ef_syllabus_name != "",
-                rx.box(
-                    _ef_uploaded_file_row(
-                        ExamForecastState.ef_syllabus_name,
-                        ExamForecastState.remove_syllabus,
-                    ),
-                    margin_top="10px",
-                    width="100%",
-                ),
-                rx.box(),
-            ),
-
-            rx.box(height="18px"),
-
-            # ── Marking schemes (optional) ──
-            _ef_section_label(
-                f"Marking schemes (optional · up to {EXAM_FORECAST_MAX_MARKING_SCHEMES})"
-            ),
-            _ef_upload_dropzone(
-                upload_id="ef_marking_zone",
-                label="Drop marking-scheme PDFs to sharpen the answer guide",
-                sub_label="Optional · PDF only",
-                multiple=True,
-                max_files=EXAM_FORECAST_MAX_MARKING_SCHEMES,
-                on_drop=ExamForecastState.handle_marking_schemes_upload,
-                disabled=ExamForecastState.ef_is_analyzing,
-            ),
-            rx.cond(
-                ExamForecastState.ef_marking_scheme_names.length() > 0,
-                rx.vstack(
-                    rx.foreach(
-                        ExamForecastState.ef_marking_scheme_names,
-                        lambda name, idx: _ef_uploaded_file_row(
-                            name,
-                            ExamForecastState.remove_marking_scheme(idx),
-                        ),
-                    ),
-                    spacing="2",
-                    width="100%",
-                    margin_top="10px",
-                ),
-                rx.box(),
-            ),
-
-            # ── Inline upload error ──
+            # Inline upload error lives at the section that produced it
             rx.cond(
                 ExamForecastState.ef_upload_error != "",
                 rx.text(
                     ExamForecastState.ef_upload_error,
                     color="rgba(248,113,113,0.92)",
                     font_size="0.82rem",
-                    margin_top="12px",
+                    margin_top="10px",
                 ),
                 rx.box(),
             ),
-
             spacing="2",
             width="100%",
             align="stretch",
@@ -37534,72 +37517,385 @@ def _ef_upload_section() -> rx.Component:
     )
 
 
-def _ef_run_bar() -> rx.Component:
-    """Backtest toggle + 'Run forecast' button strip."""
+# ─────────────────────────────────────────────────────────────────────────
+# Exam details (optional free-text grounding)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+# Multi-line placeholder rendered inside the text area. Most browsers honor
+# `\n` in textarea placeholders; on the rare ones that don't, the example
+# still reads fine on one line.
+_EF_EXAM_DETAILS_PLACEHOLDER = (
+    "Example:\n"
+    "University of Kelaniya\n"
+    "Computer Science\n"
+    "Year 1 Semester 1\n"
+    "History of Computing\n"
+    "Professor / lecturer: optional\n"
+    "Exam type: final exam / midterm\n"
+    "Topics teacher focused on: optional\n"
+    "Any notes: optional"
+)
+
+
+def _ef_exam_details_card() -> rx.Component:
+    """Optional text-area card replacing the prominent syllabus upload."""
     return _ef_card(
-        rx.hstack(
-            rx.vstack(
-                rx.text(
-                    "Run historical backtest",
-                    color="rgba(240,244,248,0.92)",
-                    font_size="0.9rem",
-                    font_weight="600",
+        rx.vstack(
+            rx.hstack(
+                _ef_section_label("Exam details"),
+                rx.box(
+                    rx.text(
+                        "Optional",
+                        font_size="0.65rem",
+                        font_weight="700",
+                        letter_spacing="0.08em",
+                        color="rgba(200,210,220,0.6)",
+                    ),
+                    padding="2px 8px",
+                    border_radius="999px",
+                    background="rgba(255,255,255,0.04)",
+                    border="1px solid rgba(255,255,255,0.10)",
+                    margin_left="8px",
                 ),
-                rx.text(
-                    "Leave-one-out: use earlier papers to predict the most recent paper, then score the overlap. Doubles wait time.",
-                    color="rgba(200,210,220,0.55)",
-                    font_size="0.8rem",
-                    line_height="1.45",
-                ),
-                spacing="1",
-                align="start",
-                flex="1",
+                spacing="0",
+                align="center",
+                width="100%",
+                margin_bottom="2px",
             ),
-            rx.switch(
-                checked=ExamForecastState.ef_run_backtest,
-                on_change=ExamForecastState.toggle_backtest,
+            rx.text_area(
+                value=ExamForecastState.ef_exam_details,
+                on_change=ExamForecastState.set_ef_exam_details,
+                placeholder=_EF_EXAM_DETAILS_PLACEHOLDER,
                 disabled=ExamForecastState.ef_is_analyzing,
-                color_scheme="green",
+                min_height="180px",
+                width="100%",
+                style={
+                    "background": "rgba(255,255,255,0.03)",
+                    "border": "1px solid rgba(255,255,255,0.08)",
+                    "border_radius": "12px",
+                    "padding": "14px 14px",
+                    "color": "rgba(236,240,244,0.92)",
+                    "font_size": "0.9rem",
+                    "line_height": "1.55",
+                    "font_family": "'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    "resize": "vertical",
+                    "_placeholder": {"color": "rgba(200,210,220,0.32)"},
+                    "_focus": {
+                        "border_color": "rgba(134,239,172,0.35)",
+                        "outline": "none",
+                        "box_shadow": "0 0 0 3px rgba(34,197,94,0.08)",
+                    },
+                },
             ),
-            spacing="4",
-            align="center",
-            width="100%",
-        ),
-        rx.box(height="16px"),
-        rx.button(
-            rx.cond(
-                ExamForecastState.ef_is_analyzing,
-                rx.hstack(
-                    rx.spinner(size="2"),
-                    rx.text("Analyzing…"),
-                    spacing="2",
-                    align="center",
-                ),
-                rx.text("Generate predicted paper"),
+            rx.text(
+                "Add details Alex can use to understand the exam context. You can leave this blank.",
+                color="rgba(200,210,220,0.55)",
+                font_size="0.78rem",
+                line_height="1.45",
+                margin_top="6px",
             ),
-            on_click=ExamForecastState.run_forecast,
-            disabled=~ExamForecastState.ef_can_run,
-            size="3",
+            spacing="0",
             width="100%",
-            style={
-                "background": "linear-gradient(90deg,#065f46,#10b981)",
-                "border": "none",
-                "color": "white",
-                "font_weight": "700",
-                "cursor": rx.cond(ExamForecastState.ef_can_run, "pointer", "not-allowed"),
-                "opacity": rx.cond(ExamForecastState.ef_can_run, "1", "0.5"),
-            },
-        ),
-        rx.text(
-            _ef.DISCLAIMER,
-            color="rgba(200,210,220,0.5)",
-            font_size="0.78rem",
-            font_style="italic",
-            text_align="center",
-            margin_top="12px",
+            align="stretch",
         ),
         width="100%",
-        margin_top="16px",
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Premium feature chips
+# ─────────────────────────────────────────────────────────────────────────
+
+
+def _ef_premium_chip(icon: str, label: str) -> rx.Component:
+    return rx.hstack(
+        rx.icon(tag=icon, size=12, color="rgba(200,210,220,0.85)"),
+        rx.text(
+            label,
+            font_size="0.72rem",
+            font_weight="600",
+            color="rgba(220,230,240,0.85)",
+            letter_spacing="0.01em",
+        ),
+        spacing="2",
+        align="center",
+        padding="6px 11px",
+        border_radius="999px",
+        background="rgba(255,255,255,0.04)",
+        border="1px solid rgba(255,255,255,0.10)",
+    )
+
+
+def _ef_premium_chips() -> rx.Component:
+    return rx.hstack(
+        _ef_premium_chip("sparkles", "Pattern analysis"),
+        _ef_premium_chip("shield_check", "Backtest"),
+        _ef_premium_chip("file_text", "PDF export"),
+        spacing="2",
+        align="center",
+        wrap="wrap",
+        margin_top="14px",
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# "What Alex analyzes" — explainer card (right column on desktop)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+def _ef_analyzes_item(icon: str, text: str) -> rx.Component:
+    return rx.hstack(
+        rx.box(
+            rx.icon(tag=icon, size=14, color="rgba(134,239,172,0.85)"),
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            width="26px",
+            height="26px",
+            border_radius="8px",
+            background="rgba(34,197,94,0.07)",
+            border="1px solid rgba(34,197,94,0.16)",
+            flex_shrink="0",
+        ),
+        rx.text(
+            text,
+            color="rgba(236,240,244,0.88)",
+            font_size="0.88rem",
+            line_height="1.4",
+        ),
+        spacing="3",
+        align="center",
+        width="100%",
+        padding="6px 0",
+    )
+
+
+def _ef_what_alex_analyzes_card() -> rx.Component:
+    return _ef_card(
+        rx.vstack(
+            _ef_section_label("What Alex analyzes"),
+            _ef_analyzes_item("repeat_2", "Repeated topics across years"),
+            _ef_analyzes_item("bar_chart_3", "Marks distribution by section"),
+            _ef_analyzes_item("type", "Question style and phrasing"),
+            _ef_analyzes_item("circle_slash", "Skipped or weakly-tested topics"),
+            _ef_analyzes_item("trending_up", "Difficulty trend over time"),
+            _ef_analyzes_item("user", "Examiner pattern and emphasis"),
+            spacing="1",
+            align="stretch",
+            width="100%",
+        ),
+        width="100%",
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Advanced uploads (visually de-emphasized; bottom of page)
+# Kept for users who DO have a syllabus / marking scheme PDF on hand.
+# ─────────────────────────────────────────────────────────────────────────
+
+
+def _ef_advanced_uploads_card() -> rx.Component:
+    return _ef_card(
+        rx.vstack(
+            rx.hstack(
+                rx.icon(tag="settings_2", size=14, color="rgba(200,210,220,0.55)"),
+                rx.text(
+                    "Advanced — optional source files",
+                    color="rgba(200,210,220,0.7)",
+                    font_size="0.82rem",
+                    font_weight="600",
+                ),
+                spacing="2",
+                align="center",
+                width="100%",
+                margin_bottom="4px",
+            ),
+            rx.text(
+                "If you happen to have these as PDFs, they sharpen the analysis. Most students can skip this.",
+                color="rgba(200,210,220,0.5)",
+                font_size="0.78rem",
+                line_height="1.45",
+                margin_bottom="14px",
+            ),
+            # Two slim side-by-side dropzones on desktop, stacked on mobile.
+            rx.flex(
+                rx.vstack(
+                    rx.text(
+                        "Syllabus PDF",
+                        color="rgba(200,210,220,0.65)",
+                        font_size="0.75rem",
+                        font_weight="600",
+                        margin_bottom="6px",
+                    ),
+                    _ef_upload_dropzone(
+                        upload_id="ef_syllabus_zone",
+                        label="Drop syllabus PDF",
+                        sub_label="Optional",
+                        multiple=False,
+                        max_files=1,
+                        on_drop=ExamForecastState.handle_syllabus_upload,
+                        disabled=ExamForecastState.ef_is_analyzing,
+                    ),
+                    rx.cond(
+                        ExamForecastState.ef_syllabus_name != "",
+                        rx.box(
+                            _ef_uploaded_file_row(
+                                ExamForecastState.ef_syllabus_name,
+                                ExamForecastState.remove_syllabus,
+                            ),
+                            margin_top="8px",
+                            width="100%",
+                        ),
+                        rx.box(),
+                    ),
+                    spacing="0",
+                    width="100%",
+                    align="stretch",
+                ),
+                rx.vstack(
+                    rx.text(
+                        f"Marking schemes (up to {EXAM_FORECAST_MAX_MARKING_SCHEMES})",
+                        color="rgba(200,210,220,0.65)",
+                        font_size="0.75rem",
+                        font_weight="600",
+                        margin_bottom="6px",
+                    ),
+                    _ef_upload_dropzone(
+                        upload_id="ef_marking_zone",
+                        label="Drop marking-scheme PDFs",
+                        sub_label="Optional",
+                        multiple=True,
+                        max_files=EXAM_FORECAST_MAX_MARKING_SCHEMES,
+                        on_drop=ExamForecastState.handle_marking_schemes_upload,
+                        disabled=ExamForecastState.ef_is_analyzing,
+                    ),
+                    rx.cond(
+                        ExamForecastState.ef_marking_scheme_names.length() > 0,
+                        rx.vstack(
+                            rx.foreach(
+                                ExamForecastState.ef_marking_scheme_names,
+                                lambda name, idx: _ef_uploaded_file_row(
+                                    name,
+                                    ExamForecastState.remove_marking_scheme(idx),
+                                ),
+                            ),
+                            spacing="2",
+                            width="100%",
+                            margin_top="8px",
+                        ),
+                        rx.box(),
+                    ),
+                    spacing="0",
+                    width="100%",
+                    align="stretch",
+                ),
+                direction=rx.breakpoints(initial="column", md="row"),
+                spacing="4",
+                width="100%",
+                align="stretch",
+            ),
+            spacing="0",
+            align="stretch",
+            width="100%",
+        ),
+        width="100%",
+        background="rgba(255,255,255,0.015)",
+        border="1px solid rgba(255,255,255,0.05)",
+    )
+
+
+def _ef_run_bar() -> rx.Component:
+    """Compact backtest toggle + 'Generate Forecast' button + subtle disclaimer."""
+    return _ef_card(
+        rx.vstack(
+            # ── Backtest toggle (compact) ──
+            rx.hstack(
+                rx.vstack(
+                    rx.text(
+                        "Historical backtest",
+                        color="rgba(240,244,248,0.92)",
+                        font_size="0.86rem",
+                        font_weight="600",
+                    ),
+                    rx.text(
+                        "Score the prediction against your most recent paper.",
+                        color="rgba(200,210,220,0.55)",
+                        font_size="0.76rem",
+                        line_height="1.4",
+                    ),
+                    spacing="1",
+                    align="start",
+                    flex="1",
+                    min_width="0",
+                ),
+                rx.switch(
+                    checked=ExamForecastState.ef_run_backtest,
+                    on_change=ExamForecastState.toggle_backtest,
+                    disabled=ExamForecastState.ef_is_analyzing,
+                    color_scheme="green",
+                ),
+                spacing="3",
+                align="center",
+                width="100%",
+            ),
+
+            rx.box(height="14px"),
+
+            # ── Generate Forecast button ──
+            rx.button(
+                rx.cond(
+                    ExamForecastState.ef_is_analyzing,
+                    rx.hstack(
+                        rx.spinner(size="2"),
+                        rx.text("Analyzing…"),
+                        spacing="2",
+                        align="center",
+                    ),
+                    rx.text("Generate Forecast"),
+                ),
+                on_click=ExamForecastState.run_forecast,
+                disabled=~ExamForecastState.ef_can_run,
+                size="3",
+                width="100%",
+                style={
+                    "background": "linear-gradient(90deg,#065f46,#10b981)",
+                    "border": "none",
+                    "color": "white",
+                    "font_weight": "700",
+                    "cursor": rx.cond(ExamForecastState.ef_can_run, "pointer", "not-allowed"),
+                    "opacity": rx.cond(ExamForecastState.ef_can_run, "1", "0.5"),
+                },
+            ),
+
+            # ── Disabled-state helper (only when not yet enough papers) ──
+            rx.cond(
+                ~ExamForecastState.ef_can_run & ~ExamForecastState.ef_is_analyzing,
+                rx.text(
+                    "Upload at least 3 past papers to continue.",
+                    color="rgba(200,210,220,0.5)",
+                    font_size="0.76rem",
+                    text_align="center",
+                    margin_top="8px",
+                ),
+                rx.box(),
+            ),
+
+            # ── Subtle disclaimer ──
+            rx.text(
+                _ef.DISCLAIMER,
+                color="rgba(200,210,220,0.35)",
+                font_size="0.72rem",
+                text_align="center",
+                margin_top="14px",
+                line_height="1.4",
+            ),
+
+            spacing="0",
+            align="stretch",
+            width="100%",
+        ),
+        width="100%",
     )
 
 
@@ -37940,7 +38236,7 @@ def _ef_result_view() -> rx.Component:
 
 
 def _ef_intro() -> rx.Component:
-    """Page heading + sub-title."""
+    """Page heading + sub-title + premium feature chips."""
     return rx.vstack(
         rx.text(
             "Smart Exam Forecast",
@@ -37956,7 +38252,7 @@ def _ef_intro() -> rx.Component:
             font_size=rx.breakpoints(initial="0.92rem", md="1rem"),
             line_height="1.55",
             margin_top="10px",
-            max_width="640px",
+            max_width="680px",
         ),
         rx.text(
             "Not mind reading. Just pattern reading.",
@@ -37965,8 +38261,54 @@ def _ef_intro() -> rx.Component:
             font_style="italic",
             margin_top="6px",
         ),
+        _ef_premium_chips(),
         spacing="0",
         align="start",
+        width="100%",
+    )
+
+
+def _ef_idle_body() -> rx.Component:
+    """Idle / upload state — two-column on desktop, stacked on mobile.
+
+    Left  : past-papers upload  +  exam-details text area
+    Right : "What Alex analyzes" explainer  +  backtest toggle + Generate button
+    Below : "Advanced — optional source files" (syllabus + marking schemes)
+    """
+    left_col = rx.vstack(
+        _ef_upload_section(),
+        _ef_exam_details_card(),
+        spacing="4",
+        align="stretch",
+        width="100%",
+    )
+    right_col = rx.vstack(
+        _ef_what_alex_analyzes_card(),
+        _ef_run_bar(),
+        spacing="4",
+        align="stretch",
+        width="100%",
+    )
+    return rx.vstack(
+        rx.flex(
+            rx.box(left_col, flex="1", min_width="0", width="100%"),
+            rx.box(right_col, flex="1", min_width="0", width="100%"),
+            direction=rx.breakpoints(initial="column", md="row"),
+            spacing="5",
+            width="100%",
+            align="stretch",
+        ),
+        # Inline error panel — only shown when pipeline returned an error.
+        rx.cond(
+            ExamForecastState.ef_has_error,
+            _ef_error_panel(),
+            rx.box(),
+        ),
+        # Advanced uploads — full-width, visually de-emphasized, bottom of page.
+        rx.box(height="8px"),
+        _ef_advanced_uploads_card(),
+        spacing="4",
+        align="stretch",
         width="100%",
     )
 
@@ -38009,32 +38351,25 @@ def exam_forecast_page() -> rx.Component:
                     ),
 
                     _ef_intro(),
-                    rx.box(height="22px"),
+                    rx.box(height="28px"),
 
                     # ── Body switches by status ──
                     rx.cond(
                         ExamForecastState.ef_has_result,
+                        # Result view stays full-width single column — it's
+                        # already vertically structured.
                         _ef_result_view(),
-                        rx.fragment(
-                            _ef_upload_section(),
-                            _ef_run_bar(),
-                            rx.cond(
-                                ExamForecastState.ef_is_analyzing,
-                                _ef_analyzing_panel(),
-                                rx.box(),
-                            ),
-                            rx.cond(
-                                ExamForecastState.ef_has_error,
-                                _ef_error_panel(),
-                                rx.box(),
-                            ),
+                        rx.cond(
+                            ExamForecastState.ef_is_analyzing,
+                            _ef_analyzing_panel(),
+                            _ef_idle_body(),
                         ),
                     ),
 
                     spacing="0",
                     align="stretch",
                     width="100%",
-                    max_width="820px",
+                    max_width="1080px",
                     margin_x="auto",
                     padding=rx.breakpoints(initial="18px 14px 60px 14px", md="36px 32px 80px 32px"),
                 ),
