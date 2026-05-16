@@ -7558,9 +7558,10 @@ class AppState(reflex_local_auth.LocalAuthState):
             f"""
         (function() {{
             try {{
-                // JSON.stringify so rx.LocalStorage (which JSON.parses on read)
-                // sees the same encoding the Next.js login route produces.
-                localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, JSON.stringify({json.dumps(new_token)}));
+                // Store the raw token. rx.LocalStorage hydrates state vars
+                // from localStorage.getItem without JSON.parse, so wrapping
+                // in quotes makes AppState._uid()'s session_id lookup miss.
+                localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
                 document.cookie = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)} + "=" + encodeURIComponent({json.dumps(new_token)}) + "; Max-Age={AUTH_SESSION_MAX_AGE_SECONDS}; Path=/; SameSite=Lax" + (window.location.protocol === "https:" ? "; Secure" : "");
             }} catch(e) {{}}
             setTimeout(function() {{ window.location.replace('/'); }}, 60);
@@ -7633,8 +7634,9 @@ class AppState(reflex_local_auth.LocalAuthState):
         yield rx.call_script(f"""
     (function() {{
         try {{
-            // JSON.stringify so rx.LocalStorage decodes cleanly on read.
-            localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, JSON.stringify({json.dumps(new_token)}));
+            // Store the raw token — rx.LocalStorage reads localStorage with
+            // plain getItem (no JSON.parse), so quoting breaks the lookup.
+            localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(new_token)});
             document.cookie = {json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)} + "=" + encodeURIComponent({json.dumps(new_token)}) + "; Max-Age={AUTH_SESSION_MAX_AGE_SECONDS}; Path=/; SameSite=Lax" + (window.location.protocol === "https:" ? "; Secure" : "");
         }} catch(e) {{}}
         setTimeout(function() {{ window.location.replace('/'); }}, 150);
@@ -37538,11 +37540,11 @@ async def google_callback(request: Request):
 	    <script>
 	      (function() {{
 	        try {{
-	          // JSON.stringify wraps the token in quotes so rx.LocalStorage
-	          // (and other JSON.parse readers) decode it cleanly. Storing
-	          // the raw token without quotes makes Reflex's auth check see
-	          // an empty string, treating the user as a guest.
-	          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, JSON.stringify({json.dumps(auth_token)}));
+	          // Store the raw token. The earlier JSON.stringify wrap was a
+	          // misdiagnosis — rx.LocalStorage reads localStorage with plain
+	          // getItem (no JSON.parse), so quotes get baked into the
+	          // session_id lookup in AppState._uid() and miss the DB.
+	          localStorage.setItem({json.dumps(AUTH_TOKEN_LOCAL_STORAGE_KEY)}, {json.dumps(auth_token)});
 	          localStorage.setItem('alex_ga_auth_method', 'google');
 	        }} catch (e) {{}}
 	        window.location.replace("/auth/post-login");
