@@ -7891,9 +7891,24 @@ class AppState(reflex_local_auth.LocalAuthState):
         return SEMESTER_NAVIGATION.get(self.selected_year, [])
 
     def _uid(self) -> int:
+        # rx.LocalStorage reads localStorage values without JSON.parse, but
+        # the Next.js login route and Google OAuth bootstrap both write the
+        # session token via JSON.stringify(...). The result is auth_token /
+        # app_auth_token hold a quoted string like '"abc123"' instead of the
+        # raw 'abc123' stored in localauthsession — so the SQL lookup below
+        # silently fails on a fresh tab and the user gets bounced back into
+        # onboarding. Decode the same way _cookie_value already does.
         tokens: list[str] = []
         for raw in (self.auth_token, self.app_auth_token, self._auth_token_from_cookie()):
             token = (raw or "").strip()
+            if not token:
+                continue
+            try:
+                parsed = json.loads(token)
+                if isinstance(parsed, str):
+                    token = parsed.strip()
+            except Exception:
+                pass
             if token and token not in tokens:
                 tokens.append(token)
         if not tokens:
