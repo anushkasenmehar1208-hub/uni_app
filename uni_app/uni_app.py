@@ -37709,55 +37709,55 @@ def _ef_advanced_uploads_card() -> rx.Component:
     can skip this" helper line stays visible at all times so the user
     understands what's hidden behind the chevron and whether to expand.
     """
-    # Clickable header row — toggles expand/collapse on click.
-    # The click handler lives on the outer `rx.box` (not the hstack) because
-    # every working on_click in this codebase sits on rx.box; flex
-    # containers don't reliably propagate click events in Reflex 0.8.x.
-    header = rx.box(
-        rx.hstack(
-            rx.icon(tag="settings_2", size=14, color="rgba(200,210,220,0.55)"),
-            rx.text(
-                "Advanced — optional source files",
-                color="rgba(200,210,220,0.7)",
-                font_size="0.82rem",
-                font_weight="600",
-            ),
-            rx.spacer(),
-            rx.icon(
-                tag="chevron_down",
-                size=16,
-                color="rgba(200,210,220,0.55)",
-                style={
-                    "transition": "transform 0.18s ease",
-                    "transform": rx.cond(
-                        ExamForecastState.ef_show_advanced,
-                        "rotate(180deg)",
-                        "rotate(0deg)",
-                    ),
-                },
-            ),
-            spacing="2",
-            align="center",
-            width="100%",
-            # Make sure the hstack itself doesn't swallow clicks meant for
-            # the box wrapper around it.
-            pointer_events="none",
+    # Clickable header — rendered as a real <button> for bulletproof click
+    # handling. `rx.button` is the canonical Reflex pattern for clickable
+    # rows in this codebase; earlier attempts to put on_click on rx.box /
+    # rx.hstack did not fire in Reflex 0.8.x's compile of this nested tree.
+    header = rx.button(
+        rx.icon(tag="settings_2", size=14, color="rgba(200,210,220,0.55)"),
+        rx.text(
+            "Advanced — optional source files",
+            color="rgba(200,210,220,0.7)",
+            font_size="0.82rem",
+            font_weight="600",
+        ),
+        rx.spacer(),
+        rx.icon(
+            tag="chevron_down",
+            size=16,
+            color="rgba(200,210,220,0.55)",
+            style={
+                "transition": "transform 0.18s ease",
+                "transform": rx.cond(
+                    ExamForecastState.ef_show_advanced,
+                    "rotate(180deg)",
+                    "rotate(0deg)",
+                ),
+            },
         ),
         on_click=ExamForecastState.toggle_advanced,
-        cursor="pointer",
+        variant="ghost",
+        size="2",
         width="100%",
-        padding="4px 2px",
-        border_radius="8px",
         custom_attrs={
-            "role": "button",
-            "tabindex": "0",
             "aria-expanded": rx.cond(
                 ExamForecastState.ef_show_advanced, "true", "false"
             ),
         },
         style={
-            "transition": "background 0.15s ease",
-            "_hover": {"background": "rgba(255,255,255,0.03)"},
+            "display": "flex",
+            "flex_direction": "row",
+            "align_items": "center",
+            "justify_content": "flex-start",
+            "gap": "8px",
+            "background": "transparent",
+            "border": "none",
+            "color": "inherit",
+            "padding": "8px 4px",
+            "cursor": "pointer",
+            "text_align": "left",
+            "font_weight": "400",  # let the inner rx.text govern weight
+            "_hover": {"background": "rgba(255,255,255,0.04)"},
         },
     )
 
