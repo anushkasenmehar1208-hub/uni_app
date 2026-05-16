@@ -37379,6 +37379,10 @@ def _ef_answer_row(g) -> rx.Component:
 
 
 def _ef_score_row(item) -> rx.Component:
+    # `item["value"]` is a Reflex ObjectItemOperation, not a Python str — call
+    # `.to_string()` before `+` to get a StringConcatOperation that supports
+    # concatenation with a plain str (canonical Reflex 0.8.x pattern, matches
+    # the rest of this file e.g. `_ef_question_row` and AppState.trial_days_left).
     return rx.hstack(
         rx.text(
             item["label"],
@@ -37387,7 +37391,7 @@ def _ef_score_row(item) -> rx.Component:
             flex="1",
         ),
         rx.text(
-            item["value"] + " / 100",
+            item["value"].to_string() + " / 100",
             color="rgba(240,244,248,0.92)",
             font_size="0.86rem",
             font_weight="600",
