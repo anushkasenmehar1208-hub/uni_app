@@ -43,11 +43,8 @@ export default function LoginPage() {
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.token) {
         // Sync Reflex auth: it reads this localStorage key on app load.
-        // Store the raw token — rx.LocalStorage hydrates state vars with
-        // plain localStorage.getItem (no JSON.parse), so any wrapping
-        // quotes get baked into the session_id lookup and miss the DB.
         try {
-          localStorage.setItem(data.tokenKey, data.token);
+          localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
         } catch {}
         // Reflex's /app handles onboarding (selecting degree/semester)
         // for new users and routes already-onboarded users to their

@@ -55,11 +55,8 @@ export default function RegisterPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.token) {
-        // Store the raw token — rx.LocalStorage on the Reflex side reads
-        // localStorage.getItem without JSON.parse, so wrapping in quotes
-        // poisons the session_id lookup.
         try {
-          localStorage.setItem(data.tokenKey, data.token);
+          localStorage.setItem(data.tokenKey, JSON.stringify(data.token));
         } catch {}
         // Skip Next.js /onboarding — Reflex's /app handles the
         // country/degree/semester picker and binds it to the chat.
