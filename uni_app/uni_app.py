@@ -37524,15 +37524,15 @@ def _ef_upload_section() -> rx.Component:
 
 # Multi-line placeholder rendered inside the text area. Most browsers honor
 # `\n` in textarea placeholders; on the rare ones that don't, the example
-# still reads fine on one line.
+# still reads fine on one line. Kept fully generic — Alex Studies serves an
+# international audience, so no specific universities, regions, or subjects.
 _EF_EXAM_DETAILS_PLACEHOLDER = (
-    "Example:\n"
-    "University of Kelaniya\n"
-    "Computer Science\n"
-    "Year 1 Semester 1\n"
-    "History of Computing\n"
-    "Professor / lecturer: optional\n"
-    "Exam type: final exam / midterm\n"
+    "Your university name\n"
+    "Your course or subject name\n"
+    "Year / semester\n"
+    "Exam name\n"
+    "Professor / lecturer name: optional\n"
+    "Exam type: final exam / midterm / quiz\n"
     "Topics teacher focused on: optional\n"
     "Any notes: optional"
 )
@@ -37589,7 +37589,7 @@ def _ef_exam_details_card() -> rx.Component:
                 },
             ),
             rx.text(
-                "Add details Alex can use to understand the exam context. You can leave this blank.",
+                "Anything Alex should know about your exam — leave blank to skip.",
                 color="rgba(200,210,220,0.55)",
                 font_size="0.78rem",
                 line_height="1.45",
