@@ -7,6 +7,7 @@ import { Check, ChevronDown } from "lucide-react";
 type Country = {
   code: string;
   name: string;
+  flag: string;
 };
 
 type Degree = {
@@ -21,10 +22,10 @@ type Semester = {
 };
 
 const countries: Country[] = [
-  { code: "uk", name: "United Kingdom" },
-  { code: "us", name: "United States" },
-  { code: "in", name: "India" },
-  { code: "lk", name: "Sri Lanka" },
+  { code: "uk", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "us", name: "United States", flag: "🇺🇸" },
+  { code: "in", name: "India", flag: "🇮🇳" },
+  { code: "lk", name: "Sri Lanka", flag: "🇱🇰" },
 ];
 
 const degrees: Degree[] = [
@@ -112,10 +113,12 @@ const reveal = {
 
 function OptionCard({
   title,
+  prefix,
   selected,
   onClick,
 }: {
   title: string;
+  prefix?: string;
   selected: boolean;
   onClick: () => void;
 }) {
@@ -151,6 +154,7 @@ function OptionCard({
             fontWeight: selected ? 700 : 500,
           }}
         >
+          {prefix && <span className="mr-1.5">{prefix}</span>}
           {title}
         </span>
       </div>
@@ -519,11 +523,12 @@ export default function OnboardingPage() {
             <Section
               title="Where do you study?"
             >
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {countries.map((item) => (
                   <OptionCard
                     key={item.code}
                     title={item.name}
+                    prefix={item.flag}
                     selected={country === item.code}
                     onClick={() => chooseCountry(item.code)}
                   />
