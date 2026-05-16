@@ -37710,38 +37710,54 @@ def _ef_advanced_uploads_card() -> rx.Component:
     understands what's hidden behind the chevron and whether to expand.
     """
     # Clickable header row — toggles expand/collapse on click.
-    header = rx.hstack(
-        rx.icon(tag="settings_2", size=14, color="rgba(200,210,220,0.55)"),
-        rx.text(
-            "Advanced — optional source files",
-            color="rgba(200,210,220,0.7)",
-            font_size="0.82rem",
-            font_weight="600",
+    # The click handler lives on the outer `rx.box` (not the hstack) because
+    # every working on_click in this codebase sits on rx.box; flex
+    # containers don't reliably propagate click events in Reflex 0.8.x.
+    header = rx.box(
+        rx.hstack(
+            rx.icon(tag="settings_2", size=14, color="rgba(200,210,220,0.55)"),
+            rx.text(
+                "Advanced — optional source files",
+                color="rgba(200,210,220,0.7)",
+                font_size="0.82rem",
+                font_weight="600",
+            ),
+            rx.spacer(),
+            rx.icon(
+                tag="chevron_down",
+                size=16,
+                color="rgba(200,210,220,0.55)",
+                style={
+                    "transition": "transform 0.18s ease",
+                    "transform": rx.cond(
+                        ExamForecastState.ef_show_advanced,
+                        "rotate(180deg)",
+                        "rotate(0deg)",
+                    ),
+                },
+            ),
+            spacing="2",
+            align="center",
+            width="100%",
+            # Make sure the hstack itself doesn't swallow clicks meant for
+            # the box wrapper around it.
+            pointer_events="none",
         ),
-        rx.spacer(),
-        rx.icon(
-            tag="chevron_down",
-            size=16,
-            color="rgba(200,210,220,0.55)",
-            style={
-                "transition": "transform 0.18s ease",
-                "transform": rx.cond(
-                    ExamForecastState.ef_show_advanced,
-                    "rotate(180deg)",
-                    "rotate(0deg)",
-                ),
-            },
-        ),
-        spacing="2",
-        align="center",
-        width="100%",
         on_click=ExamForecastState.toggle_advanced,
         cursor="pointer",
+        width="100%",
+        padding="4px 2px",
+        border_radius="8px",
         custom_attrs={
             "role": "button",
+            "tabindex": "0",
             "aria-expanded": rx.cond(
                 ExamForecastState.ef_show_advanced, "true", "false"
             ),
+        },
+        style={
+            "transition": "background 0.15s ease",
+            "_hover": {"background": "rgba(255,255,255,0.03)"},
         },
     )
 
