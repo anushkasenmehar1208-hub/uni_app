@@ -190,6 +190,65 @@ def _parse_json_loose(text: str) -> Any:
     return json.loads(cleaned)
 
 
+def _salvage_question_objects(text: str) -> list[dict[str, Any]]:
+    """Last-ditch JSON repair: when the outer document is malformed,
+    walk the text and yield every standalone balanced ``{...}`` block
+    that parses as JSON and contains a ``question`` key.
+
+    Used by ``parse_past_paper_questions`` after a model returns
+    truncated or partially-corrupt JSON. We'd rather get 6 of 10
+    questions than fail the whole paper.
+    """
+    if not text:
+        return []
+    stripped = _strip_code_fences(text)
+    out: list[dict[str, Any]] = []
+    i = 0
+    n = len(stripped)
+    while i < n:
+        if stripped[i] != "{":
+            i += 1
+            continue
+        depth = 0
+        in_str = False
+        esc = False
+        start = i
+        end = -1
+        for j in range(i, n):
+            ch = stripped[j]
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+            else:
+                if ch == '"':
+                    in_str = True
+                elif ch == "{":
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    if depth == 0:
+                        end = j
+                        break
+        if end < 0:
+            # Unterminated — bail; the rest of the text is junk.
+            break
+        block = stripped[start : end + 1]
+        cleaned = re.sub(r",(\s*[}\]])", r"\1", block)
+        try:
+            obj = json.loads(cleaned)
+        except Exception:
+            i = end + 1
+            continue
+        if isinstance(obj, dict) and "question" in obj:
+            out.append(obj)
+        i = end + 1
+    return out
+
+
 # ─── Single-stage completion with JSON retry ────────────────────────────────
 
 
@@ -447,41 +506,439 @@ Rules:
 """
 
 
+_STRUCTURE_SHORT_SYSTEM = (
+    "Extract every exam question from the text fragment below into JSON. "
+    "Output ONLY a JSON object: {\"questions\": [...]}. Each question item: "
+    '{"question_number":"","section":"","question":"","marks":"",'
+    '"topic":"","subtopic":"","difficulty":"","question_type":"",'
+    '"repeated_pattern_signal":"","has_diagram":false,"has_table":false,'
+    '"examiner_wording_style":""}. '
+    "No commentary, no markdown fences. Empty string is fine for any "
+    "field you can't infer. Never invent questions — if the text is "
+    "partial, extract only what's clearly present."
+)
+
+# Question-boundary patterns used by both chunking and local fallback.
+# Looks for line starts like "1.", "Q1.", "Q. 1", "Question 1", or
+# section headings ("Section A", "PART B").
+_Q_BOUNDARY_RE = re.compile(
+    r"(?im)^[ \t]*(?:"
+    r"Q\.?\s*\d+|"
+    r"\d+\.|"
+    r"Question\s+\d+|"
+    r"Section\s+[A-Z]\b|"
+    r"PART\s+[A-Z]\b"
+    r")\b"
+)
+_LOCAL_Q_RE = re.compile(
+    r"(?ms)^[ \t]*"
+    r"(?:"
+    r"(?:Q\.?\s*(?P<qn1>\d+)|"
+    r"(?P<qn2>\d+)\.|"
+    r"Question\s+(?P<qn3>\d+))"
+    r"[).:]?\s+"
+    r")"
+    r"(?P<body>.+?)"
+    r"(?=^[ \t]*(?:Q\.?\s*\d+|\d+\.|Question\s+\d+)[).:]?\s+|\Z)"
+)
+_LOCAL_MARKS_RE = re.compile(
+    r"\[(\d{1,3})(?:\s*marks?)?\]|\((\d{1,3})\s*marks?\)"
+)
+
+
+def _chunk_paper_text(text: str, max_chars: int) -> list[str]:
+    """Split paper text at question/section boundaries when possible,
+    otherwise fall back to char-bounded slices with a small overlap.
+
+    Returns at least one chunk; never returns ``[""]``.
+    """
+    text = text or ""
+    if len(text) <= max_chars:
+        return [text]
+    # Try splitting on question boundaries first.
+    boundaries: list[int] = [0]
+    for m in _Q_BOUNDARY_RE.finditer(text):
+        if m.start() > boundaries[-1] + 100:
+            boundaries.append(m.start())
+    boundaries.append(len(text))
+    pieces: list[str] = []
+    for i in range(len(boundaries) - 1):
+        seg = text[boundaries[i] : boundaries[i + 1]]
+        if seg.strip():
+            pieces.append(seg)
+    # Merge consecutive pieces until each is just under ``max_chars``.
+    chunks: list[str] = []
+    current = ""
+    for seg in pieces:
+        if not current:
+            current = seg
+            continue
+        if len(current) + len(seg) <= max_chars:
+            current += seg
+        else:
+            chunks.append(current)
+            current = seg
+    if current:
+        chunks.append(current)
+    # If a single boundary slice was already larger than ``max_chars``
+    # (uncommon — a giant single question), char-slice it with overlap.
+    final: list[str] = []
+    overlap = 200
+    for ch in chunks:
+        if len(ch) <= max_chars:
+            final.append(ch)
+            continue
+        i = 0
+        while i < len(ch):
+            final.append(ch[i : i + max_chars])
+            i += max(1, max_chars - overlap)
+    return final or [text[:max_chars]]
+
+
+def _local_extract_questions(text: str) -> list[dict[str, Any]]:
+    """Regex-based fallback used when every model attempt has failed.
+
+    Crude but safe: it won't invent topics or difficulty, and the
+    downstream pipeline is fine receiving questions with sparse
+    metadata — corpus analysis and prediction stages only need
+    ``question``, ``marks``, ``section``, ``question_number`` to do
+    useful work.
+    """
+    if not text:
+        return []
+    results: list[dict[str, Any]] = []
+    section_marker = ""
+    section_iter = re.finditer(
+        r"(?im)^[ \t]*(?:Section|PART)\s+([A-Z])\b", text
+    )
+    # Map of body-start offset -> section letter that was active.
+    section_at: list[tuple[int, str]] = [
+        (m.start(), m.group(1).upper()) for m in section_iter
+    ]
+
+    def _section_for(offset: int) -> str:
+        active = ""
+        for start, sec in section_at:
+            if start <= offset:
+                active = sec
+            else:
+                break
+        return active
+
+    for m in _LOCAL_Q_RE.finditer(text):
+        qn = m.group("qn1") or m.group("qn2") or m.group("qn3") or ""
+        body = (m.group("body") or "").strip()
+        if not body or len(body) < 8:
+            continue
+        marks = ""
+        marks_match = _LOCAL_MARKS_RE.search(body)
+        if marks_match:
+            marks = marks_match.group(1) or marks_match.group(2) or ""
+        results.append(
+            {
+                "section": _section_for(m.start()),
+                "question_number": qn,
+                "question": body[:1500],
+                "marks": marks,
+                "topic": "",
+                "subtopic": "",
+                "difficulty": "",
+                "question_type": "",
+                "repeated_pattern_signal": "",
+                "has_diagram": False,
+                "has_table": False,
+                "examiner_wording_style": "",
+            }
+        )
+    return results
+
+
+def _coerce_questions_payload(payload: Any) -> list[dict[str, Any]]:
+    """Pull a ``questions`` list out of whatever shape the model returned.
+
+    Models occasionally wrap the array in unexpected keys or return
+    the array directly. We accept any of:
+      - ``{"questions": [...]}``
+      - ``[...]``  (bare array of question objects)
+      - ``{"items"|"data"|"output": [...]}``  (rare wrapper)
+    """
+    if isinstance(payload, list):
+        return [q for q in payload if isinstance(q, dict)]
+    if not isinstance(payload, dict):
+        return []
+    for key in ("questions", "items", "data", "output", "result"):
+        v = payload.get(key)
+        if isinstance(v, list):
+            return [q for q in v if isinstance(q, dict)]
+    return []
+
+
+def _structured_paper_envelope(
+    year_hint: str,
+    questions: list[dict[str, Any]],
+    *,
+    extra: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """Wrap an extracted question list in the schema the rest of the
+    pipeline expects (corpus review etc. reads ``questions`` and the
+    optional metadata fields)."""
+    env: dict[str, Any] = {
+        "year_hint": year_hint,
+        "course_or_module": "",
+        "section_structure": "",
+        "questions": questions,
+    }
+    if extra:
+        for k, v in extra.items():
+            if k in env and not env[k]:
+                env[k] = v
+            elif k not in env:
+                env[k] = v
+    return env
+
+
+def _extract_questions_from_chunk(
+    *,
+    openrouter_complete: Callable[..., Any],
+    model: str,
+    chunk: str,
+    year_hint: str,
+    chunk_index: int,
+    total_chunks: int,
+) -> list[dict[str, Any]]:
+    """Call the model on a single chunk with the short prompt and a
+    smaller token cap. Returns a (possibly empty) list of question
+    dicts. Raises ``ExamForecastError`` on a hard failure (model
+    unreachable, empty after retry) so the caller can move on."""
+    user_msg = (
+        f"Year hint: {year_hint or '(none)'}. "
+        f"Chunk {chunk_index + 1} of {total_chunks}. "
+        "Extract questions as JSON only.\n\n"
+        f"---\n{chunk}\n---"
+    )
+    payload = _complete_json_once(
+        openrouter_complete=openrouter_complete,
+        stage="structure_questions_chunk",
+        model=model,
+        messages=[
+            {"role": "system", "content": _STRUCTURE_SHORT_SYSTEM},
+            {"role": "user", "content": user_msg},
+        ],
+        max_tokens=3500,
+        temperature=TEMP_EXTRACT,
+    )
+    return _coerce_questions_payload(payload)
+
+
+def _dedupe_questions(qs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Drop duplicates by (section, question_number, first 80 chars of
+    question). Chunk overlap and merged regex passes can produce the
+    same question twice."""
+    seen: set[tuple[str, str, str]] = set()
+    out: list[dict[str, Any]] = []
+    for q in qs:
+        if not isinstance(q, dict):
+            continue
+        body = (q.get("question") or "").strip()
+        if not body:
+            continue
+        key = (
+            (q.get("section") or "").strip(),
+            (q.get("question_number") or "").strip(),
+            body[:80],
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(q)
+    return out
+
+
 def parse_past_paper_questions(
     *,
     openrouter_complete: Callable[..., Any],
     paper_text: str,
     year_hint: str = "",
 ) -> dict[str, Any]:
-    """Structure one past paper's text into question JSON via the extraction model."""
+    """Structure one past paper's text into question JSON.
+
+    Robust against empty / truncated / malformed model output:
+
+      1. Try the full single-call extraction with the primary model
+         and the configured fallback chain (existing path).
+      2. If that fails or returns nothing usable, salvage standalone
+         question objects from the broken text.
+      3. If still empty, chunk the paper at question boundaries and
+         ask the primary model for each chunk with a smaller prompt
+         and tighter token cap.
+      4. If still empty, run a local regex extractor over the raw
+         text. Output is crude (no topics/difficulty) but downstream
+         stages can still produce something useful.
+      5. Only after all of the above fail does the function return
+         an empty ``questions`` list. **It never raises** — the
+         pipeline keeps running even if one paper extracts to zero
+         questions, and ``run_pipeline`` decides whether the overall
+         result has enough material.
+    """
     if not paper_text.strip():
-        return {
-            "year_hint": year_hint,
-            "course_or_module": "",
-            "section_structure": "",
-            "questions": [],
-        }
+        return _structured_paper_envelope(year_hint, [])
+
+    primary = EXAM_FORECAST_EXTRACTION_MODEL
+    fallbacks = EXAM_FORECAST_EXTRACTION_FALLBACK_MODELS
+
+    # ── 1) Primary path: full prompt, full text, primary + fallback chain ──
     user_msg = (
         f"Year hint: {year_hint or '(none)'}\n\n"
         f"Paper text follows. Extract questions as JSON.\n\n"
         f"---\n{paper_text}\n---"
     )
-    return _complete_json(
-        openrouter_complete=openrouter_complete,
-        stage="structure_questions",
-        model=EXAM_FORECAST_EXTRACTION_MODEL,
-        messages=[
-            {"role": "system", "content": _STRUCTURE_SYSTEM},
-            {"role": "user", "content": user_msg},
-        ],
-        max_tokens=MAX_TOKENS_STRUCTURE,
-        temperature=TEMP_EXTRACT,
-        fallback_models=EXAM_FORECAST_EXTRACTION_FALLBACK_MODELS,
-        user_hint=(
-            "Model returned empty response during question extraction. "
-            "Try again or change EXAM_FORECAST_EXTRACTION_MODEL."
-        ),
-    )
+    primary_payload: Any = None
+    primary_text: str = ""
+
+    def _try_primary(model: str) -> tuple[Any, str]:
+        started = time.monotonic()
+        resp = openrouter_complete(
+            model,
+            [
+                {"role": "system", "content": _STRUCTURE_SYSTEM},
+                {"role": "user", "content": user_msg},
+            ],
+            max_tokens=MAX_TOKENS_STRUCTURE,
+            temperature=TEMP_EXTRACT,
+        )
+        text = (getattr(resp, "text", "") or "").strip()
+        logger.info(
+            "exam_forecast stage=structure_questions model=%s "
+            "duration=%.1fs out_chars=%d",
+            model,
+            time.monotonic() - started,
+            len(text),
+        )
+        if not text or _looks_like_error_message(text):
+            return None, text
+        try:
+            return _parse_json_loose(text), text
+        except Exception as exc:
+            logger.warning(
+                "exam_forecast structure_questions primary parse failed "
+                "model=%s err=%s out_chars=%d",
+                model,
+                str(exc)[:200],
+                len(text),
+            )
+            return None, text
+
+    for model in (primary, *fallbacks):
+        try:
+            payload, raw = _try_primary(model)
+        except Exception as exc:
+            logger.warning(
+                "exam_forecast structure_questions model=%s exception=%s",
+                model,
+                str(exc)[:200],
+            )
+            continue
+        if payload is not None:
+            primary_payload = payload
+            primary_text = raw
+            break
+        # Keep the longest non-empty body we saw so step 2 has the best
+        # chance of salvaging questions out of broken JSON.
+        if len(raw) > len(primary_text):
+            primary_text = raw
+
+    questions: list[dict[str, Any]] = _coerce_questions_payload(primary_payload)
+    extra_meta: dict[str, Any] = {}
+    if isinstance(primary_payload, dict):
+        for k in ("course_or_module", "section_structure", "year_hint"):
+            v = primary_payload.get(k)
+            if isinstance(v, str) and v.strip():
+                extra_meta[k] = v.strip()
+
+    # ── 2) Salvage individual question objects from broken JSON ─────────
+    if not questions and primary_text:
+        salvaged = _salvage_question_objects(primary_text)
+        if salvaged:
+            logger.warning(
+                "exam_forecast structure_questions salvaged %d question(s) "
+                "from broken JSON (year=%s)",
+                len(salvaged),
+                year_hint or "(none)",
+            )
+            questions = salvaged
+
+    # ── 3) Chunked retry with the short prompt on the primary model ──────
+    if not questions and len(paper_text) > 1200:
+        chunks = _chunk_paper_text(paper_text, max_chars=4500)
+        logger.warning(
+            "exam_forecast structure_questions chunked retry: %d chunk(s) "
+            "(year=%s)",
+            len(chunks),
+            year_hint or "(none)",
+        )
+        for i, chunk in enumerate(chunks):
+            for model in (primary, *fallbacks):
+                try:
+                    chunk_qs = _extract_questions_from_chunk(
+                        openrouter_complete=openrouter_complete,
+                        model=model,
+                        chunk=chunk,
+                        year_hint=year_hint,
+                        chunk_index=i,
+                        total_chunks=len(chunks),
+                    )
+                except ExamForecastError as exc:
+                    logger.warning(
+                        "exam_forecast structure_questions chunk=%d/%d "
+                        "model=%s failed: %s",
+                        i + 1,
+                        len(chunks),
+                        model,
+                        exc.detail,
+                    )
+                    continue
+                except Exception as exc:
+                    logger.warning(
+                        "exam_forecast structure_questions chunk=%d/%d "
+                        "model=%s exception=%s",
+                        i + 1,
+                        len(chunks),
+                        model,
+                        str(exc)[:200],
+                    )
+                    continue
+                if chunk_qs:
+                    questions.extend(chunk_qs)
+                    break  # got this chunk; move on to the next chunk
+
+    # ── 4) Local regex extraction — never depends on the LLM ────────────
+    if not questions:
+        local = _local_extract_questions(paper_text)
+        if local:
+            logger.warning(
+                "exam_forecast structure_questions local-regex fallback "
+                "extracted %d question(s) (year=%s)",
+                len(local),
+                year_hint or "(none)",
+            )
+            questions = local
+
+    questions = _dedupe_questions(questions)
+    if not questions:
+        logger.warning(
+            "exam_forecast structure_questions zero questions extracted "
+            "after all paths (year=%s, paper_chars=%d)",
+            year_hint or "(none)",
+            len(paper_text),
+        )
+    else:
+        logger.info(
+            "exam_forecast structure_questions final extracted=%d (year=%s)",
+            len(questions),
+            year_hint or "(none)",
+        )
+
+    return _structured_paper_envelope(year_hint, questions, extra=extra_meta)
 
 
 # ─── Stage 3: long-context corpus review ────────────────────────────────────
@@ -1188,6 +1645,33 @@ def run_pipeline(
             EXAM_FORECAST_EXTRACTION_MODEL,
             "no papers could be structured",
         )
+
+    # ``parse_past_paper_questions`` is now defensive — it returns an
+    # envelope with an empty ``questions`` list rather than raising
+    # when every model path fails AND the local regex extractor finds
+    # nothing. Surface that situation as a progress message so the
+    # operator sees it, and only refuse to continue when literally
+    # nothing was extracted across every uploaded paper.
+    total_questions = sum(
+        len(p.get("questions") or []) for p in structured_papers
+    )
+    if total_questions == 0:
+        logger.warning(
+            "exam_forecast structure_questions extracted ZERO questions "
+            "across %d paper(s) — model and local-regex paths both empty",
+            len(structured_papers),
+        )
+        raise ExamForecastError(
+            "structure_questions",
+            EXAM_FORECAST_EXTRACTION_MODEL,
+            "Extraction recovered no questions from any uploaded paper. "
+            "Model returned empty response during question extraction. "
+            "Try again or change EXAM_FORECAST_EXTRACTION_MODEL.",
+        )
+    _progress(
+        f"Extracted {total_questions} question(s) across "
+        f"{len(structured_papers)} paper(s)."
+    )
 
     # ── Optional backtest: leave the most-recent year out, predict it ─
     backtest_score: Optional[dict[str, Any]] = None
