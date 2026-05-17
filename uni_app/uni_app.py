@@ -26856,7 +26856,11 @@ def nav_rail() -> rx.Component:
         _nav_rail_btn("search", AppState.toggle_global_search, "Search chats"),
         _nav_rail_btn("notebook", AppState.toggle_notes_panel, "Notes"),
         _nav_rail_btn("list_checks", [AppState.close_semester_sidebar, rx.redirect("/tracker")], "Tracker"),
-        _nav_rail_btn("file_search", [AppState.close_semester_sidebar, rx.redirect("/exam-forecast")], "Smart Exam Forecast"),
+        # Smart Exam Forecast lives in Next.js now, not the Reflex SPA.
+        # ``rx.redirect`` uses React Router and would stay inside the Reflex
+        # bundle; ``window.location.assign`` triggers a full browser nav so
+        # the request hits the Next.js middleware which owns /exam-forecast.
+        _nav_rail_btn("file_search", [AppState.close_semester_sidebar, rx.call_script("window.location.assign('/exam-forecast')")], "Smart Exam Forecast"),
         _nav_rail_btn("youtube", [AppState.close_semester_sidebar, rx.redirect("/learn")], "Learn from video"),
         _locked_nav_rail_btn("video", AppState.show_video_generator_coming_soon, "Generate teaching videos - coming soon"),
         rx.spacer(),
@@ -39992,10 +39996,190 @@ def _ensure_chatmessage2_document_columns() -> None:
 _ensure_chatmessage2_document_columns()
 
 
+async def exam_forecast_api(request: Request):
+    """Smart Exam Forecast — REST endpoint for the Next.js front-end.
+
+    POST multipart/form-data with:
+        past_papers       — repeated PDF field, 3–5 files required.
+        exam_details      — optional free-text context (university, course,
+                            professor, exam type, focus topics, notes).
+        syllabus          — optional PDF.
+        marking_schemes   — optional repeated PDF field.
+        run_backtest      — optional ``true``/``false`` (default ``true``).
+
+    The heavy work is delegated to ``exam_forecast.run_pipeline`` (the same
+    Python "brain" the Reflex UI uses). The pipeline is blocking and LLM-bound,
+    so we run it in a thread executor to keep the event loop responsive.
+
+    Returns ``application/json``:
+        {
+            "ok": bool,
+            "result": {...},                  # full pipeline output
+            "predicted_pdf_base64": "...",    # base64 of predicted-paper PDF
+            "answer_pdf_base64":    "...",    # base64 of answer-guide PDF
+            "error": str (only on failure or partial PDF export)
+        }
+    """
+    try:
+        form = await request.form()
+    except Exception as e:
+        return JSONResponse(
+            {"ok": False, "error": f"Bad multipart: {e}"}, status_code=400
+        )
+
+    past_paper_files = form.getlist("past_papers")
+    syllabus_file = form.get("syllabus")
+    marking_files = form.getlist("marking_schemes")
+    exam_details = str(form.get("exam_details") or "").strip()
+    run_backtest_raw = str(form.get("run_backtest") or "true").lower()
+    run_backtest = run_backtest_raw not in ("false", "0", "no", "off")
+
+    # File-count gates — match the limits enforced by the Reflex state.
+    if not past_paper_files:
+        return JSONResponse(
+            {"ok": False, "error": "At least one past-paper PDF is required."},
+            status_code=400,
+        )
+    if len(past_paper_files) > EXAM_FORECAST_MAX_PAST_PAPERS:
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": (
+                    f"Maximum {EXAM_FORECAST_MAX_PAST_PAPERS} past papers."
+                ),
+            },
+            status_code=400,
+        )
+    if len(past_paper_files) < EXAM_FORECAST_MIN_PAST_PAPERS:
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": (
+                    f"At least {EXAM_FORECAST_MIN_PAST_PAPERS} past papers "
+                    "required to run the pipeline."
+                ),
+            },
+            status_code=400,
+        )
+
+    async def _read_pdf_upload(
+        upload: Any, fallback_name: str
+    ) -> tuple[str, bytes] | JSONResponse:
+        if not hasattr(upload, "read"):
+            return JSONResponse(
+                {"ok": False, "error": "Invalid file upload."},
+                status_code=400,
+            )
+        name = getattr(upload, "filename", None) or fallback_name
+        if not name.lower().endswith(".pdf"):
+            return JSONResponse(
+                {"ok": False, "error": f'"{name}" is not a PDF.'},
+                status_code=400,
+            )
+        data = await upload.read()
+        if len(data) > EXAM_FORECAST_MAX_FILE_BYTES:
+            return JSONResponse(
+                {
+                    "ok": False,
+                    "error": (
+                        f'"{name}" exceeds the 10 MB per-file limit.'
+                    ),
+                },
+                status_code=400,
+            )
+        return (name, data)
+
+    past_papers: list[tuple[str, bytes]] = []
+    for upload in past_paper_files:
+        out = await _read_pdf_upload(upload, "paper.pdf")
+        if isinstance(out, JSONResponse):
+            return out
+        past_papers.append(out)
+
+    syllabus: Optional[tuple[str, bytes]] = None
+    if syllabus_file is not None:
+        out = await _read_pdf_upload(syllabus_file, "syllabus.pdf")
+        if isinstance(out, JSONResponse):
+            return out
+        syllabus = out
+
+    marking_schemes: list[tuple[str, bytes]] = []
+    for upload in marking_files:
+        out = await _read_pdf_upload(upload, "marking.pdf")
+        if isinstance(out, JSONResponse):
+            return out
+        marking_schemes.append(out)
+
+    print(
+        f"[exam-forecast-api] running pipeline: "
+        f"past_papers={len(past_papers)}, syllabus={syllabus is not None}, "
+        f"marking_schemes={len(marking_schemes)}, run_backtest={run_backtest}, "
+        f"exam_details_chars={len(exam_details)}"
+    )
+
+    def _run() -> dict[str, Any]:
+        return _ef.run_pipeline(
+            openrouter_complete=_openrouter_complete,
+            pdf_extractor=_extract_pdf_text,
+            past_papers=past_papers,
+            syllabus=syllabus,
+            marking_schemes=marking_schemes if marking_schemes else None,
+            exam_details=exam_details,
+            run_backtest=run_backtest,
+            progress_cb=None,
+        )
+
+    try:
+        result = await asyncio.to_thread(_run)
+    except Exception as e:
+        print(f"[exam-forecast-api] pipeline error: {type(e).__name__}: {e}")
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": (
+                    f"Pipeline failed: {type(e).__name__}: {str(e)[:200]}"
+                ),
+            },
+            status_code=500,
+        )
+
+    pred_b64 = ""
+    ans_b64 = ""
+    pdf_export_error: Optional[str] = None
+    try:
+        pred_buf = BytesIO()
+        _ef.export_predicted_paper_pdf(result, pred_buf)
+        pred_b64 = base64.b64encode(pred_buf.getvalue()).decode("ascii")
+        ans_buf = BytesIO()
+        _ef.export_answer_guide_pdf(result, ans_buf)
+        ans_b64 = base64.b64encode(ans_buf.getvalue()).decode("ascii")
+    except Exception as e:
+        print(
+            f"[exam-forecast-api] PDF export error: {type(e).__name__}: {e}"
+        )
+        pdf_export_error = f"PDF export failed: {str(e)[:200]}"
+
+    print(
+        f"[exam-forecast-api] success: predicted_pdf_b64={len(pred_b64)} chars, "
+        f"answer_pdf_b64={len(ans_b64)} chars"
+    )
+
+    payload: dict[str, Any] = {
+        "ok": True,
+        "result": result,
+        "predicted_pdf_base64": pred_b64,
+        "answer_pdf_base64": ans_b64,
+    }
+    if pdf_export_error:
+        payload["error"] = pdf_export_error
+    return JSONResponse(payload)
+
+
 api.add_route("/api/gumroad/ping", gumroad_ping, methods=["POST"])
 api.add_route("/api/webhook", dodo_webhook, methods=["POST"])
 api.add_route("/health", health_check, methods=["GET"])
 api.add_route("/api/notes/unload-autosave", notes_unload_autosave_api, methods=["POST"])
+api.add_route("/api/exam-forecast", exam_forecast_api, methods=["POST"])
 
 
 # ──────────────────────────────────────────────────────────────

@@ -9,11 +9,13 @@ const NEXT_PATHS = [
   "/login",
   "/register",
   "/onboarding",
+  "/exam-forecast",
 ];
 
 const NEXT_PREFIXES = [
   "/api/auth/",
   "/api/onboarding/",
+  "/api/exam-forecast",
   "/_next/",
 ];
 
@@ -22,7 +24,7 @@ function isNextPath(pathname: string): boolean {
   return NEXT_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname, search, origin } = req.nextUrl;
 
   // After Next.js /onboarding redirects here with ?onboarded=1, send
