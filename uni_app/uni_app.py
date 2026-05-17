@@ -37715,42 +37715,82 @@ def _ef_upload_section() -> rx.Component:
                 rx.box(),
             ),
             # ── Selected (queued) files — appear immediately on pick ──
-            # Manual submit pattern: file picker stages files into
-            # ``selected_files``; the user commits the batch with the
-            # explicit "Upload selected PDFs" button. ``on_drop`` does
-            # not reliably fire on multi-file picker selection in this
-            # Reflex version, so the explicit button is the contract.
+            # Manual submit pattern: the file picker stages files into
+            # ``rx.selected_files("ef_past_papers_zone")``; the user
+            # commits the batch with the explicit "Upload selected PDFs"
+            # button. ``on_drop`` does not reliably fire on multi-file
+            # picker selection in this Reflex version, so the explicit
+            # button is the contract.
+            #
+            # Reflex limitation: ``selected_files`` lives in a React
+            # context (``filesById``) and Reflex only exposes
+            # ``rx.clear_selected_files(id)`` which wipes the whole
+            # batch. There is no per-index removal API, so each
+            # queued row is intentionally passive and the section
+            # offers a single "Clear" action. Once files are uploaded,
+            # they move to the Uploaded section where per-row View and
+            # Remove are fully wired.
             rx.cond(
                 rx.selected_files("ef_past_papers_zone").length() > 0,
                 rx.vstack(
+                    # Action header — pinned at the top so Upload and
+                    # Clear are always reachable regardless of how many
+                    # files are queued (no scrolling required).
                     rx.hstack(
-                        _ef_section_label("Selected"),
-                        rx.spacer(),
-                        rx.text(
-                            rx.selected_files("ef_past_papers_zone")
-                            .length()
-                            .to_string()
-                            + " file(s) ready",
-                            color="rgba(200,210,220,0.55)",
-                            font_size="0.74rem",
-                        ),
-                        spacing="0",
-                        align="center",
-                        width="100%",
-                        margin_bottom="0",
-                    ),
-                    rx.foreach(
-                        rx.selected_files("ef_past_papers_zone"),
-                        lambda name: _ef_selected_paper_row(name),
-                    ),
-                    rx.hstack(
-                        rx.text(
-                            "Click Upload selected PDFs to add these papers.",
-                            color="rgba(200,210,220,0.6)",
-                            font_size="0.78rem",
-                            font_style="italic",
+                        rx.vstack(
+                            _ef_section_label("Selected"),
+                            rx.text(
+                                rx.selected_files("ef_past_papers_zone")
+                                .length()
+                                .to_string()
+                                + " file(s) ready to upload",
+                                color="rgba(200,210,220,0.55)",
+                                font_size="0.74rem",
+                                margin_top="-6px",
+                            ),
+                            spacing="0",
+                            align="start",
                             flex="1",
                             min_width="0",
+                        ),
+                        rx.button(
+                            rx.icon(tag="x", size=13),
+                            "Clear",
+                            on_click=rx.clear_selected_files(
+                                "ef_past_papers_zone"
+                            ),
+                            disabled=ExamForecastState.ef_is_analyzing,
+                            size="2",
+                            style={
+                                "background": "transparent",
+                                "color": "rgba(220,230,240,0.78)",
+                                "border": "1px solid rgba(255,255,255,0.10)",
+                                "border_radius": "10px",
+                                "padding": "8px 12px",
+                                "font_size": "0.82rem",
+                                "font_weight": "600",
+                                "cursor": "pointer",
+                                "display": "inline-flex",
+                                "align_items": "center",
+                                "gap": "6px",
+                                "_hover": {
+                                    "background": "rgba(248,113,113,0.08)",
+                                    "color": "rgba(248,113,113,0.95)",
+                                    "border_color": "rgba(248,113,113,0.30)",
+                                },
+                                "_disabled": {
+                                    "opacity": "0.5",
+                                    "cursor": "not-allowed",
+                                },
+                            },
+                            custom_attrs={
+                                "aria-label": "Clear selected files",
+                                "title": (
+                                    "Clear all selected files. Browser "
+                                    "limitation: individual files can't "
+                                    "be removed before upload."
+                                ),
+                            },
                         ),
                         rx.button(
                             rx.icon(tag="upload_cloud", size=14),
@@ -37770,20 +37810,37 @@ def _ef_upload_section() -> rx.Component:
                                 "color": "#0b1410",
                                 "font_weight": "700",
                                 "border_radius": "10px",
-                                "padding": "8px 14px",
+                                "padding": "9px 16px",
+                                "font_size": "0.86rem",
                                 "cursor": "pointer",
                                 "display": "inline-flex",
                                 "align_items": "center",
                                 "gap": "6px",
-                                "_hover": {"background": "rgba(134,239,172,1)"},
+                                "transition": "background 0.15s ease, transform 0.05s ease",
+                                "_hover": {
+                                    "background": "rgba(134,239,172,1)",
+                                },
+                                "_active": {"transform": "scale(0.98)"},
                                 "_disabled": {
                                     "opacity": "0.5",
                                     "cursor": "not-allowed",
                                 },
                             },
+                            custom_attrs={"aria-label": "Upload selected PDFs"},
                         ),
-                        spacing="3",
+                        spacing="2",
                         align="center",
+                        width="100%",
+                    ),
+                    rx.foreach(
+                        rx.selected_files("ef_past_papers_zone"),
+                        lambda name: _ef_selected_paper_row(name),
+                    ),
+                    rx.text(
+                        "Click Upload selected PDFs to add these papers.",
+                        color="rgba(200,210,220,0.55)",
+                        font_size="0.76rem",
+                        font_style="italic",
                         width="100%",
                     ),
                     spacing="2",
