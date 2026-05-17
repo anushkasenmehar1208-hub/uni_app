@@ -36880,9 +36880,27 @@ class ExamForecastState(AppState):
 
     @rx.event
     async def handle_past_papers_upload(self, files: list[rx.UploadFile]):
-        """Add uploaded past-paper PDFs (PDF only, max ``EXAM_FORECAST_MAX_PAST_PAPERS``)."""
+        """Add uploaded past-paper PDFs (PDF only, max ``EXAM_FORECAST_MAX_PAST_PAPERS``).
+
+        Logs filenames only (never PDF contents) so we can verify the
+        wiring from the staging logs without leaking user data.
+        """
         self.ef_upload_error = ""
+        try:
+            received_names = [
+                (f.filename or "") for f in (files or [])
+            ]
+        except Exception:
+            received_names = []
+        print(
+            f"[exam-forecast] handle_past_papers_upload called: "
+            f"{len(files or [])} file(s): {received_names}"
+        )
         if not files:
+            self.ef_upload_error = (
+                "No files were received. Please select PDFs and click "
+                "‘Upload selected PDFs’."
+            )
             return
         for upload in files:
             if len(self._ef_past_papers_data) >= EXAM_FORECAST_MAX_PAST_PAPERS:
@@ -37227,10 +37245,40 @@ def _ef_upload_dropzone(
     sub_label: str,
     multiple: bool,
     max_files: int,
-    on_drop,
+    on_drop=None,
     disabled=False,
 ) -> rx.Component:
-    """Compact, dark, PDF-only dropzone styled to match the app."""
+    """Compact, dark, PDF-only dropzone styled to match the app.
+
+    When ``on_drop`` is ``None`` the dropzone queues files in Reflex's
+    client-side ``selected_files`` buffer and leaves the actual upload
+    to an explicit submit button rendered by the caller. This is the
+    pattern recommended by the Reflex docs for multi-file pickers,
+    where ``on_drop`` does not reliably fire on file-picker selection.
+    """
+    upload_kwargs: dict[str, Any] = dict(
+        id=upload_id,
+        accept={"application/pdf": [".pdf"]},
+        multiple=multiple,
+        max_files=max_files,
+        disabled=disabled,
+        border="1px dashed rgba(255,255,255,0.14)",
+        border_radius="12px",
+        background="rgba(255,255,255,0.02)",
+        width="100%",
+        style={
+            "transition": "border-color 0.18s ease, background 0.18s ease",
+            "_hover": {
+                "border_color": "rgba(134,239,172,0.28)",
+                "background": "rgba(34,197,94,0.03)",
+            },
+        },
+    )
+    if on_drop is not None:
+        upload_kwargs["on_drop"] = [
+            on_drop,
+            rx.clear_selected_files(upload_id),
+        ]
     return rx.upload(
         rx.hstack(
             rx.box(
@@ -37269,26 +37317,7 @@ def _ef_upload_dropzone(
             padding="14px 16px",
             width="100%",
         ),
-        id=upload_id,
-        accept={"application/pdf": [".pdf"]},
-        multiple=multiple,
-        max_files=max_files,
-        disabled=disabled,
-        on_drop=[
-            on_drop,
-            rx.clear_selected_files(upload_id),
-        ],
-        border="1px dashed rgba(255,255,255,0.14)",
-        border_radius="12px",
-        background="rgba(255,255,255,0.02)",
-        width="100%",
-        style={
-            "transition": "border-color 0.18s ease, background 0.18s ease",
-            "_hover": {
-                "border_color": "rgba(134,239,172,0.28)",
-                "background": "rgba(34,197,94,0.03)",
-            },
-        },
+        **upload_kwargs,
     )
 
 
@@ -37478,8 +37507,53 @@ def _ef_upload_section() -> rx.Component:
                 sub_label="PDF only · up to 10 MB each",
                 multiple=True,
                 max_files=EXAM_FORECAST_MAX_PAST_PAPERS,
-                on_drop=ExamForecastState.handle_past_papers_upload,
+                on_drop=None,
                 disabled=ExamForecastState.ef_is_analyzing,
+            ),
+            # Manual upload submit: the file picker stages files into
+            # ``selected_files`` but does not call the handler. Reflex's
+            # ``on_drop`` does not reliably fire on multi-file picker
+            # selection in this version, so we surface a clear button.
+            rx.cond(
+                rx.selected_files("ef_past_papers_zone").length() > 0,
+                rx.hstack(
+                    rx.text(
+                        "Ready to upload — ",
+                        color="rgba(200,210,220,0.65)",
+                        font_size="0.84rem",
+                    ),
+                    rx.text(
+                        rx.selected_files("ef_past_papers_zone").length().to_string()
+                        + " file(s) selected",
+                        color="rgba(236,240,244,0.92)",
+                        font_size="0.84rem",
+                        font_weight="600",
+                    ),
+                    rx.spacer(),
+                    rx.button(
+                        "Upload selected PDFs",
+                        on_click=ExamForecastState.handle_past_papers_upload(
+                            rx.upload_files(upload_id="ef_past_papers_zone")
+                        ),
+                        disabled=ExamForecastState.ef_is_analyzing,
+                        size="2",
+                        style={
+                            "background": "rgba(134,239,172,0.92)",
+                            "color": "#0b1410",
+                            "font_weight": "700",
+                            "border_radius": "10px",
+                            "padding": "8px 14px",
+                            "cursor": "pointer",
+                            "_hover": {"background": "rgba(134,239,172,1)"},
+                            "_disabled": {"opacity": "0.5", "cursor": "not-allowed"},
+                        },
+                    ),
+                    spacing="2",
+                    align="center",
+                    width="100%",
+                    margin_top="10px",
+                ),
+                rx.box(),
             ),
             rx.cond(
                 ExamForecastState.ef_past_paper_names.length() > 0,
