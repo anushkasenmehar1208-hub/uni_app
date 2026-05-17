@@ -63,6 +63,39 @@ EXAM_FORECAST_FINAL_POLISH_MODEL = (
     or "anthropic/claude-opus-4.7"
 )
 
+
+def _parse_model_list(raw: str) -> list[str]:
+    """Split a comma- or newline-separated model list and dedupe."""
+    out: list[str] = []
+    for chunk in re.split(r"[,\n]", raw or ""):
+        slug = chunk.strip()
+        if slug and slug not in out:
+            out.append(slug)
+    return out
+
+
+# Comma-separated fallback chain used when the primary extraction model
+# returns an empty body (most often: model temporarily unavailable on
+# OpenRouter, or the slug doesn't exist). The chain is tried in order,
+# and each step is logged loudly — we never silently downgrade.
+# Default chain is intentionally strong (Claude Opus → Gemini Pro) so
+# the forecast doesn't regress to a weaker model than the user asked
+# for in EXAM_FORECAST_EXTRACTION_MODEL.
+EXAM_FORECAST_EXTRACTION_FALLBACK_MODELS: list[str] = _parse_model_list(
+    os.getenv("EXAM_FORECAST_EXTRACTION_FALLBACK_MODELS", "")
+) or [
+    "anthropic/claude-opus-4.7",
+    "google/gemini-3.1-pro-preview",
+]
+
+# Per-paper character cap fed into the extraction prompt. Smaller =
+# safer on context limits and cheaper; too small = the model may miss
+# tail questions on long papers. Default 16k chars (~4k tokens) leaves
+# generous room for the JSON output within the 6k token cap.
+EXAM_FORECAST_PAPER_TEXT_LIMIT = max(
+    2000, int(os.getenv("EXAM_FORECAST_PAPER_TEXT_LIMIT", "16000") or "16000")
+)
+
 # Per-stage temperature (matches user spec).
 TEMP_EXTRACT = 0.1
 TEMP_PATTERN = 0.2
@@ -160,7 +193,7 @@ def _parse_json_loose(text: str) -> Any:
 # ─── Single-stage completion with JSON retry ────────────────────────────────
 
 
-def _complete_json(
+def _complete_json_once(
     *,
     openrouter_complete: Callable[..., Any],
     stage: str,
@@ -169,10 +202,15 @@ def _complete_json(
     max_tokens: int,
     temperature: float,
 ) -> Any:
-    """Call OpenRouter and parse the response as JSON, retrying once on failure.
+    """Single-model attempt: call once, retry once on empty body, then
+    retry once on JSON-parse failure. Raises ``ExamForecastError`` if
+    the model still hasn't produced parseable JSON after both retries.
 
-    Raises ``ExamForecastError`` if the call returns an error string (model
-    unavailable, rate-limited, etc.) or if both attempts fail to parse.
+    The empty-response retry is the important one — many transient
+    OpenRouter blips return an empty string rather than an HTTP error,
+    and one quick retry usually clears them. Only after both attempts
+    come back blank do we surface the failure so the caller can
+    decide whether to fall back to a different model.
     """
     started = time.monotonic()
     resp = openrouter_complete(
@@ -180,20 +218,42 @@ def _complete_json(
     )
     text = (getattr(resp, "text", "") or "").strip()
     logger.info(
-        "exam_forecast stage=%s model=%s duration=%.1fs out_chars=%d",
+        "exam_forecast stage=%s model=%s attempt=1 duration=%.1fs out_chars=%d",
         stage,
         model,
         time.monotonic() - started,
         len(text),
     )
     if not text:
-        raise ExamForecastError(stage, model, "empty response")
+        # Empty body — retry once on the same model before giving up.
+        logger.warning(
+            "exam_forecast stage=%s model=%s empty response, retrying once",
+            stage,
+            model,
+        )
+        started_retry = time.monotonic()
+        resp = openrouter_complete(
+            model, messages, max_tokens=max_tokens, temperature=temperature
+        )
+        text = (getattr(resp, "text", "") or "").strip()
+        logger.info(
+            "exam_forecast stage=%s model=%s attempt=2 duration=%.1fs out_chars=%d",
+            stage,
+            model,
+            time.monotonic() - started_retry,
+            len(text),
+        )
+        if not text:
+            raise ExamForecastError(
+                stage, model, "empty response (after retry)"
+            )
     if _looks_like_error_message(text):
         raise ExamForecastError(stage, model, text[:200])
     try:
         return _parse_json_loose(text)
     except Exception as exc:
-        # Retry once with an explicit corrective instruction.
+        # JSON parse failed — give the model an explicit corrective
+        # instruction and try one more time before giving up.
         retry_msgs = list(messages) + [
             {
                 "role": "assistant",
@@ -222,6 +282,86 @@ def _complete_json(
             raise ExamForecastError(
                 stage, model, f"JSON parse failed twice: {exc2}"
             ) from exc2
+
+
+def _complete_json(
+    *,
+    openrouter_complete: Callable[..., Any],
+    stage: str,
+    model: str,
+    messages: list[dict[str, Any]],
+    max_tokens: int,
+    temperature: float,
+    fallback_models: Optional[list[str]] = None,
+    user_hint: str = "",
+) -> Any:
+    """Call ``_complete_json_once`` against the primary model, then
+    optionally walk a fallback chain on failure.
+
+    ``fallback_models`` is tried in order and each step is logged so
+    failures are visible in the staging logs. The first ExamForecastError
+    is preserved so the original failure stays attached to the chain.
+
+    ``user_hint`` is appended to the final error's detail string —
+    used to surface the env-var override hint to the user when every
+    model in the chain fails.
+    """
+    try:
+        return _complete_json_once(
+            openrouter_complete=openrouter_complete,
+            stage=stage,
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+    except ExamForecastError as primary_exc:
+        if not fallback_models:
+            if user_hint:
+                raise ExamForecastError(
+                    primary_exc.stage,
+                    primary_exc.model,
+                    f"{primary_exc.detail}. {user_hint}",
+                ) from primary_exc
+            raise
+        logger.warning(
+            "exam_forecast stage=%s primary model %s failed: %s — trying %d fallback(s)",
+            stage,
+            model,
+            primary_exc.detail,
+            len(fallback_models),
+        )
+        last_exc: ExamForecastError = primary_exc
+        for fb in fallback_models:
+            try:
+                logger.warning(
+                    "exam_forecast stage=%s falling back to %s",
+                    stage,
+                    fb,
+                )
+                return _complete_json_once(
+                    openrouter_complete=openrouter_complete,
+                    stage=stage,
+                    model=fb,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )
+            except ExamForecastError as fb_exc:
+                logger.warning(
+                    "exam_forecast stage=%s fallback %s failed: %s",
+                    stage,
+                    fb,
+                    fb_exc.detail,
+                )
+                last_exc = fb_exc
+        # Everything failed — re-raise with the chain summary so the
+        # operator can see exactly which slugs were tried.
+        tried = ", ".join([model, *fallback_models])
+        detail = f"{last_exc.detail} (tried: {tried})"
+        if user_hint:
+            detail = f"{detail}. {user_hint}"
+        raise ExamForecastError(stage, last_exc.model, detail) from last_exc
 
 
 _ERROR_HINTS = (
@@ -336,6 +476,11 @@ def parse_past_paper_questions(
         ],
         max_tokens=MAX_TOKENS_STRUCTURE,
         temperature=TEMP_EXTRACT,
+        fallback_models=EXAM_FORECAST_EXTRACTION_FALLBACK_MODELS,
+        user_hint=(
+            "Model returned empty response during question extraction. "
+            "Try again or change EXAM_FORECAST_EXTRACTION_MODEL."
+        ),
     )
 
 
@@ -1016,9 +1161,21 @@ def run_pipeline(
     for i, (filename, text) in enumerate(extractable, start=1):
         _progress(f"Structuring questions ({i}/{total_papers})…")
         year_hint = _guess_year(filename, text)
+        trimmed = _trim(text, EXAM_FORECAST_PAPER_TEXT_LIMIT)
+        # Log filenames + sizes only — never the PDF text itself.
+        logger.info(
+            "exam_forecast structuring paper %d/%d filename=%s raw_chars=%d "
+            "trimmed_chars=%d year_hint=%s",
+            i,
+            total_papers,
+            filename,
+            len(text),
+            len(trimmed),
+            year_hint or "(none)",
+        )
         structured = parse_past_paper_questions(
             openrouter_complete=openrouter_complete,
-            paper_text=_trim(text, 24000),
+            paper_text=trimmed,
             year_hint=year_hint,
         )
         structured.setdefault("source_filename", filename)
@@ -1429,6 +1586,9 @@ def model_slug_summary() -> dict[str, str]:
     """Return current model slugs for the operator/logs."""
     return {
         "extraction": EXAM_FORECAST_EXTRACTION_MODEL,
+        "extraction_fallbacks": ",".join(
+            EXAM_FORECAST_EXTRACTION_FALLBACK_MODELS
+        ),
         "long_context": EXAM_FORECAST_LONG_CONTEXT_MODEL,
         "pattern": EXAM_FORECAST_PATTERN_MODEL,
         "rival": EXAM_FORECAST_RIVAL_MODEL,
