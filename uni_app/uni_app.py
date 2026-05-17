@@ -37258,53 +37258,28 @@ def _ef_uploaded_file_row(name, on_remove) -> rx.Component:
 def _ef_selected_paper_row(name) -> rx.Component:
     """Queued (selected, not yet uploaded) past-paper row.
 
-    Dashed border + muted palette signals "pending". No actions: the user
-    commits the batch with the explicit "Upload selected PDFs" button.
+    Deliberately minimal: file icon + filename, no per-row actions.
+    Reflex's ``selected_files`` is a React context with no per-index
+    mutator, so dressing these rows up as interactive cards would
+    misrepresent what's possible. The real interactive list is the
+    Uploaded section — these rows are just a preview of what the
+    "Upload selected PDFs" button will submit.
     """
     return rx.hstack(
-        rx.box(
-            rx.icon(tag="file_text", size=14, color="rgba(200,210,220,0.65)"),
-            display="flex",
-            align_items="center",
-            justify_content="center",
-            width="28px",
-            height="28px",
-            border_radius="8px",
-            background="rgba(255,255,255,0.04)",
-            border="1px solid rgba(255,255,255,0.08)",
-            flex_shrink="0",
-        ),
+        rx.icon(tag="file_text", size=14, color="rgba(200,210,220,0.5)"),
         rx.text(
             name,
-            color="rgba(220,230,240,0.88)",
-            font_size="0.86rem",
-            font_weight="500",
+            color="rgba(220,230,240,0.78)",
+            font_size="0.84rem",
             flex="1",
             overflow="hidden",
             text_overflow="ellipsis",
             white_space="nowrap",
             min_width="0",
         ),
-        rx.box(
-            rx.text(
-                "Ready to upload",
-                font_size="0.7rem",
-                font_weight="600",
-                color="rgba(200,210,220,0.7)",
-                letter_spacing="0.02em",
-            ),
-            background="rgba(255,255,255,0.04)",
-            padding="3px 10px",
-            border_radius="999px",
-            border="1px solid rgba(255,255,255,0.08)",
-            flex_shrink="0",
-        ),
         spacing="2",
         align="center",
-        padding="10px 12px",
-        background="rgba(255,255,255,0.025)",
-        border="1px dashed rgba(255,255,255,0.12)",
-        border_radius="12px",
+        padding="4px 2px",
         width="100%",
     )
 
@@ -37832,16 +37807,18 @@ def _ef_upload_section() -> rx.Component:
                         align="center",
                         width="100%",
                     ),
-                    rx.foreach(
-                        rx.selected_files("ef_past_papers_zone"),
-                        lambda name: _ef_selected_paper_row(name),
-                    ),
-                    rx.text(
-                        "Click Upload selected PDFs to add these papers.",
-                        color="rgba(200,210,220,0.55)",
-                        font_size="0.76rem",
-                        font_style="italic",
+                    rx.vstack(
+                        rx.foreach(
+                            rx.selected_files("ef_past_papers_zone"),
+                            lambda name: _ef_selected_paper_row(name),
+                        ),
+                        spacing="0",
                         width="100%",
+                        padding="8px 12px",
+                        background="rgba(255,255,255,0.02)",
+                        border="1px solid rgba(255,255,255,0.06)",
+                        border_radius="10px",
+                        align="stretch",
                     ),
                     spacing="2",
                     width="100%",
