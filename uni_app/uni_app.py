@@ -36883,7 +36883,12 @@ class ExamForecastState(AppState):
         """Add uploaded past-paper PDFs (PDF only, max ``EXAM_FORECAST_MAX_PAST_PAPERS``).
 
         Logs filenames only (never PDF contents) so we can verify the
-        wiring from the staging logs without leaking user data.
+        wiring from the staging logs without leaking user data. Clears
+        the ``selected_files`` buffer at the end via ``yield`` so the
+        clear is guaranteed to run AFTER the backend has appended to
+        ``ef_past_paper_names`` — this avoids a race where a chained
+        ``rx.clear_selected_files`` on the button's ``on_click`` could
+        otherwise fire concurrently with the in-flight upload event.
         """
         self.ef_upload_error = ""
         try:
@@ -36902,6 +36907,7 @@ class ExamForecastState(AppState):
                 "‘Upload selected PDFs’."
             )
             return
+        added = 0
         for upload in files:
             if len(self._ef_past_papers_data) >= EXAM_FORECAST_MAX_PAST_PAPERS:
                 self.ef_upload_error = (
@@ -36924,6 +36930,15 @@ class ExamForecastState(AppState):
                 continue
             self._ef_past_papers_data.append((name, data))
             self.ef_past_paper_names.append(name)
+            added += 1
+        print(
+            f"[exam-forecast] handle_past_papers_upload done: "
+            f"added {added} / total uploaded={len(self.ef_past_paper_names)}"
+        )
+        # Clear the client-side queue AFTER the state has been mutated
+        # so the Selected section disappears and the Uploaded section
+        # is what's visible next.
+        yield rx.clear_selected_files("ef_past_papers_zone")
 
     @rx.event
     async def handle_syllabus_upload(self, files: list[rx.UploadFile]):
@@ -37770,14 +37785,16 @@ def _ef_upload_section() -> rx.Component:
                         rx.button(
                             rx.icon(tag="upload_cloud", size=14),
                             "Upload selected PDFs",
-                            on_click=[
-                                ExamForecastState.handle_past_papers_upload(
-                                    rx.upload_files(
-                                        upload_id="ef_past_papers_zone",
-                                    ),
+                            # Single event: the handler yields
+                            # ``rx.clear_selected_files`` after appending
+                            # to ``ef_past_paper_names``, so a chained
+                            # clear here would be redundant and risks
+                            # racing the async upload event.
+                            on_click=ExamForecastState.handle_past_papers_upload(
+                                rx.upload_files(
+                                    upload_id="ef_past_papers_zone",
                                 ),
-                                rx.clear_selected_files("ef_past_papers_zone"),
-                            ],
+                            ),
                             disabled=ExamForecastState.ef_is_analyzing,
                             size="2",
                             style={
