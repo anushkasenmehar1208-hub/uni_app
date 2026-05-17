@@ -36976,6 +36976,23 @@ class ExamForecastState(AppState):
             pass
 
     @rx.event
+    def view_past_paper(self, index: int):
+        """Open an uploaded past-paper PDF via the browser's download/preview.
+
+        Reflex does not provide native in-app PDF preview; modern browsers
+        decide whether to inline-preview or save based on user settings.
+        We deliberately label the action "View PDF" but the implementation
+        is a download to keep behavior predictable.
+        """
+        try:
+            if not (0 <= index < len(self._ef_past_papers_data)):
+                return None
+            name, data = self._ef_past_papers_data[index]
+        except Exception:
+            return None
+        return rx.download(data=data, filename=name)
+
+    @rx.event
     def remove_syllabus(self):
         self._ef_syllabus_data = None
         self.ef_syllabus_name = ""
@@ -37238,10 +37255,152 @@ def _ef_uploaded_file_row(name, on_remove) -> rx.Component:
     )
 
 
+def _ef_selected_paper_row(name) -> rx.Component:
+    """Queued (selected, not yet uploaded) past-paper row.
+
+    Dashed border + muted palette signals "pending". No actions: the user
+    commits the batch with the explicit "Upload selected PDFs" button.
+    """
+    return rx.hstack(
+        rx.box(
+            rx.icon(tag="file_text", size=14, color="rgba(200,210,220,0.65)"),
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            width="28px",
+            height="28px",
+            border_radius="8px",
+            background="rgba(255,255,255,0.04)",
+            border="1px solid rgba(255,255,255,0.08)",
+            flex_shrink="0",
+        ),
+        rx.text(
+            name,
+            color="rgba(220,230,240,0.88)",
+            font_size="0.86rem",
+            font_weight="500",
+            flex="1",
+            overflow="hidden",
+            text_overflow="ellipsis",
+            white_space="nowrap",
+            min_width="0",
+        ),
+        rx.box(
+            rx.text(
+                "Ready to upload",
+                font_size="0.7rem",
+                font_weight="600",
+                color="rgba(200,210,220,0.7)",
+                letter_spacing="0.02em",
+            ),
+            background="rgba(255,255,255,0.04)",
+            padding="3px 10px",
+            border_radius="999px",
+            border="1px solid rgba(255,255,255,0.08)",
+            flex_shrink="0",
+        ),
+        spacing="2",
+        align="center",
+        padding="10px 12px",
+        background="rgba(255,255,255,0.025)",
+        border="1px dashed rgba(255,255,255,0.12)",
+        border_radius="12px",
+        width="100%",
+    )
+
+
+def _ef_uploaded_paper_card(name, idx) -> rx.Component:
+    """Premium uploaded-paper card with View and Remove actions."""
+    return rx.hstack(
+        rx.box(
+            rx.icon(tag="file_text", size=14, color="rgba(134,239,172,0.92)"),
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            width="28px",
+            height="28px",
+            border_radius="8px",
+            background="rgba(34,197,94,0.10)",
+            border="1px solid rgba(34,197,94,0.22)",
+            flex_shrink="0",
+        ),
+        rx.text(
+            name,
+            color="rgba(236,240,244,0.94)",
+            font_size="0.88rem",
+            font_weight="500",
+            flex="1",
+            overflow="hidden",
+            text_overflow="ellipsis",
+            white_space="nowrap",
+            min_width="0",
+        ),
+        rx.box(
+            rx.text(
+                "Uploaded",
+                font_size="0.7rem",
+                font_weight="700",
+                color="rgba(134,239,172,0.92)",
+                letter_spacing="0.02em",
+            ),
+            background="rgba(34,197,94,0.10)",
+            padding="3px 10px",
+            border_radius="999px",
+            border="1px solid rgba(34,197,94,0.22)",
+            flex_shrink="0",
+        ),
+        rx.button(
+            rx.icon(tag="eye", size=13),
+            "View PDF",
+            on_click=ExamForecastState.view_past_paper(idx),
+            size="1",
+            variant="ghost",
+            style={
+                "color": "rgba(220,230,240,0.85)",
+                "background": "transparent",
+                "border": "1px solid rgba(255,255,255,0.08)",
+                "border_radius": "8px",
+                "padding": "4px 10px",
+                "font_size": "0.78rem",
+                "font_weight": "600",
+                "cursor": "pointer",
+                "_hover": {
+                    "background": "rgba(255,255,255,0.06)",
+                    "color": "white",
+                    "border_color": "rgba(255,255,255,0.16)",
+                },
+            },
+            custom_attrs={"aria-label": "View PDF"},
+        ),
+        rx.icon_button(
+            rx.icon(tag="x", size=13),
+            on_click=ExamForecastState.remove_past_paper(idx),
+            variant="ghost",
+            size="1",
+            color="rgba(255,255,255,0.5)",
+            style={
+                "_hover": {
+                    "color": "rgba(248,113,113,0.95)",
+                    "background": "rgba(248,113,113,0.08)",
+                },
+                "cursor": "pointer",
+            },
+            custom_attrs={"aria-label": "Remove paper"},
+        ),
+        spacing="2",
+        align="center",
+        padding="10px 12px",
+        background="rgba(255,255,255,0.04)",
+        border="1px solid rgba(255,255,255,0.08)",
+        border_radius="12px",
+        width="100%",
+    )
+
+
 def _ef_upload_dropzone(
     *,
     upload_id: str,
-    label: str,
+    label: Any,
     sub_label: str,
     multiple: bool,
     max_files: int,
@@ -37501,73 +37660,136 @@ def _ef_upload_section() -> rx.Component:
                 width="100%",
                 margin_bottom="2px",
             ),
-            _ef_upload_dropzone(
-                upload_id="ef_past_papers_zone",
-                label="Drop 3–5 past paper PDFs, or click to browse",
-                sub_label="PDF only · up to 10 MB each",
-                multiple=True,
-                max_files=EXAM_FORECAST_MAX_PAST_PAPERS,
-                on_drop=None,
-                disabled=ExamForecastState.ef_is_analyzing,
-            ),
-            # Manual upload submit: the file picker stages files into
-            # ``selected_files`` but does not call the handler. Reflex's
-            # ``on_drop`` does not reliably fire on multi-file picker
-            # selection in this version, so we surface a clear button.
+            # ── Dropzone (always available until the 5-paper cap) ──
+            # Label adapts: full instructions when empty, compact "Add
+            # more PDFs" once at least one paper is uploaded. Hidden
+            # entirely when the user has reached the maximum so the UI
+            # doesn't tease an action it would only reject.
             rx.cond(
-                rx.selected_files("ef_past_papers_zone").length() > 0,
-                rx.hstack(
-                    rx.text(
-                        "Ready to upload — ",
-                        color="rgba(200,210,220,0.65)",
-                        font_size="0.84rem",
+                ExamForecastState.ef_past_paper_names.length()
+                < EXAM_FORECAST_MAX_PAST_PAPERS,
+                _ef_upload_dropzone(
+                    upload_id="ef_past_papers_zone",
+                    label=rx.cond(
+                        ExamForecastState.ef_past_paper_names.length() > 0,
+                        "Add more PDFs",
+                        "Drop 3–5 past paper PDFs, or click to browse",
                     ),
-                    rx.text(
-                        rx.selected_files("ef_past_papers_zone").length().to_string()
-                        + " file(s) selected",
-                        color="rgba(236,240,244,0.92)",
-                        font_size="0.84rem",
-                        font_weight="600",
-                    ),
-                    rx.spacer(),
-                    rx.button(
-                        "Upload selected PDFs",
-                        on_click=ExamForecastState.handle_past_papers_upload(
-                            rx.upload_files(upload_id="ef_past_papers_zone")
-                        ),
-                        disabled=ExamForecastState.ef_is_analyzing,
-                        size="2",
-                        style={
-                            "background": "rgba(134,239,172,0.92)",
-                            "color": "#0b1410",
-                            "font_weight": "700",
-                            "border_radius": "10px",
-                            "padding": "8px 14px",
-                            "cursor": "pointer",
-                            "_hover": {"background": "rgba(134,239,172,1)"},
-                            "_disabled": {"opacity": "0.5", "cursor": "not-allowed"},
-                        },
-                    ),
-                    spacing="2",
-                    align="center",
-                    width="100%",
-                    margin_top="10px",
+                    sub_label="PDF only · up to 10 MB each",
+                    multiple=True,
+                    max_files=EXAM_FORECAST_MAX_PAST_PAPERS,
+                    on_drop=None,
+                    disabled=ExamForecastState.ef_is_analyzing,
                 ),
                 rx.box(),
             ),
+            # ── Uploaded papers (premium cards with View + Remove) ──
             rx.cond(
                 ExamForecastState.ef_past_paper_names.length() > 0,
                 rx.vstack(
+                    rx.hstack(
+                        _ef_section_label("Uploaded"),
+                        rx.spacer(),
+                        rx.text(
+                            ExamForecastState.ef_past_paper_names.length().to_string()
+                            + " / "
+                            + str(EXAM_FORECAST_MAX_PAST_PAPERS)
+                            + " papers uploaded",
+                            color="rgba(200,210,220,0.55)",
+                            font_size="0.74rem",
+                        ),
+                        spacing="0",
+                        align="center",
+                        width="100%",
+                        margin_bottom="0",
+                    ),
                     rx.foreach(
                         ExamForecastState.ef_past_paper_names,
-                        lambda name, idx: _ef_uploaded_file_row(
-                            name,
-                            ExamForecastState.remove_past_paper(idx),
-                        ),
+                        lambda name, idx: _ef_uploaded_paper_card(name, idx),
                     ),
                     spacing="2",
                     width="100%",
-                    margin_top="10px",
+                    margin_top="12px",
+                    align="stretch",
+                ),
+                rx.box(),
+            ),
+            # ── Selected (queued) files — appear immediately on pick ──
+            # Manual submit pattern: file picker stages files into
+            # ``selected_files``; the user commits the batch with the
+            # explicit "Upload selected PDFs" button. ``on_drop`` does
+            # not reliably fire on multi-file picker selection in this
+            # Reflex version, so the explicit button is the contract.
+            rx.cond(
+                rx.selected_files("ef_past_papers_zone").length() > 0,
+                rx.vstack(
+                    rx.hstack(
+                        _ef_section_label("Selected"),
+                        rx.spacer(),
+                        rx.text(
+                            rx.selected_files("ef_past_papers_zone")
+                            .length()
+                            .to_string()
+                            + " file(s) ready",
+                            color="rgba(200,210,220,0.55)",
+                            font_size="0.74rem",
+                        ),
+                        spacing="0",
+                        align="center",
+                        width="100%",
+                        margin_bottom="0",
+                    ),
+                    rx.foreach(
+                        rx.selected_files("ef_past_papers_zone"),
+                        lambda name: _ef_selected_paper_row(name),
+                    ),
+                    rx.hstack(
+                        rx.text(
+                            "Click Upload selected PDFs to add these papers.",
+                            color="rgba(200,210,220,0.6)",
+                            font_size="0.78rem",
+                            font_style="italic",
+                            flex="1",
+                            min_width="0",
+                        ),
+                        rx.button(
+                            rx.icon(tag="upload_cloud", size=14),
+                            "Upload selected PDFs",
+                            on_click=[
+                                ExamForecastState.handle_past_papers_upload(
+                                    rx.upload_files(
+                                        upload_id="ef_past_papers_zone",
+                                    ),
+                                ),
+                                rx.clear_selected_files("ef_past_papers_zone"),
+                            ],
+                            disabled=ExamForecastState.ef_is_analyzing,
+                            size="2",
+                            style={
+                                "background": "rgba(134,239,172,0.92)",
+                                "color": "#0b1410",
+                                "font_weight": "700",
+                                "border_radius": "10px",
+                                "padding": "8px 14px",
+                                "cursor": "pointer",
+                                "display": "inline-flex",
+                                "align_items": "center",
+                                "gap": "6px",
+                                "_hover": {"background": "rgba(134,239,172,1)"},
+                                "_disabled": {
+                                    "opacity": "0.5",
+                                    "cursor": "not-allowed",
+                                },
+                            },
+                        ),
+                        spacing="3",
+                        align="center",
+                        width="100%",
+                    ),
+                    spacing="2",
+                    width="100%",
+                    margin_top="12px",
+                    align="stretch",
                 ),
                 rx.box(),
             ),
