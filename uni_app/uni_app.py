@@ -28384,18 +28384,23 @@ def landing_page():
         tracking_event: str = "",
         tracking_params: dict[str, Any] | None = None,
     ) -> rx.Component:
-        # No more <a><button>...</button></a> nesting — the rx.button below is
-        # the single interactive element. Clicking it fires rx.redirect(href)
-        # via Reflex's event system, which navigates client-side. Right-click
-        # "open in new tab" is no longer supported here (deliberate trade-off
-        # for reliable navigation; the same route is reachable via /select).
+        # Single interactive element — the rx.button below. Navigation uses
+        # direct browser navigation via window.location.assign(...) rather
+        # than rx.redirect, because rx.redirect (a Reflex state event) was
+        # observed to silently no-op for these buttons in production.
+        # `window.location.assign` is the canonical hard-navigate path and
+        # is impossible for Reflex/Radix to swallow.
         is_solid = variant == "solid"
         on_click_chain: list[Any] = []
         if tracking_event:
-            # Track first, then redirect — track_ga_event is fire-and-forget JS
-            # so the GA event lands before client-side navigation kicks in.
+            # Track first, then navigate — track_ga_event is fire-and-forget
+            # JS via rx.call_script, so the GA beacon is queued before the
+            # page unloads (modern GA delivers via Beacon API even if the
+            # page is mid-navigation).
             on_click_chain.append(track_ga_event(tracking_event, tracking_params))
-        on_click_chain.append(rx.redirect(href))
+        on_click_chain.append(
+            rx.call_script(f"window.location.assign({json.dumps(href)})")
+        )
         on_click_value = (
             on_click_chain if len(on_click_chain) > 1 else on_click_chain[0]
         )
@@ -29195,14 +29200,17 @@ def landing_page():
             href = "/login"
         else:
             href = "#landing-feature-showcase"
-        # No more <a><button> nesting — the rx.button below is the single
-        # interactive element and runs rx.redirect(href) on click. Reflex's
-        # event system handles navigation reliably regardless of how the
-        # underlying Radix Button component handles its own click events.
+        # Single interactive element — the rx.button below. Uses direct
+        # browser navigation via window.location.assign(...) instead of
+        # rx.redirect, because rx.redirect was silently no-oping for these
+        # buttons in production. window.location.assign is the canonical
+        # hard-navigate path that nothing in the React tree can intercept.
         on_click_chain: list[Any] = []
         if tracking_event:
             on_click_chain.append(track_ga_event(tracking_event, tracking_params))
-        on_click_chain.append(rx.redirect(href))
+        on_click_chain.append(
+            rx.call_script(f"window.location.assign({json.dumps(href)})")
+        )
         on_click_value = (
             on_click_chain if len(on_click_chain) > 1 else on_click_chain[0]
         )
@@ -29243,10 +29251,13 @@ def landing_page():
 
     hero_header = rx.hstack(
         # Brand: no rx.link wrapper — the rx.box below is the single
-        # interactive element. on_click=rx.redirect(...) navigates via
-        # Reflex's event system. The inner rx.hstack uses pointer_events:none
-        # so the image + text don't intercept the click that should land on
-        # the box. role="link" + tabindex preserve basic a11y semantics.
+        # interactive element. on_click uses window.location.assign(...)
+        # (via rx.call_script) for a reliable hard navigation that nothing
+        # in the React/Radix tree can intercept (rx.redirect was observed
+        # to silently no-op here in production). The inner rx.hstack uses
+        # pointer_events:none so the image + text don't intercept the
+        # click that should land on the box. role="link" + tabindex
+        # preserve basic a11y semantics.
         rx.box(
             rx.hstack(
                 rx.image(
@@ -29269,7 +29280,9 @@ def landing_page():
                 align="center",
                 pointer_events="none",
             ),
-            on_click=rx.redirect(SELECTION_ROUTE),
+            on_click=rx.call_script(
+                f"window.location.assign({json.dumps(SELECTION_ROUTE)})"
+            ),
             cursor="pointer",
             display="inline-flex",
             align_items="center",
