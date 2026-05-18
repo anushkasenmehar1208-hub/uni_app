@@ -23550,7 +23550,7 @@ def onboarding_page():
                     to { opacity: 1; transform: translateY(0); }
                 }
                 .ob-reveal { animation: obReveal 0.28s cubic-bezier(0.16,1,0.3,1) both; }
-                .ob-choice-grid { display: grid; gap: 18px; width: 100%; }
+                .ob-choice-grid { display: grid; gap: 24px; width: 100%; }
                 .ob-choice-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
                 .ob-section + .ob-section {
                     border-top: 1px solid rgba(255,255,255,0.06);
