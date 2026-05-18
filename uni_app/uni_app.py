@@ -28396,9 +28396,19 @@ def landing_page():
             "color": "#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
             "custom_attrs": {"data-landing-link": "primary" if is_solid else "secondary"},
         }
+        # Always attach an explicit rx.redirect on_click so the navigation
+        # fires even when the inner <button> swallows the click that
+        # would normally bubble to the wrapping <a href>. The href stays
+        # as a fallback for SEO + right-click → "open in new tab".
         if tracking_event:
-            # GA funnel event: landing CTA click, then normal link navigation continues.
-            link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
+            # Track first, then redirect — track_ga_event is fire-and-forget JS
+            # so the GA event lands before the client-side navigation kicks in.
+            link_props["on_click"] = [
+                track_ga_event(tracking_event, tracking_params),
+                rx.redirect(href),
+            ]
+        else:
+            link_props["on_click"] = rx.redirect(href)
         return rx.link(
             rx.button(
                 label,
@@ -29203,9 +29213,16 @@ def landing_page():
             "color": "rgba(255,255,255,0.68)",
             "custom_attrs": {"data-landing-animate": "nav", "data-landing-link": "nav"},
         }
+        # Always attach an explicit rx.redirect on_click so the navigation
+        # fires even when the inner <button> swallows the click that would
+        # normally bubble to the wrapping <a href>. href stays as fallback.
         if tracking_event:
-            # GA funnel event: header CTA click, then normal link navigation continues.
-            link_props["on_click"] = track_ga_event(tracking_event, tracking_params)
+            link_props["on_click"] = [
+                track_ga_event(tracking_event, tracking_params),
+                rx.redirect(href),
+            ]
+        else:
+            link_props["on_click"] = rx.redirect(href)
         return rx.link(
             rx.button(
                 label,
@@ -29265,6 +29282,10 @@ def landing_page():
                 align="center",
             ),
             href=SELECTION_ROUTE,
+            # Explicit rx.redirect ensures click navigation works even if
+            # the <a> default action is intercepted by inner element handlers.
+            on_click=rx.redirect(SELECTION_ROUTE),
+            cursor="pointer",
             text_decoration="none",
             color="rgba(255,255,255,0.94)",
             custom_attrs={"data-landing-animate": "nav", "data-landing-link": "brand"},
