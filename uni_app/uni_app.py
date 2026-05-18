@@ -28384,77 +28384,68 @@ def landing_page():
         tracking_event: str = "",
         tracking_params: dict[str, Any] | None = None,
     ) -> rx.Component:
+        # No more <a><button>...</button></a> nesting — the rx.button below is
+        # the single interactive element. Clicking it fires rx.redirect(href)
+        # via Reflex's event system, which navigates client-side. Right-click
+        # "open in new tab" is no longer supported here (deliberate trade-off
+        # for reliable navigation; the same route is reachable via /select).
         is_solid = variant == "solid"
-        link_props: dict[str, Any] = {
-            "href": href,
-            "text_decoration": "none",
-            "display": "inline-flex",
-            "width": "fit-content",
-            "align_items": "center",
-            "justify_content": "center",
-            "max_width": "100%",
-            "color": "#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
-            "custom_attrs": {"data-landing-link": "primary" if is_solid else "secondary"},
-        }
-        # Always attach an explicit rx.redirect on_click so the navigation
-        # fires even when the inner <button> swallows the click that
-        # would normally bubble to the wrapping <a href>. The href stays
-        # as a fallback for SEO + right-click → "open in new tab".
+        on_click_chain: list[Any] = []
         if tracking_event:
             # Track first, then redirect — track_ga_event is fire-and-forget JS
-            # so the GA event lands before the client-side navigation kicks in.
-            link_props["on_click"] = [
-                track_ga_event(tracking_event, tracking_params),
-                rx.redirect(href),
-            ]
-        else:
-            link_props["on_click"] = rx.redirect(href)
-        return rx.link(
-            rx.button(
-                label,
-                type="button",
-                variant="ghost",
-                class_name=f"landing-main-cta landing-main-cta--{variant}",
-                style={
-                    "height": "52px",
-                    "padding": "0 24px",
-                    "border_radius": "999px",
-                    "border": (
-                        "1px solid rgba(255,255,255,0.14)"
-                        if not is_solid
-                        else "1px solid rgba(255,255,255,0.08)"
-                    ),
-                    "background": (
-                        "linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%)"
-                        if is_solid
-                        else "rgba(255,255,255,0.04)"
-                    ),
-                    "color": "#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
-                    "font_size": "0.98rem",
-                    "font_weight": "600",
-                    "letter_spacing": "0",
-                    "line_height": "1",
-                    "white_space": "nowrap",
-                    "text_align": "center",
-                    "display": "inline-flex",
-                    "align_items": "center",
-                    "justify_content": "center",
-                    "min_width": "216px",
-                    "box_sizing": "border-box",
-                    "cursor": "pointer",
-                    "transition": "transform 0.18s ease, background 0.18s ease, border-color 0.18s ease",
-                    "box_shadow": (
-                        "0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset"
-                        if is_solid
-                        else "none"
-                    ),
-                    "_hover": {
-                        "transform": "translateY(-1px)",
-                        "background": "#ffffff" if is_solid else "rgba(255,255,255,0.09)",
-                    },
+            # so the GA event lands before client-side navigation kicks in.
+            on_click_chain.append(track_ga_event(tracking_event, tracking_params))
+        on_click_chain.append(rx.redirect(href))
+        on_click_value = (
+            on_click_chain if len(on_click_chain) > 1 else on_click_chain[0]
+        )
+        return rx.button(
+            label,
+            type="button",
+            variant="ghost",
+            class_name=f"landing-main-cta landing-main-cta--{variant}",
+            on_click=on_click_value,
+            custom_attrs={"data-landing-link": "primary" if is_solid else "secondary"},
+            style={
+                "height": "52px",
+                "padding": "0 24px",
+                "border_radius": "999px",
+                "border": (
+                    "1px solid rgba(255,255,255,0.14)"
+                    if not is_solid
+                    else "1px solid rgba(255,255,255,0.08)"
+                ),
+                "background": (
+                    "linear-gradient(180deg, #f5f5f5 0%, #e8e8ea 100%)"
+                    if is_solid
+                    else "rgba(255,255,255,0.04)"
+                ),
+                "color": "#0a0a0b" if is_solid else "rgba(255,255,255,0.88)",
+                "font_size": "0.98rem",
+                "font_weight": "600",
+                "letter_spacing": "0",
+                "line_height": "1",
+                "white_space": "nowrap",
+                "text_align": "center",
+                "display": "inline-flex",
+                "align_items": "center",
+                "justify_content": "center",
+                "min_width": "216px",
+                "max_width": "100%",
+                "width": "fit-content",
+                "box_sizing": "border-box",
+                "cursor": "pointer",
+                "transition": "transform 0.18s ease, background 0.18s ease, border-color 0.18s ease",
+                "box_shadow": (
+                    "0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset"
+                    if is_solid
+                    else "none"
+                ),
+                "_hover": {
+                    "transform": "translateY(-1px)",
+                    "background": "#ffffff" if is_solid else "rgba(255,255,255,0.09)",
                 },
-            ),
-            **link_props,
+            },
         )
 
     def proof_chip(label: str, animate: str = "") -> rx.Component:
@@ -29204,63 +29195,59 @@ def landing_page():
             href = "/login"
         else:
             href = "#landing-feature-showcase"
-        link_props: dict[str, Any] = {
-            "href": href,
-            "text_decoration": "none",
-            "display": "inline-flex",
-            "flex_shrink": "0",
-            "margin_left": margin_left,
-            "color": "rgba(255,255,255,0.68)",
-            "custom_attrs": {"data-landing-animate": "nav", "data-landing-link": "nav"},
-        }
-        # Always attach an explicit rx.redirect on_click so the navigation
-        # fires even when the inner <button> swallows the click that would
-        # normally bubble to the wrapping <a href>. href stays as fallback.
+        # No more <a><button> nesting — the rx.button below is the single
+        # interactive element and runs rx.redirect(href) on click. Reflex's
+        # event system handles navigation reliably regardless of how the
+        # underlying Radix Button component handles its own click events.
+        on_click_chain: list[Any] = []
         if tracking_event:
-            link_props["on_click"] = [
-                track_ga_event(tracking_event, tracking_params),
-                rx.redirect(href),
-            ]
-        else:
-            link_props["on_click"] = rx.redirect(href)
-        return rx.link(
-            rx.button(
-                label,
-                type="button",
-                variant="ghost",
-                class_name="landing-nav-cta",
-                style={
-                    "height": "44px",
-                    "padding": "0 22px",
-                    "border_radius": "999px",
-                    "background": "rgba(255,255,255,0.08)",
-                    "border": "1px solid rgba(255,255,255,0.12)",
-                    "color": "rgba(255,255,255,0.92)",
-                    "font_size": "0.92rem",
-                    "font_weight": "600",
-                    "letter_spacing": "0",
-                    "line_height": "1",
-                    "white_space": "nowrap",
-                    "display": "inline-flex",
-                    "align_items": "center",
-                    "justify_content": "center",
-                    "box_sizing": "border-box",
-                    "transition": "background 0.18s ease, transform 0.18s ease",
-                    "box_shadow": "0 10px 36px rgba(0,0,0,0.35)",
-                    "_hover": {
-                        "background": "rgba(255,255,255,0.14)",
-                    },
-                },
-            ),
+            on_click_chain.append(track_ga_event(tracking_event, tracking_params))
+        on_click_chain.append(rx.redirect(href))
+        on_click_value = (
+            on_click_chain if len(on_click_chain) > 1 else on_click_chain[0]
+        )
+        return rx.button(
+            label,
+            type="button",
+            variant="ghost",
+            class_name="landing-nav-cta",
+            on_click=on_click_value,
+            margin_left=margin_left,
+            flex_shrink="0",
+            custom_attrs={"data-landing-animate": "nav", "data-landing-link": "nav"},
             style={
-                "transition": "color 0.16s ease",
-                "_hover": {"color": "rgba(255,255,255,0.94)"},
+                "height": "44px",
+                "padding": "0 22px",
+                "border_radius": "999px",
+                "background": "rgba(255,255,255,0.08)",
+                "border": "1px solid rgba(255,255,255,0.12)",
+                "color": "rgba(255,255,255,0.92)",
+                "font_size": "0.92rem",
+                "font_weight": "600",
+                "letter_spacing": "0",
+                "line_height": "1",
+                "white_space": "nowrap",
+                "display": "inline-flex",
+                "align_items": "center",
+                "justify_content": "center",
+                "box_sizing": "border-box",
+                "cursor": "pointer",
+                "transition": "background 0.18s ease, transform 0.18s ease, color 0.16s ease",
+                "box_shadow": "0 10px 36px rgba(0,0,0,0.35)",
+                "_hover": {
+                    "background": "rgba(255,255,255,0.14)",
+                    "color": "rgba(255,255,255,0.94)",
+                },
             },
-            **link_props,
         )
 
     hero_header = rx.hstack(
-        rx.link(
+        # Brand: no rx.link wrapper — the rx.box below is the single
+        # interactive element. on_click=rx.redirect(...) navigates via
+        # Reflex's event system. The inner rx.hstack uses pointer_events:none
+        # so the image + text don't intercept the click that should land on
+        # the box. role="link" + tabindex preserve basic a11y semantics.
+        rx.box(
             rx.hstack(
                 rx.image(
                     src="/a_logo.png",
@@ -29280,15 +29267,20 @@ def landing_page():
                 ),
                 spacing="2",
                 align="center",
+                pointer_events="none",
             ),
-            href=SELECTION_ROUTE,
-            # Explicit rx.redirect ensures click navigation works even if
-            # the <a> default action is intercepted by inner element handlers.
             on_click=rx.redirect(SELECTION_ROUTE),
             cursor="pointer",
-            text_decoration="none",
+            display="inline-flex",
+            align_items="center",
             color="rgba(255,255,255,0.94)",
-            custom_attrs={"data-landing-animate": "nav", "data-landing-link": "brand"},
+            custom_attrs={
+                "data-landing-animate": "nav",
+                "data-landing-link": "brand",
+                "role": "link",
+                "tabindex": "0",
+                "aria-label": "Alex AI — go to Set Up Alex",
+            },
         ),
         rx.hstack(
             header_action("Home"),
