@@ -65,7 +65,7 @@ export function Hero() {
       </p>
 
       <Link
-        href="/register"
+        href="/select"
         className="landing-main-cta--solid mb-7"
       >
         Start My Study Plan
