@@ -8,17 +8,30 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Alex Studies",
+  alternateName: "Alex AI",
+  url: "https://alexstudies.com/",
+};
+
 export const metadata: Metadata = {
-  title: "Alex AI — Your Academic Mentor",
+  title: {
+    default: "Alex Studies",
+    template: "%s | Alex Studies",
+  },
   description:
-    "Choose your degree and let Alex AI organize your semester with planning, voice teaching, notes, tasks, and AI-powered study visuals.",
+    "Alex Studies helps students plan their semester, organize study tasks, learn with AI guidance, and stay on track day by day.",
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Alex AI — Your Academic Mentor",
+    title: "Alex Studies",
     description:
-      "AI that teaches your full university semester day by day.",
+      "Student-focused AI study planning, tutoring, notes, and tasks in one workspace.",
+    siteName: "Alex Studies",
+    url: "https://alexstudies.com/",
     type: "website",
   },
 };
@@ -34,7 +47,15 @@ export default function RootLayout({
       className={`${jakarta.variable} antialiased`}
       style={{ colorScheme: "dark" }}
     >
-      <body className="bg-[#0a0a0c] text-white">{children}</body>
+      <body className="bg-[#0a0a0c] text-white">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
